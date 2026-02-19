@@ -46,11 +46,20 @@
       <h3>Carrinho</h3>
       <ul id="cart-items"></ul>
       <p class="total">Total: R$ <span id="cart-total">0,00</span></p>
-      <div class="whats-wrap">
-        <label for="whatsapp-input">WhatsApp para fechar pedido</label>
-        <input id="whatsapp-input" type="tel" placeholder="Ex: 5511999999999" />
+
+      <div class="payment-wrap">
+        <label for="payment-method">Forma de pagamento</label>
+        <select id="payment-method">
+          <option value="">Selecione</option>
+          <option value="pix">Pix</option>
+          <option value="credito">Cartao de credito</option>
+          <option value="debito">Cartao de debito</option>
+          <option value="boleto">Boleto</option>
+        </select>
       </div>
+
       <button id="checkout" class="btn checkout" disabled>Finalizar pedido</button>
+      <p id="checkout-feedback" class="checkout-feedback"></p>
     </aside>
   </main>
 

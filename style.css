@@ -133,7 +133,7 @@ body {
 
 .filter-wrap,
 .search-wrap,
-.whats-wrap {
+.payment-wrap {
   display: grid;
   gap: 0.2rem;
   font-size: 0.9rem;
@@ -142,7 +142,7 @@ body {
 
 .filter-wrap select,
 .search-wrap input,
-.whats-wrap input {
+.payment-wrap select {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 0.35rem 0.55rem;
@@ -151,7 +151,7 @@ body {
 }
 
 .search-wrap input,
-.whats-wrap input {
+.payment-wrap select {
   min-width: 200px;
 }
 
@@ -211,8 +211,15 @@ body {
   margin-bottom: 0.7rem;
 }
 
-.whats-wrap {
+.payment-wrap {
   margin-bottom: 0.8rem;
+}
+
+.checkout-feedback {
+  min-height: 1.1rem;
+  margin-top: 0.7rem;
+  font-size: 0.86rem;
+  color: #18663f;
 }
 
 #cart-items {
@@ -277,7 +284,7 @@ footer {
   }
 
   .search-wrap input,
-  .whats-wrap input {
+  .payment-wrap select {
     width: 100%;
   }
 }

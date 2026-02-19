@@ -1,6 +1,12 @@
-﻿const DEFAULT_WHATSAPP = "5511949426305"; // Troque pelo numero da loja com DDI+DDD, apenas digitos
-const CART_KEY = "stopmod_cart";
-const PHONE_KEY = "stopmod_whatsapp";
+﻿const CART_KEY = "stopmod_cart";
+const PAYMENT_KEY = "stopmod_payment_method";
+
+const paymentLabels = {
+  pix: "Pix",
+  credito: "Cartao de credito",
+  debito: "Cartao de debito",
+  boleto: "Boleto"
+};
 
 const products = [
   {
@@ -61,7 +67,8 @@ const cartTotal = document.getElementById("cart-total");
 const checkoutButton = document.getElementById("checkout");
 const categoryFilter = document.getElementById("category-filter");
 const searchInput = document.getElementById("search-input");
-const whatsappInput = document.getElementById("whatsapp-input");
+const paymentMethod = document.getElementById("payment-method");
+const checkoutFeedback = document.getElementById("checkout-feedback");
 
 function formatBRL(value) {
   return value.toLocaleString("pt-BR", {
@@ -128,14 +135,17 @@ function loadCart() {
   }
 }
 
-function sanitizeNumber(value) {
-  return value.replace(/\D/g, "");
+function loadPaymentMethod() {
+  const saved = localStorage.getItem(PAYMENT_KEY) || "";
+  paymentMethod.value = saved;
 }
 
-function loadWhatsappNumber() {
-  const saved = localStorage.getItem(PHONE_KEY);
-  const value = sanitizeNumber(saved || DEFAULT_WHATSAPP);
-  whatsappInput.value = value;
+function savePaymentMethod() {
+  localStorage.setItem(PAYMENT_KEY, paymentMethod.value);
+}
+
+function updateCheckoutButtonState() {
+  checkoutButton.disabled = !cart.length || !paymentMethod.value;
 }
 
 function addToCart(productId) {
@@ -153,11 +163,15 @@ function removeFromCart(index) {
   renderCart();
 }
 
+function getCartTotal() {
+  return cart.reduce((sum, item) => sum + item.price, 0);
+}
+
 function renderCart() {
   if (!cart.length) {
     cartItems.innerHTML = "<li>Seu carrinho esta vazio.</li>";
     cartTotal.textContent = "0,00";
-    checkoutButton.disabled = true;
+    updateCheckoutButtonState();
     return;
   }
 
@@ -172,48 +186,31 @@ function renderCart() {
     )
     .join("");
 
-  const total = cart.reduce((sum, item) => sum + item.price, 0);
-  cartTotal.textContent = formatBRL(total);
-  checkoutButton.disabled = false;
-}
-
-function buildCartMessage() {
-  const grouped = cart.reduce((acc, item) => {
-    if (!acc[item.id]) {
-      acc[item.id] = { ...item, qty: 0 };
-    }
-    acc[item.id].qty += 1;
-    return acc;
-  }, {});
-
-  const lines = Object.values(grouped).map(
-    (entry) => `• ${entry.name} (${entry.qty}x) - R$ ${formatBRL(entry.price * entry.qty)}`
-  );
-
-  const total = cart.reduce((sum, item) => sum + item.price, 0);
-  return `Ola, quero fechar meu pedido na Stop mod:\n\n${lines.join("\n")}\n\nTotal: R$ ${formatBRL(total)}`;
+  cartTotal.textContent = formatBRL(getCartTotal());
+  updateCheckoutButtonState();
 }
 
 categoryFilter.addEventListener("change", renderProducts);
 searchInput.addEventListener("input", renderProducts);
-whatsappInput.addEventListener("input", () => {
-  const value = sanitizeNumber(whatsappInput.value);
-  whatsappInput.value = value;
-  localStorage.setItem(PHONE_KEY, value || DEFAULT_WHATSAPP);
+
+paymentMethod.addEventListener("change", () => {
+  savePaymentMethod();
+  checkoutFeedback.textContent = "";
+  updateCheckoutButtonState();
 });
 
 checkoutButton.addEventListener("click", () => {
   if (!cart.length) return;
-
-  const number = sanitizeNumber(whatsappInput.value || DEFAULT_WHATSAPP);
-  if (!number) {
-    alert("Informe um numero de WhatsApp para finalizar o pedido.");
+  if (!paymentMethod.value) {
+    alert("Escolha uma forma de pagamento para continuar.");
     return;
   }
 
-  const message = buildCartMessage();
-  const url = `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
-  window.open(url, "_blank");
+  const method = paymentLabels[paymentMethod.value] || paymentMethod.value;
+  const total = formatBRL(getCartTotal());
+
+  checkoutFeedback.textContent = `Pedido confirmado via ${method}. Total: R$ ${total}.`;
+  alert(`Pedido confirmado!\nForma de pagamento: ${method}\nTotal: R$ ${total}`);
 
   cart.length = 0;
   saveCart();
@@ -221,7 +218,7 @@ checkoutButton.addEventListener("click", () => {
 });
 
 populateCategories();
-loadWhatsappNumber();
+loadPaymentMethod();
 loadCart();
 renderProducts();
 renderCart();
