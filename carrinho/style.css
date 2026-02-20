@@ -286,6 +286,34 @@ body {
   gap: 0.5rem;
 }
 
+.qty-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.qty-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #fff7f2;
+  color: #2f2824;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.qty-btn:hover {
+  background: #ffe3d2;
+}
+
+.qty-val {
+  min-width: 22px;
+  text-align: center;
+  font-weight: 800;
+  color: #2f2824;
+}
+
 .cart-item-price {
   font-weight: 800;
 }

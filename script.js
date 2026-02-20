@@ -1,4 +1,5 @@
 const CART_KEY = "stopmod_cart";
+const MAX_CART_ITEMS = 2000;
 
 const products = [
   { id: 1, name: "Camiseta Oversized Street", category: "Camisetas", size: "P ao GG", price: 89.9, image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80" },
@@ -93,6 +94,10 @@ function renderProducts() {
 
 function addToCart(productId) {
   const ids = loadCartIds();
+  if (ids.length >= MAX_CART_ITEMS) {
+    alert("Limite de 2000 itens no carrinho atingido.");
+    return;
+  }
   ids.push(productId);
   saveCartIds(ids);
   updateCartCount();

@@ -1,4 +1,7 @@
 const CART_KEY = "stopmod_cart";
+const MAX_CART_ITEMS = 2000;
+
+const productById = new Map(products.map((p) => [p.id, p]));
 
 const products = [
   { id: 1, name: "Camiseta Oversized Street", category: "Camisetas", size: "P ao GG", price: 89.9, image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80" },
@@ -47,14 +50,35 @@ function updateCartCount() {
 }
 
 function groupedCart(ids) {
-  const map = {};
+  const map = new Map();
   ids.forEach((id) => {
-    const p = products.find((item) => item.id === id);
+    const p = productById.get(id);
     if (!p) return;
-    if (!map[id]) map[id] = { ...p, qty: 0 };
-    map[id].qty += 1;
+    const cur = map.get(id) || { ...p, qty: 0 };
+    cur.qty += 1;
+    map.set(id, cur);
   });
-  return Object.values(map);
+  return Array.from(map.values());
+}
+
+function addOne(id) {
+  const ids = loadCartIds();
+  if (ids.length >= MAX_CART_ITEMS) {
+    feedback.textContent = "Limite de 2000 itens no carrinho atingido.";
+    return;
+  }
+  ids.push(id);
+  saveCartIds(ids);
+  renderCart();
+}
+
+function removeOne(id) {
+  const ids = loadCartIds();
+  const idx = ids.indexOf(id);
+  if (idx === -1) return;
+  ids.splice(idx, 1);
+  saveCartIds(ids);
+  renderCart();
 }
 
 function renderCart() {
@@ -81,13 +105,16 @@ function renderCart() {
         const meta = [item.category, item.size].filter(Boolean).join(" | ");
         return `
         <li class="cart-item">
-          <button class="remove" data-id="${item.id}" aria-label="Remover 1 unidade">x</button>
           <img src="${item.image}" alt="${item.name}" loading="lazy" />
           <div class="cart-item-body">
             <strong>${item.name}</strong>
             ${meta ? `<div class="cart-item-meta">${meta}</div>` : ""}
             <div class="cart-item-row">
-              <span class="cart-item-qty">Qtd: ${item.qty}</span>
+              <div class="qty-controls" aria-label="Quantidade">
+                <button class="qty-btn" data-action="dec" data-id="${item.id}" aria-label="Diminuir">-</button>
+                <span class="qty-val" aria-label="Quantidade">${item.qty}</span>
+                <button class="qty-btn" data-action="inc" data-id="${item.id}" aria-label="Aumentar">+</button>
+              </div>
               <span class="cart-item-price">R$ ${formatBRL(item.price)}</span>
             </div>
             <div class="cart-item-meta">Subtotal: R$ ${formatBRL(item.price * item.qty)}</div>
@@ -102,21 +129,14 @@ function renderCart() {
   cartTotal.textContent = formatBRL(total);
   checkoutBtn.disabled = false;
 
-  cartItems.querySelectorAll("button[data-id]").forEach((btn) => {
+  cartItems.querySelectorAll("button[data-action][data-id]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      removeItem(Number(btn.getAttribute("data-id")));
+      const id = Number(btn.getAttribute("data-id"));
+      const action = String(btn.getAttribute("data-action"));
+      if (action === "inc") addOne(id);
+      if (action === "dec") removeOne(id);
     });
   });
-}
-
-function removeItem(id) {
-  const ids = loadCartIds();
-  const idx = ids.indexOf(id);
-  if (idx !== -1) {
-    ids.splice(idx, 1);
-    saveCartIds(ids);
-    renderCart();
-  }
 }
 
 checkoutBtn.addEventListener("click", () => {
