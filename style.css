@@ -147,6 +147,9 @@ body {
   border-radius: 999px;
   font-weight: 700;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
 }
 
 .pill:hover {

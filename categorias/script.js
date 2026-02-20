@@ -16,9 +16,13 @@ const products = [
   { id: 12, name: "Bolsa Tote Minimal", category: "Acessorios", size: "Unico", price: 189.9, image: "https://images.unsplash.com/photo-1495107334309-fcf20504a5ab?auto=format&fit=crop&w=700&q=80" }
 ];
 
+const catsEl = document.getElementById("cats");
 const productGrid = document.getElementById("product-grid");
+const titleEl = document.getElementById("title");
 const searchInput = document.getElementById("search-input");
 const cartCount = document.getElementById("cart-count");
+
+let activeCat = "all";
 
 function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -43,19 +47,33 @@ function updateCartCount() {
   cartCount.style.display = ids.length ? "inline-flex" : "none";
 }
 
-function getFilteredProducts() {
-  const term = searchInput.value.toLowerCase().trim();
+function renderCats() {
+  const categories = ["all", ...new Set(products.map((p) => p.category))];
+  catsEl.innerHTML = categories
+    .map((c) => `<button class="cat ${c === activeCat ? "active" : ""}" data-cat="${c}">${c === "all" ? "Todas" : c}</button>`)
+    .join("");
 
-  return products.filter((product) => {
-    const textOk = !term || product.name.toLowerCase().includes(term);
-    return textOk;
+  catsEl.querySelectorAll("button[data-cat]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      activeCat = String(btn.getAttribute("data-cat"));
+      renderCats();
+      renderProducts();
+    });
+  });
+}
+
+function filteredProducts() {
+  const term = (searchInput?.value || "").toLowerCase().trim();
+  return products.filter((p) => (activeCat === "all" ? true : p.category === activeCat)).filter((p) => {
+    if (!term) return true;
+    return p.name.toLowerCase().includes(term);
   });
 }
 
 function renderProducts() {
-  const filtered = getFilteredProducts();
-
-  productGrid.innerHTML = filtered
+  const list = filteredProducts();
+  titleEl.textContent = activeCat === "all" ? "Todos os produtos" : activeCat;
+  productGrid.innerHTML = list
     .map(
       (product) => `
       <article class="product-card">
@@ -90,7 +108,8 @@ function addToCart(productId) {
   updateCartCount();
 }
 
-searchInput.addEventListener("input", renderProducts);
-
+searchInput?.addEventListener("input", renderProducts);
+renderCats();
 renderProducts();
 updateCartCount();
+

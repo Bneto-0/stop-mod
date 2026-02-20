@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Categorias | Stop mod</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../style.css?v=3" />
+  <style>
+    .panel { background: var(--card); border:1px solid var(--line); border-radius: 16px; padding: 1rem; box-shadow: 0 10px 24px #2f211810; }
+    .cats { display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.8rem; }
+    .cat { border:1px solid var(--line); background:#fff3e8; color:#2f2824; border-radius:999px; padding:.46rem .9rem; font-weight:800; cursor:pointer; }
+    .cat.active { background:#ffd7b8; border-color:#eac8bb; }
+    .note { color: var(--muted); font-size:.9rem; margin-top:.25rem; }
+  </style>
+</head>
+<body id="top">
+  <header class="hero">
+    <nav class="nav container">
+      <a class="logo-link" href="../index.html#top">
+        <div class="logo">Stop <span>mod</span></div>
+      </a>
+      <div class="nav-actions full-bar">
+        <div class="search-top-wrap">
+          <label class="sr-only" for="search-input">Buscar produto</label>
+          <input id="search-input" type="search" placeholder="Pesquisar produto" />
+        </div>
+        <a class="cart-link" href="../carrinho/" aria-label="Ir para o carrinho">
+          <svg class="cart-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 19a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm9 0a2 2 0 1 0 .001 4A2 2 0 0 0 17 19zM6.2 5l.6 3h11.6l-1.2 6H8.1L6.2 5zM3 2h2l2.2 11.2A2 2 0 0 0 9.2 15H18v-2H9.2l-.2-1h9.1A2 2 0 0 0 20 10.4l1-5A2 2 0 0 0 19 3H6.4l-.3-1.6A2 2 0 0 0 4.1 0H3v2z"></path>
+          </svg>
+          <span>Carrinho</span>
+          <strong id="cart-count">0</strong>
+        </a>
+      </div>
+    </nav>
+
+    <section class="hero-content container" style="max-width: 760px;">
+      <p class="tag">Navegacao</p>
+      <h1>Categorias</h1>
+      <p>Escolha uma categoria para ver os produtos.</p>
+      <a class="btn" href="#lista">Ver categorias</a>
+    </section>
+
+    <div class="hero-utilities container">
+      <a class="pill" href="../descontos/">Descontos</a>
+      <a class="pill" href="../cupons/">Cupons</a>
+      <a class="pill" href="../categorias/">Categorias</a>
+      <a class="pill" href="../notificacoes/">Notificacoes</a>
+      <a class="pill" href="../perfil/">Perfil</a>
+    </div>
+  </header>
+
+  <main class="container layout">
+    <section id="lista" class="panel">
+      <h2>Escolha uma categoria</h2>
+      <p class="note">Dica: use a busca para filtrar dentro da categoria.</p>
+      <div id="cats" class="cats"></div>
+    </section>
+
+    <section class="products" style="margin-top: 1rem;">
+      <div class="products-head">
+        <h2 id="title">Todos os produtos</h2>
+      </div>
+      <div id="product-grid" class="grid"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2026 Stop mod. Todos os direitos reservados.</p>
+  </footer>
+
+  <script src="script.js?v=1"></script>
+</body>
+</html>
+
