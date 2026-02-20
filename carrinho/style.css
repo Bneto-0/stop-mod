@@ -185,6 +185,7 @@ body {
 
 .cart-page {
   margin: 1.45rem auto 2rem;
+  padding-bottom: 600px;
 }
 
 .cart-shell {
@@ -220,6 +221,11 @@ body {
   padding: 1rem;
   display: grid;
   gap: 0.9rem;
+}
+
+.cart-products {
+  min-height: 600px;
+  align-content: start;
 }
 
 .back {
