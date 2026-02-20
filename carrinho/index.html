@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=8" />
+  <link rel="stylesheet" href="style.css?v=10" />
 </head>
 <body id="top">
   <header class="hero">
@@ -80,17 +80,8 @@
               <span id="shipping-value" class="ship-value">--</span>
             </div>
 
-            <button id="coupon-toggle" class="sum-link" type="button">
-              Cupons (<span id="coupon-count">0</span>/1 em uso)
-            </button>
-
-            <div id="coupon-panel" class="coupon-panel" hidden>
-              <label class="coupon-label" for="coupon-input">Adicionar cupom</label>
-              <div class="coupon-row">
-                <input id="coupon-input" class="coupon-input" type="text" placeholder="Ex: STOP10" />
-                <button id="coupon-add" class="coupon-btn" type="button">Aplicar</button>
-              </div>
-              <button id="coupon-clear" class="coupon-clear" type="button">Limpar cupom</button>
+            <div class="sum-row">
+              <span class="sum-link-static">Cupons (<span id="coupon-count">0</span>/1 em uso)</span>
             </div>
           </div>
 
@@ -100,18 +91,8 @@
               R$ <span id="cart-total-main">0</span><sup id="cart-total-cents">00</sup>
             </span>
           </div>
+          <p id="payment-selected" class="pay-selected-inline">com Pix</p>
         </section>
-
-        <div class="pay-box">
-          <label class="pay-label" for="payment-method">Forma de pagamento</label>
-          <select id="payment-method" class="pay-select">
-            <option value="pix">Pix</option>
-            <option value="credito">Cartao de credito</option>
-            <option value="debito">Cartao de debito</option>
-            <option value="boleto">Boleto</option>
-          </select>
-          <p id="payment-selected" class="pay-selected">com Pix</p>
-        </div>
 
         <div class="cart-actions">
           <button id="checkout" class="btn primary" disabled>Finalizar compra</button>
@@ -122,6 +103,24 @@
     </div>
   </main>
 
-  <script src="script.js?v=9"></script>
+  <div id="checkout-modal" class="modal" hidden>
+    <div class="modal-backdrop" data-close="1"></div>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <h2 id="modal-title">Escolha a forma de pagamento</h2>
+      <form id="payment-form" class="modal-form">
+        <label class="pay-option"><input type="radio" name="pay" value="pix" /> Pix</label>
+        <label class="pay-option"><input type="radio" name="pay" value="credito" /> Cartao de credito</label>
+        <label class="pay-option"><input type="radio" name="pay" value="debito" /> Cartao de debito</label>
+        <label class="pay-option"><input type="radio" name="pay" value="boleto" /> Boleto</label>
+
+        <div class="modal-actions">
+          <button id="confirm-payment" class="btn primary" type="submit">Confirmar e finalizar</button>
+          <button class="btn secondary" type="button" data-close="1">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="script.js?v=11"></script>
 </body>
 </html>

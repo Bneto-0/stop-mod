@@ -361,105 +361,15 @@ body {
   font-weight: 900;
 }
 
-.sum-link {
-  padding: 0.35rem 0;
-  border: none;
-  background: transparent;
+.sum-link-static {
   color: #1a66d6;
   font-weight: 900;
-  text-align: left;
-  cursor: pointer;
 }
 
-.sum-link:hover {
-  text-decoration: underline;
-}
-
-.coupon-panel {
-  margin-top: 0.3rem;
-  padding: 0.6rem 0.75rem;
-  border: 2px solid #f0c9b8;
-  border-radius: 12px;
-  background: linear-gradient(180deg, #fff7f2 0%, #fff 100%);
-  display: grid;
-  gap: 0.5rem;
-}
-
-.coupon-label {
-  font-weight: 900;
-  color: #2f2824;
-}
-
-.coupon-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0.5rem;
-}
-
-.coupon-input {
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 0.55rem 0.7rem;
-  font-family: inherit;
-}
-
-.coupon-input:focus {
-  outline: 3px solid #ffb08055;
-  outline-offset: 2px;
-}
-
-.coupon-btn {
-  border: none;
-  border-radius: 10px;
-  background: var(--accent);
-  color: #fff;
-  font-weight: 900;
-  padding: 0.55rem 0.75rem;
-  cursor: pointer;
-}
-
-.coupon-btn:hover {
-  background: #af4124;
-}
-
-.coupon-clear {
-  border: 1px solid var(--line);
-  background: #fff;
-  color: #2f2824;
-  border-radius: 10px;
-  padding: 0.45rem 0.6rem;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.coupon-clear:hover {
-  background: #ffe3d2;
-}
-
-.pay-box {
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: #fff;
-  padding: 0.75rem;
-  display: grid;
-  gap: 0.5rem;
-}
-
-.pay-label {
-  font-weight: 900;
-  color: #2f2824;
-}
-
-.pay-select {
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 0.55rem 0.7rem;
-  font-family: inherit;
-  background: #fff;
-}
-
-.pay-selected {
-  margin-top: 0.15rem;
+.pay-selected-inline {
+  margin: -0.35rem 0 0.85rem;
+  padding: 0 0.95rem;
+  text-align: right;
   font-weight: 900;
   color: #2aa56a;
 }
@@ -474,6 +384,69 @@ body {
   margin-top: 0;
   padding: 0.9rem 1rem;
   font-size: 1rem;
+}
+
+.modal[hidden] {
+  display: none;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: #00000080;
+}
+
+.modal-card {
+  position: relative;
+  width: min(520px, 100%);
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid var(--line);
+  box-shadow: 0 20px 60px #00000025;
+  padding: 1rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.modal-card h2 {
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.modal-form {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.pay-option {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.6rem 0.7rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.pay-option:hover {
+  background: #fff7f2;
+}
+
+.modal-actions {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 0.2rem;
 }
 
 .back {

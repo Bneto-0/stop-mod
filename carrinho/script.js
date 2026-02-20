@@ -39,13 +39,10 @@ const searchInput = document.getElementById("search-input");
 const cartCount = document.getElementById("cart-count");
 const shipForm = document.getElementById("shipping-form");
 const shipCepInput = document.getElementById("ship-cep");
-const couponInput = document.getElementById("coupon-input");
-const couponAddBtn = document.getElementById("coupon-add");
-const couponClearBtn = document.getElementById("coupon-clear");
-const couponToggle = document.getElementById("coupon-toggle");
-const couponPanel = document.getElementById("coupon-panel");
-const paymentSelect = document.getElementById("payment-method");
 const paymentSelected = document.getElementById("payment-selected");
+const checkoutModal = document.getElementById("checkout-modal");
+const paymentForm = document.getElementById("payment-form");
+const confirmPaymentBtn = document.getElementById("confirm-payment");
 
 function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -178,6 +175,31 @@ function updatePaymentUI(method) {
   paymentSelected.textContent = `com ${labels[method] || "Pix"}`;
 }
 
+function openModal() {
+  if (!checkoutModal) return;
+  checkoutModal.hidden = false;
+}
+
+function closeModal() {
+  if (!checkoutModal) return;
+  checkoutModal.hidden = true;
+}
+
+function syncPaymentRadios() {
+  if (!paymentForm) return;
+  const cur = loadPayment();
+  const radios = paymentForm.querySelectorAll("input[name=\"pay\"]");
+  radios.forEach((r) => {
+    r.checked = String(r.value) === cur;
+  });
+}
+
+function selectedPaymentFromModal() {
+  if (!paymentForm) return "pix";
+  const checked = paymentForm.querySelector("input[name=\"pay\"]:checked");
+  return checked ? String(checked.value) : "pix";
+}
+
 function renderCart() {
   const ids = loadCartIds();
   updateCartCount();
@@ -292,6 +314,7 @@ function renderCart() {
   }
 
   checkoutBtn.disabled = false;
+  updatePaymentUI(loadPayment());
 
   cartItems.querySelectorAll("button[data-action][data-id]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -310,9 +333,9 @@ checkoutBtn.addEventListener("click", () => {
     feedback.textContent = "Informe o CEP para calcular o frete antes de finalizar.";
     return;
   }
-  feedback.textContent = "Pedido enviado! Obrigado pela compra.";
-  saveCartIds([]);
-  renderCart();
+  feedback.textContent = "";
+  syncPaymentRadios();
+  openModal();
 });
 
 searchInput?.addEventListener("input", renderCart);
@@ -329,37 +352,25 @@ shipForm?.addEventListener("submit", (e) => {
   renderCart();
 });
 
-couponAddBtn?.addEventListener("click", () => {
-  const code = String(couponInput?.value || "").trim().toUpperCase();
-  if (!code) return;
-  const current = loadCoupons().slice(0, 1);
-  if (!current.includes(code)) current.unshift(code);
-  saveCoupons(current.slice(0, 1));
-  if (couponInput) couponInput.value = "";
-  feedback.textContent = "Cupom aplicado.";
+checkoutModal?.querySelectorAll("[data-close]").forEach((el) => {
+  el.addEventListener("click", closeModal);
+});
+
+paymentForm?.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const method = selectedPaymentFromModal();
+  savePayment(method);
+  updatePaymentUI(method);
+  feedback.textContent = "Pedido enviado! Obrigado pela compra.";
+  saveCartIds([]);
+  closeModal();
   renderCart();
 });
 
-couponClearBtn?.addEventListener("click", () => {
-  saveCoupons([]);
-  feedback.textContent = "Cupons removidos.";
-  renderCart();
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && checkoutModal && !checkoutModal.hidden) {
+    closeModal();
+  }
 });
-
-couponToggle?.addEventListener("click", () => {
-  if (!couponPanel) return;
-  couponPanel.hidden = !couponPanel.hidden;
-});
-
-if (paymentSelect) {
-  const cur = loadPayment();
-  paymentSelect.value = cur;
-  updatePaymentUI(cur);
-  paymentSelect.addEventListener("change", () => {
-    const value = String(paymentSelect.value || "pix");
-    savePayment(value);
-    updatePaymentUI(value);
-  });
-}
 
 renderCart();
