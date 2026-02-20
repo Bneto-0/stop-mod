@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=5" />
+  <link rel="stylesheet" href="style.css?v=6" />
 </head>
 <body id="top">
   <header class="hero">
@@ -15,6 +15,13 @@
       <a class="logo-link" href="../index.html#top" aria-label="Voltar para o inicio da loja">
         <div class="logo">Stop <span>mod</span></div>
       </a>
+
+      <form id="shipping-form" class="ship-form" autocomplete="on">
+        <label class="ship-label" for="ship-cep">Entrega</label>
+        <input id="ship-cep" class="ship-input" type="text" inputmode="numeric" placeholder="CEP (00000-000)" maxlength="9" />
+        <button class="ship-btn" type="submit">Calcular frete</button>
+      </form>
+
       <div class="nav-actions full-bar">
         <div class="search-top-wrap">
           <label class="sr-only" for="search-input">Buscar produto</label>
@@ -43,7 +50,8 @@
     <div class="cart-shell">
       <header class="cart-titlebar">
         <a class="back" href="../index.html#produtos"><- Voltar para loja</a>
-        <h1>Carrinho</h1>
+        <h1 class="sr-only">Carrinho</h1>
+        <div class="cart-title-logo" aria-hidden="true">Stop <span>mod</span></div>
       </header>
 
       <section class="cart-products" aria-label="Produtos no carrinho">
@@ -51,11 +59,55 @@
       </section>
 
       <aside class="cart-summary" aria-label="Resumo do pedido">
-        <p class="total">Total: R$ <span id="cart-total">0,00</span></p>
+        <div class="summary-total">
+          <div class="total-line">
+            <span class="total-label">Total:</span>
+            <span class="total-value">R$ <span id="cart-total">0,00</span></span>
+          </div>
+          <div id="discount-line" class="discount-line" aria-live="polite">
+            <span class="strike">R$ <span id="cart-total-before">0,00</span></span>
+            <span class="discount-chip">Desconto</span>
+          </div>
+        </div>
+
+        <div class="summary-rows" aria-label="Detalhes">
+          <div class="row">
+            <span>Produtos</span>
+            <strong><span id="items-count">0</span> itens</strong>
+          </div>
+          <div class="row">
+            <span>Frete (<span id="free-ship-count">0</span>)</span>
+            <strong id="shipping-value" class="ship-value">--</strong>
+          </div>
+          <div class="row">
+            <span>Cupons</span>
+            <strong><span id="coupon-count">0</span> em uso</strong>
+          </div>
+        </div>
+
+        <div class="coupon-box">
+          <label class="coupon-label" for="coupon-input">Adicionar cupom</label>
+          <div class="coupon-row">
+            <input id="coupon-input" class="coupon-input" type="text" placeholder="Ex: STOP10" />
+            <button id="coupon-add" class="coupon-btn" type="button">Aplicar</button>
+          </div>
+          <button id="coupon-clear" class="coupon-clear" type="button">Limpar cupons</button>
+        </div>
 
         <div class="cart-actions">
           <button id="clear-cart" class="btn secondary">Esvaziar</button>
           <button id="checkout" class="btn primary" disabled>Finalizar</button>
+        </div>
+
+        <div class="pay-box">
+          <label class="pay-label" for="payment-method">Forma de pagamento</label>
+          <select id="payment-method" class="pay-select">
+            <option value="pix">Pix</option>
+            <option value="credito">Cartao de credito</option>
+            <option value="debito">Cartao de debito</option>
+            <option value="boleto">Boleto</option>
+          </select>
+          <p id="payment-selected" class="pay-selected">Pagamento: Pix</p>
         </div>
 
         <p id="feedback" class="feedback"></p>
@@ -63,6 +115,6 @@
     </div>
   </main>
 
-  <script src="script.js?v=6"></script>
+  <script src="script.js?v=7"></script>
 </body>
 </html>

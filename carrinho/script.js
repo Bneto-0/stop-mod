@@ -1,5 +1,8 @@
 const CART_KEY = "stopmod_cart";
 const MAX_CART_ITEMS = 2000;
+const SHIP_KEY = "stopmod_ship_cep";
+const COUPON_KEY = "stopmod_coupons";
+const PAY_KEY = "stopmod_payment";
 
 const products = [
   { id: 1, name: "Camiseta Oversized Street", category: "Camisetas", size: "P ao GG", price: 89.9, image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80" },
@@ -20,11 +23,24 @@ const productById = new Map(products.map((p) => [p.id, p]));
 
 const cartItems = document.getElementById("cart-items");
 const cartTotal = document.getElementById("cart-total");
+const cartTotalBefore = document.getElementById("cart-total-before");
+const discountLine = document.getElementById("discount-line");
+const itemsCount = document.getElementById("items-count");
+const shippingValue = document.getElementById("shipping-value");
+const freeShipCount = document.getElementById("free-ship-count");
+const couponCount = document.getElementById("coupon-count");
 const feedback = document.getElementById("feedback");
 const checkoutBtn = document.getElementById("checkout");
 const clearBtn = document.getElementById("clear-cart");
 const searchInput = document.getElementById("search-input");
 const cartCount = document.getElementById("cart-count");
+const shipForm = document.getElementById("shipping-form");
+const shipCepInput = document.getElementById("ship-cep");
+const couponInput = document.getElementById("coupon-input");
+const couponAddBtn = document.getElementById("coupon-add");
+const couponClearBtn = document.getElementById("coupon-clear");
+const paymentSelect = document.getElementById("payment-method");
+const paymentSelected = document.getElementById("payment-selected");
 
 function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -40,6 +56,46 @@ function loadCartIds() {
 
 function saveCartIds(ids) {
   localStorage.setItem(CART_KEY, JSON.stringify(ids));
+}
+
+function loadShipCep() {
+  return String(localStorage.getItem(SHIP_KEY) || "").trim();
+}
+
+function saveShipCep(cep) {
+  localStorage.setItem(SHIP_KEY, cep);
+}
+
+function normalizeCep(value) {
+  const digits = String(value || "").replace(/\D/g, "").slice(0, 8);
+  if (digits.length <= 5) return digits;
+  return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+}
+
+function isCepValid(value) {
+  return String(value || "").replace(/\D/g, "").length === 8;
+}
+
+function loadCoupons() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(COUPON_KEY) || "[]");
+    if (!Array.isArray(raw)) return [];
+    return raw.map((c) => String(c || "").trim().toUpperCase()).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+function saveCoupons(coupons) {
+  localStorage.setItem(COUPON_KEY, JSON.stringify(coupons));
+}
+
+function loadPayment() {
+  return String(localStorage.getItem(PAY_KEY) || "pix");
+}
+
+function savePayment(method) {
+  localStorage.setItem(PAY_KEY, method);
 }
 
 function updateCartCount() {
@@ -81,17 +137,57 @@ function removeOne(id) {
   renderCart();
 }
 
+function calcShipping(subtotal, itemCount, cep) {
+  if (!isCepValid(cep)) return null;
+  const free = subtotal >= 249.9 || itemCount >= 5;
+  return free ? 0 : 19.9;
+}
+
+function calcDiscount(subtotal, coupons) {
+  const unique = Array.from(new Set(coupons));
+  const rate = Math.min(0.2, unique.length * 0.05);
+  return subtotal * rate;
+}
+
+function setCartExtraSpace(itemCount) {
+  const extra = Math.round(Math.min(600, 120 + itemCount * 0.24));
+  document.documentElement.style.setProperty("--cart-extra", `${extra}px`);
+}
+
+function updatePaymentUI(method) {
+  if (!paymentSelected) return;
+  const labels = {
+    pix: "Pix",
+    credito: "Cartao de credito",
+    debito: "Cartao de debito",
+    boleto: "Boleto"
+  };
+  paymentSelected.textContent = `Pagamento: ${labels[method] || "Pix"}`;
+}
+
 function renderCart() {
   const ids = loadCartIds();
   updateCartCount();
+  setCartExtraSpace(ids.length);
 
   if (!ids.length) {
     cartItems.innerHTML = "<li class=\"empty\">Seu carrinho esta vazio.</li>";
     cartTotal.textContent = "0,00";
     checkoutBtn.disabled = true;
     feedback.textContent = "";
+    if (itemsCount) itemsCount.textContent = "0";
+    if (freeShipCount) freeShipCount.textContent = "0";
+    if (shippingValue) {
+      shippingValue.textContent = "--";
+      shippingValue.classList.remove("free");
+    }
+    if (couponCount) couponCount.textContent = String(loadCoupons().length);
+    if (discountLine) discountLine.style.display = "none";
     return;
   }
+
+  const cep = loadShipCep();
+  if (shipCepInput) shipCepInput.value = normalizeCep(cep);
 
   const term = (searchInput?.value || "").toLowerCase().trim();
   const grouped = groupedCart(ids).filter((item) =>
@@ -125,8 +221,44 @@ function renderCart() {
       .join("");
   }
 
-  const total = groupedCart(ids).reduce((sum, item) => sum + item.price * item.qty, 0);
-  cartTotal.textContent = formatBRL(total);
+  const subtotal = groupedCart(ids).reduce((sum, item) => sum + item.price * item.qty, 0);
+  const coupons = loadCoupons();
+  const shipping = calcShipping(subtotal, ids.length, cep);
+  const discount = calcDiscount(subtotal, coupons);
+
+  const totalBefore = subtotal + (shipping ?? 0);
+  const totalFinal = Math.max(0, totalBefore - discount);
+
+  cartTotal.textContent = formatBRL(totalFinal);
+  if (itemsCount) itemsCount.textContent = String(ids.length);
+  if (couponCount) couponCount.textContent = String(coupons.length);
+
+  if (shippingValue) {
+    if (shipping === null) {
+      shippingValue.textContent = "Calcular";
+      shippingValue.classList.remove("free");
+    } else if (shipping === 0) {
+      shippingValue.textContent = "Gratis";
+      shippingValue.classList.add("free");
+    } else {
+      shippingValue.textContent = `R$ ${formatBRL(shipping)}`;
+      shippingValue.classList.remove("free");
+    }
+  }
+
+  if (freeShipCount) {
+    freeShipCount.textContent = String(shipping === 0 ? ids.length : 0);
+  }
+
+  if (discountLine && cartTotalBefore) {
+    if (discount > 0.01) {
+      cartTotalBefore.textContent = formatBRL(totalBefore);
+      discountLine.style.display = "flex";
+    } else {
+      discountLine.style.display = "none";
+    }
+  }
+
   checkoutBtn.disabled = false;
 
   cartItems.querySelectorAll("button[data-action][data-id]").forEach((btn) => {
@@ -142,6 +274,10 @@ function renderCart() {
 checkoutBtn.addEventListener("click", () => {
   const ids = loadCartIds();
   if (!ids.length) return;
+  if (!isCepValid(loadShipCep())) {
+    feedback.textContent = "Informe o CEP para calcular o frete antes de finalizar.";
+    return;
+  }
   feedback.textContent = "Pedido enviado! Obrigado pela compra.";
   saveCartIds([]);
   renderCart();
@@ -153,5 +289,45 @@ clearBtn.addEventListener("click", () => {
 });
 
 searchInput?.addEventListener("input", renderCart);
+
+shipCepInput?.addEventListener("input", () => {
+  shipCepInput.value = normalizeCep(shipCepInput.value);
+});
+
+shipForm?.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const cep = normalizeCep(shipCepInput?.value || "");
+  saveShipCep(cep);
+  feedback.textContent = isCepValid(cep) ? "Frete calculado." : "CEP invalido. Use 8 numeros.";
+  renderCart();
+});
+
+couponAddBtn?.addEventListener("click", () => {
+  const code = String(couponInput?.value || "").trim().toUpperCase();
+  if (!code) return;
+  const current = loadCoupons();
+  if (!current.includes(code)) current.push(code);
+  saveCoupons(current.slice(0, 10));
+  if (couponInput) couponInput.value = "";
+  feedback.textContent = "Cupom aplicado.";
+  renderCart();
+});
+
+couponClearBtn?.addEventListener("click", () => {
+  saveCoupons([]);
+  feedback.textContent = "Cupons removidos.";
+  renderCart();
+});
+
+if (paymentSelect) {
+  const cur = loadPayment();
+  paymentSelect.value = cur;
+  updatePaymentUI(cur);
+  paymentSelect.addEventListener("change", () => {
+    const value = String(paymentSelect.value || "pix");
+    savePayment(value);
+    updatePaymentUI(value);
+  });
+}
 
 renderCart();
