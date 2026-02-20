@@ -32,7 +32,7 @@ body {
 .hero {
   background: linear-gradient(130deg, #2f2824 0%, #4d3f35 45%, #725745 100%);
   color: #fff6ef;
-  padding: 1.1rem 0 2.5rem;
+  padding: 1rem 0 1.1rem;
   border-bottom-left-radius: 28px;
   border-bottom-right-radius: 28px;
 }
@@ -133,7 +133,7 @@ body {
 }
 
 .hero-utilities {
-  margin-top: 0.9rem;
+  margin-top: 0.75rem;
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
@@ -184,7 +184,7 @@ body {
 }
 
 .cart-page {
-  margin: 1.45rem auto 2rem;
+  margin: 1rem auto 2rem;
   padding-bottom: 600px;
 }
 
