@@ -18,6 +18,7 @@ const products = [
 const productGrid = document.getElementById("product-grid");
 const categoryFilter = document.getElementById("category-filter");
 const searchInput = document.getElementById("search-input");
+const cartCount = document.getElementById("cart-count");
 
 function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -33,6 +34,13 @@ function loadCartIds() {
 
 function saveCartIds(ids) {
   localStorage.setItem(CART_KEY, JSON.stringify(ids));
+}
+
+function updateCartCount() {
+  if (!cartCount) return;
+  const ids = loadCartIds();
+  cartCount.textContent = String(ids.length);
+  cartCount.style.display = ids.length ? "inline-flex" : "none";
 }
 
 function populateCategories() {
@@ -87,6 +95,7 @@ function addToCart(productId) {
   const ids = loadCartIds();
   ids.push(productId);
   saveCartIds(ids);
+  updateCartCount();
 }
 
 categoryFilter.addEventListener("change", renderProducts);
@@ -94,3 +103,4 @@ searchInput.addEventListener("input", renderProducts);
 
 populateCategories();
 renderProducts();
+updateCartCount();
