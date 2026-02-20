@@ -9,16 +9,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body id="top">
   <header class="hero">
     <nav class="nav container">
-      <a class="logo-link" href="../index.html#top">
+      <a class="logo-link" href="#top">
         <div class="logo">Stop <span>mod</span></div>
       </a>
       <div class="nav-actions full-bar">
         <div class="search-top-wrap">
           <label class="sr-only" for="search-input">Buscar produto</label>
-          <input id="search-input" type="search" placeholder="Pesquisar produto" disabled />
+          <input id="search-input" type="search" placeholder="Pesquisar produto" />
         </div>
         <a class="cart-link" href="../carrinho/" aria-label="Carrinho">
           <svg class="cart-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -28,12 +28,27 @@
         </a>
       </div>
     </nav>
+
+    <section class="hero-content container">
+      <p class="tag">Colecao 2026</p>
+      <h1>Vista atitude com a Stop mod</h1>
+      <p>Roupas urbanas, caimento premium e pecas pensadas para o seu dia a dia.</p>
+      <a class="btn" href="#cart">Ver carrinho</a>
+    </section>
+
+    <div class="hero-utilities container">
+      <button class="pill" type="button">Descontos</button>
+      <button class="pill" type="button">Cupons</button>
+      <button class="pill" type="button">Categorias</button>
+      <button class="pill" type="button">Notificacoes</button>
+      <button class="pill" type="button">Perfil</button>
+    </div>
   </header>
 
-  <main class="page">
+  <main id="cart" class="cart-page container">
     <section class="cart-box">
       <header class="cart-header">
-        <a class="back" href="../index.html"><- Voltar</a>
+        <a class="back" href="../index.html#produtos"><- Voltar para loja</a>
         <h1>Carrinho</h1>
       </header>
 

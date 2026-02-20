@@ -20,6 +20,7 @@ const cartTotal = document.getElementById("cart-total");
 const feedback = document.getElementById("feedback");
 const checkoutBtn = document.getElementById("checkout");
 const clearBtn = document.getElementById("clear-cart");
+const searchInput = document.getElementById("search-input");
 
 function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -57,7 +58,10 @@ function renderCart() {
     return;
   }
 
-  const grouped = groupedCart(ids);
+  const term = (searchInput?.value || "").toLowerCase().trim();
+  const grouped = groupedCart(ids).filter((item) =>
+    !term ? true : item.name.toLowerCase().includes(term)
+  );
   cartItems.innerHTML = grouped
     .map(
       (item) => `
@@ -72,7 +76,7 @@ function renderCart() {
     )
     .join("");
 
-  const total = grouped.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const total = groupedCart(ids).reduce((sum, item) => sum + item.price * item.qty, 0);
   cartTotal.textContent = formatBRL(total);
   checkoutBtn.disabled = false;
 
@@ -105,5 +109,7 @@ clearBtn.addEventListener("click", () => {
   saveCartIds([]);
   renderCart();
 });
+
+searchInput?.addEventListener("input", renderCart);
 
 renderCart();
