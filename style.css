@@ -62,6 +62,11 @@ body {
   flex-wrap: wrap;
 }
 
+.logo-link {
+  text-decoration: none;
+  color: inherit;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -74,7 +79,7 @@ body {
 }
 
 .search-top-wrap input {
-  width: 230px;
+  width: 320px;
   border: 1px solid #ffffff40;
   border-radius: 10px;
   padding: 0.5rem 0.7rem;
@@ -120,6 +125,27 @@ body {
 .hero-content {
   margin-top: 3.2rem;
   max-width: 620px;
+}
+
+.hero-utilities {
+  margin-top: 2rem;
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.pill {
+  border: 1px solid #ffffff50;
+  background: #fff2e6;
+  color: #2f2824;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pill:hover {
+  background: #ffd7b8;
 }
 
 .tag {
