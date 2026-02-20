@@ -51,16 +51,16 @@ body {
   gap: 0.55rem;
   padding: 0.5rem 0.7rem;
   border-radius: 14px;
-  background: #ffdf4d;
+  background: #ffe3d2;
   color: #2f2824;
   text-decoration: none;
-  border: 1px solid #00000020;
-  box-shadow: 0 10px 24px #00000020;
+  border: 1px solid #ffffff40;
+  box-shadow: 0 10px 24px #00000014;
   min-width: 210px;
 }
 
 .ship-pick:hover {
-  background: #ffd44a;
+  background: #ffd7b8;
 }
 
 .ship-ic {
