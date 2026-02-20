@@ -1,8 +1,6 @@
 const CART_KEY = "stopmod_cart";
 const MAX_CART_ITEMS = 2000;
 
-const productById = new Map(products.map((p) => [p.id, p]));
-
 const products = [
   { id: 1, name: "Camiseta Oversized Street", category: "Camisetas", size: "P ao GG", price: 89.9, image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80" },
   { id: 2, name: "Calca Cargo Urban", category: "Calcas", size: "36 ao 46", price: 159.9, image: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=700&q=80" },
@@ -17,6 +15,8 @@ const products = [
   { id: 11, name: "Tenis Street Clean", category: "Calcados", size: "37 ao 43", price: 239.9, image: "https://images.unsplash.com/photo-1549298916-f52d724204b4?auto=format&fit=crop&w=700&q=80" },
   { id: 12, name: "Bolsa Tote Minimal", category: "Acessorios", size: "Unico", price: 189.9, image: "https://images.unsplash.com/photo-1495107334309-fcf20504a5ab?auto=format&fit=crop&w=700&q=80" }
 ];
+
+const productById = new Map(products.map((p) => [p.id, p]));
 
 const cartItems = document.getElementById("cart-items");
 const cartTotal = document.getElementById("cart-total");
