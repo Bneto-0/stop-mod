@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=7" />
+  <link rel="stylesheet" href="style.css?v=8" />
 </head>
 <body id="top">
   <header class="hero">
@@ -102,11 +102,6 @@
           </div>
         </section>
 
-        <div class="cart-actions">
-          <button id="clear-cart" class="btn secondary">Esvaziar</button>
-          <button id="checkout" class="btn primary" disabled>Finalizar</button>
-        </div>
-
         <div class="pay-box">
           <label class="pay-label" for="payment-method">Forma de pagamento</label>
           <select id="payment-method" class="pay-select">
@@ -118,11 +113,15 @@
           <p id="payment-selected" class="pay-selected">com Pix</p>
         </div>
 
+        <div class="cart-actions">
+          <button id="checkout" class="btn primary" disabled>Finalizar compra</button>
+        </div>
+
         <p id="feedback" class="feedback"></p>
       </aside>
     </div>
   </main>
 
-  <script src="script.js?v=8"></script>
+  <script src="script.js?v=9"></script>
 </body>
 </html>

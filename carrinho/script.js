@@ -35,7 +35,6 @@ const freeShipCount = document.getElementById("free-ship-count");
 const couponCount = document.getElementById("coupon-count");
 const feedback = document.getElementById("feedback");
 const checkoutBtn = document.getElementById("checkout");
-const clearBtn = document.getElementById("clear-cart");
 const searchInput = document.getElementById("search-input");
 const cartCount = document.getElementById("cart-count");
 const shipForm = document.getElementById("shipping-form");
@@ -312,11 +311,6 @@ checkoutBtn.addEventListener("click", () => {
     return;
   }
   feedback.textContent = "Pedido enviado! Obrigado pela compra.";
-  saveCartIds([]);
-  renderCart();
-});
-
-clearBtn.addEventListener("click", () => {
   saveCartIds([]);
   renderCart();
 });
