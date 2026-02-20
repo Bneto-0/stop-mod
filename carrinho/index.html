@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=6" />
+  <link rel="stylesheet" href="style.css?v=7" />
 </head>
 <body id="top">
   <header class="hero">
@@ -59,40 +59,48 @@
       </section>
 
       <aside class="cart-summary" aria-label="Resumo do pedido">
-        <div class="summary-total">
-          <div class="total-line">
-            <span class="total-label">Total:</span>
-            <span class="total-value">R$ <span id="cart-total">0,00</span></span>
-          </div>
-          <div id="discount-line" class="discount-line" aria-live="polite">
-            <span class="strike">R$ <span id="cart-total-before">0,00</span></span>
-            <span class="discount-chip">Desconto</span>
-          </div>
-        </div>
+        <section class="summary-card" aria-label="Resumo da compra">
+          <h2 class="summary-title">Resumo da compra</h2>
 
-        <div class="summary-rows" aria-label="Detalhes">
-          <div class="row">
-            <span>Produtos</span>
-            <strong><span id="items-count">0</span> itens</strong>
-          </div>
-          <div class="row">
-            <span>Frete (<span id="free-ship-count">0</span>)</span>
-            <strong id="shipping-value" class="ship-value">--</strong>
-          </div>
-          <div class="row">
-            <span>Cupons</span>
-            <strong><span id="coupon-count">0</span> em uso</strong>
-          </div>
-        </div>
+          <div class="summary-list">
+            <div class="sum-row">
+              <span>Produtos (<span id="items-count">0</span>)</span>
+              <span class="sum-prices">
+                <span id="products-before-wrap" class="money before" hidden>
+                  R$ <span id="products-before-main">0</span><sup id="products-before-cents">00</sup>
+                </span>
+                <span class="money now">
+                  R$ <span id="products-now-main">0</span><sup id="products-now-cents">00</sup>
+                </span>
+              </span>
+            </div>
 
-        <div class="coupon-box">
-          <label class="coupon-label" for="coupon-input">Adicionar cupom</label>
-          <div class="coupon-row">
-            <input id="coupon-input" class="coupon-input" type="text" placeholder="Ex: STOP10" />
-            <button id="coupon-add" class="coupon-btn" type="button">Aplicar</button>
+            <div class="sum-row">
+              <span>Fretes (<span id="free-ship-count">0</span>)</span>
+              <span id="shipping-value" class="ship-value">--</span>
+            </div>
+
+            <button id="coupon-toggle" class="sum-link" type="button">
+              Cupons (<span id="coupon-count">0</span>/1 em uso)
+            </button>
+
+            <div id="coupon-panel" class="coupon-panel" hidden>
+              <label class="coupon-label" for="coupon-input">Adicionar cupom</label>
+              <div class="coupon-row">
+                <input id="coupon-input" class="coupon-input" type="text" placeholder="Ex: STOP10" />
+                <button id="coupon-add" class="coupon-btn" type="button">Aplicar</button>
+              </div>
+              <button id="coupon-clear" class="coupon-clear" type="button">Limpar cupom</button>
+            </div>
           </div>
-          <button id="coupon-clear" class="coupon-clear" type="button">Limpar cupons</button>
-        </div>
+
+          <div class="sum-total">
+            <span class="sum-total-label">Total</span>
+            <span class="money total">
+              R$ <span id="cart-total-main">0</span><sup id="cart-total-cents">00</sup>
+            </span>
+          </div>
+        </section>
 
         <div class="cart-actions">
           <button id="clear-cart" class="btn secondary">Esvaziar</button>
@@ -107,7 +115,7 @@
             <option value="debito">Cartao de debito</option>
             <option value="boleto">Boleto</option>
           </select>
-          <p id="payment-selected" class="pay-selected">Pagamento: Pix</p>
+          <p id="payment-selected" class="pay-selected">com Pix</p>
         </div>
 
         <p id="feedback" class="feedback"></p>
@@ -115,6 +123,6 @@
     </div>
   </main>
 
-  <script src="script.js?v=7"></script>
+  <script src="script.js?v=8"></script>
 </body>
 </html>

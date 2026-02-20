@@ -22,9 +22,13 @@ const products = [
 const productById = new Map(products.map((p) => [p.id, p]));
 
 const cartItems = document.getElementById("cart-items");
-const cartTotal = document.getElementById("cart-total");
-const cartTotalBefore = document.getElementById("cart-total-before");
-const discountLine = document.getElementById("discount-line");
+const productsBeforeWrap = document.getElementById("products-before-wrap");
+const productsBeforeMain = document.getElementById("products-before-main");
+const productsBeforeCents = document.getElementById("products-before-cents");
+const productsNowMain = document.getElementById("products-now-main");
+const productsNowCents = document.getElementById("products-now-cents");
+const cartTotalMain = document.getElementById("cart-total-main");
+const cartTotalCents = document.getElementById("cart-total-cents");
 const itemsCount = document.getElementById("items-count");
 const shippingValue = document.getElementById("shipping-value");
 const freeShipCount = document.getElementById("free-ship-count");
@@ -39,11 +43,20 @@ const shipCepInput = document.getElementById("ship-cep");
 const couponInput = document.getElementById("coupon-input");
 const couponAddBtn = document.getElementById("coupon-add");
 const couponClearBtn = document.getElementById("coupon-clear");
+const couponToggle = document.getElementById("coupon-toggle");
+const couponPanel = document.getElementById("coupon-panel");
 const paymentSelect = document.getElementById("payment-method");
 const paymentSelected = document.getElementById("payment-selected");
 
 function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function moneyParts(value) {
+  const fixed = (Number(value) || 0).toFixed(2);
+  const [a, b] = fixed.split(".");
+  const main = Number(a).toLocaleString("pt-BR");
+  return { main, cents: b || "00" };
 }
 
 function loadCartIds() {
@@ -144,9 +157,10 @@ function calcShipping(subtotal, itemCount, cep) {
 }
 
 function calcDiscount(subtotal, coupons) {
-  const unique = Array.from(new Set(coupons));
-  const rate = Math.min(0.2, unique.length * 0.05);
-  return subtotal * rate;
+  const unique = Array.from(new Set(coupons)).slice(0, 1);
+  if (!unique.length) return 0;
+  // Simples: 10% com 1 cupom (demo).
+  return subtotal * 0.1;
 }
 
 function setCartExtraSpace(itemCount) {
@@ -162,7 +176,7 @@ function updatePaymentUI(method) {
     debito: "Cartao de debito",
     boleto: "Boleto"
   };
-  paymentSelected.textContent = `Pagamento: ${labels[method] || "Pix"}`;
+  paymentSelected.textContent = `com ${labels[method] || "Pix"}`;
 }
 
 function renderCart() {
@@ -172,7 +186,6 @@ function renderCart() {
 
   if (!ids.length) {
     cartItems.innerHTML = "<li class=\"empty\">Seu carrinho esta vazio.</li>";
-    cartTotal.textContent = "0,00";
     checkoutBtn.disabled = true;
     feedback.textContent = "";
     if (itemsCount) itemsCount.textContent = "0";
@@ -182,7 +195,15 @@ function renderCart() {
       shippingValue.classList.remove("free");
     }
     if (couponCount) couponCount.textContent = String(loadCoupons().length);
-    if (discountLine) discountLine.style.display = "none";
+    if (productsBeforeWrap) productsBeforeWrap.hidden = true;
+    if (productsNowMain && productsNowCents) {
+      productsNowMain.textContent = "0";
+      productsNowCents.textContent = "00";
+    }
+    if (cartTotalMain && cartTotalCents) {
+      cartTotalMain.textContent = "0";
+      cartTotalCents.textContent = "00";
+    }
     return;
   }
 
@@ -226,10 +247,31 @@ function renderCart() {
   const shipping = calcShipping(subtotal, ids.length, cep);
   const discount = calcDiscount(subtotal, coupons);
 
-  const totalBefore = subtotal + (shipping ?? 0);
-  const totalFinal = Math.max(0, totalBefore - discount);
+  const productsBefore = subtotal;
+  const productsNow = Math.max(0, subtotal - discount);
+  const totalFinal = Math.max(0, productsNow + (shipping ?? 0));
 
-  cartTotal.textContent = formatBRL(totalFinal);
+  const pNow = moneyParts(productsNow);
+  if (productsNowMain) productsNowMain.textContent = pNow.main;
+  if (productsNowCents) productsNowCents.textContent = pNow.cents;
+
+  if (productsBeforeWrap && productsBeforeMain && productsBeforeCents) {
+    if (discount > 0.01) {
+      const pBefore = moneyParts(productsBefore);
+      productsBeforeMain.textContent = pBefore.main;
+      productsBeforeCents.textContent = pBefore.cents;
+      productsBeforeWrap.hidden = false;
+    } else {
+      productsBeforeWrap.hidden = true;
+    }
+  }
+
+  if (cartTotalMain && cartTotalCents) {
+    const t = moneyParts(totalFinal);
+    cartTotalMain.textContent = t.main;
+    cartTotalCents.textContent = t.cents;
+  }
+
   if (itemsCount) itemsCount.textContent = String(ids.length);
   if (couponCount) couponCount.textContent = String(coupons.length);
 
@@ -248,15 +290,6 @@ function renderCart() {
 
   if (freeShipCount) {
     freeShipCount.textContent = String(shipping === 0 ? ids.length : 0);
-  }
-
-  if (discountLine && cartTotalBefore) {
-    if (discount > 0.01) {
-      cartTotalBefore.textContent = formatBRL(totalBefore);
-      discountLine.style.display = "flex";
-    } else {
-      discountLine.style.display = "none";
-    }
   }
 
   checkoutBtn.disabled = false;
@@ -305,9 +338,9 @@ shipForm?.addEventListener("submit", (e) => {
 couponAddBtn?.addEventListener("click", () => {
   const code = String(couponInput?.value || "").trim().toUpperCase();
   if (!code) return;
-  const current = loadCoupons();
-  if (!current.includes(code)) current.push(code);
-  saveCoupons(current.slice(0, 10));
+  const current = loadCoupons().slice(0, 1);
+  if (!current.includes(code)) current.unshift(code);
+  saveCoupons(current.slice(0, 1));
   if (couponInput) couponInput.value = "";
   feedback.textContent = "Cupom aplicado.";
   renderCart();
@@ -317,6 +350,11 @@ couponClearBtn?.addEventListener("click", () => {
   saveCoupons([]);
   feedback.textContent = "Cupons removidos.";
   renderCart();
+});
+
+couponToggle?.addEventListener("click", () => {
+  if (!couponPanel) return;
+  couponPanel.hidden = !couponPanel.hidden;
 });
 
 if (paymentSelect) {

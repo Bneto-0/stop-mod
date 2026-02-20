@@ -278,77 +278,100 @@ body {
   align-content: start;
 }
 
-.summary-total {
-  display: grid;
-  gap: 0.35rem;
-}
-
-.total-line {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.6rem;
-}
-
-.total-label {
-  font-size: 1.2rem;
-  font-weight: 900;
-}
-
-.total-value {
-  font-size: 1.2rem;
-  font-weight: 900;
-}
-
-.discount-line {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.6rem;
-}
-
-.strike {
-  color: #8b7f77;
-  text-decoration: line-through;
-  font-weight: 800;
-}
-
-.discount-chip {
-  font-size: 0.8rem;
-  font-weight: 900;
-  color: #2f2824;
-  background: #fff3e8;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 0.2rem 0.55rem;
-}
-
-.summary-rows {
-  display: grid;
-  gap: 0.55rem;
-  padding-top: 0.25rem;
-}
-
-.summary-rows .row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 0.6rem;
-  padding: 0.45rem 0.55rem;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: #fff;
-}
-
 .ship-value.free {
   color: #2aa56a;
+  font-weight: 900;
 }
 
-.coupon-box {
+.summary-card {
   border: 1px solid var(--line);
   border-radius: 14px;
   background: #fff;
-  padding: 0.75rem;
+  overflow: hidden;
+}
+
+.summary-title {
+  font-size: 1rem;
+  font-weight: 900;
+  padding: 0.85rem 0.95rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.summary-list {
+  padding: 0.65rem 0.95rem 0.35rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.sum-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.25rem 0;
+}
+
+.sum-prices {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45rem;
+}
+
+.money {
+  font-weight: 900;
+}
+
+.money sup {
+  font-size: 0.7em;
+  vertical-align: super;
+}
+
+.money.before {
+  color: #8b7f77;
+  text-decoration: line-through;
+}
+
+.money.now {
+  color: #2f2824;
+}
+
+.money.total {
+  font-size: 1.45rem;
+}
+
+.sum-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.5rem 0.95rem 0.85rem;
+}
+
+.sum-total-label {
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.sum-link {
+  padding: 0.35rem 0;
+  border: none;
+  background: transparent;
+  color: #1a66d6;
+  font-weight: 900;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sum-link:hover {
+  text-decoration: underline;
+}
+
+.coupon-panel {
+  margin-top: 0.3rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff7f2;
   display: grid;
   gap: 0.5rem;
 }
@@ -387,7 +410,7 @@ body {
 
 .coupon-clear {
   border: 1px solid var(--line);
-  background: #fff7f2;
+  background: #fff;
   color: #2f2824;
   border-radius: 10px;
   padding: 0.45rem 0.6rem;
