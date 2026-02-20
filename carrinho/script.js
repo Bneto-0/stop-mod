@@ -51,7 +51,7 @@ function groupedCart(ids) {
 function renderCart() {
   const ids = loadCartIds();
   if (!ids.length) {
-    cartItems.innerHTML = "<li>Seu carrinho está vazio.</li>";
+    cartItems.innerHTML = "<li>Seu carrinho esta vazio.</li>";
     cartTotal.textContent = "0,00";
     checkoutBtn.disabled = true;
     return;
@@ -62,7 +62,10 @@ function renderCart() {
     .map(
       (item) => `
       <li>
-        <span>${item.name} (${item.qty}x)</span>
+        <div class="item-meta">
+          <strong>${item.name}</strong>
+          <span>${item.qty}x - R$ ${formatBRL(item.price)} (Sub: R$ ${formatBRL(item.price * item.qty)})</span>
+        </div>
         <button class="remove" data-id="${item.id}">x</button>
       </li>
     `
