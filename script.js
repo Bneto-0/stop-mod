@@ -64,6 +64,7 @@ const cart = [];
 const productGrid = document.getElementById("product-grid");
 const cartItems = document.getElementById("cart-items");
 const cartTotal = document.getElementById("cart-total");
+const cartCount = document.getElementById("cart-count");
 const checkoutButton = document.getElementById("checkout");
 const categoryFilter = document.getElementById("category-filter");
 const searchInput = document.getElementById("search-input");
@@ -148,6 +149,10 @@ function updateCheckoutButtonState() {
   checkoutButton.disabled = !cart.length || !paymentMethod.value;
 }
 
+function updateCartCount() {
+  cartCount.textContent = String(cart.length);
+}
+
 function addToCart(productId) {
   const product = products.find((item) => item.id === productId);
   if (!product) return;
@@ -171,6 +176,7 @@ function renderCart() {
   if (!cart.length) {
     cartItems.innerHTML = "<li>Seu carrinho esta vazio.</li>";
     cartTotal.textContent = "0,00";
+    updateCartCount();
     updateCheckoutButtonState();
     return;
   }
@@ -187,6 +193,7 @@ function renderCart() {
     .join("");
 
   cartTotal.textContent = formatBRL(getCartTotal());
+  updateCartCount();
   updateCheckoutButtonState();
 }
 

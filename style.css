@@ -41,6 +41,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
 }
 
 .logo {
@@ -51,6 +52,69 @@ body {
 
 .logo span {
   color: #ffb080;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.search-top-wrap input {
+  width: 230px;
+  border: 1px solid #ffffff40;
+  border-radius: 10px;
+  padding: 0.5rem 0.7rem;
+  font-family: inherit;
+  background: #fff9f5;
+  color: #2f2824;
+}
+
+.search-top-wrap input::placeholder {
+  color: #6d6057;
+}
+
+.cart-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  text-decoration: none;
+  color: #2f2824;
+  background: #ffe3d2;
+  border-radius: 10px;
+  padding: 0.45rem 0.65rem;
+  font-weight: 700;
+}
+
+.cart-icon {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+#cart-count {
+  min-width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.76rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .hero-content {
@@ -132,7 +196,6 @@ body {
 }
 
 .filter-wrap,
-.search-wrap,
 .payment-wrap {
   display: grid;
   gap: 0.2rem;
@@ -141,17 +204,12 @@ body {
 }
 
 .filter-wrap select,
-.search-wrap input,
 .payment-wrap select {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 0.35rem 0.55rem;
   font-family: inherit;
   background: #fff;
-}
-
-.search-wrap input,
-.payment-wrap select {
   min-width: 200px;
 }
 
@@ -207,8 +265,18 @@ body {
   align-self: start;
 }
 
-.cart h3 {
+.cart-title {
   margin-bottom: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cart-title-icon {
+  width: 30px;
+  height: 30px;
+  color: var(--accent-2);
+  display: block;
 }
 
 .payment-wrap {
@@ -279,12 +347,21 @@ footer {
     position: static;
   }
 
-  .products-head {
-    align-items: stretch;
+  .nav {
+    align-items: flex-start;
   }
 
-  .search-wrap input,
+  .nav-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .search-top-wrap input,
   .payment-wrap select {
+    width: 100%;
+  }
+
+  .search-top-wrap {
     width: 100%;
   }
 }

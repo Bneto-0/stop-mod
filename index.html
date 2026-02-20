@@ -13,7 +13,19 @@
   <header class="hero">
     <nav class="nav container">
       <div class="logo">Stop <span>mod</span></div>
-      <a class="btn" href="#produtos">Comprar agora</a>
+      <div class="nav-actions">
+        <div class="search-top-wrap">
+          <label class="sr-only" for="search-input">Buscar produto</label>
+          <input id="search-input" type="search" placeholder="Pesquisar produto" />
+        </div>
+        <a class="cart-link" href="#carrinho" aria-label="Ir para o carrinho">
+          <svg class="cart-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 19a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm9 0a2 2 0 1 0 .001 4A2 2 0 0 0 17 19zM6.2 5l.6 3h11.6l-1.2 6H8.1L6.2 5zM3 2h2l2.2 11.2A2 2 0 0 0 9.2 15H18v-2H9.2l-.2-1h9.1A2 2 0 0 0 20 10.4l1-5A2 2 0 0 0 19 3H6.4l-.3-1.6A2 2 0 0 0 4.1 0H3v2z"></path>
+          </svg>
+          <span>Carrinho</span>
+          <strong id="cart-count">0</strong>
+        </a>
+      </div>
     </nav>
 
     <section class="hero-content container">
@@ -28,10 +40,6 @@
     <section id="produtos" class="products">
       <div class="products-head">
         <h2>Destaques</h2>
-        <div class="search-wrap">
-          <label for="search-input">Buscar</label>
-          <input id="search-input" type="search" placeholder="Procure por nome" />
-        </div>
         <div class="filter-wrap">
           <label for="category-filter">Categoria</label>
           <select id="category-filter">
@@ -42,8 +50,10 @@
       <div id="product-grid" class="grid"></div>
     </section>
 
-    <aside class="cart">
-      <h3>Carrinho</h3>
+    <aside id="carrinho" class="cart">
+      <h3 class="cart-title">
+        <img class="cart-title-icon" src="assets/icons/cart-solid.svg" alt="Carrinho" />
+      </h3>
       <ul id="cart-items"></ul>
       <p class="total">Total: R$ <span id="cart-total">0,00</span></p>
 
