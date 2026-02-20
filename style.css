@@ -164,15 +164,11 @@ body {
 }
 
 .layout {
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 1.25rem;
   margin-top: 1.45rem;
   margin-bottom: 2rem;
 }
 
-.products,
-.mini-products {
+.products {
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 16px;

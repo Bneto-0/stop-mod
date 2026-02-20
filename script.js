@@ -50,7 +50,6 @@
 ];
 
 const productGrid = document.getElementById("product-grid");
-const miniGrid = document.getElementById("product-mini-grid");
 const categoryFilter = document.getElementById("category-filter");
 const searchInput = document.getElementById("search-input");
 
@@ -100,25 +99,6 @@ function renderProducts() {
     )
     .join("");
 
-  renderMiniProducts(filtered);
-}
-
-function renderMiniProducts(list) {
-  if (!miniGrid) return;
-  const subset = list.slice(0, 4);
-  miniGrid.innerHTML = subset
-    .map(
-      (product) => `
-      <div class="mini-card">
-        <img src="${product.image}" alt="${product.name}" loading="lazy" />
-        <div>
-          <h4>${product.name}</h4>
-          <p class="price">R$ ${formatBRL(product.price)}</p>
-        </div>
-      </div>
-    `
-    )
-    .join("");
 }
 
 categoryFilter.addEventListener("change", renderProducts);
