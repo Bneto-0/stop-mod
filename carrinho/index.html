@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=10" />
+  <link rel="stylesheet" href="style.css?v=12" />
 </head>
 <body id="top">
   <header class="hero">
@@ -16,11 +16,17 @@
         <div class="logo">Stop <span>mod</span></div>
       </a>
 
-      <form id="shipping-form" class="ship-form" autocomplete="on">
-        <label class="ship-label" for="ship-cep">Entrega</label>
-        <input id="ship-cep" class="ship-input" type="text" inputmode="numeric" placeholder="CEP (00000-000)" maxlength="9" />
-        <button class="ship-btn" type="submit">Calcular frete</button>
-      </form>
+      <a class="ship-pick" href="../entrega/" aria-label="Selecionar endereco de entrega">
+        <span class="ship-ic" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M12 2c3.87 0 7 3.09 7 6.9 0 4.71-5.2 10.35-6.45 11.65a.8.8 0 0 1-1.1 0C10.2 19.25 5 13.61 5 8.9 5 5.09 8.13 2 12 2zm0 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"></path>
+          </svg>
+        </span>
+        <span class="ship-lines">
+          <span class="ship-top">Enviar para</span>
+          <strong id="ship-summary" class="ship-dest">Selecionar endereco</strong>
+        </span>
+      </a>
 
       <div class="nav-actions full-bar">
         <div class="search-top-wrap">
@@ -121,6 +127,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=11"></script>
+  <script src="script.js?v=12"></script>
 </body>
 </html>

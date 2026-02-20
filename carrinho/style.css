@@ -45,42 +45,56 @@ body {
   gap: 1rem;
 }
 
-.ship-form {
+.ship-pick {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  flex-wrap: wrap;
+  gap: 0.55rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 14px;
+  background: #ffdf4d;
+  color: #2f2824;
+  text-decoration: none;
+  border: 1px solid #00000020;
+  box-shadow: 0 10px 24px #00000020;
+  min-width: 210px;
+}
+
+.ship-pick:hover {
+  background: #ffd44a;
+}
+
+.ship-ic {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
 }
 
-.ship-label {
+.ship-ic svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.ship-lines {
+  display: grid;
+  line-height: 1.05;
+}
+
+.ship-lines .ship-top {
+  font-size: 0.78rem;
   font-weight: 800;
-  font-size: 0.9rem;
-  color: #fff6ef;
+  opacity: 0.9;
 }
 
-.ship-input {
-  width: 150px;
-  border: 1px solid #ffffff40;
-  border-radius: 10px;
-  padding: 0.5rem 0.7rem;
-  font-family: inherit;
-  background: #fff9f5;
-  color: #2f2824;
-}
-
-.ship-btn {
-  border: 1px solid #ffffff40;
-  background: #ffe3d2;
-  color: #2f2824;
-  border-radius: 10px;
-  padding: 0.5rem 0.65rem;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.ship-btn:hover {
-  background: #ffd7b8;
+.ship-dest {
+  font-size: 0.95rem;
+  font-weight: 900;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 240px;
 }
 
 .logo {
@@ -561,12 +575,6 @@ body {
   font-weight: 800;
 }
 
-.cart-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.6rem;
-}
-
 .btn {
   border: none;
   border-radius: 10px;
@@ -620,13 +628,8 @@ body {
     width: 100%;
   }
 
-  .ship-form {
+  .ship-pick {
     width: 100%;
     justify-content: flex-start;
-  }
-
-  .ship-input {
-    width: 100%;
-    max-width: 220px;
   }
 }

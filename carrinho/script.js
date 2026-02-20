@@ -1,6 +1,7 @@
 const CART_KEY = "stopmod_cart";
 const MAX_CART_ITEMS = 2000;
-const SHIP_KEY = "stopmod_ship_cep";
+const SHIP_KEY = "stopmod_ship_to";
+const LEGACY_SHIP_KEY = "stopmod_ship_cep";
 const COUPON_KEY = "stopmod_coupons";
 const PAY_KEY = "stopmod_payment";
 
@@ -37,8 +38,7 @@ const feedback = document.getElementById("feedback");
 const checkoutBtn = document.getElementById("checkout");
 const searchInput = document.getElementById("search-input");
 const cartCount = document.getElementById("cart-count");
-const shipForm = document.getElementById("shipping-form");
-const shipCepInput = document.getElementById("ship-cep");
+const shipSummary = document.getElementById("ship-summary");
 const paymentSelected = document.getElementById("payment-selected");
 const checkoutModal = document.getElementById("checkout-modal");
 const paymentForm = document.getElementById("payment-form");
@@ -67,12 +67,44 @@ function saveCartIds(ids) {
   localStorage.setItem(CART_KEY, JSON.stringify(ids));
 }
 
-function loadShipCep() {
-  return String(localStorage.getItem(SHIP_KEY) || "").trim();
+function loadShipTo() {
+  // New format: JSON { city, cep }
+  try {
+    const raw = localStorage.getItem(SHIP_KEY);
+    if (raw) {
+      const obj = JSON.parse(raw);
+      if (obj && typeof obj === "object") {
+        return {
+          city: String(obj.city || "").trim(),
+          cep: normalizeCep(String(obj.cep || "")),
+        };
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  // Legacy: stored CEP string
+  const legacy = String(localStorage.getItem(LEGACY_SHIP_KEY) || "").trim();
+  if (legacy) {
+    const to = { city: "", cep: normalizeCep(legacy) };
+    try {
+      localStorage.setItem(SHIP_KEY, JSON.stringify(to));
+    } catch {
+      // ignore
+    }
+    return to;
+  }
+  return { city: "", cep: "" };
 }
 
-function saveShipCep(cep) {
-  localStorage.setItem(SHIP_KEY, cep);
+function shipSummaryText(to) {
+  const city = String(to?.city || "").trim();
+  const cep = String(to?.cep || "").trim();
+  if (city && cep) return `${city} ${cep}`;
+  if (cep) return cep;
+  if (city) return city;
+  return "Selecionar endereco";
 }
 
 function normalizeCep(value) {
@@ -228,8 +260,9 @@ function renderCart() {
     return;
   }
 
-  const cep = loadShipCep();
-  if (shipCepInput) shipCepInput.value = normalizeCep(cep);
+  const shipTo = loadShipTo();
+  if (shipSummary) shipSummary.textContent = shipSummaryText(shipTo);
+  const cep = shipTo.cep;
 
   const term = (searchInput?.value || "").toLowerCase().trim();
   const grouped = groupedCart(ids).filter((item) =>
@@ -298,7 +331,7 @@ function renderCart() {
 
   if (shippingValue) {
     if (shipping === null) {
-      shippingValue.textContent = "Calcular";
+      shippingValue.textContent = "Selecionar";
       shippingValue.classList.remove("free");
     } else if (shipping === 0) {
       shippingValue.textContent = "Gratis";
@@ -329,8 +362,8 @@ function renderCart() {
 checkoutBtn.addEventListener("click", () => {
   const ids = loadCartIds();
   if (!ids.length) return;
-  if (!isCepValid(loadShipCep())) {
-    feedback.textContent = "Informe o CEP para calcular o frete antes de finalizar.";
+  if (!isCepValid(loadShipTo().cep)) {
+    feedback.textContent = "Selecione o endereco de entrega antes de finalizar.";
     return;
   }
   feedback.textContent = "";
@@ -339,18 +372,6 @@ checkoutBtn.addEventListener("click", () => {
 });
 
 searchInput?.addEventListener("input", renderCart);
-
-shipCepInput?.addEventListener("input", () => {
-  shipCepInput.value = normalizeCep(shipCepInput.value);
-});
-
-shipForm?.addEventListener("submit", (e) => {
-  e.preventDefault();
-  const cep = normalizeCep(shipCepInput?.value || "");
-  saveShipCep(cep);
-  feedback.textContent = isCepValid(cep) ? "Frete calculado." : "CEP invalido. Use 8 numeros.";
-  renderCart();
-});
 
 checkoutModal?.querySelectorAll("[data-close]").forEach((el) => {
   el.addEventListener("click", closeModal);
