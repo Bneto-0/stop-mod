@@ -46,6 +46,54 @@
     size: "P ao GG",
     price: 129.9,
     image: "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=700&q=80"
+  },
+  {
+    id: 7,
+    name: "Cardigan Tricot Cozy",
+    category: "Casacos",
+    size: "P ao G",
+    price: 149.9,
+    image: "https://images.unsplash.com/photo-1503341338985-c0477be52513?auto=format&fit=crop&w=700&q=80"
+  },
+  {
+    id: 8,
+    name: "Blazer Minimal Preto",
+    category: "Blazers",
+    size: "P ao GG",
+    price: 249.9,
+    image: "https://images.unsplash.com/photo-1484515991647-c5760fcecfc7?auto=format&fit=crop&w=700&q=80"
+  },
+  {
+    id: 9,
+    name: "Saia Midi Plissada",
+    category: "Saias",
+    size: "PP ao G",
+    price: 119.9,
+    image: "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=700&q=80"
+  },
+  {
+    id: 10,
+    name: "Short Alfaiataria",
+    category: "Shorts",
+    size: "36 ao 44",
+    price: 109.9,
+    image: "https://images.unsplash.com/photo-1542293787938-4d273c37c18d?auto=format&fit=crop&w=700&q=80"
+  },
+  {
+    id: 11,
+    name: "Tenis Street Clean",
+    category: "Calcados",
+    size: "37 ao 43",
+    price: 239.9,
+    image: "https://images.unsplash.com/photo-1549298916-f52d724204b4?auto=format&fit=crop&w=700&q=80"
+  },
+  {
+    id: 12,
+    name: "Bolsa Tote Minimal",
+    category: "Acessorios",
+    size: "Unico",
+    price: 189.9,
+    image: "https://images.unsplash.com/photo-1495107334309-fcf20504a5ab?auto=format&fit=crop&w=700&q=80"
   }
 ];
 
@@ -98,7 +146,6 @@ function renderProducts() {
     `
     )
     .join("");
-
 }
 
 categoryFilter.addEventListener("change", renderProducts);
