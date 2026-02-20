@@ -1,14 +1,4 @@
-﻿const CART_KEY = "stopmod_cart";
-const PAYMENT_KEY = "stopmod_payment_method";
-
-const paymentLabels = {
-  pix: "Pix",
-  credito: "Cartao de credito",
-  debito: "Cartao de debito",
-  boleto: "Boleto"
-};
-
-const products = [
+﻿const products = [
   {
     id: 1,
     name: "Camiseta Oversized Street",
@@ -59,17 +49,10 @@ const products = [
   }
 ];
 
-const cart = [];
-
 const productGrid = document.getElementById("product-grid");
-const cartItems = document.getElementById("cart-items");
-const cartTotal = document.getElementById("cart-total");
-const cartCount = document.getElementById("cart-count");
-const checkoutButton = document.getElementById("checkout");
+const miniGrid = document.getElementById("product-mini-grid");
 const categoryFilter = document.getElementById("category-filter");
 const searchInput = document.getElementById("search-input");
-const paymentMethod = document.getElementById("payment-method");
-const checkoutFeedback = document.getElementById("checkout-feedback");
 
 function formatBRL(value) {
   return value.toLocaleString("pt-BR", {
@@ -100,9 +83,9 @@ function getFilteredProducts() {
 }
 
 function renderProducts() {
-  const filteredProducts = getFilteredProducts();
+  const filtered = getFilteredProducts();
 
-  productGrid.innerHTML = filteredProducts
+  productGrid.innerHTML = filtered
     .map(
       (product) => `
       <article class="product-card">
@@ -111,121 +94,35 @@ function renderProducts() {
           <h4>${product.name}</h4>
           <p class="meta">${product.category} | Tam: ${product.size}</p>
           <p class="price">R$ ${formatBRL(product.price)}</p>
-          <button class="btn" onclick="addToCart(${product.id})">Adicionar ao carrinho</button>
         </div>
       </article>
     `
     )
     .join("");
+
+  renderMiniProducts(filtered);
 }
 
-function saveCart() {
-  const ids = cart.map((item) => item.id);
-  localStorage.setItem(CART_KEY, JSON.stringify(ids));
-}
-
-function loadCart() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
-    saved.forEach((id) => {
-      const product = products.find((p) => p.id === id);
-      if (product) cart.push(product);
-    });
-  } catch (err) {
-    console.warn("Falha ao carregar carrinho", err);
-  }
-}
-
-function loadPaymentMethod() {
-  const saved = localStorage.getItem(PAYMENT_KEY) || "";
-  paymentMethod.value = saved;
-}
-
-function savePaymentMethod() {
-  localStorage.setItem(PAYMENT_KEY, paymentMethod.value);
-}
-
-function updateCheckoutButtonState() {
-  checkoutButton.disabled = !cart.length || !paymentMethod.value;
-}
-
-function updateCartCount() {
-  cartCount.textContent = String(cart.length);
-}
-
-function addToCart(productId) {
-  const product = products.find((item) => item.id === productId);
-  if (!product) return;
-
-  cart.push(product);
-  saveCart();
-  renderCart();
-}
-
-function removeFromCart(index) {
-  cart.splice(index, 1);
-  saveCart();
-  renderCart();
-}
-
-function getCartTotal() {
-  return cart.reduce((sum, item) => sum + item.price, 0);
-}
-
-function renderCart() {
-  if (!cart.length) {
-    cartItems.innerHTML = "<li>Seu carrinho esta vazio.</li>";
-    cartTotal.textContent = "0,00";
-    updateCartCount();
-    updateCheckoutButtonState();
-    return;
-  }
-
-  cartItems.innerHTML = cart
+function renderMiniProducts(list) {
+  if (!miniGrid) return;
+  const subset = list.slice(0, 4);
+  miniGrid.innerHTML = subset
     .map(
-      (item, index) => `
-      <li>
-        <span>${item.name}</span>
-        <button class="remove" onclick="removeFromCart(${index})">x</button>
-      </li>
+      (product) => `
+      <div class="mini-card">
+        <img src="${product.image}" alt="${product.name}" loading="lazy" />
+        <div>
+          <h4>${product.name}</h4>
+          <p class="price">R$ ${formatBRL(product.price)}</p>
+        </div>
+      </div>
     `
     )
     .join("");
-
-  cartTotal.textContent = formatBRL(getCartTotal());
-  updateCartCount();
-  updateCheckoutButtonState();
 }
 
 categoryFilter.addEventListener("change", renderProducts);
 searchInput.addEventListener("input", renderProducts);
 
-paymentMethod.addEventListener("change", () => {
-  savePaymentMethod();
-  checkoutFeedback.textContent = "";
-  updateCheckoutButtonState();
-});
-
-checkoutButton.addEventListener("click", () => {
-  if (!cart.length) return;
-  if (!paymentMethod.value) {
-    alert("Escolha uma forma de pagamento para continuar.");
-    return;
-  }
-
-  const method = paymentLabels[paymentMethod.value] || paymentMethod.value;
-  const total = formatBRL(getCartTotal());
-
-  checkoutFeedback.textContent = `Pedido confirmado via ${method}. Total: R$ ${total}.`;
-  alert(`Pedido confirmado!\nForma de pagamento: ${method}\nTotal: R$ ${total}`);
-
-  cart.length = 0;
-  saveCart();
-  renderCart();
-});
-
 populateCategories();
-loadPaymentMethod();
-loadCart();
 renderProducts();
-renderCart();

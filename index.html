@@ -23,7 +23,6 @@
             <path d="M8 19a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm9 0a2 2 0 1 0 .001 4A2 2 0 0 0 17 19zM6.2 5l.6 3h11.6l-1.2 6H8.1L6.2 5zM3 2h2l2.2 11.2A2 2 0 0 0 9.2 15H18v-2H9.2l-.2-1h9.1A2 2 0 0 0 20 10.4l1-5A2 2 0 0 0 19 3H6.4l-.3-1.6A2 2 0 0 0 4.1 0H3v2z"></path>
           </svg>
           <span>Produtos</span>
-          <strong id="cart-count">0</strong>
         </a>
       </div>
     </nav>
@@ -50,26 +49,13 @@
       <div id="product-grid" class="grid"></div>
     </section>
 
-    <aside id="carrinho" class="cart">
-      <h3 class="cart-title">
-        <img class="cart-title-icon" src="assets/icons/cart-solid.svg" alt="Carrinho" />
-      </h3>
-      <ul id="cart-items"></ul>
-      <p class="total">Total: R$ <span id="cart-total">0,00</span></p>
-
-      <div class="payment-wrap">
-        <label for="payment-method">Forma de pagamento</label>
-        <select id="payment-method">
-          <option value="">Selecione</option>
-          <option value="pix">Pix</option>
-          <option value="credito">Cartao de credito</option>
-          <option value="debito">Cartao de debito</option>
-          <option value="boleto">Boleto</option>
-        </select>
+    <aside class="mini-products">
+      <div class="mini-header">
+        <img class="cart-title-icon" src="assets/icons/cart-solid.svg" alt="Produtos" />
+        <h3>Mais produtos</h3>
       </div>
-
-      <button id="checkout" class="btn checkout" disabled>Finalizar pedido</button>
-      <p id="checkout-feedback" class="checkout-feedback"></p>
+      <div id="product-mini-grid" class="mini-grid"></div>
+      <a class="btn mini-btn" href="#produtos">Ver todos</a>
     </aside>
   </main>
 
