@@ -32,7 +32,7 @@ body {
 .hero {
   background: linear-gradient(130deg, #2f2824 0%, #4d3f35 45%, #725745 100%);
   color: #fff6ef;
-  padding: 1.1rem 0 4rem;
+  padding: 1.1rem 0 2.5rem;
   border-bottom-left-radius: 28px;
   border-bottom-right-radius: 28px;
 }
@@ -133,7 +133,7 @@ body {
 }
 
 .hero-utilities {
-  margin-top: 1.6rem;
+  margin-top: 0.9rem;
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
@@ -283,62 +283,6 @@ body {
   margin-top: 0;
 }
 
-.mini-products {
-  padding: 1rem;
-  position: sticky;
-  top: 0.9rem;
-  align-self: start;
-  display: grid;
-  gap: 0.8rem;
-}
-
-.mini-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.cart-title-icon {
-  width: 54px;
-  height: 54px;
-  display: block;
-}
-
-.mini-grid {
-  display: grid;
-  gap: 0.55rem;
-}
-
-.mini-card {
-  display: grid;
-  grid-template-columns: 70px 1fr;
-  gap: 0.55rem;
-  align-items: center;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 0.5rem;
-}
-
-.mini-card img {
-  width: 70px;
-  height: 70px;
-  object-fit: cover;
-  border-radius: 10px;
-}
-
-.mini-card h4 {
-  margin: 0;
-  font-size: 0.95rem;
-}
-
-.mini-card .price {
-  margin: 0.15rem 0 0;
-}
-
-.mini-btn {
-  width: 100%;
-}
-
 footer {
   text-align: center;
   color: var(--muted);
@@ -348,10 +292,6 @@ footer {
 @media (max-width: 920px) {
   .layout {
     grid-template-columns: 1fr;
-  }
-
-  .mini-products {
-    position: static;
   }
 
   .nav {
