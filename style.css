@@ -54,6 +54,18 @@ body {
   color: #ffb080;
 }
 
+.logo-img {
+  height: 44px;
+  width: auto;
+  display: block;
+}
+
+@media (max-width: 520px) {
+  .logo-img {
+    height: 38px;
+  }
+}
+
 .nav-actions {
   display: flex;
   align-items: center;

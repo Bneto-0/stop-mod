@@ -54,6 +54,12 @@ body {
   color: #ffb080;
 }
 
+.logo-img {
+  height: 44px;
+  width: auto;
+  display: block;
+}
+
 .logo-link {
   text-decoration: none;
   color: inherit;
@@ -211,4 +217,3 @@ input:focus {
     justify-content: flex-start;
   }
 }
-
