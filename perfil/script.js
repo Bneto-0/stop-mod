@@ -11,6 +11,7 @@ const saveClientBtn = document.getElementById("save-client");
 const clientMsg = document.getElementById("client-msg");
 const loginMsg = document.getElementById("login-msg");
 const gbtn = document.getElementById("gbtn");
+const gWarn = document.getElementById("g-warn");
 const logoutBtn = document.getElementById("logout");
 
 const viewAuthed = document.getElementById("view-authed");
@@ -128,11 +129,16 @@ function ensureGoogleScript(cb) {
 
 function initGoogle() {
   const clientId = loadClientId();
-  if (!clientId) return;
+  if (gWarn) gWarn.hidden = true;
+  if (!clientId) {
+    if (gWarn) gWarn.hidden = false;
+    return;
+  }
 
   ensureGoogleScript(() => {
     if (!window.google || !window.google.accounts || !window.google.accounts.id) {
       loginMsg.textContent = "Nao foi possivel carregar o Google. Tente novamente.";
+      if (gWarn) gWarn.hidden = false;
       return;
     }
 
@@ -161,8 +167,15 @@ function initGoogle() {
         size: "large",
         text: "continue_with"
       });
+
+      // Hide the warning only if the button actually rendered.
+      setTimeout(() => {
+        const rendered = !!(gbtn && gbtn.querySelector("iframe, div, span, button"));
+        if (gWarn) gWarn.hidden = rendered;
+      }, 600);
     } catch {
       loginMsg.textContent = "Erro ao iniciar Google. Verifique o Client ID.";
+      if (gWarn) gWarn.hidden = false;
     }
   });
 }
