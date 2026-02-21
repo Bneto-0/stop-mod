@@ -9,6 +9,8 @@ const cartCount = document.getElementById("cart-count");
 const clientInput = document.getElementById("google-client");
 const saveClientBtn = document.getElementById("save-client");
 const clientMsg = document.getElementById("client-msg");
+const clientNote = document.getElementById("client-note");
+const clientAdv = document.getElementById("client-adv");
 const loginMsg = document.getElementById("login-msg");
 const gbtn = document.getElementById("gbtn");
 const gWarn = document.getElementById("g-warn");
@@ -52,6 +54,11 @@ function loadClientId() {
 
 function saveClientId(id) {
   localStorage.setItem(GOOGLE_CLIENT_KEY, String(id || "").trim());
+}
+
+function isLikelyGoogleClientId(v) {
+  const s = String(v || "").trim();
+  return !!s && /\.apps\.googleusercontent\.com$/i.test(s);
 }
 
 function saveProfile(p) {
@@ -331,6 +338,19 @@ saveClientBtn?.addEventListener("click", () => {
   initGoogle();
 });
 
+// Auto-save the Client ID (no need to click "Salvar").
+let clientSaveTimer = null;
+clientInput?.addEventListener("input", () => {
+  if (!clientMsg) return;
+  if (clientSaveTimer) clearTimeout(clientSaveTimer);
+  clientSaveTimer = setTimeout(() => {
+    const v = String(clientInput?.value || "").trim();
+    saveClientId(v);
+    clientMsg.textContent = !v ? "Client ID removido." : (isLikelyGoogleClientId(v) ? "Client ID salvo automaticamente." : "Salvo automaticamente (verifique se o ID esta correto).");
+    initGoogle();
+  }, 450);
+});
+
 logoutBtn?.addEventListener("click", () => {
   localStorage.removeItem(PROFILE_KEY);
   renderAuth();
@@ -351,10 +371,22 @@ accSave?.addEventListener("click", () => {
   renderAccount();
 });
 
+const hadStoredClientId = !!String(localStorage.getItem(GOOGLE_CLIENT_KEY) || "").trim();
 clientInput.value = loadClientId();
-if (!String(localStorage.getItem(GOOGLE_CLIENT_KEY) || "").trim() && DEFAULT_GOOGLE_CLIENT_ID) {
+if (!hadStoredClientId && DEFAULT_GOOGLE_CLIENT_ID) {
   localStorage.setItem(GOOGLE_CLIENT_KEY, DEFAULT_GOOGLE_CLIENT_ID);
+  if (clientMsg) clientMsg.textContent = "Client ID configurado automaticamente.";
 }
+
+// Keep advanced config collapsed for most users.
+try {
+  const current = String(clientInput?.value || "").trim();
+  const isDefault = !!DEFAULT_GOOGLE_CLIENT_ID && current === DEFAULT_GOOGLE_CLIENT_ID;
+  if (clientAdv) clientAdv.open = !isDefault && !!current;
+  if (clientNote) clientNote.textContent = isDefault
+    ? "Login Google ja esta configurado automaticamente. Se precisar, voce pode alterar o Client ID nas configuracoes avancadas."
+    : "Se voce tiver um Client ID proprio, voce pode configurar nas configuracoes avancadas.";
+} catch {}
 updateCartCount();
 initGoogle();
 renderAuth();

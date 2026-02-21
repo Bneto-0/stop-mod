@@ -102,12 +102,17 @@
       <div id="view-guest" class="grid2">
         <div class="order">
           <h2>Entrar com Google</h2>
-          <p class="muted2">Para funcionar 100%, precisa configurar o Client ID do Google.</p>
-
-          <label for="google-client">Google Client ID</label>
-          <input id="google-client" type="text" placeholder="ex: 123.apps.googleusercontent.com" />
-          <button id="save-client" class="btn" type="button">Salvar</button>
+          <p id="client-note" class="muted2">Login Google ja esta configurado automaticamente. Se precisar, voce pode alterar o Client ID nas configuracoes avancadas.</p>
           <p id="client-msg" class="ok"></p>
+
+          <details id="client-adv" style="margin-top:.2rem;">
+            <summary>Configuracoes avancadas</summary>
+            <div class="grid2" style="margin-top:.7rem;">
+              <label for="google-client">Google Client ID</label>
+              <input id="google-client" type="text" placeholder="ex: 123.apps.googleusercontent.com" />
+              <button id="save-client" class="btn" type="button">Salvar</button>
+            </div>
+          </details>
 
           <div id="gbtn" style="margin-top:.8rem;"></div>
           <p id="login-msg" class="ok"></p>
@@ -165,6 +170,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=4"></script>
+  <script src="script.js?v=5"></script>
 </body>
 </html>
