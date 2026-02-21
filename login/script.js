@@ -1,4 +1,5 @@
 const GOOGLE_CLIENT_KEY = "stopmod_google_client_id";
+const DEFAULT_GOOGLE_CLIENT_ID = "887504211072-0elgoi3dbg80bb9640vvlqfl7cp8guq5.apps.googleusercontent.com";
 const PROFILE_KEY = "stopmod_profile";
 const PROFILE_EXTRA_KEY = "stopmod_profile_extra";
 const USERS_KEY = "stopmod_users";
@@ -382,7 +383,7 @@ function jwtPayload(token) {
 }
 
 function googleSignIn() {
-  const clientId = String(localStorage.getItem(GOOGLE_CLIENT_KEY) || "").trim();
+  const clientId = String(localStorage.getItem(GOOGLE_CLIENT_KEY) || DEFAULT_GOOGLE_CLIENT_ID || "").trim();
   if (!clientId) {
     openModal(
       "Configurar Google",
@@ -416,6 +417,11 @@ function googleSignIn() {
       }, 450);
     });
     return;
+  }
+
+  // Persist default so Perfil page can render the Google button without extra steps.
+  if (!String(localStorage.getItem(GOOGLE_CLIENT_KEY) || "").trim() && DEFAULT_GOOGLE_CLIENT_ID) {
+    localStorage.setItem(GOOGLE_CLIENT_KEY, DEFAULT_GOOGLE_CLIENT_ID);
   }
 
   ensureGoogleScript(() => {

@@ -1,5 +1,6 @@
 const CART_KEY = "stopmod_cart";
 const GOOGLE_CLIENT_KEY = "stopmod_google_client_id";
+const DEFAULT_GOOGLE_CLIENT_ID = "887504211072-0elgoi3dbg80bb9640vvlqfl7cp8guq5.apps.googleusercontent.com";
 const PROFILE_KEY = "stopmod_profile";
 const PROFILE_EXTRA_KEY = "stopmod_profile_extra";
 const ORDERS_KEY = "stopmod_orders";
@@ -45,7 +46,7 @@ function updateCartCount() {
 }
 
 function loadClientId() {
-  return String(localStorage.getItem(GOOGLE_CLIENT_KEY) || "").trim();
+  return String(localStorage.getItem(GOOGLE_CLIENT_KEY) || DEFAULT_GOOGLE_CLIENT_ID || "").trim();
 }
 
 function saveClientId(id) {
@@ -338,6 +339,9 @@ accSave?.addEventListener("click", () => {
 });
 
 clientInput.value = loadClientId();
+if (!String(localStorage.getItem(GOOGLE_CLIENT_KEY) || "").trim() && DEFAULT_GOOGLE_CLIENT_ID) {
+  localStorage.setItem(GOOGLE_CLIENT_KEY, DEFAULT_GOOGLE_CLIENT_ID);
+}
 updateCartCount();
 initGoogle();
 renderAuth();
