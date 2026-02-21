@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../style.css?v=6" />
   <style>
+    .hero { padding-bottom: 1.3rem; }
     .panel { background: var(--card); border:1px solid var(--line); border-radius: 16px; padding: 1rem; box-shadow: 0 10px 24px #2f211810; }
     .muted2 { color: var(--muted); font-size: .92rem; }
 
@@ -69,24 +70,15 @@
         </a>
       </div>
     </nav>
-
-    <section class="hero-content container" style="max-width: 760px;">
-      <p class="tag">Conta</p>
-      <h1>Perfil</h1>
-      <p>Entre com Google para ver seus dados pessoais, pedidos e acompanhar entregas.</p>
-      <a class="btn" href="#perfil">Abrir perfil</a>
-    </section>
-
-    <div class="hero-utilities container">
-      <a class="pill" href="../descontos/">Descontos</a>
-      <a class="pill" href="../cupons/">Cupons</a>
-      <a class="pill" href="../categorias/">Categorias</a>
-      <a class="pill" href="../notificacoes/">Notificacoes</a>
-      <a class="pill" href="../login/">Criar conta</a>
-    </div>
   </header>
 
   <main class="container layout">
+    <header style="margin-bottom:.9rem;">
+      <p class="tag">Conta</p>
+      <h1 style="margin-top:.25rem;">Perfil</h1>
+      <p style="color: var(--muted); margin-top:.35rem;">Gerencie sua conta, pedidos e acompanhe entregas.</p>
+    </header>
+
     <section id="perfil" class="panel">
       <div class="header">
         <div class="who">
@@ -170,6 +162,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=5"></script>
+  <script src="script.js?v=6"></script>
 </body>
 </html>
