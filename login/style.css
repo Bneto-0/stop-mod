@@ -251,6 +251,22 @@ input:focus {
   font-weight: 800;
 }
 
+.legal {
+  margin-top: 0.65rem;
+  text-align: center;
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.legal a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.legal a:hover {
+  text-decoration: underline;
+}
+
 .modal[hidden] {
   display: none;
 }
