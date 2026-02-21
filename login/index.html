@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Entrar | Stop mod</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css?v=1" />
+</head>
+<body>
+  <main class="page">
+    <section class="card" aria-label="Login">
+      <header class="head">
+        <a class="brand" href="../index.html#top" aria-label="Voltar para a loja">
+          <span class="b1">Stop</span> <span class="b2">mod</span>
+        </a>
+        <h1>Entrar</h1>
+      </header>
+
+      <form id="login-form" class="form">
+        <label class="sr-only" for="login-id">Usuario</label>
+        <input id="login-id" type="text" placeholder="Numero de telefone/Nome do usuario/Email" autocomplete="username" />
+
+        <div class="pw-wrap">
+          <label class="sr-only" for="login-pass">Senha</label>
+          <input id="login-pass" type="password" placeholder="Senha" autocomplete="current-password" />
+          <button id="pw-toggle" class="pw-toggle" type="button" aria-label="Mostrar senha">ver</button>
+        </div>
+
+        <button id="login-btn" class="btn primary" type="submit">ENTRAR</button>
+      </form>
+
+      <div class="help-row">
+        <button id="forgot" class="link" type="button">Esqueci minha senha</button>
+        <button id="sms" class="link" type="button">Fazer login com SMS</button>
+      </div>
+
+      <div class="or">
+        <span>OU</span>
+      </div>
+
+      <div class="social">
+        <button id="fb" class="btn ghost" type="button">
+          <span class="soc-ic fb">f</span>
+          Facebook
+        </button>
+        <button id="google" class="btn ghost" type="button">
+          <span class="soc-ic g">G</span>
+          Google
+        </button>
+      </div>
+
+      <p id="msg" class="msg" aria-live="polite"></p>
+
+      <div class="foot">
+        <span>Novo na Stop mod?</span>
+        <button id="go-register" class="link strong" type="button">Cadastrar</button>
+      </div>
+    </section>
+
+    <section class="card" id="register-card" aria-label="Cadastro" hidden>
+      <header class="head">
+        <h2>Cadastrar</h2>
+        <p class="muted">Crie uma conta simples (demo) para acessar seu perfil.</p>
+      </header>
+
+      <form id="register-form" class="form">
+        <input id="reg-name" type="text" placeholder="Nome completo" autocomplete="name" />
+        <input id="reg-email" type="email" placeholder="Email" autocomplete="email" />
+        <input id="reg-phone" type="text" placeholder="Telefone" autocomplete="tel" />
+        <div class="pw-wrap">
+          <input id="reg-pass" type="password" placeholder="Senha" autocomplete="new-password" />
+          <button id="reg-pw-toggle" class="pw-toggle" type="button" aria-label="Mostrar senha">ver</button>
+        </div>
+        <button class="btn primary" type="submit">CRIAR CONTA</button>
+      </form>
+
+      <p id="reg-msg" class="msg" aria-live="polite"></p>
+
+      <div class="foot">
+        <span>Ja tem conta?</span>
+        <button id="go-login" class="link strong" type="button">Entrar</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js?v=1"></script>
+</body>
+</html>
