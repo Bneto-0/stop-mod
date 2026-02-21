@@ -4,6 +4,7 @@ const SHIP_KEY = "stopmod_ship_to";
 const LEGACY_SHIP_KEY = "stopmod_ship_cep";
 const COUPON_KEY = "stopmod_coupons";
 const PAY_KEY = "stopmod_payment";
+const ORDERS_KEY = "stopmod_orders";
 
 const products = [
   { id: 1, name: "Camiseta Oversized Street", category: "Camisetas", size: "P ao GG", price: 89.9, image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80" },
@@ -131,6 +132,19 @@ function saveCoupons(coupons) {
   localStorage.setItem(COUPON_KEY, JSON.stringify(coupons));
 }
 
+function loadOrders() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(ORDERS_KEY) || "[]");
+    return Array.isArray(raw) ? raw : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveOrders(orders) {
+  localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+}
+
 function loadPayment() {
   return String(localStorage.getItem(PAY_KEY) || "pix");
 }
@@ -189,6 +203,53 @@ function calcDiscount(subtotal, coupons) {
   if (!unique.length) return 0;
   // Simples: 10% com 1 cupom (demo).
   return subtotal * 0.1;
+}
+
+function genOrderId() {
+  const rnd = Math.random().toString(16).slice(2, 6).toUpperCase();
+  return `SM-${Date.now().toString(36).toUpperCase()}-${rnd}`;
+}
+
+function genTrackingCode() {
+  const rnd = Math.random().toString(36).slice(2, 10).toUpperCase();
+  return `BR${rnd}`;
+}
+
+function createOrder(paymentMethod) {
+  const ids = loadCartIds();
+  if (!ids.length) return null;
+
+  const shipTo = loadShipTo();
+  const coupons = loadCoupons();
+  const grouped = groupedCart(ids);
+  const subtotal = grouped.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const shipping = calcShipping(subtotal, ids.length, shipTo.cep);
+  const discount = calcDiscount(subtotal, coupons);
+  const total = Math.max(0, Math.max(0, subtotal - discount) + (shipping ?? 0));
+
+  const order = {
+    id: genOrderId(),
+    createdAt: new Date().toISOString(),
+    payment: String(paymentMethod || "pix"),
+    shipTo,
+    coupon: coupons[0] || "",
+    totals: { subtotal, shipping: shipping ?? 0, discount, total },
+    tracking: { code: genTrackingCode(), status: "Preparando" },
+    items: grouped.map((it) => ({
+      id: it.id,
+      name: it.name,
+      price: it.price,
+      qty: it.qty,
+      image: it.image || "",
+      category: it.category || "",
+      size: it.size || ""
+    }))
+  };
+
+  const orders = loadOrders();
+  orders.unshift(order);
+  saveOrders(orders.slice(0, 100));
+  return order;
 }
 
 function setCartExtraSpace(itemCount) {
@@ -382,8 +443,11 @@ paymentForm?.addEventListener("submit", (e) => {
   const method = selectedPaymentFromModal();
   savePayment(method);
   updatePaymentUI(method);
-  feedback.textContent = "Pedido enviado! Obrigado pela compra.";
+  const order = createOrder(method);
+  feedback.textContent = order ? `Pedido confirmado: ${order.id}` : "Pedido enviado! Obrigado pela compra.";
   saveCartIds([]);
+  // Consome o cupom (1 por compra).
+  saveCoupons([]);
   closeModal();
   renderCart();
 });

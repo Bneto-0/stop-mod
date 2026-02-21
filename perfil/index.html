@@ -7,17 +7,50 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../style.css?v=3" />
+  <link rel="stylesheet" href="../style.css?v=4" />
   <style>
     .panel { background: var(--card); border:1px solid var(--line); border-radius: 16px; padding: 1rem; box-shadow: 0 10px 24px #2f211810; }
-    .row { display:flex; gap:1rem; flex-wrap:wrap; }
-    .box { flex: 1 1 320px; }
     .muted2 { color: var(--muted); font-size: .92rem; }
-    label { display:grid; gap:.25rem; font-weight: 900; margin-top: .65rem; }
+
+    .header { display:flex; gap: 1rem; flex-wrap:wrap; align-items:center; justify-content:space-between; }
+    .who { display:flex; gap: .8rem; align-items:center; flex-wrap:wrap; }
+    .who img { width: 56px; height: 56px; border-radius: 16px; object-fit: cover; border: 1px solid var(--line); background: #fff; }
+    .who .txt { display:grid; gap:.1rem; }
+    .who .txt strong { font-size: 1.1rem; }
+
+    .tabs { display:flex; gap:.5rem; flex-wrap:wrap; margin-top: .9rem; }
+    .tbtn { border:1px solid var(--line); background:#fff3e8; color:#2f2824; border-radius:999px; padding:.46rem .9rem; font-weight:900; cursor:pointer; }
+    .tbtn.active { background:#ffd7b8; border-color:#eac8bb; }
+
+    .grid2 { display:grid; gap: .8rem; margin-top: 1rem; }
+
+    label { display:grid; gap:.25rem; font-weight: 900; }
     input { border:1px solid var(--line); border-radius: 10px; padding:.6rem .7rem; font-family: inherit; }
     input:focus { outline: 3px solid #ffb08055; outline-offset: 2px; }
-    .ok { color:#18663f; font-weight:900; min-height:1rem; margin-top:.75rem; }
+
+    .ok { color:#18663f; font-weight:900; min-height:1rem; margin-top:.6rem; }
     .warn { color:#8c3c26; font-weight:900; }
+
+    .order, .track { border:1px solid var(--line); border-radius: 14px; padding: .85rem; background:#fff; }
+    .order-top { display:flex; gap: 1rem; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; }
+    .order-id { font-weight: 900; letter-spacing: .3px; }
+    .order-total { font-weight: 900; font-size: 1.05rem; }
+    .order-mid { display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; margin-top: .45rem; }
+    .chip { font-weight:900; font-size:.78rem; padding:.18rem .55rem; border-radius:999px; background:#fff3e8; border:1px solid var(--line); }
+    details summary { cursor:pointer; font-weight: 900; margin-top: .55rem; }
+    .items { display:grid; gap:.55rem; margin-top: .6rem; }
+    .item { display:flex; gap:.6rem; align-items:center; }
+    .item img { width: 42px; height: 42px; border-radius: 10px; object-fit: cover; border: 1px solid var(--line); }
+
+    .bar { height: 10px; border-radius: 999px; background: #f2ece5; overflow:hidden; border: 1px solid var(--line); margin-top: .55rem; }
+    .bar-fill { height: 100%; background: var(--accent); width: 25%; }
+    .steps { display:flex; gap:.4rem; flex-wrap:wrap; margin-top: .55rem; }
+    .step { font-weight: 900; font-size: .78rem; padding: .18rem .55rem; border-radius: 999px; border:1px solid var(--line); background:#fff; color: var(--muted); }
+    .step.done { background:#e9fff1; border-color:#b9e3c8; color:#18663f; }
+
+    @media (max-width: 720px) {
+      .header { justify-content:flex-start; }
+    }
   </style>
 </head>
 <body id="top">
@@ -40,7 +73,7 @@
     <section class="hero-content container" style="max-width: 760px;">
       <p class="tag">Conta</p>
       <h1>Perfil</h1>
-      <p>Entre com Google para salvar suas informacoes e acompanhar pedidos.</p>
+      <p>Entre com Google para ver seus dados pessoais, pedidos e acompanhar entregas.</p>
       <a class="btn" href="#perfil">Abrir perfil</a>
     </section>
 
@@ -55,11 +88,21 @@
 
   <main class="container layout">
     <section id="perfil" class="panel">
-      <div class="row">
-        <div class="box">
+      <div class="header">
+        <div class="who">
+          <img id="avatar" alt="Foto do perfil" src="../assets/icons/cart-solid.svg" />
+          <div class="txt">
+            <strong id="name">Nao logado</strong>
+            <span id="email" class="muted2">Entre com Google para ver seus pedidos.</span>
+          </div>
+        </div>
+        <button id="logout" class="btn" type="button" style="background:#fff5ef; color:#8c3c26; border:1px solid #eac8bb;">Sair</button>
+      </div>
+
+      <div id="view-guest" class="grid2">
+        <div class="order">
           <h2>Entrar com Google</h2>
           <p class="muted2">Para funcionar 100%, precisa configurar o Client ID do Google.</p>
-          <p class="muted2">Se voce ainda nao tem, eu te ajudo a criar depois.</p>
 
           <label for="google-client">Google Client ID</label>
           <input id="google-client" type="text" placeholder="ex: 123.apps.googleusercontent.com" />
@@ -70,22 +113,55 @@
           <p id="login-msg" class="ok"></p>
           <p class="warn" style="margin-top:.4rem;">Se o botao nao aparecer, faltou configurar o Client ID.</p>
         </div>
+      </div>
 
-        <div class="box">
-          <h2>Meus dados</h2>
-          <p class="muted2">Depois do login, aparece aqui.</p>
-          <p id="me" style="margin-top:.6rem; font-weight:900;">Nao logado.</p>
-          <button id="logout" class="btn" type="button" style="background:#fff5ef; color:#8c3c26; border:1px solid #eac8bb;">Sair</button>
+      <div id="view-authed" hidden>
+        <div class="tabs">
+          <button class="tbtn active" type="button" data-tab="account">Minha conta</button>
+          <button class="tbtn" type="button" data-tab="orders">Pedidos</button>
+          <button class="tbtn" type="button" data-tab="tracking">Minhas compras</button>
+        </div>
+
+        <div class="grid2" data-panel="account">
+          <div class="order">
+            <h2>Minha conta</h2>
+            <p class="muted2">Edite seus dados pessoais. Endereco voce ajusta na pagina Entrega.</p>
+            <div class="grid2" style="margin-top:.7rem;">
+              <label>Nome
+                <input id="acc-name" type="text" placeholder="Seu nome" />
+              </label>
+              <label>Telefone
+                <input id="acc-phone" type="text" placeholder="(11) 99999-9999" />
+              </label>
+              <button id="acc-save" class="btn" type="button">Salvar alteracoes</button>
+              <p id="acc-msg" class="ok"></p>
+              <a class="btn" href="../entrega/" style="text-decoration:none; background:#ffe3d2; color:#2f2824;">Editar endereco (Entrega)</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid2" data-panel="orders" hidden>
+          <div>
+            <h2>Meus pedidos</h2>
+            <div id="orders-list" class="grid2" style="margin-top:.7rem;"></div>
+          </div>
+        </div>
+
+        <div class="grid2" data-panel="tracking" hidden>
+          <div>
+            <h2>Minhas compras (rastreio)</h2>
+            <div id="track-list" class="grid2" style="margin-top:.7rem;"></div>
+          </div>
         </div>
       </div>
     </section>
   </main>
 
   <footer>
-    <p>© 2026 Stop mod. Todos os direitos reservados.</p>
+    <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=1"></script>
+  <script src="script.js?v=2"></script>
 </body>
 </html>
 
