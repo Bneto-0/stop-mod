@@ -333,7 +333,7 @@ accSave?.addEventListener("click", () => {
   extra.displayName = String(accName?.value || "").trim();
   extra.phone = String(accPhone?.value || "").trim();
   saveExtra(extra);
-  accMsg.textContent = "Perfil atualizado.";
+  accMsg.textContent = "Conta atualizada.";
   renderAccount();
 });
 
@@ -341,4 +341,3 @@ clientInput.value = loadClientId();
 updateCartCount();
 initGoogle();
 renderAuth();
-
