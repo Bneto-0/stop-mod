@@ -310,8 +310,8 @@ function renderAccount() {
   emailEl.textContent = "Conta conectada";
   if (cornerLabel) cornerLabel.textContent = displayName;
   if (avatarEl) {
-    const pic = String(p?.picture || "").trim();
-    avatarEl.src = pic || "../assets/icons/user-solid.svg";
+    // Keep a consistent profile icon here (avoid showing a second avatar/photo in Perfil).
+    avatarEl.src = "../assets/icons/user-solid.svg";
   }
 }
 

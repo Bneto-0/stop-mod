@@ -13,8 +13,7 @@
     .panel { background: var(--card); border:1px solid var(--line); border-radius: 16px; padding: 1rem; box-shadow: 0 10px 24px #2f211810; }
     .muted2 { color: var(--muted); font-size: .92rem; }
 
-    .hero-row { margin-top: 3.2rem; display:flex; align-items:flex-end; justify-content:space-between; gap: 1.2rem; flex-wrap:wrap; }
-    .hero-row .hero-content { margin-top: 0; max-width: 560px; flex: 1 1 420px; }
+    .hero-row { margin-top: 3.2rem; }
 
     .hero-perfil-icon {
       width: 44px;
@@ -54,7 +53,7 @@
       box-shadow: 0 18px 46px #00000022;
       color: #fff6ef;
       font-weight: 900;
-      font-size: clamp(1.15rem, 2.4vw, 1.65rem);
+      font-size: clamp(1.05rem, 2.2vw, 1.45rem);
       letter-spacing: .2px;
       line-height: 1;
       user-select: none;
@@ -62,6 +61,35 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    .hero-logout {
+      position: absolute;
+      right: 1.1rem;
+      bottom: 1.15rem;
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      border: 1px solid #ffffff40;
+      background: #fff3e8;
+      color: #2f2824;
+      box-shadow: 0 18px 46px #00000022;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-weight: 900;
+      font-family: inherit;
+    }
+
+    .hero-logout:hover {
+      background: #ffd7b8;
+    }
+
+    .hero-logout svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
     }
 
     .hero-chip {
@@ -125,6 +153,7 @@
       .hero-chip .txt { min-width: 0; }
       .hero-perfil-icon { left: .9rem; bottom: .95rem; }
       .hero-perfil-label { left: calc(.9rem + 44px + 10px); bottom: .95rem; }
+      .hero-logout { right: .9rem; bottom: .95rem; }
     }
   </style>
 </head>
@@ -151,21 +180,11 @@
     <div class="hero-perfil-label" aria-label="Nome do cliente">
       <span id="corner-label">Perfil</span>
     </div>
-    <section class="hero-row container">
-      <div class="hero-content">
-        <h1 class="sr-only">Perfil</h1>
-      </div>
-
-      <div class="hero-chip" aria-label="Resumo do usuario">
-        <div class="txt">
-          <strong id="name">Nao logado</strong>
-          <span id="email" class="muted2">Faca login para ver seus pedidos.</span>
-        </div>
-        <div class="actions">
-          <button id="logout" class="btn" type="button" style="background:#fff5ef; color:#8c3c26; border:1px solid #eac8bb;">Sair</button>
-        </div>
-      </div>
-    </section>
+    <button id="logout" class="hero-logout" type="button" aria-label="Sair" title="Sair">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M10 17l1.41-1.41L8.83 13H21v-2H8.83l2.58-2.59L10 7l-7 7 7 7z"></path>
+      </svg>
+    </button>
   </header>
 
   <main class="container layout">
@@ -241,6 +260,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=16"></script>
+  <script src="script.js?v=17"></script>
 </body>
 </html>
