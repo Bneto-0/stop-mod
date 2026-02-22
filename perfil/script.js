@@ -287,7 +287,7 @@ function setTab(tabId) {
 function getRequestedTab() {
   try {
     const tab = String(new URLSearchParams(window.location.search).get("tab") || "").trim().toLowerCase();
-    const allowed = new Set(["account", "orders", "tracking", "processing", "favorites"]);
+    const allowed = new Set(["account"]);
     return allowed.has(tab) ? tab : "";
   } catch {
     return "";
@@ -513,6 +513,8 @@ tabBtns.forEach((b) => {
 openPanelBtns.forEach((b) => {
   b.addEventListener("click", () => {
     const tabId = String(b.getAttribute("data-open-panel") || "account");
+    const targetPanel = document.querySelector(`[data-panel="${tabId}"]`);
+    if (!targetPanel) return;
     if (detailSections) detailSections.hidden = false;
     setTab(tabId);
     if (detailSections && typeof detailSections.scrollIntoView === "function") {
