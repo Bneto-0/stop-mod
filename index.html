@@ -97,7 +97,7 @@
     }
 
     .search-top-wrap {
-      width: min(360px, 42vw);
+      width: clamp(300px, 34vw, 560px);
     }
 
     .search-top-wrap input {
@@ -169,8 +169,9 @@
     }
 
     .hero-main {
-      margin-top: 0.8rem;
+      margin-top: 0.35rem;
       display: block;
+      position: relative;
     }
 
     .hero-banner {
@@ -184,8 +185,8 @@
       display: block;
       text-decoration: none;
       color: inherit;
-      border: 2px solid #ffffff66;
-      border-radius: 10px;
+      border: none;
+      border-radius: 0;
       background:
         radial-gradient(circle at 14% 20%, #ffffff10, transparent 25%),
         linear-gradient(130deg, #3a2e25 0%, #6e5442 100%);
@@ -210,6 +211,19 @@
 
     .hero-ad.dragging {
       cursor: grabbing;
+    }
+
+    /* Transparent effect only on the bottom edge of the banner. */
+    .hero-main::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: clamp(54px, 10vw, 140px);
+      background: linear-gradient(to bottom, #f7f3ee00 0%, #f7f3eeef 100%);
+      pointer-events: none;
+      z-index: 2;
     }
 
     .ad-arrow {
@@ -269,12 +283,13 @@
     }
 
     .hero-menu {
-      margin-top: 0.32rem;
+      margin-top: 0.45rem;
+      margin-bottom: 0.35rem;
       display: flex;
       align-items: center;
       gap: clamp(0.9rem, 1.6vw, 2.4rem);
       flex-wrap: wrap;
-      padding-bottom: 0.25rem;
+      padding-bottom: 0;
     }
 
     .hero-menu a {
@@ -371,15 +386,6 @@
       </div>
     </nav>
 
-    <section class="hero-main container" aria-label="Destaque inicial">
-      <a id="ad-main-link" class="hero-banner hero-ad" href="anuncios/" aria-label="Anuncio em destaque">
-        <img id="ad-main-image" src="" alt="Anuncio destaque" loading="lazy" />
-        <span class="ad-arrow ad-prev" data-nav="prev" role="button" tabindex="0" aria-label="Anuncio anterior">&#10094;</span>
-        <span class="ad-arrow ad-next" data-nav="next" role="button" tabindex="0" aria-label="Proximo anuncio">&#10095;</span>
-        <div id="ad-main-dots" class="ad-dots" aria-hidden="true"></div>
-      </a>
-    </section>
-
     <div class="hero-menu container">
       <a class="em" href="perfil/?tab=orders">Pedidos</a>
       <a href="perfil/?tab=favorites">Favoritos</a>
@@ -387,6 +393,15 @@
       <a class="em" href="cupons/">Cupons</a>
       <a href="categorias/">Categorias</a>
     </div>
+
+    <section class="hero-main" aria-label="Destaque inicial">
+      <a id="ad-main-link" class="hero-banner hero-ad" href="anuncios/" aria-label="Anuncio em destaque">
+        <img id="ad-main-image" src="" alt="Anuncio destaque" loading="lazy" />
+        <span class="ad-arrow ad-prev" data-nav="prev" role="button" tabindex="0" aria-label="Anuncio anterior">&#10094;</span>
+        <span class="ad-arrow ad-next" data-nav="next" role="button" tabindex="0" aria-label="Proximo anuncio">&#10095;</span>
+        <div id="ad-main-dots" class="ad-dots" aria-hidden="true"></div>
+      </a>
+    </section>
   </header>
 
   <main class="container layout">
@@ -406,6 +421,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=10"></script>
+  <script src="script.js?v=11"></script>
 </body>
 </html>
