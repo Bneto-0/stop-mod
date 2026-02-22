@@ -42,6 +42,7 @@ const trackList = document.getElementById("track-list");
 const favoritesList = document.getElementById("favorites-list");
 
 let lastAuthTouchAt = 0;
+let redirectingToLogin = false;
 
 function loadCartIds() {
   try {
@@ -113,6 +114,17 @@ function loadActiveProfile() {
   }
 
   return profile;
+}
+
+function resolveLoginUrlFromProfile() {
+  const nextPath = `../perfil/${window.location.search || ""}${window.location.hash || ""}`;
+  return `../login/?next=${encodeURIComponent(nextPath)}`;
+}
+
+function goToLoginFromProfile() {
+  if (redirectingToLogin) return;
+  redirectingToLogin = true;
+  window.location.href = resolveLoginUrlFromProfile();
 }
 
 function bindAuthActivity() {
@@ -427,7 +439,8 @@ function renderAuth() {
     if (emailEl) emailEl.textContent = "Faca login para ver seus pedidos.";
     if (cornerLabel) cornerLabel.textContent = "Perfil";
     if (avatarEl) avatarEl.src = "../assets/icons/user-solid.svg";
-    return;
+    goToLoginFromProfile();
+    return false;
   }
 
   touchAuthSession(true);
@@ -435,6 +448,7 @@ function renderAuth() {
   renderOrders();
   renderFavorites();
   setTab(getRequestedTab() || "account");
+  return true;
 }
 
 saveClientBtn?.addEventListener("click", () => {
@@ -459,7 +473,7 @@ clientInput?.addEventListener("input", () => {
 
 logoutBtn?.addEventListener("click", () => {
   clearAuthSession();
-  renderAuth();
+  goToLoginFromProfile();
 });
 
 tabBtns.forEach((b) => {
@@ -494,6 +508,7 @@ try {
     : "Se voce tiver um Client ID proprio, voce pode configurar nas configuracoes avancadas.";
 } catch {}
 updateCartCount();
-bindAuthActivity();
-initGoogle();
-renderAuth();
+const authedNow = renderAuth();
+if (authedNow) {
+  bindAuthActivity();
+}
