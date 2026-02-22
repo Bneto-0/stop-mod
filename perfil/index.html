@@ -409,29 +409,29 @@
               <p>Dados pessoais e da conta.</p>
             </button>
 
-            <a class="repo-card" href="?tab=orders#detail-sections" data-open-panel="orders">
+            <a class="repo-card" href="pedidos/">
               <span class="icn">📦</span>
               <h3>Pedidos</h3>
               <p>Acompanhe seus pedidos salvos.</p>
             </a>
 
-            <button class="repo-card" type="button" data-open-panel="tracking">
+            <a class="repo-card" href="minhas-compras/">
               <span class="icn">🚚</span>
               <h3>Minhas compras</h3>
               <p>Veja rastreio e atualizacoes da entrega.</p>
-            </button>
+            </a>
 
-            <button class="repo-card" type="button" data-open-panel="processing">
+            <a class="repo-card" href="processando/">
               <span class="icn">⏳</span>
               <h3>Processando</h3>
               <p>Status dos pedidos em preparacao.</p>
-            </button>
+            </a>
 
-            <button class="repo-card" type="button" data-open-panel="favorites">
+            <a class="repo-card" href="favoritos/">
               <span class="icn">❤</span>
               <h3>Favoritos</h3>
               <p>Produtos favoritos da sua conta.</p>
-            </button>
+            </a>
 
             <a class="repo-card" href="../entrega/">
               <span class="icn">📍</span>
@@ -525,44 +525,6 @@
             </div>
           </div>
 
-          <div class="grid2" data-panel="orders" hidden>
-            <div class="order">
-              <h2>Pedidos</h2>
-              <p class="muted2">Aqui voce ve todos os pedidos: entregues, em entrega e cancelados.</p>
-
-              <div class="orders-directory" style="margin-top:.7rem;">
-                <details class="orders-group" data-order-group open>
-                  <summary class="orders-group-head">
-                    <h3>Em entrega</h3>
-                    <span class="orders-count" id="orders-in-progress-count">0</span>
-                  </summary>
-                  <div id="orders-in-progress-list" class="orders-list">
-                    <p class="orders-empty">Nenhum pedido em entrega.</p>
-                  </div>
-                </details>
-
-                <details class="orders-group" data-order-group>
-                  <summary class="orders-group-head">
-                    <h3>Entregues</h3>
-                    <span class="orders-count" id="orders-delivered-count">0</span>
-                  </summary>
-                  <div id="orders-delivered-list" class="orders-list">
-                    <p class="orders-empty">Nenhum pedido entregue.</p>
-                  </div>
-                </details>
-
-                <details class="orders-group" data-order-group>
-                  <summary class="orders-group-head">
-                    <h3>Cancelados</h3>
-                    <span class="orders-count" id="orders-cancelled-count">0</span>
-                  </summary>
-                  <div id="orders-cancelled-list" class="orders-list">
-                    <p class="orders-empty">Nenhum pedido cancelado.</p>
-                  </div>
-                </details>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </section>
@@ -576,6 +538,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=48"></script>
+  <script src="script.js?v=50"></script>
 </body>
 </html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pedidos | Stop mod</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../style.css?v=6" />
+  <link rel="stylesheet" href="../diretorios.css?v=1" />
+</head>
+<body data-mode="pedidos">
+  <header class="hero">
+    <nav class="nav nav-wide">
+      <a class="brand-pill" href="../../index.html#top" aria-label="Voltar para o inicio">Stop <span>mod</span></a>
+      <div class="nav-actions">
+        <a class="notify-link" href="../../notificacoes/" aria-label="Notificacoes">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 1 0-14 0v5l-2 2v1h18v-1l-2-2z"></path>
+          </svg>
+        </a>
+        <a class="cart-link" href="../../carrinho/" aria-label="Ir para o carrinho">
+          <svg class="cart-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 19a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm9 0a2 2 0 1 0 .001 4A2 2 0 0 0 17 19zM6.2 5l.6 3h11.6l-1.2 6H8.1L6.2 5zM3 2h2l2.2 11.2A2 2 0 0 0 9.2 15H18v-2H9.2l-.2-1h9.1A2 2 0 0 0 20 10.4l1-5A2 2 0 0 0 19 3H6.4l-.3-1.6A2 2 0 0 0 4.1 0H3v2z"></path>
+          </svg>
+          <span>Carrinho</span>
+          <strong id="cart-count">0</strong>
+        </a>
+      </div>
+    </nav>
+
+    <div class="hero-bottom hero-wide" aria-label="Barra do usuario">
+      <div class="hero-userchip">
+        <img id="avatar" alt="Foto do perfil" src="../../assets/icons/user-solid.svg" />
+        <strong id="corner-label">Perfil</strong>
+      </div>
+      <button id="logout" class="hero-logout-mini" type="button">Sair</button>
+    </div>
+  </header>
+
+  <main class="container layout">
+    <section class="panel">
+      <div class="account-head">
+        <img id="account-avatar" src="../../assets/icons/user-solid.svg" alt="Perfil" />
+        <div>
+          <strong id="name">Cliente Stop mod</strong>
+          <span id="email">Conta conectada</span>
+        </div>
+      </div>
+
+      <div class="section-head">
+        <h1 id="page-title">Pedidos</h1>
+        <p id="page-desc">Todos os pedidos: em entrega, entregues e cancelados.</p>
+      </div>
+
+      <nav class="directory-nav" aria-label="Diretorios">
+        <a href="../pedidos/" data-dir-tab="pedidos">Pedidos</a>
+        <a href="../minhas-compras/" data-dir-tab="compras">Minhas compras</a>
+        <a href="../processando/" data-dir-tab="processando">Processando</a>
+        <a href="../favoritos/" data-dir-tab="favoritos">Favoritos</a>
+        <a href="../">Minha conta</a>
+      </nav>
+
+      <section id="content-root" class="directory-content"></section>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-links">
+      <a href="../../privacidade/">Politica de privacidade</a>
+      <a href="../../termos/">Termos de servico</a>
+    </div>
+    <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
+  </footer>
+
+  <script src="../diretorios.js?v=1"></script>
+</body>
+</html>
