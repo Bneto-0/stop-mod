@@ -9,6 +9,16 @@ const AUTH_TIMEOUT_MS = 30 * 60 * 1000;
 const AUTH_TOUCH_MIN_GAP_MS = 15 * 1000;
 const ORDERS_KEY = "stopmod_orders";
 const FAVORITES_KEY = "stopmod_favorites";
+const TAB_IDS = new Set([
+  "account",
+  "orders",
+  "purchases",
+  "processing",
+  "favorites",
+  "addresses",
+  "privacy",
+  "communications"
+]);
 
 const cartCount = document.getElementById("cart-count");
 const menuLocationEl = document.getElementById("menu-location");
@@ -33,7 +43,6 @@ const nameEl = document.getElementById("name");
 const emailEl = document.getElementById("email");
 const cornerLabel = document.getElementById("corner-label");
 
-const tabBtns = document.querySelectorAll("[data-tab]");
 const tabPanels = document.querySelectorAll("[data-panel]");
 const openPanelBtns = document.querySelectorAll("[data-open-panel]");
 
@@ -53,6 +62,10 @@ const ordersCancelledList = document.getElementById("orders-cancelled-list");
 const ordersInProgressCount = document.getElementById("orders-in-progress-count");
 const ordersDeliveredCount = document.getElementById("orders-delivered-count");
 const ordersCancelledCount = document.getElementById("orders-cancelled-count");
+const purchasesDeliveredList = document.getElementById("purchases-delivered-list");
+const purchasesDeliveredCount = document.getElementById("purchases-delivered-count");
+const processingOrdersList = document.getElementById("processing-orders-list");
+const processingOrdersCount = document.getElementById("processing-orders-count");
 const favoritesList = document.getElementById("favorites-list");
 
 let lastAuthTouchAt = 0;
@@ -318,15 +331,19 @@ function initGoogle() {
 }
 
 function setTab(tabId) {
-  tabBtns.forEach((b) => b.classList.toggle("active", b.getAttribute("data-tab") === tabId));
-  tabPanels.forEach((p) => p.hidden = p.getAttribute("data-panel") !== tabId);
+  const safeTabId = TAB_IDS.has(tabId) ? tabId : "account";
+  openPanelBtns.forEach((btn) => {
+    btn.classList.toggle("active", String(btn.getAttribute("data-open-panel") || "") === safeTabId);
+  });
+  tabPanels.forEach((panel) => {
+    panel.hidden = panel.getAttribute("data-panel") !== safeTabId;
+  });
 }
 
 function getRequestedTab() {
   try {
     const tab = String(new URLSearchParams(window.location.search).get("tab") || "").trim().toLowerCase();
-    const allowed = new Set(["account"]);
-    return allowed.has(tab) ? tab : "";
+    return TAB_IDS.has(tab) ? tab : "";
   } catch {
     return "";
   }
@@ -464,7 +481,13 @@ function fillOrderBucket(listEl, countEl, orders, emptyText, bucket) {
 
 function renderOrders() {
   const orders = loadOrders();
-  if (!ordersInProgressList && !ordersDeliveredList && !ordersCancelledList) return;
+  if (
+    !ordersInProgressList &&
+    !ordersDeliveredList &&
+    !ordersCancelledList &&
+    !purchasesDeliveredList &&
+    !processingOrdersList
+  ) return;
 
   const buckets = {
     "in-progress": [],
@@ -498,11 +521,27 @@ function renderOrders() {
     "Nenhum pedido cancelado.",
     "cancelled"
   );
+  fillOrderBucket(
+    purchasesDeliveredList,
+    purchasesDeliveredCount,
+    buckets.delivered,
+    "Voce ainda nao tem compras entregues.",
+    "delivered"
+  );
+  fillOrderBucket(
+    processingOrdersList,
+    processingOrdersCount,
+    buckets["in-progress"],
+    "Voce nao tem pedidos processando.",
+    "in-progress"
+  );
 
   if (!orders.length) {
     if (ordersInProgressCount) ordersInProgressCount.textContent = "0";
     if (ordersDeliveredCount) ordersDeliveredCount.textContent = "0";
     if (ordersCancelledCount) ordersCancelledCount.textContent = "0";
+    if (purchasesDeliveredCount) purchasesDeliveredCount.textContent = "0";
+    if (processingOrdersCount) processingOrdersCount.textContent = "0";
     return;
   }
 }
@@ -611,10 +650,6 @@ logoutBtn?.addEventListener("click", () => {
   goToLoginFromProfile();
 });
 
-tabBtns.forEach((b) => {
-  b.addEventListener("click", () => setTab(String(b.getAttribute("data-tab"))));
-});
-
 openPanelBtns.forEach((b) => {
   b.addEventListener("click", (event) => {
     const tabId = String(b.getAttribute("data-open-panel") || "account");
@@ -623,16 +658,14 @@ openPanelBtns.forEach((b) => {
     event.preventDefault();
     if (detailSections) detailSections.hidden = false;
     setTab(tabId);
-    if (tabId === "orders") renderOrders();
+    if (tabId === "orders" || tabId === "purchases" || tabId === "processing") renderOrders();
+    if (tabId === "favorites") renderFavorites();
     try {
       const url = new URL(window.location.href);
       url.searchParams.set("tab", tabId);
       url.hash = "detail-sections";
       window.history.replaceState(null, "", url.toString());
     } catch {}
-    if (detailSections && typeof detailSections.scrollIntoView === "function") {
-      detailSections.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
   });
 });
 
