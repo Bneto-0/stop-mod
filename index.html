@@ -311,6 +311,223 @@
       text-underline-offset: 4px;
     }
 
+    body.address-modal-open {
+      overflow: hidden;
+    }
+
+    .address-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      padding: 1rem;
+      display: grid;
+      place-items: center;
+    }
+
+    .address-modal[hidden] {
+      display: none;
+    }
+
+    .address-modal-backdrop {
+      position: absolute;
+      inset: 0;
+      border: none;
+      padding: 0;
+      margin: 0;
+      background: #00000080;
+    }
+
+    .address-modal-card {
+      position: relative;
+      width: min(760px, 96vw);
+      max-height: 92vh;
+      overflow: auto;
+      border-radius: 16px;
+      background: #f7f3ee;
+      border: 1px solid #decfc3;
+      box-shadow: 0 22px 44px #2f211836;
+      padding: 1rem;
+      color: #2f2824;
+      z-index: 1;
+    }
+
+    .address-modal-head {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 0.8rem;
+    }
+
+    .address-modal-head h3 {
+      margin: 0;
+      font-size: clamp(1.05rem, 1.8vw, 1.55rem);
+    }
+
+    .address-modal-head p {
+      margin: 0.2rem 0 0;
+      color: #6e625a;
+      font-size: 0.9rem;
+    }
+
+    .address-close {
+      border: 1px solid #d9c8bc;
+      border-radius: 10px;
+      background: #fff8f2;
+      color: #6e3b27;
+      font-weight: 800;
+      font-family: inherit;
+      padding: 0.35rem 0.66rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .address-card-block {
+      border: 1px solid #e2d5cb;
+      border-radius: 12px;
+      background: #fff;
+      padding: 0.78rem;
+      margin-bottom: 0.74rem;
+    }
+
+    .address-card-block h4 {
+      margin: 0 0 0.55rem;
+      font-size: 1rem;
+    }
+
+    .saved-address-list {
+      display: grid;
+      gap: 0.58rem;
+    }
+
+    .saved-address-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: flex-start;
+      gap: 0.6rem;
+      border: 1px solid #eadfd7;
+      border-radius: 10px;
+      background: #fffaf6;
+      padding: 0.58rem;
+    }
+
+    .saved-address-item input[type="radio"] {
+      margin-top: 0.3rem;
+      accent-color: #3366ff;
+    }
+
+    .saved-address-text strong {
+      display: block;
+      font-size: 0.96rem;
+      margin-bottom: 0.12rem;
+    }
+
+    .saved-address-text span {
+      color: #665a51;
+      font-size: 0.88rem;
+      line-height: 1.25;
+    }
+
+    .address-mini {
+      border: 1px solid #e2d5cb;
+      border-radius: 8px;
+      background: #fff;
+      color: #6e3b27;
+      font-weight: 800;
+      font-family: inherit;
+      padding: 0.25rem 0.5rem;
+      cursor: pointer;
+      font-size: 0.76rem;
+      line-height: 1.1;
+    }
+
+    .address-form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.5rem;
+      margin-top: 0.3rem;
+    }
+
+    .address-form-grid label {
+      display: grid;
+      gap: 0.18rem;
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: #4b413a;
+    }
+
+    .address-form-grid input {
+      border: 1px solid #dccfc4;
+      border-radius: 9px;
+      padding: 0.5rem 0.58rem;
+      font-family: inherit;
+      background: #fff;
+      color: #2f2824;
+      font-size: 0.86rem;
+    }
+
+    .address-form-grid .full {
+      grid-column: 1 / -1;
+    }
+
+    .address-inline-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.48rem;
+      margin-top: 0.55rem;
+    }
+
+    .address-btn {
+      border: 1px solid #e2d5cb;
+      border-radius: 9px;
+      background: #fff4eb;
+      color: #6e3b27;
+      font-weight: 800;
+      font-family: inherit;
+      padding: 0.5rem 0.75rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+      line-height: 1.1;
+    }
+
+    .address-btn.ghost {
+      background: #fff;
+      color: #2f2824;
+    }
+
+    .address-link {
+      color: #265adf;
+      text-decoration: none;
+      font-weight: 800;
+      font-size: 0.84rem;
+    }
+
+    .address-link:hover {
+      text-decoration: underline;
+    }
+
+    .address-modal-foot {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.55rem;
+      margin-top: 0.7rem;
+    }
+
+    .address-feedback {
+      min-height: 1.2rem;
+      margin-top: 0.3rem;
+      color: #18663f;
+      font-weight: 800;
+      font-size: 0.85rem;
+    }
+
+    .address-feedback.error {
+      color: #8c3c26;
+    }
+
     .mini-products { display: none !important; }
     .grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
 
@@ -340,6 +557,10 @@
       .hero-banner {
         height: clamp(180px, 44vw, 330px);
       }
+
+      .address-form-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -351,7 +572,7 @@
           <span>Stop</span>
           <em>mod</em>
         </a>
-        <a class="menu-location" href="entrega/" aria-label="Selecionar endereco">
+        <a id="open-address-modal" class="menu-location" href="entrega/" aria-label="Selecionar endereco">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 2c3.87 0 7 3.09 7 6.9 0 4.71-5.2 10.35-6.45 11.65a.8.8 0 0 1-1.1 0C10.2 19.25 5 13.61 5 8.9 5 5.09 8.13 2 12 2zm0 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"></path>
           </svg>
@@ -414,6 +635,74 @@
     </section>
   </main>
 
+  <div id="address-modal" class="address-modal" hidden>
+    <button class="address-modal-backdrop" type="button" data-address-close="1" aria-label="Fechar"></button>
+    <section class="address-modal-card" role="dialog" aria-modal="true" aria-labelledby="address-modal-title">
+      <header class="address-modal-head">
+        <div>
+          <h3 id="address-modal-title">Selecione onde quer receber suas compras</h3>
+          <p>Voce pode salvar enderecos e validar no Google Maps sem sair da pagina.</p>
+        </div>
+        <button class="address-close" type="button" data-address-close="1">X</button>
+      </header>
+
+      <section class="address-card-block">
+        <h4>Em um dos seus enderecos</h4>
+        <div id="saved-address-list" class="saved-address-list"></div>
+        <p id="saved-address-empty" class="meta" hidden>Voce ainda nao possui enderecos salvos.</p>
+        <div class="address-inline-actions">
+          <button id="use-selected-address" class="address-btn ghost" type="button">Usar selecionado</button>
+        </div>
+      </section>
+
+      <section class="address-card-block">
+        <h4>Em outro lugar</h4>
+        <div class="address-form-grid">
+          <label>
+            CEP
+            <input id="address-cep" type="text" inputmode="numeric" placeholder="Informar um CEP" maxlength="9" />
+          </label>
+          <label>
+            Telefone de contato
+            <input id="address-contact" type="text" placeholder="(11) 99999-9999" />
+          </label>
+          <label class="full">
+            Rua
+            <input id="address-street" type="text" placeholder="Rua / Avenida" />
+          </label>
+          <label>
+            Numero
+            <input id="address-number" type="text" placeholder="Numero" />
+          </label>
+          <label>
+            Bairro
+            <input id="address-district" type="text" placeholder="Bairro" />
+          </label>
+          <label>
+            Cidade
+            <input id="address-city" type="text" placeholder="Cidade" />
+          </label>
+          <label>
+            Estado
+            <input id="address-state" type="text" placeholder="UF" maxlength="2" />
+          </label>
+        </div>
+
+        <div class="address-inline-actions">
+          <button id="lookup-cep" class="address-btn ghost" type="button">Buscar CEP</button>
+          <button id="google-maps-check" class="address-btn ghost" type="button">Validar no Google Maps</button>
+          <a class="address-link" href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer">Nao sei meu CEP</a>
+        </div>
+      </section>
+
+      <div class="address-modal-foot">
+        <button class="address-btn ghost" type="button" data-address-close="1">Cancelar</button>
+        <button id="save-address" class="address-btn" type="button">Salvar alteracoes</button>
+      </div>
+      <p id="address-feedback" class="address-feedback" aria-live="polite"></p>
+    </section>
+  </div>
+
   <footer>
     <div class="footer-links">
       <a href="privacidade/">Politica de privacidade</a>
@@ -422,6 +711,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=13"></script>
+  <script src="script.js?v=14"></script>
 </body>
 </html>

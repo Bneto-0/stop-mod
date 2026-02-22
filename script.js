@@ -2,6 +2,7 @@ const CART_KEY = "stopmod_cart";
 const MAX_CART_ITEMS = 2000;
 const MAX_AD_SLIDES = 10;
 const SHIP_KEY = "stopmod_ship_to";
+const SHIP_LIST_KEY = "stopmod_ship_list";
 
 const ADS_LEFT_IMAGES_KEY = "stopmod_ads_left_images";
 const ADS_RIGHT_IMAGES_KEY = "stopmod_ads_right_images";
@@ -20,6 +21,29 @@ const DEFAULT_RIGHT_ADS = [
   "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=1400&q=80",
   "https://images.unsplash.com/photo-1484515991647-c5760fcecfc7?auto=format&fit=crop&w=1400&q=80",
   "https://images.unsplash.com/photo-1542293787938-4d273c37c18d?auto=format&fit=crop&w=1400&q=80"
+];
+
+const DEFAULT_SHIP_ADDRESSES = [
+  {
+    id: "sp-paulista-1578",
+    street: "Avenida Paulista",
+    number: "1578",
+    district: "Bela Vista",
+    city: "Sao Paulo",
+    state: "SP",
+    cep: "01310-200",
+    contact: "Cliente Stop mod - 11999999999"
+  },
+  {
+    id: "sp-oscar-freire-379",
+    street: "Rua Oscar Freire",
+    number: "379",
+    district: "Cerqueira Cesar",
+    city: "Sao Paulo",
+    state: "SP",
+    cep: "01426-001",
+    contact: "Cliente Stop mod - 11999999998"
+  }
 ];
 
 const products = [
@@ -44,6 +68,25 @@ const menuLocation = document.getElementById("menu-location");
 const adMainImage = document.getElementById("ad-main-image");
 const adMainLink = document.getElementById("ad-main-link");
 const adMainDots = document.getElementById("ad-main-dots");
+const openAddressModal = document.getElementById("open-address-modal");
+const addressModal = document.getElementById("address-modal");
+const addressCloseEls = document.querySelectorAll("[data-address-close=\"1\"]");
+const savedAddressList = document.getElementById("saved-address-list");
+const savedAddressEmpty = document.getElementById("saved-address-empty");
+const useSelectedAddressBtn = document.getElementById("use-selected-address");
+const addressCepInput = document.getElementById("address-cep");
+const addressContactInput = document.getElementById("address-contact");
+const addressStreetInput = document.getElementById("address-street");
+const addressNumberInput = document.getElementById("address-number");
+const addressDistrictInput = document.getElementById("address-district");
+const addressCityInput = document.getElementById("address-city");
+const addressStateInput = document.getElementById("address-state");
+const lookupCepBtn = document.getElementById("lookup-cep");
+const googleMapsCheckBtn = document.getElementById("google-maps-check");
+const saveAddressBtn = document.getElementById("save-address");
+const addressFeedback = document.getElementById("address-feedback");
+
+let selectedAddressId = "";
 
 function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -55,6 +98,107 @@ function normalizeText(value) {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
+}
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function normalizeCep(value) {
+  const digits = String(value || "").replace(/\D/g, "").slice(0, 8);
+  if (digits.length <= 5) return digits;
+  return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+}
+
+function isCepValid(value) {
+  return String(value || "").replace(/\D/g, "").length === 8;
+}
+
+function normalizeState(value) {
+  return String(value || "").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 2);
+}
+
+function buildAddressId(base) {
+  const seed = normalizeText(base).replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  if (seed) return seed.slice(0, 42);
+  return `addr-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+}
+
+function normalizeShipAddress(raw) {
+  const street = String(raw?.street || "").trim();
+  const number = String(raw?.number || "").trim();
+  const district = String(raw?.district || "").trim();
+  const city = String(raw?.city || "").trim();
+  const state = normalizeState(raw?.state || "");
+  const cep = normalizeCep(raw?.cep || "");
+  const contact = String(raw?.contact || "").trim();
+  const id = String(raw?.id || "").trim() || buildAddressId(`${street}|${number}|${cep}|${city}`);
+
+  return { id, street, number, district, city, state, cep, contact };
+}
+
+function addressSignature(raw) {
+  const addr = normalizeShipAddress(raw);
+  return [
+    normalizeText(addr.street),
+    normalizeText(addr.number),
+    normalizeText(addr.district),
+    normalizeText(addr.city),
+    normalizeText(addr.state),
+    String(addr.cep || "").replace(/\D/g, "")
+  ].join("|");
+}
+
+function addressTitle(raw) {
+  const addr = normalizeShipAddress(raw);
+  const streetPart = [addr.street, addr.number].filter(Boolean).join(" ");
+  if (streetPart) return streetPart;
+  return [addr.city, addr.state].filter(Boolean).join(" - ") || "Endereco";
+}
+
+function addressMeta(raw) {
+  const addr = normalizeShipAddress(raw);
+  const cityState = [addr.city, addr.state].filter(Boolean).join(", ");
+  const left = [addr.cep ? `CEP: ${addr.cep}` : "", cityState].filter(Boolean).join(" - ");
+  return [left, addr.contact].filter(Boolean).join(" | ");
+}
+
+function mapQueryFromAddress(raw) {
+  const addr = normalizeShipAddress(raw);
+  return [
+    [addr.street, addr.number].filter(Boolean).join(" "),
+    addr.district,
+    addr.city,
+    addr.state,
+    addr.cep
+  ].filter(Boolean).join(", ");
+}
+
+function setAddressFeedback(text, isError) {
+  if (!addressFeedback) return;
+  addressFeedback.textContent = text || "";
+  addressFeedback.classList.toggle("error", !!isError);
+}
+
+function dedupeAddresses(items) {
+  const seen = new Set();
+  const out = [];
+
+  items.forEach((item) => {
+    const addr = normalizeShipAddress(item);
+    if (!addr.city && !addr.cep && !addr.street) return;
+    const sig = addressSignature(addr);
+    if (seen.has(sig)) return;
+    seen.add(sig);
+    out.push(addr);
+  });
+
+  return out.slice(0, 30);
 }
 
 function applySearchFromUrl() {
@@ -99,13 +243,270 @@ function loadCartIds() {
 function loadShipTo() {
   try {
     const raw = JSON.parse(localStorage.getItem(SHIP_KEY) || "{}");
-    return {
-      city: String(raw.city || "").trim(),
-      cep: String(raw.cep || "").trim()
-    };
+    return normalizeShipAddress(raw || {});
   } catch {
-    return { city: "", cep: "" };
+    return normalizeShipAddress({});
   }
+}
+
+function saveShipTo(raw) {
+  const addr = normalizeShipAddress(raw || {});
+  localStorage.setItem(SHIP_KEY, JSON.stringify(addr));
+}
+
+function loadShipList() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SHIP_LIST_KEY) || "[]");
+    if (!Array.isArray(raw)) return [];
+    return dedupeAddresses(raw);
+  } catch {
+    return [];
+  }
+}
+
+function saveShipList(items) {
+  const normalized = dedupeAddresses(items || []);
+  localStorage.setItem(SHIP_LIST_KEY, JSON.stringify(normalized));
+}
+
+function ensureShipDirectorySeed() {
+  const current = loadShipTo();
+  const list = loadShipList();
+
+  const hasCurrent = !!(current.city || current.cep || current.street);
+  const merged = dedupeAddresses([
+    ...list,
+    ...(hasCurrent ? [current] : []),
+    ...DEFAULT_SHIP_ADDRESSES
+  ]);
+
+  if (!list.length || merged.length !== list.length || (hasCurrent && !list.some((x) => addressSignature(x) === addressSignature(current)))) {
+    saveShipList(merged);
+  }
+
+  if (hasCurrent) return;
+  const fallback = merged[0];
+  if (fallback) saveShipTo(fallback);
+}
+
+function readAddressForm() {
+  return normalizeShipAddress({
+    id: selectedAddressId || "",
+    cep: addressCepInput?.value,
+    contact: addressContactInput?.value,
+    street: addressStreetInput?.value,
+    number: addressNumberInput?.value,
+    district: addressDistrictInput?.value,
+    city: addressCityInput?.value,
+    state: addressStateInput?.value
+  });
+}
+
+function fillAddressForm(raw) {
+  const addr = normalizeShipAddress(raw || {});
+  if (addressCepInput) addressCepInput.value = addr.cep || "";
+  if (addressContactInput) addressContactInput.value = addr.contact || "";
+  if (addressStreetInput) addressStreetInput.value = addr.street || "";
+  if (addressNumberInput) addressNumberInput.value = addr.number || "";
+  if (addressDistrictInput) addressDistrictInput.value = addr.district || "";
+  if (addressCityInput) addressCityInput.value = addr.city || "";
+  if (addressStateInput) addressStateInput.value = addr.state || "";
+}
+
+function closeAddressDirectory() {
+  if (!addressModal) return;
+  addressModal.hidden = true;
+  document.body.classList.remove("address-modal-open");
+}
+
+function renderSavedAddresses() {
+  if (!savedAddressList) return;
+  const list = loadShipList();
+  const current = loadShipTo();
+
+  if (!selectedAddressId) {
+    const currentMatch = list.find((item) => addressSignature(item) === addressSignature(current));
+    selectedAddressId = currentMatch?.id || list[0]?.id || "";
+  }
+
+  if (!list.length) {
+    savedAddressList.innerHTML = "";
+    if (savedAddressEmpty) savedAddressEmpty.hidden = false;
+    return;
+  }
+
+  if (savedAddressEmpty) savedAddressEmpty.hidden = true;
+  savedAddressList.innerHTML = list
+    .map((item) => `
+      <div class="saved-address-item">
+        <input type="radio" name="saved-address" value="${escapeHtml(item.id)}" ${item.id === selectedAddressId ? "checked" : ""} />
+        <div class="saved-address-text">
+          <strong>${escapeHtml(addressTitle(item))}</strong>
+          <span>${escapeHtml(addressMeta(item))}</span>
+        </div>
+        <button class="address-mini" type="button" data-remove-address="${escapeHtml(item.id)}">Remover</button>
+      </div>
+    `)
+    .join("");
+
+  savedAddressList.querySelectorAll("input[name=\"saved-address\"]").forEach((radioEl) => {
+    radioEl.addEventListener("change", () => {
+      selectedAddressId = String(radioEl.value || "");
+      const selected = loadShipList().find((x) => x.id === selectedAddressId);
+      if (selected) fillAddressForm(selected);
+      setAddressFeedback("", false);
+    });
+  });
+
+  savedAddressList.querySelectorAll("button[data-remove-address]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = String(btn.getAttribute("data-remove-address") || "");
+      const nextList = loadShipList().filter((item) => item.id !== id);
+      saveShipList(nextList);
+      if (selectedAddressId === id) selectedAddressId = nextList[0]?.id || "";
+      renderSavedAddresses();
+      setAddressFeedback("Endereco removido.", false);
+    });
+  });
+}
+
+function openAddressDirectory(event) {
+  if (event) event.preventDefault();
+  if (!addressModal) return;
+  ensureShipDirectorySeed();
+
+  const current = loadShipTo();
+  const list = loadShipList();
+  const currentMatch = list.find((item) => addressSignature(item) === addressSignature(current));
+  selectedAddressId = currentMatch?.id || list[0]?.id || "";
+
+  fillAddressForm(currentMatch || list[0] || current);
+  renderSavedAddresses();
+  setAddressFeedback("", false);
+
+  addressModal.hidden = false;
+  document.body.classList.add("address-modal-open");
+}
+
+function useSelectedAddress() {
+  const list = loadShipList();
+  const selected = list.find((item) => item.id === selectedAddressId) || list[0];
+  if (!selected) {
+    setAddressFeedback("Nenhum endereco disponivel para selecionar.", true);
+    return;
+  }
+
+  saveShipTo(selected);
+  renderMenuLocation();
+  setAddressFeedback("Endereco selecionado.", false);
+  closeAddressDirectory();
+}
+
+async function lookupCep() {
+  const cep = normalizeCep(addressCepInput?.value || "");
+  if (addressCepInput) addressCepInput.value = cep;
+  if (!isCepValid(cep)) {
+    setAddressFeedback("CEP invalido. Use 8 numeros.", true);
+    return;
+  }
+
+  setAddressFeedback("Buscando CEP...", false);
+
+  try {
+    const digits = cep.replace(/\D/g, "");
+    const response = await fetch(`https://viacep.com.br/ws/${digits}/json/`, { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error("CEP nao encontrado");
+    }
+    const data = await response.json();
+    if (data.erro) {
+      setAddressFeedback("CEP nao encontrado.", true);
+      return;
+    }
+
+    if (addressStreetInput) addressStreetInput.value = String(data.logradouro || addressStreetInput.value || "");
+    if (addressDistrictInput) addressDistrictInput.value = String(data.bairro || addressDistrictInput.value || "");
+    if (addressCityInput) addressCityInput.value = String(data.localidade || addressCityInput.value || "");
+    if (addressStateInput) addressStateInput.value = normalizeState(data.uf || addressStateInput?.value || "");
+
+    setAddressFeedback("CEP validado e endereco preenchido.", false);
+  } catch {
+    setAddressFeedback("Falha ao consultar CEP. Tente novamente.", true);
+  }
+}
+
+function openGoogleMapsValidation() {
+  const query = mapQueryFromAddress(readAddressForm());
+  if (!query) {
+    setAddressFeedback("Preencha o endereco para validar no Google Maps.", true);
+    return;
+  }
+
+  const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+  window.open(url, "_blank", "noopener,noreferrer");
+  setAddressFeedback("Validacao aberta no Google Maps.", false);
+}
+
+function saveAddressFromForm() {
+  const addr = readAddressForm();
+  if (!addr.city) {
+    setAddressFeedback("Informe a cidade.", true);
+    return;
+  }
+  if (!isCepValid(addr.cep)) {
+    setAddressFeedback("Informe um CEP valido.", true);
+    return;
+  }
+  if (!addr.street) {
+    setAddressFeedback("Informe a rua para validar no Google Maps.", true);
+    return;
+  }
+
+  const id = addr.id || buildAddressId(`${addr.street}|${addr.number}|${addr.cep}|${addr.city}`);
+  const completeAddress = normalizeShipAddress({ ...addr, id });
+
+  const currentList = loadShipList();
+  const filtered = currentList.filter((item) => addressSignature(item) !== addressSignature(completeAddress));
+  const nextList = dedupeAddresses([completeAddress, ...filtered]);
+
+  saveShipList(nextList);
+  saveShipTo(completeAddress);
+  selectedAddressId = completeAddress.id;
+
+  renderSavedAddresses();
+  renderMenuLocation();
+  setAddressFeedback("Endereco salvo e selecionado.", false);
+  closeAddressDirectory();
+}
+
+function initAddressDirectory() {
+  ensureShipDirectorySeed();
+
+  if (openAddressModal) {
+    openAddressModal.addEventListener("click", openAddressDirectory);
+  }
+
+  addressCloseEls.forEach((el) => {
+    el.addEventListener("click", closeAddressDirectory);
+  });
+
+  useSelectedAddressBtn?.addEventListener("click", useSelectedAddress);
+  lookupCepBtn?.addEventListener("click", lookupCep);
+  googleMapsCheckBtn?.addEventListener("click", openGoogleMapsValidation);
+  saveAddressBtn?.addEventListener("click", saveAddressFromForm);
+
+  addressCepInput?.addEventListener("input", () => {
+    addressCepInput.value = normalizeCep(addressCepInput.value);
+  });
+
+  addressStateInput?.addEventListener("input", () => {
+    addressStateInput.value = normalizeState(addressStateInput.value);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || !addressModal || addressModal.hidden) return;
+    closeAddressDirectory();
+  });
 }
 
 function loadStringArray(key, fallback) {
@@ -424,6 +825,7 @@ searchInput?.addEventListener("keydown", (event) => {
 const openedWithQuery = applySearchFromUrl();
 renderProducts();
 updateCartCount();
+initAddressDirectory();
 renderMenuLocation();
 startAdSlider(adMainLink, adMainImage, adMainDots, loadHomeAds(), loadHomeTarget());
 syncSearchQueryInUrl();
