@@ -491,22 +491,24 @@ accSave?.addEventListener("click", () => {
   renderAccount();
 });
 
-const hadStoredClientId = !!String(localStorage.getItem(GOOGLE_CLIENT_KEY) || "").trim();
-clientInput.value = loadClientId();
-if (!hadStoredClientId && DEFAULT_GOOGLE_CLIENT_ID) {
-  localStorage.setItem(GOOGLE_CLIENT_KEY, DEFAULT_GOOGLE_CLIENT_ID);
-  if (clientMsg) clientMsg.textContent = "Client ID configurado automaticamente.";
-}
+if (clientInput) {
+  const hadStoredClientId = !!String(localStorage.getItem(GOOGLE_CLIENT_KEY) || "").trim();
+  clientInput.value = loadClientId();
+  if (!hadStoredClientId && DEFAULT_GOOGLE_CLIENT_ID) {
+    localStorage.setItem(GOOGLE_CLIENT_KEY, DEFAULT_GOOGLE_CLIENT_ID);
+    if (clientMsg) clientMsg.textContent = "Client ID configurado automaticamente.";
+  }
 
-// Keep advanced config collapsed for most users.
-try {
-  const current = String(clientInput?.value || "").trim();
-  const isDefault = !!DEFAULT_GOOGLE_CLIENT_ID && current === DEFAULT_GOOGLE_CLIENT_ID;
-  if (clientAdv) clientAdv.open = !isDefault && !!current;
-  if (clientNote) clientNote.textContent = isDefault
-    ? "Login Google ja esta configurado automaticamente. Se precisar, voce pode alterar o Client ID nas configuracoes avancadas."
-    : "Se voce tiver um Client ID proprio, voce pode configurar nas configuracoes avancadas.";
-} catch {}
+  // Keep advanced config collapsed for most users.
+  try {
+    const current = String(clientInput?.value || "").trim();
+    const isDefault = !!DEFAULT_GOOGLE_CLIENT_ID && current === DEFAULT_GOOGLE_CLIENT_ID;
+    if (clientAdv) clientAdv.open = !isDefault && !!current;
+    if (clientNote) clientNote.textContent = isDefault
+      ? "Login Google ja esta configurado automaticamente. Se precisar, voce pode alterar o Client ID nas configuracoes avancadas."
+      : "Se voce tiver um Client ID proprio, voce pode configurar nas configuracoes avancadas.";
+  } catch {}
+}
 updateCartCount();
 const authedNow = renderAuth();
 if (authedNow) {
