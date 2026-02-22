@@ -620,8 +620,9 @@ function renderAuth() {
   renderOrders();
   renderFavorites();
   const requestedTab = getRequestedTab();
-  if (detailSections) detailSections.hidden = !requestedTab;
-  if (requestedTab) setTab(requestedTab);
+  const initialTab = requestedTab || "account";
+  if (detailSections) detailSections.hidden = false;
+  setTab(initialTab);
   return true;
 }
 

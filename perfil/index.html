@@ -395,38 +395,32 @@
       font-weight: 700;
       font-size: .9rem;
     }
-    .repo-grid {
-      display:grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: .8rem;
+    .directory-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .55rem;
+      margin-top: .9rem;
     }
-    .repo-card {
+    .dir-tab {
       border:1px solid var(--line);
-      border-radius: 12px;
-      background:#fff;
-      padding: .85rem;
-      display:grid;
-      gap: .32rem;
-      text-align: left;
-      color: #1f1f1f;
-      text-decoration: none;
+      border-radius: 999px;
+      background:#fff3e8;
+      color:#2f2824;
+      padding:.38rem .8rem;
       font-family: inherit;
+      font-weight: 900;
+      font-size: .82rem;
       cursor: pointer;
-      transition: border-color .18s ease, box-shadow .18s ease;
+      transition: border-color .18s ease, background .18s ease;
     }
-    .repo-card:hover {
+    .dir-tab:hover {
       border-color: #d7c6bb;
-      box-shadow: 0 8px 18px #2f211810;
     }
-    .repo-card.active {
-      border-color: #d7c6bb;
-      background: #fffaf6;
-      box-shadow: 0 10px 20px #2f211814;
+    .dir-tab.active {
+      background:#ffd7b8;
+      border-color:#eac8bb;
     }
-    .repo-card .icn { font-size: 1.05rem; }
-    .repo-card h3 { font-size: 1.02rem; }
-    .repo-card p { color: var(--muted); font-size: .88rem; }
-    .cancel-note { margin-top: .2rem; }
+    .cancel-note { margin-top: .55rem; }
     #detail-sections { margin-top: 1rem; }
     .orders-directory { display:grid; gap: .85rem; }
     .orders-group {
@@ -598,55 +592,16 @@
             </div>
           </div>
 
-          <div class="repo-grid">
-            <button class="repo-card" type="button" data-open-panel="account">
-              <span class="icn">👤</span>
-              <h3>Informacoes do seu perfil</h3>
-              <p>Dados pessoais e da conta.</p>
-            </button>
-
-            <button class="repo-card" type="button" data-open-panel="orders">
-              <span class="icn">📦</span>
-              <h3>Pedidos</h3>
-              <p>Acompanhe seus pedidos salvos.</p>
-            </button>
-
-            <button class="repo-card" type="button" data-open-panel="purchases">
-              <span class="icn">🚚</span>
-              <h3>Minhas compras</h3>
-              <p>Veja rastreio e atualizacoes da entrega.</p>
-            </button>
-
-            <button class="repo-card" type="button" data-open-panel="processing">
-              <span class="icn">⏳</span>
-              <h3>Processando</h3>
-              <p>Status dos pedidos em preparacao.</p>
-            </button>
-
-            <button class="repo-card" type="button" data-open-panel="favorites">
-              <span class="icn">❤</span>
-              <h3>Favoritos</h3>
-              <p>Produtos favoritos da sua conta.</p>
-            </button>
-
-            <button class="repo-card" type="button" data-open-panel="addresses">
-              <span class="icn">📍</span>
-              <h3>Enderecos</h3>
-              <p>Enderecos salvos para entrega.</p>
-            </button>
-
-            <button class="repo-card" type="button" data-open-panel="privacy">
-              <span class="icn">🔒</span>
-              <h3>Privacidade</h3>
-              <p>Preferencias e controle dos seus dados.</p>
-            </button>
-
-            <button class="repo-card" type="button" data-open-panel="communications">
-              <span class="icn">💬</span>
-              <h3>Comunicacoes</h3>
-              <p>Promocoes e avisos da loja.</p>
-            </button>
-          </div>
+          <nav class="directory-tabs" aria-label="Abas dos diretorios">
+            <button class="dir-tab" type="button" data-open-panel="account">Informacoes do perfil</button>
+            <button class="dir-tab" type="button" data-open-panel="orders">Pedidos</button>
+            <button class="dir-tab" type="button" data-open-panel="purchases">Minhas compras</button>
+            <button class="dir-tab" type="button" data-open-panel="processing">Processando</button>
+            <button class="dir-tab" type="button" data-open-panel="favorites">Favoritos</button>
+            <button class="dir-tab" type="button" data-open-panel="addresses">Enderecos</button>
+            <button class="dir-tab" type="button" data-open-panel="privacy">Privacidade</button>
+            <button class="dir-tab" type="button" data-open-panel="communications">Comunicacoes</button>
+          </nav>
 
           <p class="muted2 cancel-note">Voce pode cancelar sua conta quando quiser.</p>
         </div>
@@ -825,6 +780,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=52"></script>
+  <script src="script.js?v=53"></script>
 </body>
 </html>
