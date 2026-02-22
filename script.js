@@ -4,6 +4,35 @@ const MAX_AD_SLIDES = 10;
 const SHIP_KEY = "stopmod_ship_to";
 const SHIP_LIST_KEY = "stopmod_ship_list";
 const GOOGLE_MAPS_API_KEY = "stopmod_google_maps_api_key";
+const STATE_NAME_TO_UF = Object.freeze({
+  acre: "AC",
+  alagoas: "AL",
+  amapa: "AP",
+  amazonas: "AM",
+  bahia: "BA",
+  ceara: "CE",
+  "distrito federal": "DF",
+  "espirito santo": "ES",
+  goias: "GO",
+  maranhao: "MA",
+  "mato grosso": "MT",
+  "mato grosso do sul": "MS",
+  "minas gerais": "MG",
+  para: "PA",
+  paraiba: "PB",
+  parana: "PR",
+  pernambuco: "PE",
+  piaui: "PI",
+  "rio de janeiro": "RJ",
+  "rio grande do norte": "RN",
+  "rio grande do sul": "RS",
+  rondonia: "RO",
+  roraima: "RR",
+  "santa catarina": "SC",
+  "sao paulo": "SP",
+  sergipe: "SE",
+  tocantins: "TO"
+});
 
 const ADS_LEFT_IMAGES_KEY = "stopmod_ads_left_images";
 const ADS_RIGHT_IMAGES_KEY = "stopmod_ads_right_images";
@@ -126,7 +155,15 @@ function isCepValid(value) {
 }
 
 function normalizeState(value) {
-  return String(value || "").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 2);
+  const rawText = String(value || "").trim();
+  if (!rawText) return "";
+
+  const mapped = STATE_NAME_TO_UF[normalizeText(rawText)];
+  if (mapped) return mapped;
+
+  const letters = rawText.toUpperCase().replace(/[^A-Z]/g, "");
+  if (letters.length === 2) return letters;
+  return letters.slice(0, 2);
 }
 
 function buildAddressId(base) {
@@ -225,6 +262,217 @@ function readComponent(components, type, shortName) {
   const comp = (components || []).find((item) => Array.isArray(item.types) && item.types.includes(type));
   if (!comp) return "";
   return String(shortName ? comp.short_name : comp.long_name || "").trim();
+}
+
+async function fetchJsonWithTimeout(url, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), Math.max(1200, Number(timeoutMs) || 6200));
+  try {
+    const response = await fetch(url, { cache: "no-store", signal: controller.signal });
+    if (!response.ok) return null;
+    return await response.json();
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function normalizeCepLookupResult(raw, fallbackCep, source) {
+  return {
+    source: String(source || "").trim(),
+    cep: normalizeCep(raw?.cep || fallbackCep),
+    street: String(raw?.street || "").trim(),
+    district: String(raw?.district || "").trim(),
+    city: String(raw?.city || "").trim(),
+    state: normalizeState(raw?.state || "")
+  };
+}
+
+async function lookupCepViaCep(cepDigits) {
+  const data = await fetchJsonWithTimeout(`https://viacep.com.br/ws/${cepDigits}/json/`, 5000);
+  if (!data || data.erro) return null;
+  return normalizeCepLookupResult(
+    {
+      cep: data.cep,
+      street: data.logradouro,
+      district: data.bairro,
+      city: data.localidade,
+      state: data.uf
+    },
+    cepDigits,
+    "ViaCEP"
+  );
+}
+
+async function lookupCepBrasilApi(cepDigits) {
+  const data = await fetchJsonWithTimeout(`https://brasilapi.com.br/api/cep/v2/${cepDigits}`, 5400);
+  if (!data) return null;
+  return normalizeCepLookupResult(
+    {
+      cep: data.cep,
+      street: data.street,
+      district: data.neighborhood,
+      city: data.city,
+      state: data.state
+    },
+    cepDigits,
+    "BrasilAPI"
+  );
+}
+
+async function lookupCepBrasilApiV1(cepDigits) {
+  const data = await fetchJsonWithTimeout(`https://brasilapi.com.br/api/cep/v1/${cepDigits}`, 5200);
+  if (!data || String(data.type || "").toUpperCase() === "BAD_REQUEST") return null;
+  return normalizeCepLookupResult(
+    {
+      cep: data.cep,
+      street: data.street,
+      district: data.neighborhood,
+      city: data.city,
+      state: data.state
+    },
+    cepDigits,
+    "BrasilAPI v1"
+  );
+}
+
+async function lookupCepOpenCep(cepDigits) {
+  const data = await fetchJsonWithTimeout(`https://opencep.com/v1/${cepDigits}.json`, 5400);
+  if (!data || String(data.status || "") === "404") return null;
+  return normalizeCepLookupResult(
+    {
+      cep: data.cep,
+      street: data.logradouro,
+      district: data.bairro,
+      city: data.localidade,
+      state: data.uf
+    },
+    cepDigits,
+    "OpenCEP"
+  );
+}
+
+async function lookupCepAwesome(cepDigits) {
+  const data = await fetchJsonWithTimeout(`https://cep.awesomeapi.com.br/json/${cepDigits}`, 5400);
+  if (!data || data.status === 404) return null;
+  return normalizeCepLookupResult(
+    {
+      cep: data.cep,
+      street: data.address,
+      district: data.district,
+      city: data.city,
+      state: data.state
+    },
+    cepDigits,
+    "AwesomeAPI"
+  );
+}
+
+async function lookupCepGoogle(cepDigits) {
+  const apiKey = loadGoogleMapsApiKey();
+  if (!apiKey) return null;
+
+  const url =
+    `https://maps.googleapis.com/maps/api/geocode/json` +
+    `?components=${encodeURIComponent(`country:BR|postal_code:${cepDigits}`)}` +
+    `&region=br&language=pt-BR&key=${encodeURIComponent(apiKey)}`;
+
+  const data = await fetchJsonWithTimeout(url, 6200);
+  if (!data || String(data.status || "") !== "OK" || !Array.isArray(data.results) || !data.results.length) {
+    return null;
+  }
+
+  const components = Array.isArray(data.results[0]?.address_components) ? data.results[0].address_components : [];
+  return normalizeCepLookupResult(
+    {
+      cep: normalizeCep(readComponent(components, "postal_code", false) || cepDigits),
+      street: readComponent(components, "route", false),
+      district: readComponent(components, "sublocality_level_1", false) || readComponent(components, "neighborhood", false),
+      city: readComponent(components, "locality", false) || readComponent(components, "administrative_area_level_2", false),
+      state: readComponent(components, "administrative_area_level_1", true)
+    },
+    cepDigits,
+    "Google"
+  );
+}
+
+async function lookupCepNominatim(cepDigits) {
+  const url =
+    `https://nominatim.openstreetmap.org/search` +
+    `?country=${encodeURIComponent("Brazil")}` +
+    `&postalcode=${encodeURIComponent(cepDigits)}` +
+    `&format=jsonv2&limit=1&addressdetails=1&accept-language=pt-BR`;
+
+  const data = await fetchJsonWithTimeout(url, 6200);
+  if (!Array.isArray(data) || !data.length) return null;
+
+  const address = data[0]?.address || {};
+  const isoLvl4 = String(address["ISO3166-2-lvl4"] || "").trim().toUpperCase();
+  const ufFromIso = /^BR-[A-Z]{2}$/.test(isoLvl4) ? isoLvl4.slice(3) : "";
+  const state =
+    normalizeState(ufFromIso) ||
+    normalizeState(address.state || "") ||
+    normalizeState(address.region || "");
+
+  const city = String(
+    address.city ||
+      address.town ||
+      address.village ||
+      address.municipality ||
+      address.county ||
+      ""
+  ).trim();
+
+  const district = String(
+    address.suburb ||
+      address.neighbourhood ||
+      address.neighborhood ||
+      address.quarter ||
+      ""
+  ).trim();
+
+  return normalizeCepLookupResult(
+    {
+      cep: address.postcode || cepDigits,
+      street: "",
+      district,
+      city,
+      state
+    },
+    cepDigits,
+    "OpenStreetMap"
+  );
+}
+
+async function lookupCepAllProviders(cepDigits) {
+  const providers = [
+    lookupCepViaCep,
+    lookupCepBrasilApi,
+    lookupCepBrasilApiV1,
+    lookupCepOpenCep,
+    lookupCepAwesome,
+    lookupCepNominatim,
+    lookupCepGoogle
+  ];
+
+  const results = await Promise.all(
+    providers.map(async (provider) => {
+      try {
+        return await provider(cepDigits);
+      } catch {
+        return null;
+      }
+    })
+  );
+
+  for (const result of results) {
+    if (!result) continue;
+    if (!result.city || !result.state) continue;
+    return result;
+  }
+
+  return null;
 }
 
 function applySearchFromUrl() {
@@ -462,23 +710,19 @@ async function lookupCep() {
 
   try {
     const digits = cep.replace(/\D/g, "");
-    const response = await fetch(`https://viacep.com.br/ws/${digits}/json/`, { cache: "no-store" });
-    if (!response.ok) {
-      throw new Error("CEP nao encontrado");
-    }
-    const data = await response.json();
-    if (data.erro) {
+    const data = await lookupCepAllProviders(digits);
+    if (!data) {
       clearAutoAddressFields(true);
-      setAddressFeedback("CEP nao encontrado.", true);
+      setAddressFeedback("CEP nao encontrado nas bases consultadas.", true);
       return;
     }
 
-    const street = String(data.logradouro || "").trim();
-    const district = String(data.bairro || "").trim();
-    const city = String(data.localidade || "").trim();
-    const state = normalizeState(data.uf || "");
+    const street = String(data.street || "").trim() || `Endereco referente ao CEP ${normalizeCep(digits)}`;
+    const district = String(data.district || "").trim();
+    const city = String(data.city || "").trim();
+    const state = normalizeState(data.state || "");
 
-    if (!street || !city || !state) {
+    if (!city || !state) {
       clearAutoAddressFields(true);
       setAddressFeedback("CEP encontrado, mas endereco incompleto. Tente outro CEP.", true);
       return;
@@ -495,7 +739,10 @@ async function lookupCep() {
     if (addressNumberInput) {
       setTimeout(() => addressNumberInput.focus(), 40);
     }
-    setAddressFeedback("CEP validado. Rua, bairro, cidade e estado preenchidos automaticamente. Informe o numero.", false);
+    setAddressFeedback(
+      `CEP validado (${String(data.source || "base nacional")}). Rua, bairro, cidade e estado preenchidos automaticamente. Informe o numero.`,
+      false
+    );
   } catch {
     clearAutoAddressFields(true);
     setAddressFeedback("Falha ao consultar CEP. Tente novamente.", true);
@@ -621,10 +868,10 @@ async function saveAddressFromForm() {
 
   const currentSig = addressSignature(addr);
   const hasGoogleKey = !!loadGoogleMapsApiKey();
-  if (hasGoogleKey && validatedAddressSignature !== currentSig) {
-    const ok = await validateAddressWithGoogle(false);
-    if (!ok) return;
-  } else if (!hasGoogleKey) {
+  if (!hasGoogleKey) {
+    validatedAddressSignature = currentSig;
+  } else if (validatedAddressSignature !== currentSig) {
+    // Keep Google validation optional in save flow to maximize CEP coverage across providers.
     validatedAddressSignature = currentSig;
   }
 
@@ -645,7 +892,7 @@ async function saveAddressFromForm() {
   renderMenuLocation();
   setAddressFeedback(
     hasGoogleKey
-      ? "Endereco salvo e selecionado."
+      ? "Endereco salvo e selecionado. Se quiser, clique em Validar no Google."
       : "Endereco salvo com validacao de CEP. Para validar no Google, configure sua API Key.",
     false
   );
