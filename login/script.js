@@ -130,6 +130,7 @@ function buildFacebookLoginUrl(appId) {
   oauthUrl.searchParams.set("scope", "public_profile,email");
   oauthUrl.searchParams.set("state", state);
   oauthUrl.searchParams.set("display", "popup");
+  oauthUrl.searchParams.set("locale", "pt_BR");
 
   const loginUrl = new URL("https://www.facebook.com/login.php");
   loginUrl.searchParams.set("skip_api_login", "1");
@@ -137,6 +138,7 @@ function buildFacebookLoginUrl(appId) {
   loginUrl.searchParams.set("kid_directed_site", "0");
   loginUrl.searchParams.set("app_id", appId);
   loginUrl.searchParams.set("signed_next", "1");
+  loginUrl.searchParams.set("locale", "pt_BR");
   loginUrl.searchParams.set("next", oauthUrl.toString());
   return loginUrl.toString();
 }
@@ -403,10 +405,14 @@ function facebookSignIn() {
   }
 
   setMsg(msg, "Abrindo login Facebook...", false);
+  const popupWidth = 560;
+  const popupHeight = 740;
+  const popupLeft = Math.max(0, Math.round((window.screen.width - popupWidth) / 2));
+  const popupTop = Math.max(0, Math.round((window.screen.height - popupHeight) / 2));
   const popup = window.open(
     buildFacebookLoginUrl(appId),
     "stopmod-facebook-login",
-    "popup=yes,width=620,height=760,menubar=no,toolbar=no,location=yes,status=no,scrollbars=yes,resizable=yes"
+    `popup=yes,width=${popupWidth},height=${popupHeight},left=${popupLeft},top=${popupTop},menubar=no,toolbar=no,location=yes,status=no,scrollbars=yes,resizable=yes`
   );
   if (!popup) {
     startFacebookOAuthFallback(appId);
