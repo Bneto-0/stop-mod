@@ -40,6 +40,7 @@ const directoryGrid = document.getElementById("directory-grid");
 const directoryNote = document.getElementById("directory-note");
 const detailSections = document.getElementById("detail-sections");
 const backToDirectoriesBtn = document.getElementById("back-to-directories");
+const directoryCardBtns = document.querySelectorAll("#directory-grid [data-open-panel]");
 const avatarEl = document.getElementById("avatar");
 const accountAvatarEl = document.getElementById("account-avatar");
 const nameEl = document.getElementById("name");
@@ -343,7 +344,23 @@ function setTab(tabId) {
   });
 }
 
+function setDirectoryCardsState(activeTabId) {
+  const selected = String(activeTabId || "").trim();
+  directoryCardBtns.forEach((btn) => {
+    const tabId = String(btn.getAttribute("data-open-panel") || "").trim();
+    if (!selected) {
+      btn.hidden = false;
+      btn.classList.remove("active");
+      return;
+    }
+    const isActive = tabId === selected;
+    btn.hidden = !isActive;
+    btn.classList.toggle("active", isActive);
+  });
+}
+
 function showDirectoryCards() {
+  setDirectoryCardsState("");
   if (directoryGrid) directoryGrid.hidden = false;
   if (directoryNote) directoryNote.hidden = false;
   if (detailSections) detailSections.hidden = true;
@@ -351,6 +368,7 @@ function showDirectoryCards() {
 }
 
 function showDirectoryPanel(tabId) {
+  setDirectoryCardsState(tabId);
   if (directoryGrid) directoryGrid.hidden = true;
   if (directoryNote) directoryNote.hidden = true;
   if (detailSections) detailSections.hidden = false;
