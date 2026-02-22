@@ -7,6 +7,7 @@ const USERS_KEY = "stopmod_users";
 const OTP_KEY = "stopmod_otp";
 const FACEBOOK_APP_ID_KEY = "stopmod_facebook_app_id";
 const DEFAULT_FACEBOOK_APP_ID = "484889158765114";
+const FACEBOOK_OAUTH_STATE_KEY = "stopmod_facebook_oauth_state";
 
 const loginForm = document.getElementById("login-form");
 const loginId = document.getElementById("login-id");
@@ -104,6 +105,77 @@ function resolvePostLoginUrl() {
     return "../perfil/";
   } catch {
     return "../perfil/";
+  }
+}
+
+function randomStateToken() {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
+function clearOAuthHashFromUrl() {
+  if (!window.location.hash) return;
+  const clean = `${window.location.pathname}${window.location.search}`;
+  window.history.replaceState(null, "", clean);
+}
+
+function startFacebookOAuthFallback(appId) {
+  const redirectUri = `${window.location.origin}${window.location.pathname}${window.location.search}`;
+  const state = randomStateToken();
+  localStorage.setItem(FACEBOOK_OAUTH_STATE_KEY, state);
+
+  const oauthUrl = new URL("https://www.facebook.com/v20.0/dialog/oauth");
+  oauthUrl.searchParams.set("client_id", appId);
+  oauthUrl.searchParams.set("redirect_uri", redirectUri);
+  oauthUrl.searchParams.set("response_type", "token");
+  oauthUrl.searchParams.set("scope", "public_profile,email");
+  oauthUrl.searchParams.set("state", state);
+  window.location.href = oauthUrl.toString();
+}
+
+async function consumeFacebookOAuthCallback() {
+  const hash = String(window.location.hash || "");
+  if (!hash.startsWith("#")) return false;
+
+  const params = new URLSearchParams(hash.slice(1));
+  const accessToken = String(params.get("access_token") || "").trim();
+  const error = String(params.get("error") || params.get("error_reason") || "").trim();
+  const state = String(params.get("state") || "").trim();
+  if (!accessToken && !error) return false;
+
+  const expectedState = String(localStorage.getItem(FACEBOOK_OAUTH_STATE_KEY) || "").trim();
+  localStorage.removeItem(FACEBOOK_OAUTH_STATE_KEY);
+  clearOAuthHashFromUrl();
+
+  if (error) {
+    setMsg(msg, "Login Facebook cancelado ou nao autorizado.", true);
+    return true;
+  }
+  if (expectedState && state !== expectedState) {
+    setMsg(msg, "Falha de seguranca no retorno do Facebook. Tente novamente.", true);
+    return true;
+  }
+
+  setMsg(msg, "Finalizando login Facebook...", false);
+  try {
+    const profileUrl =
+      "https://graph.facebook.com/me?fields=id,name,email,picture.width(256).height(256)" +
+      `&access_token=${encodeURIComponent(accessToken)}`;
+    const profileResp = await fetch(profileUrl, { cache: "no-store" }).then((resp) => {
+      if (!resp.ok) throw new Error("facebook_graph_error");
+      return resp.json();
+    });
+    if (!profileResp || profileResp.error) throw new Error("facebook_profile_error");
+
+    const name = String(profileResp.name || "Cliente Stop mod");
+    const email = String(profileResp.email || "");
+    const picture = String(profileResp?.picture?.data?.url || "");
+    const accountKey = email ? norm(email) : `fb:${String(profileResp.id || "").trim()}`;
+    const user = upsertUser({ key: accountKey, name, email, phone: "", pass: "", picture });
+    finishLogin({ ...user, name, email, picture });
+    return true;
+  } catch {
+    setMsg(msg, "Falha ao carregar dados da conta Facebook.", true);
+    return true;
   }
 }
 
@@ -367,7 +439,8 @@ function facebookSignIn() {
   setMsg(msg, "Abrindo login Facebook...", false);
   ensureFacebookReady(appId, (err, FB) => {
     if (err || !FB || typeof FB.login !== "function") {
-      setMsg(msg, "Nao foi possivel abrir o Facebook agora. Tente novamente.", true);
+      // Fallback: abre o login oficial via OAuth em tela cheia.
+      startFacebookOAuthFallback(appId);
       return;
     }
 
@@ -569,6 +642,7 @@ loginForm?.addEventListener("submit", (e) => {
 });
 
 // Default state
+void consumeFacebookOAuthCallback();
 const initialFacebookAppId = loadFacebookAppId();
 if (initialFacebookAppId) {
   ensureFacebookReady(initialFacebookAppId, () => {});
