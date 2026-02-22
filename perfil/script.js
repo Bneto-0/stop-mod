@@ -23,13 +23,16 @@ const heroTabs = document.getElementById("hero-tabs");
 
 const viewAuthed = document.getElementById("view-authed");
 const viewGuest = document.getElementById("view-guest");
+const detailSections = document.getElementById("detail-sections");
 const avatarEl = document.getElementById("avatar");
+const accountAvatarEl = document.getElementById("account-avatar");
 const nameEl = document.getElementById("name");
 const emailEl = document.getElementById("email");
 const cornerLabel = document.getElementById("corner-label");
 
 const tabBtns = document.querySelectorAll("[data-tab]");
 const tabPanels = document.querySelectorAll("[data-panel]");
+const openPanelBtns = document.querySelectorAll("[data-open-panel]");
 
 const accName = document.getElementById("acc-name");
 const accPhone = document.getElementById("acc-phone");
@@ -424,6 +427,10 @@ function renderAccount(activeProfile) {
     const pic = String(p?.picture || "").trim();
     avatarEl.src = pic || "../assets/icons/user-solid.svg";
   }
+  if (accountAvatarEl) {
+    const pic = String(p?.picture || "").trim();
+    accountAvatarEl.src = pic || "../assets/icons/user-solid.svg";
+  }
 }
 
 function renderAuth() {
@@ -447,7 +454,9 @@ function renderAuth() {
   renderAccount(p);
   renderOrders();
   renderFavorites();
-  setTab(getRequestedTab() || "account");
+  const requestedTab = getRequestedTab();
+  if (detailSections) detailSections.hidden = !requestedTab;
+  if (requestedTab) setTab(requestedTab);
   return true;
 }
 
@@ -478,6 +487,17 @@ logoutBtn?.addEventListener("click", () => {
 
 tabBtns.forEach((b) => {
   b.addEventListener("click", () => setTab(String(b.getAttribute("data-tab"))));
+});
+
+openPanelBtns.forEach((b) => {
+  b.addEventListener("click", () => {
+    const tabId = String(b.getAttribute("data-open-panel") || "account");
+    if (detailSections) detailSections.hidden = false;
+    setTab(tabId);
+    if (detailSections && typeof detailSections.scrollIntoView === "function") {
+      detailSections.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
 });
 
 accSave?.addEventListener("click", () => {
