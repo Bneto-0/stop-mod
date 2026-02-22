@@ -663,7 +663,7 @@ openPanelBtns.forEach((b) => {
     try {
       const url = new URL(window.location.href);
       url.searchParams.set("tab", tabId);
-      url.hash = "detail-sections";
+      url.hash = "";
       window.history.replaceState(null, "", url.toString());
     } catch {}
   });
