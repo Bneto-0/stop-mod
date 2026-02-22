@@ -21,6 +21,7 @@ const viewGuest = document.getElementById("view-guest");
 const avatarEl = document.getElementById("avatar");
 const nameEl = document.getElementById("name");
 const emailEl = document.getElementById("email");
+const cornerLabel = document.getElementById("corner-label");
 
 const tabBtns = document.querySelectorAll("[data-tab]");
 const tabPanels = document.querySelectorAll("[data-panel]");
@@ -307,6 +308,7 @@ function renderAccount() {
   nameEl.textContent = displayName;
   // Avoid showing personal email in the public UI; use a simple status line instead.
   emailEl.textContent = "Conta conectada";
+  if (cornerLabel) cornerLabel.textContent = displayName;
   if (avatarEl) {
     const pic = String(p?.picture || "").trim();
     avatarEl.src = pic || "../assets/icons/user-solid.svg";
@@ -323,6 +325,7 @@ function renderAuth() {
   if (!authed) {
     nameEl.textContent = "Nao logado";
     emailEl.textContent = "Faca login para ver seus pedidos.";
+    if (cornerLabel) cornerLabel.textContent = "Perfil";
     if (avatarEl) avatarEl.src = "../assets/icons/user-solid.svg";
     return;
   }
