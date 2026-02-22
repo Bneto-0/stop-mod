@@ -309,7 +309,7 @@ function renderAccount() {
   emailEl.textContent = email || "email nao informado";
   if (avatarEl) {
     const pic = String(p?.picture || "").trim();
-    avatarEl.src = pic || "../assets/icons/cart-solid.svg";
+    avatarEl.src = pic || "../assets/icons/user-solid.svg";
   }
 }
 
@@ -322,7 +322,7 @@ function renderAuth() {
   if (!authed) {
     nameEl.textContent = "Nao logado";
     emailEl.textContent = "Entre com Google para ver seus pedidos.";
-    if (avatarEl) avatarEl.src = "../assets/icons/cart-solid.svg";
+    if (avatarEl) avatarEl.src = "../assets/icons/user-solid.svg";
     return;
   }
 

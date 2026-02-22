@@ -9,9 +9,33 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../style.css?v=6" />
   <style>
-    .hero { padding-bottom: 1.3rem; }
+    .hero { padding: 1.1rem 0 2.6rem; }
     .panel { background: var(--card); border:1px solid var(--line); border-radius: 16px; padding: 1rem; box-shadow: 0 10px 24px #2f211810; }
     .muted2 { color: var(--muted); font-size: .92rem; }
+
+    .hero-row { margin-top: 3.2rem; display:flex; align-items:flex-end; justify-content:space-between; gap: 1.2rem; flex-wrap:wrap; }
+    .hero-row .hero-content { margin-top: 0; }
+    .hero-h1 { display:flex; align-items:center; gap: .65rem; }
+    .hero-h1 svg { width: 34px; height: 34px; fill: #fff6ef; opacity: .95; }
+
+    .hero-chip {
+      display:flex;
+      gap: .75rem;
+      align-items:center;
+      background: #fff3e8;
+      color: #2f2824;
+      border: 1px solid #ffffff55;
+      border-radius: 18px;
+      padding: .65rem .75rem;
+      box-shadow: 0 18px 46px #00000020;
+      max-width: min(520px, 100%);
+    }
+    .hero-chip img { width: 54px; height: 54px; border-radius: 16px; object-fit: cover; border: 1px solid #eac8bb; background: #fff; }
+    .hero-chip .txt { display:grid; gap:.1rem; min-width: 220px; }
+    .hero-chip .txt strong { font-size: 1.05rem; }
+    .hero-chip .txt span { color: #6e6761; font-weight: 800; font-size: .9rem; }
+    .hero-chip .actions { margin-left: auto; display:flex; align-items:center; }
+    .hero-chip .btn { margin-top: 0; }
 
     .header { display:flex; gap: 1rem; flex-wrap:wrap; align-items:center; justify-content:space-between; }
     .who { display:flex; gap: .8rem; align-items:center; flex-wrap:wrap; }
@@ -51,6 +75,8 @@
 
     @media (max-width: 720px) {
       .header { justify-content:flex-start; }
+      .hero-chip { width: 100%; }
+      .hero-chip .txt { min-width: 0; }
     }
   </style>
 </head>
@@ -70,27 +96,35 @@
         </a>
       </div>
     </nav>
+
+    <section class="hero-row container">
+      <div class="hero-content" style="max-width: 760px;">
+        <p class="tag">Conta</p>
+        <h1 class="hero-h1">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M12 12a4.5 4.5 0 1 0-4.5-4.5A4.5 4.5 0 0 0 12 12zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"></path>
+          </svg>
+          Perfil
+        </h1>
+        <p>Entre com Google para ver seus dados pessoais, pedidos e acompanhar entregas.</p>
+        <a class="btn" href="#perfil">Abrir perfil</a>
+      </div>
+
+      <div class="hero-chip" aria-label="Resumo do usuario">
+        <img id="avatar" alt="Foto do perfil" src="../assets/icons/user-solid.svg" />
+        <div class="txt">
+          <strong id="name">Nao logado</strong>
+          <span id="email" class="muted2">Entre com Google para ver seus pedidos.</span>
+        </div>
+        <div class="actions">
+          <button id="logout" class="btn" type="button" style="background:#fff5ef; color:#8c3c26; border:1px solid #eac8bb;">Sair</button>
+        </div>
+      </div>
+    </section>
   </header>
 
   <main class="container layout">
-    <header style="margin-bottom:.9rem;">
-      <p class="tag">Conta</p>
-      <h1 style="margin-top:.25rem;">Perfil</h1>
-      <p style="color: var(--muted); margin-top:.35rem;">Gerencie sua conta, pedidos e acompanhe entregas.</p>
-    </header>
-
     <section id="perfil" class="panel">
-      <div class="header">
-        <div class="who">
-          <img id="avatar" alt="Foto do perfil" src="../assets/icons/cart-solid.svg" />
-          <div class="txt">
-            <strong id="name">Nao logado</strong>
-            <span id="email" class="muted2">Entre com Google para ver seus pedidos.</span>
-          </div>
-        </div>
-        <button id="logout" class="btn" type="button" style="background:#fff5ef; color:#8c3c26; border:1px solid #eac8bb;">Sair</button>
-      </div>
-
       <div id="view-guest" class="grid2">
         <div class="order">
           <h2>Entrar com Google</h2>
@@ -162,6 +196,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=6"></script>
+  <script src="script.js?v=8"></script>
 </body>
 </html>
