@@ -234,6 +234,14 @@ function setAddressCompletionVisible(show) {
   if (saveAddressBtn) saveAddressBtn.hidden = !isVisible;
 }
 
+function setAutoAddressReadOnly(readOnly) {
+  const lock = !!readOnly;
+  if (addressStreetInput) addressStreetInput.readOnly = lock;
+  if (addressDistrictInput) addressDistrictInput.readOnly = lock;
+  if (addressCityInput) addressCityInput.readOnly = lock;
+  if (addressStateInput) addressStateInput.readOnly = lock;
+}
+
 function dedupeAddresses(items) {
   const seen = new Set();
   const out = [];
@@ -587,10 +595,12 @@ function fillAddressForm(raw) {
   if (addressStateInput) addressStateInput.value = addr.state || "";
 
   cepResolved = !!(isCepValid(addr.cep) && addr.street && addr.city && addr.state);
+  setAutoAddressReadOnly(cepResolved);
   setAddressCompletionVisible(cepResolved);
 }
 
 function clearAutoAddressFields(resetNumber) {
+  setAutoAddressReadOnly(true);
   if (addressStreetInput) addressStreetInput.value = "";
   if (addressDistrictInput) addressDistrictInput.value = "";
   if (addressCityInput) addressCityInput.value = "";
@@ -713,7 +723,14 @@ async function lookupCep() {
     const data = await lookupCepAllProviders(digits);
     if (!data) {
       clearAutoAddressFields(true);
-      setAddressFeedback("CEP nao encontrado nas bases consultadas.", true);
+      setAutoAddressReadOnly(false);
+      cepResolved = true;
+      setAddressCompletionVisible(true);
+      if (addressStreetInput) addressStreetInput.focus();
+      setAddressFeedback(
+        "CEP nao encontrado nas bases consultadas. Preencha rua, bairro, cidade e estado manualmente.",
+        true
+      );
       return;
     }
 
@@ -724,10 +741,18 @@ async function lookupCep() {
 
     if (!city || !state) {
       clearAutoAddressFields(true);
-      setAddressFeedback("CEP encontrado, mas endereco incompleto. Tente outro CEP.", true);
+      setAutoAddressReadOnly(false);
+      cepResolved = true;
+      setAddressCompletionVisible(true);
+      if (addressStreetInput) addressStreetInput.focus();
+      setAddressFeedback(
+        "CEP encontrado com dados parciais. Complete rua, bairro, cidade e estado manualmente.",
+        true
+      );
       return;
     }
 
+    setAutoAddressReadOnly(true);
     if (addressStreetInput) addressStreetInput.value = street;
     if (addressDistrictInput) addressDistrictInput.value = district;
     if (addressCityInput) addressCityInput.value = city;
@@ -929,6 +954,7 @@ function initAddressDirectory() {
     if (digits.length < 8) {
       clearAutoAddressFields(true);
     } else {
+      setAutoAddressReadOnly(true);
       cepResolved = false;
       setAddressCompletionVisible(false);
     }
