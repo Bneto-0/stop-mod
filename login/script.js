@@ -7,6 +7,8 @@ const USERS_KEY = "stopmod_users";
 const OTP_KEY = "stopmod_otp";
 const FACEBOOK_APP_ID_KEY = "stopmod_facebook_app_id";
 const DEFAULT_FACEBOOK_APP_ID = "";
+const FACEBOOK_PENDING_NEXT_KEY = "stopmod_facebook_pending_next";
+const FACEBOOK_OAUTH_STATE_KEY = "stopmod_facebook_oauth_state";
 
 const loginForm = document.getElementById("login-form");
 const loginId = document.getElementById("login-id");
@@ -31,10 +33,6 @@ const regMsg = document.getElementById("reg-msg");
 const modal = document.getElementById("modal");
 const modalTitle = document.getElementById("modal-title");
 const modalBody = document.getElementById("modal-body");
-
-let facebookSdkLoading = false;
-let facebookSdkWaiters = [];
-let facebookInitAppId = "";
 
 function setMsg(el, text, isErr = false) {
   if (!el) return;
@@ -92,16 +90,36 @@ function saveFacebookAppId(appId) {
   localStorage.setItem(FACEBOOK_APP_ID_KEY, String(appId || "").trim());
 }
 
-function resolvePostLoginUrl() {
+function normalizeNextPath(raw) {
+  const next = String(raw || "").trim();
+  if (!next) return "";
+  if (/^[a-z]+:\/\//i.test(next)) return "";
+  if (next.startsWith("../") || next.startsWith("./") || next.startsWith("/")) return next;
+  return "";
+}
+
+function resolveRequestedPostLoginUrl() {
   try {
     const raw = String(new URLSearchParams(window.location.search).get("next") || "").trim();
-    if (!raw) return "../perfil/";
-    if (/^[a-z]+:\/\//i.test(raw)) return "../perfil/";
-    if (raw.startsWith("../") || raw.startsWith("./") || raw.startsWith("/")) return raw;
-    return "../perfil/";
+    return normalizeNextPath(raw) || "../perfil/";
   } catch {
     return "../perfil/";
   }
+}
+
+function resolvePostLoginUrl() {
+  const pending = normalizeNextPath(localStorage.getItem(FACEBOOK_PENDING_NEXT_KEY) || "");
+  if (pending) {
+    localStorage.removeItem(FACEBOOK_PENDING_NEXT_KEY);
+    return pending;
+  }
+  return resolveRequestedPostLoginUrl();
+}
+
+function clearOAuthHashFromUrl() {
+  if (!window.location.hash) return;
+  const clean = `${window.location.pathname}${window.location.search}`;
+  window.history.replaceState(null, "", clean);
 }
 
 function openModal(title, html) {
@@ -155,65 +173,80 @@ function openFacebookAppIdSetup(onSaved) {
   });
 }
 
-function ensureFacebookReady(appId, done) {
-  const normalizedAppId = String(appId || "").trim();
-  if (!normalizedAppId) {
-    done(new Error("missing_facebook_app_id"));
-    return;
+function randomStateToken() {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
+function facebookRedirectUri() {
+  return `${window.location.origin}${window.location.pathname}`;
+}
+
+function startFacebookOAuth(appId) {
+  const nextAfterLogin = resolveRequestedPostLoginUrl();
+  localStorage.setItem(FACEBOOK_PENDING_NEXT_KEY, nextAfterLogin);
+
+  const state = randomStateToken();
+  localStorage.setItem(FACEBOOK_OAUTH_STATE_KEY, state);
+
+  const url = new URL("https://www.facebook.com/v20.0/dialog/oauth");
+  url.searchParams.set("client_id", appId);
+  url.searchParams.set("redirect_uri", facebookRedirectUri());
+  url.searchParams.set("response_type", "token");
+  url.searchParams.set("scope", "public_profile,email");
+  url.searchParams.set("state", state);
+
+  window.location.href = url.toString();
+}
+
+async function consumeFacebookOAuthCallback() {
+  const hash = String(window.location.hash || "");
+  if (!hash.startsWith("#")) return false;
+
+  const params = new URLSearchParams(hash.slice(1));
+  const accessToken = String(params.get("access_token") || "").trim();
+  const error = String(params.get("error") || params.get("error_reason") || "").trim();
+  const state = String(params.get("state") || "").trim();
+
+  if (!accessToken && !error) return false;
+
+  const expectedState = String(localStorage.getItem(FACEBOOK_OAUTH_STATE_KEY) || "").trim();
+  localStorage.removeItem(FACEBOOK_OAUTH_STATE_KEY);
+  clearOAuthHashFromUrl();
+
+  if (error) {
+    setMsg(msg, "Login Facebook cancelado ou nao autorizado.", true);
+    return true;
   }
 
-  const initAndDone = () => {
-    try {
-      if (!window.FB || typeof window.FB.init !== "function") {
-        done(new Error("facebook_sdk_unavailable"));
-        return;
-      }
-      if (facebookInitAppId !== normalizedAppId) {
-        window.FB.init({
-          appId: normalizedAppId,
-          cookie: true,
-          xfbml: false,
-          version: "v20.0"
-        });
-        facebookInitAppId = normalizedAppId;
-      }
-      done(null, window.FB);
-    } catch (err) {
-      done(err || new Error("facebook_init_failed"));
+  if (expectedState && state !== expectedState) {
+    setMsg(msg, "Falha de seguranca no retorno do Facebook. Tente novamente.", true);
+    return true;
+  }
+
+  setMsg(msg, "Finalizando login Facebook...", false);
+
+  try {
+    const profileUrl =
+      "https://graph.facebook.com/me?fields=id,name,email,picture.width(256).height(256)" +
+      `&access_token=${encodeURIComponent(accessToken)}`;
+    const resp = await fetch(profileUrl, { cache: "no-store" });
+    if (!resp.ok) throw new Error("facebook_graph_error");
+    const profileResp = await resp.json();
+    if (!profileResp || profileResp.error) {
+      throw new Error("facebook_profile_error");
     }
-  };
 
-  if (window.FB) {
-    initAndDone();
-    return;
+    const name = String(profileResp.name || "Cliente Stop mod");
+    const email = String(profileResp.email || "");
+    const picture = String(profileResp?.picture?.data?.url || "");
+    const accountKey = email ? norm(email) : `fb:${String(profileResp.id || "").trim()}`;
+    const user = upsertUser({ key: accountKey, name, email, phone: "", pass: "", picture });
+    finishLogin({ ...user, name, email, picture });
+    return true;
+  } catch {
+    setMsg(msg, "Falha ao carregar dados da conta Facebook.", true);
+    return true;
   }
-
-  facebookSdkWaiters.push(initAndDone);
-  if (facebookSdkLoading) return;
-
-  facebookSdkLoading = true;
-  const existing = document.getElementById("facebook-jssdk");
-  if (existing) return;
-
-  window.fbAsyncInit = () => {
-    facebookSdkLoading = false;
-    const waiters = facebookSdkWaiters.slice();
-    facebookSdkWaiters = [];
-    waiters.forEach((fn) => fn());
-  };
-
-  const script = document.createElement("script");
-  script.id = "facebook-jssdk";
-  script.src = "https://connect.facebook.net/pt_BR/sdk.js";
-  script.async = true;
-  script.defer = true;
-  script.onerror = () => {
-    facebookSdkLoading = false;
-    const waiters = facebookSdkWaiters.slice();
-    facebookSdkWaiters = [];
-    waiters.forEach((fn) => fn(new Error("facebook_sdk_load_failed")));
-  };
-  document.head.appendChild(script);
 }
 
 modal?.querySelectorAll("[data-close]").forEach((el) => el.addEventListener("click", closeModal));
@@ -392,43 +425,15 @@ function facebookSignIn() {
   const appId = loadFacebookAppId();
   if (!appId) {
     openFacebookAppIdSetup(() => {
-      facebookSignIn();
+      const saved = loadFacebookAppId();
+      if (!saved) return;
+      startFacebookOAuth(saved);
     });
     return;
   }
 
   setMsg(msg, "Abrindo login Facebook...", false);
-
-  ensureFacebookReady(appId, (err, FB) => {
-    if (err || !FB) {
-      setMsg(msg, "Nao foi possivel iniciar o Facebook. Verifique o App ID.", true);
-      return;
-    }
-
-    FB.login(
-      (response) => {
-        if (!response || response.status !== "connected") {
-          setMsg(msg, "Login Facebook cancelado ou nao autorizado.", true);
-          return;
-        }
-
-        FB.api("/me", { fields: "id,name,email,picture.width(256).height(256)" }, (profileResp) => {
-          if (!profileResp || profileResp.error) {
-            setMsg(msg, "Falha ao carregar dados da conta Facebook.", true);
-            return;
-          }
-
-          const name = String(profileResp.name || "Cliente Stop mod");
-          const email = String(profileResp.email || "");
-          const picture = String(profileResp?.picture?.data?.url || "");
-          const accountKey = email ? norm(email) : `fb:${String(profileResp.id || "").trim()}`;
-          const user = upsertUser({ key: accountKey, name, email, phone: "", pass: "", picture });
-          finishLogin({ ...user, name, email, picture });
-        });
-      },
-      { scope: "public_profile,email", return_scopes: true, auth_type: "rerequest" }
-    );
-  });
+  startFacebookOAuth(appId);
 }
 
 fbBtn?.addEventListener("click", facebookSignIn);
@@ -592,4 +597,5 @@ loginForm?.addEventListener("submit", (e) => {
 });
 
 // Default state
+void consumeFacebookOAuthCallback();
 showRegister(false);
