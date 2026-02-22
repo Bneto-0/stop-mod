@@ -484,6 +484,16 @@
       margin-top: 0.55rem;
     }
 
+    .address-cep-start {
+      margin-top: 0.2rem;
+    }
+
+    .address-complete-block {
+      margin-top: 0.72rem;
+      border-top: 1px dashed #e2d5cb;
+      padding-top: 0.62rem;
+    }
+
     .address-btn {
       border: 1px solid #e2d5cb;
       border-radius: 9px;
@@ -680,42 +690,48 @@
 
       <section class="address-card-block">
         <h4>Em outro lugar</h4>
-        <p class="meta" style="margin-top:0;">Passo 1: informe o CEP e clique em Buscar CEP. Passo 2: preencha somente o numero da residencia.</p>
-        <div class="address-form-grid">
-          <label>
-            CEP
-            <input id="address-cep" type="text" inputmode="numeric" placeholder="Informar um CEP" maxlength="9" />
-          </label>
-          <label>
-            Telefone de contato
-            <input id="address-contact" type="text" placeholder="(11) 99999-9999" />
-          </label>
-          <label class="full">
-            Rua
-            <input id="address-street" type="text" placeholder="Rua / Avenida" readonly />
-          </label>
-          <label>
-            Numero
-            <input id="address-number" type="text" placeholder="Numero" />
-          </label>
-          <label>
-            Bairro
-            <input id="address-district" type="text" placeholder="Bairro" readonly />
-          </label>
-          <label>
-            Cidade
-            <input id="address-city" type="text" placeholder="Cidade" readonly />
-          </label>
-          <label>
-            Estado
-            <input id="address-state" type="text" placeholder="UF" maxlength="2" readonly />
-          </label>
+        <div class="address-cep-start">
+          <div class="address-form-grid">
+            <label class="full">
+              CEP
+              <input id="address-cep" type="text" inputmode="numeric" placeholder="Informar um CEP" maxlength="9" />
+            </label>
+          </div>
+
+          <div class="address-inline-actions">
+            <button id="lookup-cep" class="address-btn ghost" type="button">Buscar CEP</button>
+            <a class="address-link" href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer">Nao sei meu CEP</a>
+          </div>
         </div>
 
-        <div class="address-inline-actions">
-          <button id="lookup-cep" class="address-btn ghost" type="button">Buscar CEP</button>
-          <button id="google-maps-check" class="address-btn ghost" type="button">Validar no Google</button>
-          <a class="address-link" href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer">Nao sei meu CEP</a>
+        <div id="address-complete-block" class="address-complete-block" hidden>
+          <p class="meta" style="margin-top:0;">CEP validado. Agora complete com o numero da residencia.</p>
+          <div class="address-form-grid">
+            <label>
+              Telefone de contato
+              <input id="address-contact" type="text" placeholder="(11) 99999-9999" />
+            </label>
+            <label>
+              Numero
+              <input id="address-number" type="text" placeholder="Numero" />
+            </label>
+            <label class="full">
+              Rua
+              <input id="address-street" type="text" placeholder="Rua / Avenida" readonly />
+            </label>
+            <label>
+              Bairro
+              <input id="address-district" type="text" placeholder="Bairro" readonly />
+            </label>
+            <label>
+              Cidade
+              <input id="address-city" type="text" placeholder="Cidade" readonly />
+            </label>
+            <label>
+              Estado
+              <input id="address-state" type="text" placeholder="UF" maxlength="2" readonly />
+            </label>
+          </div>
         </div>
 
         <details class="address-setup">
@@ -737,7 +753,7 @@
 
       <div class="address-modal-foot">
         <button class="address-btn ghost" type="button" data-address-close="1">Cancelar</button>
-        <button id="save-address" class="address-btn" type="button">Salvar alteracoes</button>
+        <button id="save-address" class="address-btn" type="button" hidden>Salvar alteracoes</button>
       </div>
       <p id="address-feedback" class="address-feedback" aria-live="polite"></p>
     </section>
@@ -751,6 +767,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=16"></script>
+  <script src="script.js?v=17"></script>
 </body>
 </html>

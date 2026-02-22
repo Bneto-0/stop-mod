@@ -88,6 +88,7 @@ const saveAddressBtn = document.getElementById("save-address");
 const addressFeedback = document.getElementById("address-feedback");
 const googleMapsApiKeyInput = document.getElementById("google-maps-api-key");
 const saveGoogleKeyBtn = document.getElementById("save-google-key");
+const addressCompleteBlock = document.getElementById("address-complete-block");
 
 let selectedAddressId = "";
 let validatedAddressSignature = "";
@@ -188,6 +189,12 @@ function setAddressFeedback(text, isError) {
   if (!addressFeedback) return;
   addressFeedback.textContent = text || "";
   addressFeedback.classList.toggle("error", !!isError);
+}
+
+function setAddressCompletionVisible(show) {
+  const isVisible = !!show;
+  if (addressCompleteBlock) addressCompleteBlock.hidden = !isVisible;
+  if (saveAddressBtn) saveAddressBtn.hidden = !isVisible;
 }
 
 function dedupeAddresses(items) {
@@ -332,6 +339,7 @@ function fillAddressForm(raw) {
   if (addressStateInput) addressStateInput.value = addr.state || "";
 
   cepResolved = !!(isCepValid(addr.cep) && addr.street && addr.city && addr.state);
+  setAddressCompletionVisible(cepResolved);
 }
 
 function clearAutoAddressFields(resetNumber) {
@@ -341,6 +349,7 @@ function clearAutoAddressFields(resetNumber) {
   if (addressStateInput) addressStateInput.value = "";
   if (resetNumber && addressNumberInput) addressNumberInput.value = "";
   cepResolved = false;
+  setAddressCompletionVisible(false);
 }
 
 function closeAddressDirectory() {
@@ -362,6 +371,9 @@ function renderSavedAddresses() {
   if (!list.length) {
     savedAddressList.innerHTML = "";
     if (savedAddressEmpty) savedAddressEmpty.hidden = false;
+    clearAutoAddressFields(true);
+    if (addressCepInput) addressCepInput.value = "";
+    if (addressContactInput) addressContactInput.value = "";
     return;
   }
 
@@ -479,6 +491,10 @@ async function lookupCep() {
 
     validatedAddressSignature = "";
     cepResolved = true;
+    setAddressCompletionVisible(true);
+    if (addressNumberInput) {
+      setTimeout(() => addressNumberInput.focus(), 40);
+    }
     setAddressFeedback("CEP validado. Rua, bairro, cidade e estado preenchidos automaticamente. Informe o numero.", false);
   } catch {
     clearAutoAddressFields(true);
@@ -638,6 +654,7 @@ async function saveAddressFromForm() {
 
 function initAddressDirectory() {
   ensureShipDirectorySeed();
+  setAddressCompletionVisible(false);
 
   if (openAddressModal) {
     openAddressModal.addEventListener("click", openAddressDirectory);
@@ -666,6 +683,7 @@ function initAddressDirectory() {
       clearAutoAddressFields(true);
     } else {
       cepResolved = false;
+      setAddressCompletionVisible(false);
     }
   });
 
