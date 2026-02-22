@@ -9,7 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../style.css?v=6" />
   <style>
-    .hero { padding: 1.1rem 0 2.6rem; position: relative; }
+    /* Keep enough vertical space so the corner chips never overlap the top nav at 100% zoom. */
+    .hero { padding: 1.1rem 0 4.2rem; min-height: 180px; position: relative; }
     .panel { background: var(--card); border:1px solid var(--line); border-radius: 16px; padding: 1rem; box-shadow: 0 10px 24px #2f211810; }
     .muted2 { color: var(--muted); font-size: .92rem; }
 
@@ -237,6 +238,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=22"></script>
+  <script src="script.js?v=23"></script>
 </body>
 </html>
