@@ -43,6 +43,8 @@ const adLeftImage = document.getElementById("ad-left-image");
 const adRightImage = document.getElementById("ad-right-image");
 const adLeftLink = document.getElementById("ad-left-link");
 const adRightLink = document.getElementById("ad-right-link");
+const adLeftDots = document.getElementById("ad-left-dots");
+const adRightDots = document.getElementById("ad-right-dots");
 
 function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -109,7 +111,7 @@ function getFilteredProducts() {
   });
 }
 
-function startAdSlider(frameEl, imgEl, imageKey, targetKey, fallbackImages) {
+function startAdSlider(frameEl, imgEl, dotsEl, imageKey, targetKey, fallbackImages) {
   if (!frameEl || !imgEl) return;
   const images = loadStringArray(imageKey, fallbackImages);
   const target = loadLinkTarget(targetKey) || "anuncios/";
@@ -122,6 +124,31 @@ function startAdSlider(frameEl, imgEl, imageKey, targetKey, fallbackImages) {
   let lastX = 0;
   let suppressClick = false;
 
+  const syncDots = () => {
+    if (!dotsEl) return;
+    dotsEl.querySelectorAll(".ad-dot").forEach((dot, i) => {
+      dot.classList.toggle("active", i === index);
+    });
+  };
+
+  const buildDots = () => {
+    if (!dotsEl) return;
+    dotsEl.innerHTML = images
+      .map((_, i) => `<span class="ad-dot ${i === 0 ? "active" : ""}" data-i="${i}"></span>`)
+      .join("");
+    dotsEl.querySelectorAll(".ad-dot").forEach((dotEl) => {
+      dotEl.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        const i = Number(dotEl.getAttribute("data-i"));
+        if (!Number.isInteger(i)) return;
+        index = i;
+        apply();
+        startAuto();
+      });
+    });
+  };
+
   const apply = () => {
     imgEl.style.opacity = "0.2";
     imgEl.style.transform = "translateX(0)";
@@ -129,6 +156,7 @@ function startAdSlider(frameEl, imgEl, imageKey, targetKey, fallbackImages) {
       imgEl.src = images[index];
       imgEl.alt = `Anuncio ${index + 1}`;
       imgEl.style.opacity = "1";
+      syncDots();
     }, 120);
   };
 
@@ -211,14 +239,17 @@ function startAdSlider(frameEl, imgEl, imageKey, targetKey, fallbackImages) {
   if (!images.length) {
     imgEl.removeAttribute("src");
     imgEl.alt = "Sem anuncios";
+    if (dotsEl) dotsEl.innerHTML = "";
     return;
   }
 
+  buildDots();
   const firstImage = images[0];
   if (firstImage) {
     imgEl.src = firstImage;
     imgEl.alt = "Anuncio 1";
   }
+  syncDots();
 
   if (images.length <= 1) return;
 
@@ -272,5 +303,5 @@ searchInput?.addEventListener("input", renderProducts);
 renderProducts();
 updateCartCount();
 renderMenuLocation();
-startAdSlider(adLeftLink, adLeftImage, ADS_LEFT_IMAGES_KEY, ADS_LEFT_TARGET_KEY, DEFAULT_LEFT_ADS);
-startAdSlider(adRightLink, adRightImage, ADS_RIGHT_IMAGES_KEY, ADS_RIGHT_TARGET_KEY, DEFAULT_RIGHT_ADS);
+startAdSlider(adLeftLink, adLeftImage, adLeftDots, ADS_LEFT_IMAGES_KEY, ADS_LEFT_TARGET_KEY, DEFAULT_LEFT_ADS);
+startAdSlider(adRightLink, adRightImage, adRightDots, ADS_RIGHT_IMAGES_KEY, ADS_RIGHT_TARGET_KEY, DEFAULT_RIGHT_ADS);

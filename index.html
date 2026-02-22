@@ -261,6 +261,33 @@
       cursor: grabbing;
     }
 
+    .ad-dots {
+      position: absolute;
+      left: 50%;
+      bottom: 9px;
+      transform: translateX(-50%);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.34rem;
+      z-index: 3;
+    }
+
+    .ad-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #ffffff88;
+      border: 1px solid #0000002a;
+      transition: width .2s ease, background .2s ease, opacity .2s ease;
+      opacity: 0.9;
+    }
+
+    .ad-dot.active {
+      width: 20px;
+      background: #fff;
+      opacity: 1;
+    }
+
     .hero-menu {
       margin-top: 0.32rem;
       display: flex;
@@ -367,6 +394,7 @@
     <section class="hero-main container" aria-label="Destaque inicial">
       <a id="ad-left-link" class="hero-media hero-ad" href="anuncios/" aria-label="Anuncio em destaque">
         <img id="ad-left-image" src="" alt="Anuncio destaque" loading="lazy" />
+        <div id="ad-left-dots" class="ad-dots" aria-hidden="true"></div>
       </a>
       <div class="hero-copy">
       <h1>
@@ -376,6 +404,7 @@
       <p>Roupas urbanas, caimento premium e pecas pensadas para o seu dia a dia.</p>
       <a id="ad-right-link" class="hero-box hero-ad" href="anuncios/" aria-label="Anuncio secundario">
         <img id="ad-right-image" src="" alt="Anuncio secundario" loading="lazy" />
+        <div id="ad-right-dots" class="ad-dots" aria-hidden="true"></div>
       </a>
       </div>
     </section>
@@ -406,6 +435,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=7"></script>
+  <script src="script.js?v=8"></script>
 </body>
 </html>
