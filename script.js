@@ -7,6 +7,8 @@ const ADS_LEFT_IMAGES_KEY = "stopmod_ads_left_images";
 const ADS_RIGHT_IMAGES_KEY = "stopmod_ads_right_images";
 const ADS_LEFT_TARGET_KEY = "stopmod_ads_left_target";
 const ADS_RIGHT_TARGET_KEY = "stopmod_ads_right_target";
+const ADS_HOME_IMAGES_KEY = "stopmod_ads_home_images";
+const ADS_HOME_TARGET_KEY = "stopmod_ads_home_target";
 
 const DEFAULT_LEFT_ADS = [
   "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1400&q=80",
@@ -39,12 +41,9 @@ const productGrid = document.getElementById("product-grid");
 const searchInput = document.getElementById("search-input");
 const cartCount = document.getElementById("cart-count");
 const menuLocation = document.getElementById("menu-location");
-const adLeftImage = document.getElementById("ad-left-image");
-const adRightImage = document.getElementById("ad-right-image");
-const adLeftLink = document.getElementById("ad-left-link");
-const adRightLink = document.getElementById("ad-right-link");
-const adLeftDots = document.getElementById("ad-left-dots");
-const adRightDots = document.getElementById("ad-right-dots");
+const adMainImage = document.getElementById("ad-main-image");
+const adMainLink = document.getElementById("ad-main-link");
+const adMainDots = document.getElementById("ad-main-dots");
 
 function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -85,6 +84,39 @@ function loadLinkTarget(key) {
   return String(localStorage.getItem(key) || "").trim();
 }
 
+function uniqueUrls(items) {
+  const seen = new Set();
+  const out = [];
+  items.forEach((url) => {
+    const u = String(url || "").trim();
+    if (!u || seen.has(u)) return;
+    seen.add(u);
+    out.push(u);
+  });
+  return out;
+}
+
+function loadHomeAds() {
+  const home = loadStringArray(ADS_HOME_IMAGES_KEY, []);
+  if (home.length) return home.slice(0, MAX_AD_SLIDES);
+
+  const left = loadStringArray(ADS_LEFT_IMAGES_KEY, []);
+  const right = loadStringArray(ADS_RIGHT_IMAGES_KEY, []);
+  const merged = uniqueUrls([...left, ...right]);
+  if (merged.length) return merged.slice(0, MAX_AD_SLIDES);
+
+  return uniqueUrls([...DEFAULT_LEFT_ADS, ...DEFAULT_RIGHT_ADS]).slice(0, MAX_AD_SLIDES);
+}
+
+function loadHomeTarget() {
+  return (
+    loadLinkTarget(ADS_HOME_TARGET_KEY) ||
+    loadLinkTarget(ADS_LEFT_TARGET_KEY) ||
+    loadLinkTarget(ADS_RIGHT_TARGET_KEY) ||
+    "anuncios/"
+  );
+}
+
 function saveCartIds(ids) {
   localStorage.setItem(CART_KEY, JSON.stringify(ids));
 }
@@ -111,11 +143,10 @@ function getFilteredProducts() {
   });
 }
 
-function startAdSlider(frameEl, imgEl, dotsEl, imageKey, targetKey, fallbackImages) {
+function startAdSlider(frameEl, imgEl, dotsEl, images, targetHref) {
   if (!frameEl || !imgEl) return;
-  const images = loadStringArray(imageKey, fallbackImages);
-  const target = loadLinkTarget(targetKey) || "anuncios/";
-  frameEl.href = target;
+  const list = Array.isArray(images) ? images.filter(Boolean).slice(0, MAX_AD_SLIDES) : [];
+  frameEl.href = String(targetHref || "anuncios/");
   const navEls = Array.from(frameEl.querySelectorAll("[data-nav]"));
 
   let index = 0;
@@ -134,7 +165,7 @@ function startAdSlider(frameEl, imgEl, dotsEl, imageKey, targetKey, fallbackImag
 
   const buildDots = () => {
     if (!dotsEl) return;
-    dotsEl.innerHTML = images
+    dotsEl.innerHTML = list
       .map((_, i) => `<span class="ad-dot ${i === 0 ? "active" : ""}" data-i="${i}"></span>`)
       .join("");
     dotsEl.querySelectorAll(".ad-dot").forEach((dotEl) => {
@@ -154,7 +185,7 @@ function startAdSlider(frameEl, imgEl, dotsEl, imageKey, targetKey, fallbackImag
     imgEl.style.opacity = "0.2";
     imgEl.style.transform = "translateX(0)";
     setTimeout(() => {
-      imgEl.src = images[index];
+      imgEl.src = list[index];
       imgEl.alt = `Anuncio ${index + 1}`;
       imgEl.style.opacity = "1";
       syncDots();
@@ -162,17 +193,17 @@ function startAdSlider(frameEl, imgEl, dotsEl, imageKey, targetKey, fallbackImag
   };
 
   const next = () => {
-    index = (index + 1) % images.length;
+    index = (index + 1) % list.length;
     apply();
   };
 
   const prev = () => {
-    index = (index - 1 + images.length) % images.length;
+    index = (index - 1 + list.length) % list.length;
     apply();
   };
 
   const setNavVisible = () => {
-    const show = images.length > 1;
+    const show = list.length > 1;
     navEls.forEach((el) => {
       el.style.display = show ? "inline-flex" : "none";
     });
@@ -187,12 +218,12 @@ function startAdSlider(frameEl, imgEl, dotsEl, imageKey, targetKey, fallbackImag
 
   const startAuto = () => {
     stopAuto();
-    if (images.length <= 1) return;
+    if (list.length <= 1) return;
     autoTimer = setInterval(next, 3400);
   };
 
   const onPointerDown = (ev) => {
-    if (images.length <= 1) return;
+    if (list.length <= 1) return;
     dragging = true;
     startX = ev.clientX;
     lastX = ev.clientX;
@@ -263,7 +294,7 @@ function startAdSlider(frameEl, imgEl, dotsEl, imageKey, targetKey, fallbackImag
     });
   });
 
-  if (!images.length) {
+  if (!list.length) {
     imgEl.removeAttribute("src");
     imgEl.alt = "Sem anuncios";
     if (dotsEl) dotsEl.innerHTML = "";
@@ -273,17 +304,17 @@ function startAdSlider(frameEl, imgEl, dotsEl, imageKey, targetKey, fallbackImag
 
   buildDots();
   setNavVisible();
-  const firstImage = images[0];
+  const firstImage = list[0];
   if (firstImage) {
     imgEl.src = firstImage;
     imgEl.alt = "Anuncio 1";
   }
   syncDots();
 
-  if (images.length <= 1) return;
+  if (list.length <= 1) return;
 
   setTimeout(() => {
-    imgEl.src = images[index];
+    imgEl.src = list[index];
     imgEl.alt = `Anuncio ${index + 1}`;
   }, 0);
   startAuto();
@@ -332,5 +363,4 @@ searchInput?.addEventListener("input", renderProducts);
 renderProducts();
 updateCartCount();
 renderMenuLocation();
-startAdSlider(adLeftLink, adLeftImage, adLeftDots, ADS_LEFT_IMAGES_KEY, ADS_LEFT_TARGET_KEY, DEFAULT_LEFT_ADS);
-startAdSlider(adRightLink, adRightImage, adRightDots, ADS_RIGHT_IMAGES_KEY, ADS_RIGHT_TARGET_KEY, DEFAULT_RIGHT_ADS);
+startAdSlider(adMainLink, adMainImage, adMainDots, loadHomeAds(), loadHomeTarget());
