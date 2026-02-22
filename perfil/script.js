@@ -15,6 +15,7 @@ const loginMsg = document.getElementById("login-msg");
 const gbtn = document.getElementById("gbtn");
 const gWarn = document.getElementById("g-warn");
 const logoutBtn = document.getElementById("logout");
+const heroTabs = document.getElementById("hero-tabs");
 
 const viewAuthed = document.getElementById("view-authed");
 const viewGuest = document.getElementById("view-guest");
@@ -320,6 +321,7 @@ function renderAuth() {
   const authed = !!p;
   if (viewAuthed) viewAuthed.hidden = !authed;
   if (viewGuest) viewGuest.hidden = authed;
+  if (heroTabs) heroTabs.hidden = !authed;
   if (logoutBtn) logoutBtn.style.display = authed ? "inline-flex" : "none";
 
   if (!authed) {
@@ -332,7 +334,7 @@ function renderAuth() {
 
   renderAccount();
   renderOrders();
-  setTab("account");
+  setTab("orders");
 }
 
 saveClientBtn?.addEventListener("click", () => {

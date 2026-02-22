@@ -73,6 +73,12 @@
       flex-wrap: wrap;
     }
 
+    .hero-left {
+      display: grid;
+      gap: 0.2rem;
+      align-items: start;
+    }
+
     .hero-userchip {
       border-radius: 14px;
       /* border/background/color overridden above to keep a consistent pill style */
@@ -101,6 +107,32 @@
       max-width: 28ch;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    .hero-tabs-text {
+      display: flex;
+      align-items: center;
+      gap: 1.1rem;
+      flex-wrap: wrap;
+      margin-left: 2.55rem;
+    }
+
+    .hero-tab-link {
+      border: none;
+      background: transparent;
+      color: #fff6ef;
+      font-family: inherit;
+      font-weight: 900;
+      font-size: 0.95rem;
+      padding: 0;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .hero-tab-link:hover,
+    .hero-tab-link.active {
+      text-decoration: underline;
+      text-underline-offset: 2px;
     }
 
     .hero-logout-mini {
@@ -143,10 +175,6 @@
     .who .txt { display:grid; gap:.1rem; }
     .who .txt strong { font-size: 1.1rem; }
 
-    .tabs { display:flex; gap:.5rem; flex-wrap:wrap; margin-top: .9rem; }
-    .tbtn { border:1px solid var(--line); background:#fff3e8; color:#2f2824; border-radius:999px; padding:.46rem .9rem; font-weight:900; cursor:pointer; }
-    .tbtn.active { background:#ffd7b8; border-color:#eac8bb; }
-
     .grid2 { display:grid; gap: .8rem; margin-top: 1rem; }
 
     label { display:grid; gap:.25rem; font-weight: 900; }
@@ -178,6 +206,7 @@
       .hero-chip { width: 100%; }
       .hero-chip .txt { min-width: 0; }
       .hero-userchip strong { max-width: 22ch; }
+      .hero-tabs-text { margin-left: 0; }
     }
   </style>
 </head>
@@ -199,9 +228,15 @@
     </nav>
 
     <div class="hero-bottom hero-wide" aria-label="Barra do usuario">
-      <div class="hero-userchip" aria-label="Usuario">
-        <img id="avatar" alt="Foto do perfil" src="../assets/icons/user-solid.svg" />
-        <strong id="corner-label">Perfil</strong>
+      <div class="hero-left">
+        <div class="hero-userchip" aria-label="Usuario">
+          <img id="avatar" alt="Foto do perfil" src="../assets/icons/user-solid.svg" />
+          <strong id="corner-label">Perfil</strong>
+        </div>
+        <div id="hero-tabs" class="hero-tabs-text" hidden>
+          <button class="hero-tab-link active" type="button" data-tab="orders">Pedidos</button>
+          <button class="hero-tab-link" type="button" data-tab="tracking">Minhas compras</button>
+        </div>
       </div>
 
       <button id="logout" class="hero-logout-mini" type="button" aria-label="Sair">Sair</button>
@@ -232,30 +267,6 @@
       </div>
 
       <div id="view-authed" hidden>
-        <div class="tabs">
-          <button class="tbtn active" type="button" data-tab="account">Conta</button>
-          <button class="tbtn" type="button" data-tab="orders">Pedidos</button>
-          <button class="tbtn" type="button" data-tab="tracking">Minhas compras</button>
-        </div>
-
-        <div class="grid2" data-panel="account">
-          <div class="order">
-            <h2>Dados pessoais</h2>
-            <p class="muted2">Edite seus dados pessoais. Endereco voce ajusta na pagina Entrega.</p>
-            <div class="grid2" style="margin-top:.7rem;">
-              <label>Nome
-                <input id="acc-name" type="text" placeholder="Seu nome" />
-              </label>
-              <label>Telefone
-                <input id="acc-phone" type="text" placeholder="(11) 99999-9999" />
-              </label>
-              <button id="acc-save" class="btn" type="button">Salvar alteracoes</button>
-              <p id="acc-msg" class="ok"></p>
-              <a class="btn" href="../entrega/" style="text-decoration:none; background:#ffe3d2; color:#2f2824;">Editar endereco (Entrega)</a>
-            </div>
-          </div>
-        </div>
-
         <div class="grid2" data-panel="orders" hidden>
           <div>
             <h2>Meus pedidos</h2>
@@ -281,6 +292,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=30"></script>
+  <script src="script.js?v=31"></script>
 </body>
 </html>
