@@ -287,7 +287,7 @@ function setTab(tabId) {
 function getRequestedTab() {
   try {
     const tab = String(new URLSearchParams(window.location.search).get("tab") || "").trim().toLowerCase();
-    const allowed = new Set(["account"]);
+    const allowed = new Set(["account", "orders", "tracking", "processing", "favorites"]);
     return allowed.has(tab) ? tab : "";
   } catch {
     return "";

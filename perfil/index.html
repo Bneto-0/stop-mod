@@ -382,6 +382,30 @@
               <p>Dados pessoais e da conta.</p>
             </button>
 
+            <button class="repo-card" type="button" data-open-panel="orders">
+              <span class="icn">📦</span>
+              <h3>Pedidos</h3>
+              <p>Acompanhe seus pedidos salvos.</p>
+            </button>
+
+            <button class="repo-card" type="button" data-open-panel="tracking">
+              <span class="icn">🚚</span>
+              <h3>Minhas compras</h3>
+              <p>Veja rastreio e atualizacoes da entrega.</p>
+            </button>
+
+            <button class="repo-card" type="button" data-open-panel="processing">
+              <span class="icn">⏳</span>
+              <h3>Processando</h3>
+              <p>Status dos pedidos em preparacao.</p>
+            </button>
+
+            <button class="repo-card" type="button" data-open-panel="favorites">
+              <span class="icn">❤</span>
+              <h3>Favoritos</h3>
+              <p>Produtos favoritos da sua conta.</p>
+            </button>
+
             <a class="repo-card" href="../entrega/">
               <span class="icn">📍</span>
               <h3>Enderecos</h3>
@@ -473,6 +497,36 @@
               </div>
             </div>
           </div>
+
+          <div class="grid2" data-panel="orders" hidden>
+            <div>
+              <h2>Meus pedidos</h2>
+              <div id="orders-list" class="grid2" style="margin-top:.7rem;"></div>
+            </div>
+          </div>
+
+          <div class="grid2" data-panel="tracking" hidden>
+            <div>
+              <h2>Minhas compras</h2>
+              <div id="purchases-list" class="grid2" style="margin-top:.7rem;"></div>
+            </div>
+          </div>
+
+          <div class="grid2" data-panel="processing" hidden>
+            <div>
+              <h2>Processando</h2>
+              <div id="track-list" class="grid2" style="margin-top:.7rem;"></div>
+            </div>
+          </div>
+
+          <div class="grid2" data-panel="favorites" hidden>
+            <div>
+              <h2>Favoritos</h2>
+              <div id="favorites-list" class="grid2" style="margin-top:.7rem;">
+                <p class="muted2">Voce ainda nao tem produtos favoritos.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -486,6 +540,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=41"></script>
+  <script src="script.js?v=42"></script>
 </body>
 </html>
