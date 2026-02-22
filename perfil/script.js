@@ -620,9 +620,8 @@ function renderAuth() {
   renderOrders();
   renderFavorites();
   const requestedTab = getRequestedTab();
-  const initialTab = requestedTab || "account";
-  if (detailSections) detailSections.hidden = false;
-  setTab(initialTab);
+  if (detailSections) detailSections.hidden = !requestedTab;
+  if (requestedTab) setTab(requestedTab);
   return true;
 }
 
@@ -664,7 +663,7 @@ openPanelBtns.forEach((b) => {
     try {
       const url = new URL(window.location.href);
       url.searchParams.set("tab", tabId);
-      url.hash = "";
+      url.hash = "detail-sections";
       window.history.replaceState(null, "", url.toString());
     } catch {}
   });
