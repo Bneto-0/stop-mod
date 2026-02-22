@@ -36,7 +36,10 @@ const heroTabs = document.getElementById("hero-tabs");
 
 const viewAuthed = document.getElementById("view-authed");
 const viewGuest = document.getElementById("view-guest");
+const directoryGrid = document.getElementById("directory-grid");
+const directoryNote = document.getElementById("directory-note");
 const detailSections = document.getElementById("detail-sections");
+const backToDirectoriesBtn = document.getElementById("back-to-directories");
 const avatarEl = document.getElementById("avatar");
 const accountAvatarEl = document.getElementById("account-avatar");
 const nameEl = document.getElementById("name");
@@ -340,6 +343,20 @@ function setTab(tabId) {
   });
 }
 
+function showDirectoryCards() {
+  if (directoryGrid) directoryGrid.hidden = false;
+  if (directoryNote) directoryNote.hidden = false;
+  if (detailSections) detailSections.hidden = true;
+  openPanelBtns.forEach((btn) => btn.classList.remove("active"));
+}
+
+function showDirectoryPanel(tabId) {
+  if (directoryGrid) directoryGrid.hidden = true;
+  if (directoryNote) directoryNote.hidden = true;
+  if (detailSections) detailSections.hidden = false;
+  setTab(tabId);
+}
+
 function getRequestedTab() {
   try {
     const tab = String(new URLSearchParams(window.location.search).get("tab") || "").trim().toLowerCase();
@@ -619,7 +636,7 @@ function renderAuth() {
   renderAccount(p);
   renderOrders();
   renderFavorites();
-  if (detailSections) detailSections.hidden = true;
+  showDirectoryCards();
   return true;
 }
 
@@ -654,11 +671,14 @@ openPanelBtns.forEach((b) => {
     const targetPanel = document.querySelector(`[data-panel="${tabId}"]`);
     if (!targetPanel) return;
     event.preventDefault();
-    if (detailSections) detailSections.hidden = false;
-    setTab(tabId);
+    showDirectoryPanel(tabId);
     if (tabId === "orders" || tabId === "purchases" || tabId === "processing") renderOrders();
     if (tabId === "favorites") renderFavorites();
   });
+});
+
+backToDirectoriesBtn?.addEventListener("click", () => {
+  showDirectoryCards();
 });
 
 accSave?.addEventListener("click", () => {
