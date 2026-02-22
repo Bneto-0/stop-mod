@@ -53,28 +53,10 @@ const DEFAULT_RIGHT_ADS = [
   "https://images.unsplash.com/photo-1542293787938-4d273c37c18d?auto=format&fit=crop&w=1400&q=80"
 ];
 
-const DEFAULT_SHIP_ADDRESSES = [
-  {
-    id: "sp-paulista-1578",
-    street: "Avenida Paulista",
-    number: "1578",
-    district: "Bela Vista",
-    city: "Sao Paulo",
-    state: "SP",
-    cep: "01310-200",
-    contact: "Cliente Stop mod - 11999999999"
-  },
-  {
-    id: "sp-oscar-freire-379",
-    street: "Rua Oscar Freire",
-    number: "379",
-    district: "Cerqueira Cesar",
-    city: "Sao Paulo",
-    state: "SP",
-    cep: "01426-001",
-    contact: "Cliente Stop mod - 11999999998"
-  }
-];
+const LEGACY_SEEDED_SHIP_IDS = new Set([
+  "sp-paulista-1578",
+  "sp-oscar-freire-379"
+]);
 
 const products = [
   { id: 1, name: "Camiseta Oversized Street", category: "Camisetas", size: "P ao GG", price: 89.9, image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80" },
@@ -560,7 +542,8 @@ function loadShipList() {
   try {
     const raw = JSON.parse(localStorage.getItem(SHIP_LIST_KEY) || "[]");
     if (!Array.isArray(raw)) return [];
-    return dedupeAddresses(raw);
+    const filtered = raw.filter((item) => !LEGACY_SEEDED_SHIP_IDS.has(String(item?.id || "").trim()));
+    return dedupeAddresses(filtered);
   } catch {
     return [];
   }
@@ -572,23 +555,24 @@ function saveShipList(items) {
 }
 
 function ensureShipDirectorySeed() {
-  const current = loadShipTo();
   const list = loadShipList();
-
-  const hasCurrent = !!(current.city || current.cep || current.street);
-  const merged = dedupeAddresses([
-    ...list,
-    ...(hasCurrent ? [current] : []),
-    ...DEFAULT_SHIP_ADDRESSES
-  ]);
-
-  if (!list.length || merged.length !== list.length || (hasCurrent && !list.some((x) => addressSignature(x) === addressSignature(current)))) {
-    saveShipList(merged);
+  const normalized = dedupeAddresses(list);
+  if (normalized.length !== list.length) {
+    saveShipList(normalized);
   }
 
-  if (hasCurrent) return;
-  const fallback = merged[0];
-  if (fallback) saveShipTo(fallback);
+  const current = loadShipTo();
+  const hasCurrent = !!(current.city || current.cep || current.street);
+  const hasCurrentInList = hasCurrent && normalized.some((item) => addressSignature(item) === addressSignature(current));
+
+  if (!normalized.length) {
+    if (hasCurrent) saveShipTo({});
+    return;
+  }
+
+  if (!hasCurrentInList) {
+    saveShipTo(normalized[0]);
+  }
 }
 
 function readAddressForm() {
@@ -647,6 +631,8 @@ function renderSavedAddresses() {
   }
 
   if (!list.length) {
+    selectedAddressId = "";
+    if (useSelectedAddressBtn) useSelectedAddressBtn.hidden = true;
     savedAddressList.innerHTML = "";
     if (savedAddressEmpty) savedAddressEmpty.hidden = false;
     clearAutoAddressFields(true);
@@ -655,6 +641,7 @@ function renderSavedAddresses() {
     return;
   }
 
+  if (useSelectedAddressBtn) useSelectedAddressBtn.hidden = false;
   if (savedAddressEmpty) savedAddressEmpty.hidden = true;
   savedAddressList.innerHTML = list
     .map((item) => `
