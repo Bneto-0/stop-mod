@@ -3,6 +3,9 @@ const GOOGLE_CLIENT_KEY = "stopmod_google_client_id";
 const DEFAULT_GOOGLE_CLIENT_ID = "887504211072-0elgoi3dbg80bb9640vvlqfl7cp8guq5.apps.googleusercontent.com";
 const PROFILE_KEY = "stopmod_profile";
 const PROFILE_EXTRA_KEY = "stopmod_profile_extra";
+const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
+const AUTH_TIMEOUT_MS = 30 * 60 * 1000;
+const AUTH_TOUCH_MIN_GAP_MS = 15 * 1000;
 const ORDERS_KEY = "stopmod_orders";
 const FAVORITES_KEY = "stopmod_favorites";
 
@@ -37,6 +40,8 @@ const ordersList = document.getElementById("orders-list");
 const purchasesList = document.getElementById("purchases-list");
 const trackList = document.getElementById("track-list");
 const favoritesList = document.getElementById("favorites-list");
+
+let lastAuthTouchAt = 0;
 
 function loadCartIds() {
   try {
@@ -76,6 +81,49 @@ function loadProfile() {
   } catch {
     return null;
   }
+}
+
+function clearAuthSession() {
+  localStorage.removeItem(PROFILE_KEY);
+  localStorage.removeItem(AUTH_LAST_SEEN_KEY);
+}
+
+function touchAuthSession(force) {
+  const profile = loadProfile();
+  if (!profile) return;
+  const now = Date.now();
+  if (!force && now - lastAuthTouchAt < AUTH_TOUCH_MIN_GAP_MS) return;
+  lastAuthTouchAt = now;
+  localStorage.setItem(AUTH_LAST_SEEN_KEY, String(now));
+}
+
+function loadActiveProfile() {
+  const profile = loadProfile();
+  if (!profile) return null;
+
+  const rawLastSeen = Number(localStorage.getItem(AUTH_LAST_SEEN_KEY) || "0");
+  if (!Number.isFinite(rawLastSeen) || rawLastSeen <= 0) {
+    touchAuthSession(true);
+    return profile;
+  }
+
+  if (Date.now() - rawLastSeen > AUTH_TIMEOUT_MS) {
+    clearAuthSession();
+    return null;
+  }
+
+  return profile;
+}
+
+function bindAuthActivity() {
+  const touch = () => touchAuthSession(false);
+  ["pointerdown", "keydown", "touchstart", "mousemove", "scroll"].forEach((eventName) => {
+    document.addEventListener(eventName, touch, { passive: true });
+  });
+  window.addEventListener("focus", touch);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) touch();
+  });
 }
 
 function loadExtra() {
@@ -177,6 +225,7 @@ function initGoogle() {
             email: String(p.email || ""),
             picture: String(p.picture || "")
           });
+          touchAuthSession(true);
           loginMsg.textContent = "Login realizado.";
           renderAuth();
         }
@@ -346,8 +395,9 @@ function renderFavorites() {
     .join("");
 }
 
-function renderAccount() {
-  const p = loadProfile();
+function renderAccount(activeProfile) {
+  const p = activeProfile || loadActiveProfile();
+  if (!p) return;
   const extra = loadExtra();
   const displayName = String(extra.displayName || p?.name || "Cliente Stop mod");
 
@@ -365,10 +415,10 @@ function renderAccount() {
 }
 
 function renderAuth() {
-  const p = loadProfile();
+  const p = loadActiveProfile();
   const authed = !!p;
   if (viewAuthed) viewAuthed.hidden = !authed;
-  if (viewGuest) viewGuest.hidden = false;
+  if (viewGuest) viewGuest.hidden = authed;
   if (heroTabs) heroTabs.hidden = !authed;
   if (logoutBtn) logoutBtn.style.display = authed ? "inline-flex" : "none";
 
@@ -380,7 +430,8 @@ function renderAuth() {
     return;
   }
 
-  renderAccount();
+  touchAuthSession(true);
+  renderAccount(p);
   renderOrders();
   renderFavorites();
   setTab(getRequestedTab() || "account");
@@ -407,7 +458,7 @@ clientInput?.addEventListener("input", () => {
 });
 
 logoutBtn?.addEventListener("click", () => {
-  localStorage.removeItem(PROFILE_KEY);
+  clearAuthSession();
   renderAuth();
 });
 
@@ -443,5 +494,6 @@ try {
     : "Se voce tiver um Client ID proprio, voce pode configurar nas configuracoes avancadas.";
 } catch {}
 updateCartCount();
+bindAuthActivity();
 initGoogle();
 renderAuth();

@@ -2,6 +2,7 @@ const GOOGLE_CLIENT_KEY = "stopmod_google_client_id";
 const DEFAULT_GOOGLE_CLIENT_ID = "887504211072-0elgoi3dbg80bb9640vvlqfl7cp8guq5.apps.googleusercontent.com";
 const PROFILE_KEY = "stopmod_profile";
 const PROFILE_EXTRA_KEY = "stopmod_profile_extra";
+const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
 const USERS_KEY = "stopmod_users";
 const OTP_KEY = "stopmod_otp";
 
@@ -72,6 +73,22 @@ function saveProfile(name, email, picture = "") {
 
 function saveExtra(displayName, phone) {
   localStorage.setItem(PROFILE_EXTRA_KEY, JSON.stringify({ displayName, phone }));
+}
+
+function setAuthSessionActive() {
+  localStorage.setItem(AUTH_LAST_SEEN_KEY, String(Date.now()));
+}
+
+function resolvePostLoginUrl() {
+  try {
+    const raw = String(new URLSearchParams(window.location.search).get("next") || "").trim();
+    if (!raw) return "../perfil/";
+    if (/^[a-z]+:\/\//i.test(raw)) return "../perfil/";
+    if (raw.startsWith("../") || raw.startsWith("./") || raw.startsWith("/")) return raw;
+    return "../perfil/";
+  } catch {
+    return "../perfil/";
+  }
 }
 
 function openModal(title, html) {
@@ -178,9 +195,10 @@ function upsertUser(user) {
 }
 
 function finishLogin(user) {
-  saveProfile(String(user.name || "Cliente Stop mod"), String(user.email || ""), "");
+  saveProfile(String(user.name || "Cliente Stop mod"), String(user.email || ""), String(user.picture || ""));
   saveExtra(String(user.name || ""), String(user.phone || ""));
-  window.location.href = "../perfil/";
+  setAuthSessionActive();
+  window.location.href = resolvePostLoginUrl();
 }
 
 forgotBtn?.addEventListener("click", () => {
@@ -442,9 +460,7 @@ function googleSignIn() {
           const name = String(p.name || "Cliente Stop mod");
           const email = String(p.email || "");
           const picture = String(p.picture || "");
-          saveProfile(name, email, picture);
-          saveExtra(name, "");
-          window.location.href = "../perfil/";
+          finishLogin({ name, email, picture, phone: "" });
         }
       });
 
@@ -484,9 +500,7 @@ registerForm?.addEventListener("submit", (e) => {
 
   users.unshift({ key, name, email, phone, pass });
   saveUsers(users.slice(0, 200));
-  saveProfile(name, email, "");
-  saveExtra(name, phone);
-  window.location.href = "../perfil/";
+  finishLogin({ name, email, phone, picture: "" });
 });
 
 loginForm?.addEventListener("submit", (e) => {
@@ -510,9 +524,12 @@ loginForm?.addEventListener("submit", (e) => {
     return;
   }
 
-  saveProfile(String(user.name || "Cliente Stop mod"), String(user.email || ""), "");
-  saveExtra(String(user.name || ""), String(user.phone || ""));
-  window.location.href = "../perfil/";
+  finishLogin({
+    name: String(user.name || "Cliente Stop mod"),
+    email: String(user.email || ""),
+    phone: String(user.phone || ""),
+    picture: ""
+  });
 });
 
 // Default state

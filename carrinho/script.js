@@ -5,6 +5,10 @@ const LEGACY_SHIP_KEY = "stopmod_ship_cep";
 const COUPON_KEY = "stopmod_coupons";
 const PAY_KEY = "stopmod_payment";
 const ORDERS_KEY = "stopmod_orders";
+const PROFILE_KEY = "stopmod_profile";
+const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
+const AUTH_TIMEOUT_MS = 30 * 60 * 1000;
+const AUTH_TOUCH_MIN_GAP_MS = 15 * 1000;
 
 const products = [
   { id: 1, name: "Camiseta Oversized Street", category: "Camisetas", size: "P ao GG", price: 89.9, image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80" },
@@ -45,6 +49,8 @@ const checkoutModal = document.getElementById("checkout-modal");
 const paymentForm = document.getElementById("payment-form");
 const confirmPaymentBtn = document.getElementById("confirm-payment");
 
+let lastAuthTouchAt = 0;
+
 function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
@@ -70,6 +76,56 @@ function loadCartIds() {
   } catch {
     return [];
   }
+}
+
+function loadProfile() {
+  try {
+    return JSON.parse(localStorage.getItem(PROFILE_KEY) || "null");
+  } catch {
+    return null;
+  }
+}
+
+function clearAuthSession() {
+  localStorage.removeItem(PROFILE_KEY);
+  localStorage.removeItem(AUTH_LAST_SEEN_KEY);
+}
+
+function hasActiveAuthSession() {
+  const profile = loadProfile();
+  if (!profile) return false;
+
+  const rawLastSeen = Number(localStorage.getItem(AUTH_LAST_SEEN_KEY) || "0");
+  if (!Number.isFinite(rawLastSeen) || rawLastSeen <= 0) {
+    localStorage.setItem(AUTH_LAST_SEEN_KEY, String(Date.now()));
+    return true;
+  }
+
+  if (Date.now() - rawLastSeen > AUTH_TIMEOUT_MS) {
+    clearAuthSession();
+    return false;
+  }
+
+  return true;
+}
+
+function touchAuthSession(force) {
+  if (!hasActiveAuthSession()) return;
+  const now = Date.now();
+  if (!force && now - lastAuthTouchAt < AUTH_TOUCH_MIN_GAP_MS) return;
+  lastAuthTouchAt = now;
+  localStorage.setItem(AUTH_LAST_SEEN_KEY, String(now));
+}
+
+function bindAuthActivity() {
+  const touch = () => touchAuthSession(false);
+  ["pointerdown", "keydown", "touchstart", "mousemove", "scroll"].forEach((eventName) => {
+    document.addEventListener(eventName, touch, { passive: true });
+  });
+  window.addEventListener("focus", touch);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) touch();
+  });
 }
 
 function saveCartIds(ids) {
@@ -172,6 +228,11 @@ function openStoreProductSearch() {
   const query = String(searchInput?.value || "").trim();
   const target = query ? `../index.html?q=${encodeURIComponent(query)}#produtos` : "../index.html#produtos";
   window.location.href = target;
+}
+
+function redirectToLoginForCheckout() {
+  const next = encodeURIComponent("../carrinho/");
+  window.location.href = `../login/?next=${next}`;
 }
 
 function groupedCart(ids) {
@@ -435,6 +496,13 @@ function renderCart() {
 }
 
 checkoutBtn.addEventListener("click", () => {
+  if (!hasActiveAuthSession()) {
+    feedback.textContent = "Faca login para finalizar a compra.";
+    redirectToLoginForCheckout();
+    return;
+  }
+
+  touchAuthSession(true);
   const ids = loadCartIds();
   if (!ids.length) return;
   if (!isCepValid(loadShipTo().cep)) {
@@ -459,6 +527,14 @@ checkoutModal?.querySelectorAll("[data-close]").forEach((el) => {
 
 paymentForm?.addEventListener("submit", (e) => {
   e.preventDefault();
+  if (!hasActiveAuthSession()) {
+    closeModal();
+    feedback.textContent = "Sua sessao expirou. Faca login novamente para continuar.";
+    redirectToLoginForCheckout();
+    return;
+  }
+
+  touchAuthSession(true);
   const method = selectedPaymentFromModal();
   savePayment(method);
   updatePaymentUI(method);
@@ -477,4 +553,5 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+bindAuthActivity();
 renderCart();
