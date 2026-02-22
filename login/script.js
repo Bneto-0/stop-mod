@@ -15,7 +15,6 @@ const loginId = document.getElementById("login-id");
 const loginPass = document.getElementById("login-pass");
 const pwToggle = document.getElementById("pw-toggle");
 const forgotBtn = document.getElementById("forgot");
-const fbBtn = document.getElementById("fb");
 const googleBtn = document.getElementById("google");
 const msg = document.getElementById("msg");
 
@@ -417,34 +416,6 @@ forgotBtn?.addEventListener("click", () => {
   });
 });
 
-function facebookSignIn() {
-  const appId = loadFacebookAppId();
-  if (!appId) {
-    setMsg(msg, "App ID do Facebook nao configurado.", true);
-    return;
-  }
-
-  setMsg(msg, "Abrindo login Facebook...", false);
-  const popupWidth = 560;
-  const popupHeight = 740;
-  const popupLeft = Math.max(0, Math.round((window.screen.width - popupWidth) / 2));
-  const popupTop = Math.max(0, Math.round((window.screen.height - popupHeight) / 2));
-  const popup = window.open(
-    buildFacebookLoginUrl(appId),
-    "stopmod-facebook-login",
-    `popup=yes,width=${popupWidth},height=${popupHeight},left=${popupLeft},top=${popupTop},menubar=no,toolbar=no,location=yes,status=no,scrollbars=yes,resizable=yes`
-  );
-  if (!popup) {
-    startFacebookOAuthFallback(appId);
-    return;
-  }
-  try {
-    popup.focus();
-  } catch {}
-}
-
-fbBtn?.addEventListener("click", facebookSignIn);
-
 function ensureGoogleScript(cb) {
   if (window.google && window.google.accounts && window.google.accounts.id) {
     cb();
@@ -588,7 +559,7 @@ loginForm?.addEventListener("submit", (e) => {
 
   if (!user || String(user.pass) !== pass) {
     if (user && !String(user.pass || "")) {
-      setMsg(msg, "Essa conta foi criada por login social (Facebook/Google). Use um desses botoes.", true);
+      setMsg(msg, "Essa conta foi criada por login social (Google). Use o botao Google.", true);
       return;
     }
     setMsg(msg, "Login invalido. Verifique usuario e senha.", true);
