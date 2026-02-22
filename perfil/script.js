@@ -34,8 +34,13 @@ const tabBtns = document.querySelectorAll("[data-tab]");
 const tabPanels = document.querySelectorAll("[data-panel]");
 const openPanelBtns = document.querySelectorAll("[data-open-panel]");
 
-const accName = document.getElementById("acc-name");
+const accFullName = document.getElementById("acc-full-name");
+const accCpf = document.getElementById("acc-cpf");
+const accPreferredName = document.getElementById("acc-preferred-name");
+const accTaxAddress = document.getElementById("acc-tax-address");
+const accEmail = document.getElementById("acc-email");
 const accPhone = document.getElementById("acc-phone");
+const accUsername = document.getElementById("acc-username");
 const accSave = document.getElementById("acc-save");
 const accMsg = document.getElementById("acc-msg");
 
@@ -182,6 +187,15 @@ function fmtDate(iso) {
   } catch {
     return String(iso || "");
   }
+}
+
+function deriveUsername(profile, extra) {
+  const custom = String(extra?.username || "").trim();
+  if (custom) return custom;
+  const email = String(profile?.email || "").trim();
+  if (email.includes("@")) return email.split("@")[0];
+  const fallback = String(extra?.displayName || profile?.name || "cliente-stopmod");
+  return fallback.toLowerCase().replace(/\s+/g, "-");
 }
 
 function jwtPayload(token) {
@@ -414,15 +428,22 @@ function renderAccount(activeProfile) {
   const p = activeProfile || loadActiveProfile();
   if (!p) return;
   const extra = loadExtra();
-  const displayName = String(extra.displayName || p?.name || "Cliente Stop mod");
+  const fullName = String(extra.fullName || extra.displayName || p?.name || "Cliente Stop mod");
+  const preferredName = String(extra.preferredName || extra.displayName || fullName);
+  const username = deriveUsername(p, extra);
 
-  if (accName) accName.value = displayName;
+  if (accFullName) accFullName.value = fullName;
+  if (accCpf) accCpf.value = String(extra.cpf || "");
+  if (accPreferredName) accPreferredName.value = preferredName;
+  if (accTaxAddress) accTaxAddress.value = String(extra.taxAddress || "");
+  if (accEmail) accEmail.value = String(p?.email || "");
   if (accPhone) accPhone.value = String(extra.phone || "");
+  if (accUsername) accUsername.value = username;
 
-  if (nameEl) nameEl.textContent = displayName;
+  if (nameEl) nameEl.textContent = preferredName;
   // Avoid showing personal email in the public UI; use a simple status line instead.
-  if (emailEl) emailEl.textContent = "Conta conectada";
-  if (cornerLabel) cornerLabel.textContent = displayName;
+  if (emailEl) emailEl.textContent = String(p?.email || "Conta conectada");
+  if (cornerLabel) cornerLabel.textContent = preferredName;
   if (avatarEl) {
     const pic = String(p?.picture || "").trim();
     avatarEl.src = pic || "../assets/icons/user-solid.svg";
@@ -504,8 +525,15 @@ accSave?.addEventListener("click", () => {
   const p = loadProfile();
   if (!p) return;
   const extra = loadExtra();
-  extra.displayName = String(accName?.value || "").trim();
+  const fullName = String(accFullName?.value || "").trim();
+  const preferredName = String(accPreferredName?.value || "").trim();
+  extra.fullName = fullName;
+  extra.displayName = preferredName || fullName || String(p?.name || "Cliente Stop mod");
+  extra.preferredName = preferredName;
+  extra.cpf = String(accCpf?.value || "").trim();
+  extra.taxAddress = String(accTaxAddress?.value || "").trim();
   extra.phone = String(accPhone?.value || "").trim();
+  extra.username = String(accUsername?.value || "").trim();
   saveExtra(extra);
   accMsg.textContent = "Conta atualizada.";
   renderAccount();

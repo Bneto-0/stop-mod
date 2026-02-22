@@ -285,6 +285,39 @@
     .repo-card p { color: var(--muted); font-size: .88rem; }
     .cancel-note { margin-top: .2rem; }
     #detail-sections { margin-top: 1rem; }
+    .account-groups { display:grid; gap: .9rem; }
+    .info-group {
+      border:1px solid var(--line);
+      border-radius: 12px;
+      background:#fff;
+      overflow: hidden;
+    }
+    .info-group h3 {
+      font-size: 1.08rem;
+      padding: .9rem;
+      border-bottom:1px solid var(--line);
+      background:#fffdfb;
+    }
+    .line-field {
+      display:grid;
+      grid-template-columns: minmax(190px, 260px) 1fr;
+      align-items:center;
+      gap: .7rem;
+      padding: .7rem .9rem;
+      border-bottom:1px solid var(--line);
+    }
+    .line-field:last-child { border-bottom: none; }
+    .line-meta { display:grid; gap: .15rem; }
+    .line-meta strong { font-size: .95rem; }
+    .line-meta small { color: var(--muted); font-size: .82rem; font-weight: 700; }
+    .line-field input {
+      border-radius: 10px;
+      border:1px solid var(--line);
+      padding:.58rem .68rem;
+      width: 100%;
+      font-family: inherit;
+    }
+    .line-field input[readonly] { background:#f8f4ef; color:#6e6761; }
 
     @media (max-width: 720px) {
       .header { justify-content:flex-start; }
@@ -292,6 +325,7 @@
       .hero-chip .txt { min-width: 0; }
       .hero-userchip strong { max-width: 22ch; }
       .hero-tabs-text { margin-left: 0; }
+      .line-field { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -405,15 +439,66 @@
 
           <div class="grid2" data-panel="account">
             <div class="order">
-              <h2>Minha conta</h2>
-              <p class="muted2">Edite seus dados pessoais. Endereco voce ajusta na pagina Entrega.</p>
-              <div class="grid2" style="margin-top:.7rem;">
-                <label>Nome
-                  <input id="acc-name" type="text" placeholder="Seu nome" />
-                </label>
-                <label>Telefone
-                  <input id="acc-phone" type="text" placeholder="(11) 99999-9999" />
-                </label>
+              <h2>Informacoes do perfil</h2>
+              <p class="muted2">Atualize seus dados pessoais e dados da conta.</p>
+              <div class="account-groups" style="margin-top:.7rem;">
+                <section class="info-group" aria-label="Informacoes pessoais">
+                  <h3>Informacoes pessoais</h3>
+                  <label class="line-field">
+                    <span class="line-meta">
+                      <strong>Nome e sobrenome</strong>
+                      <small>Dados pessoais da conta.</small>
+                    </span>
+                    <input id="acc-full-name" type="text" placeholder="Nome completo" />
+                  </label>
+                  <label class="line-field">
+                    <span class="line-meta">
+                      <strong>Numero do CPF</strong>
+                      <small>Documento do titular.</small>
+                    </span>
+                    <input id="acc-cpf" type="text" placeholder="00000000000" />
+                  </label>
+                  <label class="line-field">
+                    <span class="line-meta">
+                      <strong>Nome de preferencia</strong>
+                      <small>Nome exibido no perfil.</small>
+                    </span>
+                    <input id="acc-preferred-name" type="text" placeholder="Como voce prefere ser chamado" />
+                  </label>
+                  <label class="line-field">
+                    <span class="line-meta">
+                      <strong>Endereco fiscal</strong>
+                      <small>Rua, numero e CEP.</small>
+                    </span>
+                    <input id="acc-tax-address" type="text" placeholder="Rua e numero fiscal" />
+                  </label>
+                </section>
+
+                <section class="info-group" aria-label="Dados da conta">
+                  <h3>Dados da conta</h3>
+                  <label class="line-field">
+                    <span class="line-meta">
+                      <strong>E-mail</strong>
+                      <small>Email de acesso da conta.</small>
+                    </span>
+                    <input id="acc-email" type="text" readonly />
+                  </label>
+                  <label class="line-field">
+                    <span class="line-meta">
+                      <strong>Telefone</strong>
+                      <small>Numero de verificacao e contato.</small>
+                    </span>
+                    <input id="acc-phone" type="text" placeholder="(11) 99999-9999" />
+                  </label>
+                  <label class="line-field">
+                    <span class="line-meta">
+                      <strong>Nome de usuario</strong>
+                      <small>Identificacao da sua conta.</small>
+                    </span>
+                    <input id="acc-username" type="text" placeholder="seuusuario" />
+                  </label>
+                </section>
+
                 <button id="acc-save" class="btn" type="button">Salvar alteracoes</button>
                 <p id="acc-msg" class="ok"></p>
                 <a class="btn" href="../entrega/" style="text-decoration:none; background:#ffe3d2; color:#2f2824;">Editar endereco (Entrega)</a>
@@ -463,6 +548,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=39"></script>
+  <script src="script.js?v=40"></script>
 </body>
 </html>
