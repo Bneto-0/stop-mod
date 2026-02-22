@@ -14,6 +14,8 @@
     .muted2 { color: var(--muted); font-size: .92rem; }
 
     .hero-row { margin-top: 3.2rem; display:flex; align-items:flex-end; justify-content:space-between; gap: 1.2rem; flex-wrap:wrap; }
+    .hero-row .hero-content { margin-top: 0; max-width: 560px; flex: 1 1 420px; }
+
     .hero-perfil-icon {
       width: 54px;
       height: 54px;
@@ -29,8 +31,26 @@
       bottom: 1.15rem;
     }
     .hero-perfil-icon svg { width: 30px; height: 30px; fill: #fff6ef; opacity: .95; }
-    .hero-row .hero-content { margin-top: 0; max-width: 560px; }
-    .hero-h1 { font-size: clamp(1.8rem, 3.2vw, 2.55rem); line-height: 1.05; }
+
+    .hero-perfil-label {
+      position: absolute;
+      left: calc(1.1rem + 54px + 10px);
+      bottom: 1.15rem;
+      height: 54px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 .95rem;
+      border-radius: 18px;
+      border: 1px solid #ffffff40;
+      background: #ffffff12;
+      box-shadow: 0 18px 46px #00000022;
+      color: #fff6ef;
+      font-weight: 900;
+      font-size: clamp(1.55rem, 3vw, 2.2rem);
+      letter-spacing: .2px;
+      line-height: 1;
+      user-select: none;
+    }
 
     .hero-chip {
       display:flex;
@@ -93,6 +113,7 @@
       .hero-chip { width: 100%; }
       .hero-chip .txt { min-width: 0; }
       .hero-perfil-icon { left: .9rem; bottom: .95rem; }
+      .hero-perfil-label { left: calc(.9rem + 54px + 10px); bottom: .95rem; }
     }
   </style>
 </head>
@@ -114,13 +135,14 @@
     </nav>
 
     <div class="hero-perfil-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" focusable="false">
-          <path d="M12 12a4.5 4.5 0 1 0-4.5-4.5A4.5 4.5 0 0 0 12 12zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"></path>
-        </svg>
+      <svg viewBox="0 0 24 24" focusable="false">
+        <path d="M12 12a4.5 4.5 0 1 0-4.5-4.5A4.5 4.5 0 0 0 12 12zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"></path>
+      </svg>
     </div>
+    <div class="hero-perfil-label" aria-hidden="true">Perfil</div>
     <section class="hero-row container">
       <div class="hero-content">
-        <h1 class="hero-h1">Perfil</h1>
+        <h1 class="sr-only">Perfil</h1>
       </div>
 
       <div class="hero-chip" aria-label="Resumo do usuario">
@@ -209,6 +231,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=12"></script>
+  <script src="script.js?v=13"></script>
 </body>
 </html>
