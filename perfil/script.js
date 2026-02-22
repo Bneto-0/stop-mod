@@ -358,7 +358,7 @@ function renderAuth() {
   const p = loadProfile();
   const authed = !!p;
   if (viewAuthed) viewAuthed.hidden = !authed;
-  if (viewGuest) viewGuest.hidden = authed;
+  if (viewGuest) viewGuest.hidden = false;
   if (heroTabs) heroTabs.hidden = !authed;
   if (logoutBtn) logoutBtn.style.display = authed ? "inline-flex" : "none";
 
@@ -373,7 +373,7 @@ function renderAuth() {
   renderAccount();
   renderOrders();
   renderFavorites();
-  setTab("orders");
+  setTab("account");
 }
 
 saveClientBtn?.addEventListener("click", () => {
