@@ -417,7 +417,7 @@ forgotBtn?.addEventListener("click", () => {
 });
 
 function ensureGoogleScript(cb) {
-  if (window.google && window.google.accounts && window.google.accounts.id) {
+  if (window.google && window.google.accounts) {
     cb();
     return;
   }
@@ -427,19 +427,6 @@ function ensureGoogleScript(cb) {
   s.defer = true;
   s.onload = cb;
   document.head.appendChild(s);
-}
-
-function jwtPayload(token) {
-  try {
-    const parts = String(token || "").split(".");
-    if (parts.length < 2) return null;
-    const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-    const pad = b64.length % 4 ? "=".repeat(4 - (b64.length % 4)) : "";
-    const json = atob(b64 + pad);
-    return JSON.parse(json);
-  } catch {
-    return null;
-  }
 }
 
 function googleSignIn() {
@@ -484,31 +471,48 @@ function googleSignIn() {
     localStorage.setItem(GOOGLE_CLIENT_KEY, DEFAULT_GOOGLE_CLIENT_ID);
   }
 
-  ensureGoogleScript(() => {
-    if (!window.google || !window.google.accounts || !window.google.accounts.id) {
+  ensureGoogleScript(async () => {
+    if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
       setMsg(msg, "Nao foi possivel carregar o Google. Tente novamente.", true);
       return;
     }
 
     try {
-      window.google.accounts.id.initialize({
+      const tokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id: clientId,
-        callback: (resp) => {
-          if (!resp || !resp.credential) {
+        scope: "openid email profile",
+        callback: async (tokenResponse) => {
+          const accessToken = String(tokenResponse?.access_token || "").trim();
+          if (!accessToken) {
             setMsg(msg, "Falha no login Google.", true);
             return;
           }
-          const p = jwtPayload(resp.credential) || {};
-          const name = String(p.name || "Cliente Stop mod");
-          const email = String(p.email || "");
-          const picture = String(p.picture || "");
-          finishLogin({ name, email, picture, phone: "" });
+
+          setMsg(msg, "Finalizando login Google...", false);
+          try {
+            const profile = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+              headers: { Authorization: `Bearer ${accessToken}` },
+              cache: "no-store"
+            }).then((resp) => {
+              if (!resp.ok) throw new Error("google_profile_error");
+              return resp.json();
+            });
+
+            const name = String(profile?.name || "Cliente Stop mod");
+            const email = String(profile?.email || "");
+            const picture = String(profile?.picture || "");
+            finishLogin({ name, email, picture, phone: "" });
+          } catch {
+            setMsg(msg, "Falha ao carregar dados da conta Google.", true);
+          }
+        },
+        error_callback: () => {
+          setMsg(msg, "Nao foi possivel abrir o login Google. Verifique pop-up do navegador.", true);
         }
       });
 
-      // Prompt One Tap (se permitido) ou popup.
-      window.google.accounts.id.prompt();
       setMsg(msg, "Abrindo login Google...", false);
+      tokenClient.requestAccessToken({ prompt: "select_account" });
     } catch {
       setMsg(msg, "Erro ao iniciar Google. Verifique o Client ID.", true);
     }
