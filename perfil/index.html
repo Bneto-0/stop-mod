@@ -43,6 +43,25 @@
     }
 
     .brand-pill span { color: #ffb080; }
+
+    /* Make all header "pills" transparent like the exemplar. */
+    .hero .cart-link,
+    .hero-userchip,
+    .hero-logout-mini {
+      background: #00000026;
+      border: 1px solid #ffffff2f;
+      color: #fff6ef;
+      box-shadow: 0 18px 46px #00000022;
+    }
+
+    .hero .cart-link:hover,
+    .hero-logout-mini:hover {
+      background: #0000003a;
+    }
+
+    .hero-userchip {
+      box-shadow: 0 18px 46px #00000022;
+    }
     .panel { background: var(--card); border:1px solid var(--line); border-radius: 16px; padding: 1rem; box-shadow: 0 10px 24px #2f211810; }
     .muted2 { color: var(--muted); font-size: .92rem; }
 
@@ -57,10 +76,7 @@
 
     .hero-userchip {
       border-radius: 14px;
-      border: 1px solid #ffffff40;
-      background: #fff3e8;
-      color: #2f2824;
-      box-shadow: 0 18px 46px #00000022;
+      /* border/background/color overridden above to keep a consistent pill style */
       display: inline-flex;
       align-items: center;
       gap: 0.55rem;
@@ -74,8 +90,8 @@
       border-radius: 12px;
       object-fit: cover;
       display: block;
-      border: 1px solid #eac8bb;
-      background: #fff;
+      border: 1px solid #ffffff35;
+      background: #1a1512;
     }
 
     .hero-userchip strong {
@@ -92,10 +108,7 @@
       height: 32px;
       padding: 0 .7rem;
       border-radius: 10px;
-      border: 1px solid #ffffff40;
-      background: #fff3e8;
-      color: #2f2824;
-      box-shadow: 0 18px 46px #00000022;
+      /* border/background/color overridden above to keep a consistent pill style */
       cursor: pointer;
       font-weight: 900;
       font-family: inherit;
@@ -104,7 +117,7 @@
       justify-content: center;
     }
 
-    .hero-logout-mini:hover { background: #ffd7b8; }
+    /* hover handled by shared rule above */
 
     .hero-chip {
       display:flex;
@@ -269,6 +282,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=26"></script>
+  <script src="script.js?v=27"></script>
 </body>
 </html>
