@@ -11,7 +11,6 @@ const loginId = document.getElementById("login-id");
 const loginPass = document.getElementById("login-pass");
 const pwToggle = document.getElementById("pw-toggle");
 const forgotBtn = document.getElementById("forgot");
-const smsBtn = document.getElementById("sms");
 const fbBtn = document.getElementById("fb");
 const googleBtn = document.getElementById("google");
 const msg = document.getElementById("msg");
@@ -276,70 +275,6 @@ forgotBtn?.addEventListener("click", () => {
   });
 });
 
-smsBtn?.addEventListener("click", () => {
-  openModal(
-    "Login com SMS",
-    `
-    <div class="modal-body">
-      <p class="hint">Digite seu telefone. Vamos gerar um codigo (demo) para entrar.</p>
-      <input id="sms-phone" type="text" placeholder="Telefone" inputmode="tel" autocomplete="tel" />
-      <button id="sms-send" class="btn primary" type="button">Enviar codigo</button>
-      <div id="sms-step2" hidden>
-        <div class="codebox" id="sms-codebox"></div>
-        <input id="sms-code" type="text" inputmode="numeric" placeholder="Codigo (6 digitos)" />
-        <div class="actions">
-          <button id="sms-confirm" class="btn primary" type="button">Entrar</button>
-          <button class="btn ghost" type="button" data-close="1">Cancelar</button>
-        </div>
-      </div>
-      <p id="sms-msg" class="msg"></p>
-    </div>
-    `
-  );
-
-  const smsPhone = document.getElementById("sms-phone");
-  const smsSend = document.getElementById("sms-send");
-  const smsStep2 = document.getElementById("sms-step2");
-  const smsCodeBox = document.getElementById("sms-codebox");
-  const smsCode = document.getElementById("sms-code");
-  const smsConfirm = document.getElementById("sms-confirm");
-  const smsMsg = document.getElementById("sms-msg");
-
-  smsSend?.addEventListener("click", () => {
-    const phone = String(smsPhone?.value || "").trim();
-    const digits = phoneDigits(phone);
-    if (digits.length < 10) {
-      setMsg(smsMsg, "Informe um telefone valido.", true);
-      return;
-    }
-    const code = genCode();
-    saveOtp("sms", digits, code);
-    smsStep2.hidden = false;
-    smsCodeBox.textContent = `Codigo (demo): ${code}`;
-    setMsg(smsMsg, "Codigo gerado. Digite acima para entrar.", false);
-  });
-
-  smsConfirm?.addEventListener("click", () => {
-    const otp = loadOtp();
-    if (!otpStillValid(otp) || otp.purpose !== "sms") {
-      setMsg(smsMsg, "Codigo expirou. Gere um novo.", true);
-      return;
-    }
-    const code = String(smsCode?.value || "").trim();
-    if (code !== String(otp.code)) {
-      setMsg(smsMsg, "Codigo incorreto.", true);
-      return;
-    }
-    const digits = String(otp.to || "");
-    let user = findUserByAny(digits);
-    if (!user) {
-      user = upsertUser({ name: "Cliente Stop mod", phone: digits, email: "", pass: "" });
-    }
-    clearOtp();
-    finishLogin(user);
-  });
-});
-
 fbBtn?.addEventListener("click", () => {
   openModal(
     "Continuar com Facebook",
@@ -517,7 +452,7 @@ loginForm?.addEventListener("submit", (e) => {
 
   if (!user || String(user.pass) !== pass) {
     if (user && !String(user.pass || "")) {
-      setMsg(msg, "Essa conta foi criada por login social (SMS/Facebook/Google). Use um desses botoes.", true);
+      setMsg(msg, "Essa conta foi criada por login social (Facebook/Google). Use um desses botoes.", true);
       return;
     }
     setMsg(msg, "Login invalido. Verifique usuario e senha.", true);
