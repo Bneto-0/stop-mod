@@ -619,9 +619,7 @@ function renderAuth() {
   renderAccount(p);
   renderOrders();
   renderFavorites();
-  const requestedTab = getRequestedTab();
-  if (detailSections) detailSections.hidden = !requestedTab;
-  if (requestedTab) setTab(requestedTab);
+  if (detailSections) detailSections.hidden = true;
   return true;
 }
 
@@ -660,12 +658,6 @@ openPanelBtns.forEach((b) => {
     setTab(tabId);
     if (tabId === "orders" || tabId === "purchases" || tabId === "processing") renderOrders();
     if (tabId === "favorites") renderFavorites();
-    try {
-      const url = new URL(window.location.href);
-      url.searchParams.set("tab", tabId);
-      url.hash = "";
-      window.history.replaceState(null, "", url.toString());
-    } catch {}
   });
 });
 
