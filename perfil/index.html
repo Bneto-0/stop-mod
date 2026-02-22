@@ -10,18 +10,20 @@
   <link rel="stylesheet" href="../style.css?v=6" />
   <style>
     /* Keep enough vertical space so the corner chips never overlap the top nav at 100% zoom. */
-    .hero { padding: 1.1rem 0 4.2rem; min-height: 180px; position: relative; }
+    .hero { padding: 1.1rem 0 2.2rem; }
     .panel { background: var(--card); border:1px solid var(--line); border-radius: 16px; padding: 1rem; box-shadow: 0 10px 24px #2f211810; }
     .muted2 { color: var(--muted); font-size: .92rem; }
 
-    .hero-row { margin-top: 3.2rem; }
+    .hero-bottom {
+      margin-top: 2.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.9rem;
+      flex-wrap: wrap;
+    }
 
     .hero-userchip {
-      position: absolute;
-      left: 1.1rem;
-      bottom: 1.15rem;
-      width: 44px;
-      height: 44px;
       border-radius: 14px;
       border: 1px solid #ffffff40;
       background: #fff3e8;
@@ -31,8 +33,7 @@
       align-items: center;
       gap: 0.55rem;
       padding: 0.22rem 0.75rem 0.22rem 0.22rem;
-      width: auto;
-      height: 44px;
+      min-height: 44px;
     }
 
     .hero-userchip img {
@@ -50,15 +51,12 @@
       letter-spacing: .15px;
       font-size: .98rem;
       white-space: nowrap;
-      max-width: min(280px, calc(100vw - 2.2rem - 44px - 12px));
+      max-width: 28ch;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
     .hero-logout-mini {
-      position: absolute;
-      right: 1.1rem;
-      bottom: 1.15rem;
       height: 32px;
       padding: 0 .7rem;
       border-radius: 10px;
@@ -135,8 +133,7 @@
       .header { justify-content:flex-start; }
       .hero-chip { width: 100%; }
       .hero-chip .txt { min-width: 0; }
-      .hero-userchip { left: .9rem; bottom: .95rem; }
-      .hero-logout-mini { right: .9rem; bottom: .95rem; }
+      .hero-userchip strong { max-width: 22ch; }
     }
   </style>
 </head>
@@ -157,12 +154,14 @@
       </div>
     </nav>
 
-    <div class="hero-userchip" aria-label="Usuario">
-      <img id="avatar" alt="Foto do perfil" src="../assets/icons/user-solid.svg" />
-      <strong id="corner-label">Perfil</strong>
-    </div>
+    <div class="hero-bottom container" aria-label="Barra do usuario">
+      <div class="hero-userchip" aria-label="Usuario">
+        <img id="avatar" alt="Foto do perfil" src="../assets/icons/user-solid.svg" />
+        <strong id="corner-label">Perfil</strong>
+      </div>
 
-    <button id="logout" class="hero-logout-mini" type="button" aria-label="Sair">Sair</button>
+      <button id="logout" class="hero-logout-mini" type="button" aria-label="Sair">Sair</button>
+    </div>
   </header>
 
   <main class="container layout">
@@ -238,6 +237,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=23"></script>
+  <script src="script.js?v=24"></script>
 </body>
 </html>
