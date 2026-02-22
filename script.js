@@ -91,6 +91,7 @@ const saveGoogleKeyBtn = document.getElementById("save-google-key");
 
 let selectedAddressId = "";
 let validatedAddressSignature = "";
+let cepResolved = false;
 
 function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -329,6 +330,17 @@ function fillAddressForm(raw) {
   if (addressDistrictInput) addressDistrictInput.value = addr.district || "";
   if (addressCityInput) addressCityInput.value = addr.city || "";
   if (addressStateInput) addressStateInput.value = addr.state || "";
+
+  cepResolved = !!(isCepValid(addr.cep) && addr.street && addr.city && addr.state);
+}
+
+function clearAutoAddressFields(resetNumber) {
+  if (addressStreetInput) addressStreetInput.value = "";
+  if (addressDistrictInput) addressDistrictInput.value = "";
+  if (addressCityInput) addressCityInput.value = "";
+  if (addressStateInput) addressStateInput.value = "";
+  if (resetNumber && addressNumberInput) addressNumberInput.value = "";
+  cepResolved = false;
 }
 
 function closeAddressDirectory() {
@@ -429,6 +441,7 @@ async function lookupCep() {
   const cep = normalizeCep(addressCepInput?.value || "");
   if (addressCepInput) addressCepInput.value = cep;
   if (!isCepValid(cep)) {
+    clearAutoAddressFields(true);
     setAddressFeedback("CEP invalido. Use 8 numeros.", true);
     return;
   }
@@ -443,18 +456,32 @@ async function lookupCep() {
     }
     const data = await response.json();
     if (data.erro) {
+      clearAutoAddressFields(true);
       setAddressFeedback("CEP nao encontrado.", true);
       return;
     }
 
-    if (addressStreetInput) addressStreetInput.value = String(data.logradouro || addressStreetInput.value || "");
-    if (addressDistrictInput) addressDistrictInput.value = String(data.bairro || addressDistrictInput.value || "");
-    if (addressCityInput) addressCityInput.value = String(data.localidade || addressCityInput.value || "");
-    if (addressStateInput) addressStateInput.value = normalizeState(data.uf || addressStateInput?.value || "");
+    const street = String(data.logradouro || "").trim();
+    const district = String(data.bairro || "").trim();
+    const city = String(data.localidade || "").trim();
+    const state = normalizeState(data.uf || "");
+
+    if (!street || !city || !state) {
+      clearAutoAddressFields(true);
+      setAddressFeedback("CEP encontrado, mas endereco incompleto. Tente outro CEP.", true);
+      return;
+    }
+
+    if (addressStreetInput) addressStreetInput.value = street;
+    if (addressDistrictInput) addressDistrictInput.value = district;
+    if (addressCityInput) addressCityInput.value = city;
+    if (addressStateInput) addressStateInput.value = state;
 
     validatedAddressSignature = "";
-    setAddressFeedback("CEP validado e endereco preenchido.", false);
+    cepResolved = true;
+    setAddressFeedback("CEP validado. Rua, bairro, cidade e estado preenchidos automaticamente. Informe o numero.", false);
   } catch {
+    clearAutoAddressFields(true);
     setAddressFeedback("Falha ao consultar CEP. Tente novamente.", true);
   }
 }
@@ -484,8 +511,16 @@ async function validateAddressWithGoogle(openMapsAfter) {
   }
 
   const addr = readAddressForm();
+  if (!cepResolved) {
+    setAddressFeedback("Primeiro valide o CEP para preencher os dados do endereco.", true);
+    return false;
+  }
+  if (!addr.number) {
+    setAddressFeedback("Informe o numero da residencia antes de validar.", true);
+    return false;
+  }
   if (!addr.street || !addr.city || !addr.state || !isCepValid(addr.cep)) {
-    setAddressFeedback("Preencha rua, cidade, estado e CEP valido antes de validar.", true);
+    setAddressFeedback("Dados de endereco incompletos. Valide o CEP novamente.", true);
     return false;
   }
 
@@ -551,23 +586,30 @@ async function openGoogleMapsValidation() {
 
 async function saveAddressFromForm() {
   const addr = readAddressForm();
-  if (!addr.city) {
-    setAddressFeedback("Informe a cidade.", true);
-    return;
-  }
   if (!isCepValid(addr.cep)) {
-    setAddressFeedback("Informe um CEP valido.", true);
+    setAddressFeedback("Informe um CEP valido e clique em Buscar CEP.", true);
     return;
   }
-  if (!addr.street) {
-    setAddressFeedback("Informe a rua para validar no Google Maps.", true);
+  if (!cepResolved) {
+    setAddressFeedback("Primeiro clique em Buscar CEP para identificar o endereco.", true);
+    return;
+  }
+  if (!addr.number) {
+    setAddressFeedback("Informe o numero da residencia.", true);
+    return;
+  }
+  if (!addr.street || !addr.city || !addr.state) {
+    setAddressFeedback("Endereco nao preenchido corretamente pelo CEP. Busque o CEP novamente.", true);
     return;
   }
 
   const currentSig = addressSignature(addr);
-  if (validatedAddressSignature !== currentSig) {
+  const hasGoogleKey = !!loadGoogleMapsApiKey();
+  if (hasGoogleKey && validatedAddressSignature !== currentSig) {
     const ok = await validateAddressWithGoogle(false);
     if (!ok) return;
+  } else if (!hasGoogleKey) {
+    validatedAddressSignature = currentSig;
   }
 
   const confirmed = readAddressForm();
@@ -585,7 +627,12 @@ async function saveAddressFromForm() {
 
   renderSavedAddresses();
   renderMenuLocation();
-  setAddressFeedback("Endereco salvo e selecionado.", false);
+  setAddressFeedback(
+    hasGoogleKey
+      ? "Endereco salvo e selecionado."
+      : "Endereco salvo com validacao de CEP. Para validar no Google, configure sua API Key.",
+    false
+  );
   closeAddressDirectory();
 }
 
@@ -614,6 +661,17 @@ function initAddressDirectory() {
   addressCepInput?.addEventListener("input", () => {
     addressCepInput.value = normalizeCep(addressCepInput.value);
     validatedAddressSignature = "";
+    const digits = addressCepInput.value.replace(/\D/g, "");
+    if (digits.length < 8) {
+      clearAutoAddressFields(true);
+    } else {
+      cepResolved = false;
+    }
+  });
+
+  addressCepInput?.addEventListener("change", () => {
+    if (!isCepValid(addressCepInput.value)) return;
+    void lookupCep();
   });
 
   addressStreetInput?.addEventListener("input", () => {

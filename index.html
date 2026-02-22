@@ -466,6 +466,12 @@
       font-size: 0.86rem;
     }
 
+    .address-form-grid input[readonly] {
+      background: #f5eee8;
+      color: #5f534a;
+      cursor: not-allowed;
+    }
+
     .address-form-grid .full {
       grid-column: 1 / -1;
     }
@@ -674,6 +680,7 @@
 
       <section class="address-card-block">
         <h4>Em outro lugar</h4>
+        <p class="meta" style="margin-top:0;">Passo 1: informe o CEP e clique em Buscar CEP. Passo 2: preencha somente o numero da residencia.</p>
         <div class="address-form-grid">
           <label>
             CEP
@@ -685,7 +692,7 @@
           </label>
           <label class="full">
             Rua
-            <input id="address-street" type="text" placeholder="Rua / Avenida" />
+            <input id="address-street" type="text" placeholder="Rua / Avenida" readonly />
           </label>
           <label>
             Numero
@@ -693,15 +700,15 @@
           </label>
           <label>
             Bairro
-            <input id="address-district" type="text" placeholder="Bairro" />
+            <input id="address-district" type="text" placeholder="Bairro" readonly />
           </label>
           <label>
             Cidade
-            <input id="address-city" type="text" placeholder="Cidade" />
+            <input id="address-city" type="text" placeholder="Cidade" readonly />
           </label>
           <label>
             Estado
-            <input id="address-state" type="text" placeholder="UF" maxlength="2" />
+            <input id="address-state" type="text" placeholder="UF" maxlength="2" readonly />
           </label>
         </div>
 
@@ -744,6 +751,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=15"></script>
+  <script src="script.js?v=16"></script>
 </body>
 </html>
