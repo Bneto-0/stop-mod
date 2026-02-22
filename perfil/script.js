@@ -4,6 +4,7 @@ const DEFAULT_GOOGLE_CLIENT_ID = "887504211072-0elgoi3dbg80bb9640vvlqfl7cp8guq5.
 const PROFILE_KEY = "stopmod_profile";
 const PROFILE_EXTRA_KEY = "stopmod_profile_extra";
 const ORDERS_KEY = "stopmod_orders";
+const FAVORITES_KEY = "stopmod_favorites";
 
 const cartCount = document.getElementById("cart-count");
 const clientInput = document.getElementById("google-client");
@@ -33,7 +34,9 @@ const accSave = document.getElementById("acc-save");
 const accMsg = document.getElementById("acc-msg");
 
 const ordersList = document.getElementById("orders-list");
+const purchasesList = document.getElementById("purchases-list");
 const trackList = document.getElementById("track-list");
+const favoritesList = document.getElementById("favorites-list");
 
 function loadCartIds() {
   try {
@@ -90,6 +93,15 @@ function saveExtra(extra) {
 function loadOrders() {
   try {
     const raw = JSON.parse(localStorage.getItem(ORDERS_KEY) || "[]");
+    return Array.isArray(raw) ? raw : [];
+  } catch {
+    return [];
+  }
+}
+
+function loadFavoriteIds() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(FAVORITES_KEY) || "[]");
     return Array.isArray(raw) ? raw : [];
   } catch {
     return [];
@@ -219,15 +231,16 @@ function escapeHtml(s) {
 
 function renderOrders() {
   const orders = loadOrders();
-  if (!ordersList || !trackList) return;
+  if (!ordersList && !purchasesList && !trackList) return;
 
   if (!orders.length) {
-    ordersList.innerHTML = "<p class=\"muted2\">Voce ainda nao tem pedidos.</p>";
-    trackList.innerHTML = "<p class=\"muted2\">Voce ainda nao tem compras para acompanhar.</p>";
+    if (ordersList) ordersList.innerHTML = "<p class=\"muted2\">Voce ainda nao tem pedidos.</p>";
+    if (purchasesList) purchasesList.innerHTML = "<p class=\"muted2\">Voce ainda nao tem compras.</p>";
+    if (trackList) trackList.innerHTML = "<p class=\"muted2\">Voce ainda nao tem rastreio para acompanhar.</p>";
     return;
   }
 
-  ordersList.innerHTML = orders
+  const ordersHtml = orders
     .map((o) => {
       const stage = stageForOrder(o);
       const total = o?.totals?.total ?? 0;
@@ -267,8 +280,10 @@ function renderOrders() {
       `;
     })
     .join("");
+  if (ordersList) ordersList.innerHTML = ordersHtml;
+  if (purchasesList) purchasesList.innerHTML = ordersHtml;
 
-  trackList.innerHTML = orders
+  const trackingHtml = orders
     .map((o) => {
       const stage = stageForOrder(o);
       const ship = o?.shipTo ? `${o.shipTo.city || ""} ${o.shipTo.cep || ""}`.trim() : "";
@@ -295,6 +310,29 @@ function renderOrders() {
         </article>
       `;
     })
+    .join("");
+  if (trackList) trackList.innerHTML = trackingHtml;
+}
+
+function renderFavorites() {
+  if (!favoritesList) return;
+  const favorites = loadFavoriteIds();
+  if (!favorites.length) {
+    favoritesList.innerHTML = "<p class=\"muted2\">Voce ainda nao tem produtos favoritos.</p>";
+    return;
+  }
+
+  favoritesList.innerHTML = favorites
+    .map((id, idx) => `
+      <article class="order">
+        <div class="order-top">
+          <div>
+            <div class="order-id">Favorito ${escapeHtml(idx + 1)}</div>
+            <div class="muted2">Produto ID: ${escapeHtml(id)}</div>
+          </div>
+        </div>
+      </article>
+    `)
     .join("");
 }
 
@@ -334,6 +372,7 @@ function renderAuth() {
 
   renderAccount();
   renderOrders();
+  renderFavorites();
   setTab("orders");
 }
 
