@@ -28,6 +28,14 @@ function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function normalizeText(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 function loadCartIds() {
   try {
     return JSON.parse(localStorage.getItem(CART_KEY) || "[]");
@@ -47,6 +55,12 @@ function updateCartCount() {
   cartCount.style.display = ids.length ? "inline-flex" : "none";
 }
 
+function openStoreProductSearch() {
+  const query = String(searchInput?.value || "").trim();
+  const target = query ? `../index.html?q=${encodeURIComponent(query)}#produtos` : "../index.html#produtos";
+  window.location.href = target;
+}
+
 function renderCats() {
   const categories = ["all", ...new Set(products.map((p) => p.category))];
   catsEl.innerHTML = categories
@@ -63,16 +77,29 @@ function renderCats() {
 }
 
 function filteredProducts() {
-  const term = (searchInput?.value || "").toLowerCase().trim();
+  const term = normalizeText(searchInput?.value);
   return products.filter((p) => (activeCat === "all" ? true : p.category === activeCat)).filter((p) => {
     if (!term) return true;
-    return p.name.toLowerCase().includes(term);
+    return normalizeText(`${p.name} ${p.category} ${p.size}`).includes(term);
   });
 }
 
 function renderProducts() {
   const list = filteredProducts();
   titleEl.textContent = activeCat === "all" ? "Todos os produtos" : activeCat;
+
+  if (!list.length) {
+    productGrid.innerHTML = `
+      <article class="product-card">
+        <div class="product-info">
+          <h4>Nenhum produto encontrado</h4>
+          <p class="meta">Ajuste a busca e tente novamente.</p>
+        </div>
+      </article>
+    `;
+    return;
+  }
+
   productGrid.innerHTML = list
     .map(
       (product) => `
@@ -109,7 +136,11 @@ function addToCart(productId) {
 }
 
 searchInput?.addEventListener("input", renderProducts);
+searchInput?.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter") return;
+  event.preventDefault();
+  openStoreProductSearch();
+});
 renderCats();
 renderProducts();
 updateCartCount();
-

@@ -49,6 +49,14 @@ function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function normalizeText(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 function moneyParts(value) {
   const fixed = (Number(value) || 0).toFixed(2);
   const [a, b] = fixed.split(".");
@@ -158,6 +166,12 @@ function updateCartCount() {
   const ids = loadCartIds();
   cartCount.textContent = String(ids.length);
   cartCount.style.display = ids.length ? "inline-flex" : "none";
+}
+
+function openStoreProductSearch() {
+  const query = String(searchInput?.value || "").trim();
+  const target = query ? `../index.html?q=${encodeURIComponent(query)}#produtos` : "../index.html#produtos";
+  window.location.href = target;
 }
 
 function groupedCart(ids) {
@@ -325,9 +339,9 @@ function renderCart() {
   if (shipSummary) shipSummary.textContent = shipSummaryText(shipTo);
   const cep = shipTo.cep;
 
-  const term = (searchInput?.value || "").toLowerCase().trim();
+  const term = normalizeText(searchInput?.value);
   const grouped = groupedCart(ids).filter((item) =>
-    !term ? true : item.name.toLowerCase().includes(term)
+    !term ? true : normalizeText(`${item.name} ${item.category} ${item.size}`).includes(term)
   );
   if (!grouped.length) {
     cartItems.innerHTML = "<li class=\"empty\">Nenhum item encontrado.</li>";
@@ -433,6 +447,11 @@ checkoutBtn.addEventListener("click", () => {
 });
 
 searchInput?.addEventListener("input", renderCart);
+searchInput?.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter") return;
+  event.preventDefault();
+  openStoreProductSearch();
+});
 
 checkoutModal?.querySelectorAll("[data-close]").forEach((el) => {
   el.addEventListener("click", closeModal);

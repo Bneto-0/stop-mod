@@ -25,6 +25,14 @@ function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function normalizeText(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 function loadCartIds() {
   try {
     return JSON.parse(localStorage.getItem(CART_KEY) || "[]");
@@ -44,17 +52,35 @@ function updateCartCount() {
   cartCount.style.display = ids.length ? "inline-flex" : "none";
 }
 
+function openStoreProductSearch() {
+  const query = String(searchInput?.value || "").trim();
+  const target = query ? `../index.html?q=${encodeURIComponent(query)}#produtos` : "../index.html#produtos";
+  window.location.href = target;
+}
+
 function discountedProducts() {
-  const term = (searchInput?.value || "").toLowerCase().trim();
+  const term = normalizeText(searchInput?.value);
   return products.filter((p) => p.oldPrice && p.oldPrice > p.price).filter((p) => {
     if (!term) return true;
-    return p.name.toLowerCase().includes(term);
+    return normalizeText(`${p.name} ${p.category} ${p.size}`).includes(term);
   });
 }
 
 function renderProducts() {
   const list = discountedProducts();
   if (discountCount) discountCount.textContent = `${list.length} descontos`;
+
+  if (!list.length) {
+    productGrid.innerHTML = `
+      <article class="product-card">
+        <div class="product-info">
+          <h4>Nenhum produto com desconto encontrado</h4>
+          <p class="meta">Tente outro termo de busca.</p>
+        </div>
+      </article>
+    `;
+    return;
+  }
 
   productGrid.innerHTML = list
     .map((product) => {
@@ -97,6 +123,10 @@ function addToCart(productId) {
 }
 
 searchInput?.addEventListener("input", renderProducts);
+searchInput?.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter") return;
+  event.preventDefault();
+  openStoreProductSearch();
+});
 renderProducts();
 updateCartCount();
-

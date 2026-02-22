@@ -49,6 +49,45 @@ function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function normalizeText(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function applySearchFromUrl() {
+  if (!searchInput) return false;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const query = String(params.get("q") || "").trim();
+    if (!query) return false;
+    searchInput.value = query;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function syncSearchQueryInUrl() {
+  if (!searchInput) return;
+  const params = new URLSearchParams(window.location.search);
+  const query = String(searchInput.value || "").trim();
+  if (query) params.set("q", query);
+  else params.delete("q");
+
+  const queryString = params.toString();
+  const nextUrl = `${window.location.pathname}${queryString ? `?${queryString}` : ""}${window.location.hash || ""}`;
+  window.history.replaceState(null, "", nextUrl);
+}
+
+function scrollToProducts(smooth) {
+  const section = document.getElementById("produtos");
+  if (!section) return;
+  section.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "start" });
+}
+
 function loadCartIds() {
   try {
     return JSON.parse(localStorage.getItem(CART_KEY) || "[]");
@@ -135,10 +174,12 @@ function renderMenuLocation() {
 }
 
 function getFilteredProducts() {
-  const term = String(searchInput?.value || "").toLowerCase().trim();
+  const term = normalizeText(searchInput?.value);
+  if (!term) return products;
 
   return products.filter((product) => {
-    const textOk = !term || product.name.toLowerCase().includes(term);
+    const target = normalizeText(`${product.name} ${product.category} ${product.size}`);
+    const textOk = target.includes(term);
     return textOk;
   });
 }
@@ -321,7 +362,21 @@ function startAdSlider(frameEl, imgEl, dotsEl, images, targetHref) {
 }
 
 function renderProducts() {
+  if (!productGrid) return;
   const filtered = getFilteredProducts();
+
+  if (!filtered.length) {
+    const query = String(searchInput?.value || "").trim();
+    productGrid.innerHTML = `
+      <article class="product-card">
+        <div class="product-info">
+          <h4>Nenhum produto encontrado</h4>
+          <p class="meta">Busca: ${query || "--"}</p>
+        </div>
+      </article>
+    `;
+    return;
+  }
 
   productGrid.innerHTML = filtered
     .map(
@@ -359,8 +414,20 @@ function addToCart(productId) {
 }
 
 searchInput?.addEventListener("input", renderProducts);
+searchInput?.addEventListener("input", syncSearchQueryInUrl);
+searchInput?.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter") return;
+  event.preventDefault();
+  scrollToProducts(true);
+});
 
+const openedWithQuery = applySearchFromUrl();
 renderProducts();
 updateCartCount();
 renderMenuLocation();
 startAdSlider(adMainLink, adMainImage, adMainDots, loadHomeAds(), loadHomeTarget());
+syncSearchQueryInUrl();
+
+if (openedWithQuery) {
+  setTimeout(() => scrollToProducts(false), 70);
+}
