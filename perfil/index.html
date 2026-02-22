@@ -14,8 +14,8 @@
     .muted2 { color: var(--muted); font-size: .92rem; }
 
     .hero-row { margin-top: 3.2rem; display:flex; align-items:flex-end; justify-content:space-between; gap: 1.2rem; flex-wrap:wrap; }
-    .hero-row .hero-content { margin-top: 0; max-width: 760px; }
-    .hero-h1 { display:flex; align-items:center; gap: .65rem; }
+    .hero-row .hero-content { margin-top: 0; max-width: 560px; }
+    .hero-h1 { display:flex; align-items:center; gap: .65rem; font-size: clamp(1.8rem, 3.2vw, 2.55rem); line-height: 1.05; }
     .hero-h1 svg { width: 34px; height: 34px; fill: #fff6ef; opacity: .95; }
 
     .hero-chip {
@@ -25,14 +25,15 @@
       background: #fff3e8;
       color: #2f2824;
       border: 1px solid #ffffff55;
-      border-radius: 18px;
-      padding: .65rem .75rem;
+      border-radius: 16px;
+      padding: .55rem .65rem;
       box-shadow: 0 18px 46px #00000020;
-      max-width: min(520px, 100%);
+      max-width: min(460px, 100%);
+      transform: translateY(8px);
     }
-    .hero-chip img { width: 54px; height: 54px; border-radius: 16px; object-fit: cover; border: 1px solid #eac8bb; background: #fff; }
-    .hero-chip .txt { display:grid; gap:.1rem; min-width: 220px; }
-    .hero-chip .txt strong { font-size: 1.05rem; }
+    .hero-chip img { width: 46px; height: 46px; border-radius: 14px; object-fit: cover; border: 1px solid #eac8bb; background: #fff; }
+    .hero-chip .txt { display:grid; gap:.1rem; min-width: 180px; }
+    .hero-chip .txt strong { font-size: 1rem; }
     .hero-chip .txt span { color: #6e6761; font-weight: 800; font-size: .9rem; }
     .hero-chip .actions { margin-left: auto; display:flex; align-items:center; }
     .hero-chip .btn { margin-top: 0; }
@@ -98,8 +99,7 @@
     </nav>
 
     <section class="hero-row container">
-      <div class="hero-content" style="max-width: 760px;">
-        <p class="tag">Conta</p>
+      <div class="hero-content">
         <h1 class="hero-h1">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M12 12a4.5 4.5 0 1 0-4.5-4.5A4.5 4.5 0 0 0 12 12zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"></path>
@@ -194,6 +194,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=9"></script>
+  <script src="script.js?v=10"></script>
 </body>
 </html>
