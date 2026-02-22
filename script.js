@@ -116,6 +116,7 @@ function startAdSlider(frameEl, imgEl, dotsEl, imageKey, targetKey, fallbackImag
   const images = loadStringArray(imageKey, fallbackImages);
   const target = loadLinkTarget(targetKey) || "anuncios/";
   frameEl.href = target;
+  const navEls = Array.from(frameEl.querySelectorAll("[data-nav]"));
 
   let index = 0;
   let autoTimer = null;
@@ -168,6 +169,13 @@ function startAdSlider(frameEl, imgEl, dotsEl, imageKey, targetKey, fallbackImag
   const prev = () => {
     index = (index - 1 + images.length) % images.length;
     apply();
+  };
+
+  const setNavVisible = () => {
+    const show = images.length > 1;
+    navEls.forEach((el) => {
+      el.style.display = show ? "inline-flex" : "none";
+    });
   };
 
   const stopAuto = () => {
@@ -236,14 +244,35 @@ function startAdSlider(frameEl, imgEl, dotsEl, imageKey, targetKey, fallbackImag
     ev.stopPropagation();
   });
 
+  navEls.forEach((navEl) => {
+    const go = (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      const dir = String(navEl.getAttribute("data-nav") || "");
+      if (dir === "next") next();
+      else prev();
+      startAuto();
+    };
+    navEl.addEventListener("pointerdown", (ev) => {
+      ev.stopPropagation();
+    });
+    navEl.addEventListener("click", go);
+    navEl.addEventListener("keydown", (ev) => {
+      if (ev.key !== "Enter" && ev.key !== " ") return;
+      go(ev);
+    });
+  });
+
   if (!images.length) {
     imgEl.removeAttribute("src");
     imgEl.alt = "Sem anuncios";
     if (dotsEl) dotsEl.innerHTML = "";
+    setNavVisible();
     return;
   }
 
   buildDots();
+  setNavVisible();
   const firstImage = images[0];
   if (firstImage) {
     imgEl.src = firstImage;

@@ -261,6 +261,35 @@
       cursor: grabbing;
     }
 
+    .ad-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      border: none;
+      background: #00000066;
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      font-weight: 900;
+      z-index: 4;
+      cursor: pointer;
+      user-select: none;
+      transition: background .2s ease, transform .2s ease;
+    }
+
+    .ad-arrow:hover {
+      background: #0000008a;
+      transform: translateY(-50%) scale(1.05);
+    }
+
+    .ad-prev { left: 8px; }
+    .ad-next { right: 8px; }
+
     .ad-dots {
       position: absolute;
       left: 50%;
@@ -394,6 +423,8 @@
     <section class="hero-main container" aria-label="Destaque inicial">
       <a id="ad-left-link" class="hero-media hero-ad" href="anuncios/" aria-label="Anuncio em destaque">
         <img id="ad-left-image" src="" alt="Anuncio destaque" loading="lazy" />
+        <span class="ad-arrow ad-prev" data-nav="prev" role="button" tabindex="0" aria-label="Anuncio anterior">&#10094;</span>
+        <span class="ad-arrow ad-next" data-nav="next" role="button" tabindex="0" aria-label="Proximo anuncio">&#10095;</span>
         <div id="ad-left-dots" class="ad-dots" aria-hidden="true"></div>
       </a>
       <div class="hero-copy">
@@ -404,6 +435,8 @@
       <p>Roupas urbanas, caimento premium e pecas pensadas para o seu dia a dia.</p>
       <a id="ad-right-link" class="hero-box hero-ad" href="anuncios/" aria-label="Anuncio secundario">
         <img id="ad-right-image" src="" alt="Anuncio secundario" loading="lazy" />
+        <span class="ad-arrow ad-prev" data-nav="prev" role="button" tabindex="0" aria-label="Anuncio anterior">&#10094;</span>
+        <span class="ad-arrow ad-next" data-nav="next" role="button" tabindex="0" aria-label="Proximo anuncio">&#10095;</span>
         <div id="ad-right-dots" class="ad-dots" aria-hidden="true"></div>
       </a>
       </div>
@@ -435,6 +468,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=8"></script>
+  <script src="script.js?v=9"></script>
 </body>
 </html>
