@@ -6,7 +6,7 @@ const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
 const USERS_KEY = "stopmod_users";
 const OTP_KEY = "stopmod_otp";
 const FACEBOOK_APP_ID_KEY = "stopmod_facebook_app_id";
-const DEFAULT_FACEBOOK_APP_ID = "";
+const DEFAULT_FACEBOOK_APP_ID = "484889158765114";
 const FACEBOOK_PENDING_NEXT_KEY = "stopmod_facebook_pending_next";
 const FACEBOOK_OAUTH_STATE_KEY = "stopmod_facebook_oauth_state";
 
@@ -83,7 +83,10 @@ function setAuthSessionActive() {
 }
 
 function loadFacebookAppId() {
-  return String(localStorage.getItem(FACEBOOK_APP_ID_KEY) || DEFAULT_FACEBOOK_APP_ID || "").trim();
+  const raw = String(localStorage.getItem(FACEBOOK_APP_ID_KEY) || "").trim();
+  if (/^\d+$/.test(raw)) return raw;
+  if (/^\d+$/.test(DEFAULT_FACEBOOK_APP_ID)) return DEFAULT_FACEBOOK_APP_ID;
+  return "";
 }
 
 function saveFacebookAppId(appId) {
@@ -424,11 +427,7 @@ forgotBtn?.addEventListener("click", () => {
 function facebookSignIn() {
   const appId = loadFacebookAppId();
   if (!appId) {
-    openFacebookAppIdSetup(() => {
-      const saved = loadFacebookAppId();
-      if (!saved) return;
-      startFacebookOAuth(saved);
-    });
+    window.location.href = "https://www.facebook.com/login.php";
     return;
   }
 
