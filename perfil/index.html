@@ -300,10 +300,14 @@
       padding: .72rem .85rem;
       border-bottom:1px solid var(--line);
       background:#fffdfb;
+      cursor: pointer;
+      list-style: none;
     }
+    .orders-group-head::-webkit-details-marker { display: none; }
     .orders-group-head h3 { font-size: 1rem; }
     .orders-count { color: var(--muted); font-weight: 900; font-size: .85rem; }
     .orders-list { display:grid; gap: .7rem; padding: .75rem; }
+    .orders-group:not([open]) .orders-list { display: none; }
     .orders-empty { color: var(--muted); font-size: .92rem; margin: 0; }
     .chip.status-delivered { background:#e9fff1; border-color:#b9e3c8; color:#18663f; }
     .chip.status-progress { background:#fff3e8; border-color:var(--line); color:#8c3c26; }
@@ -527,35 +531,35 @@
               <p class="muted2">Aqui voce ve todos os pedidos: entregues, em entrega e cancelados.</p>
 
               <div class="orders-directory" style="margin-top:.7rem;">
-                <section class="orders-group" aria-label="Pedidos em entrega">
-                  <div class="orders-group-head">
+                <details class="orders-group" data-order-group open>
+                  <summary class="orders-group-head">
                     <h3>Em entrega</h3>
                     <span class="orders-count" id="orders-in-progress-count">0</span>
-                  </div>
+                  </summary>
                   <div id="orders-in-progress-list" class="orders-list">
                     <p class="orders-empty">Nenhum pedido em entrega.</p>
                   </div>
-                </section>
+                </details>
 
-                <section class="orders-group" aria-label="Pedidos entregues">
-                  <div class="orders-group-head">
+                <details class="orders-group" data-order-group>
+                  <summary class="orders-group-head">
                     <h3>Entregues</h3>
                     <span class="orders-count" id="orders-delivered-count">0</span>
-                  </div>
+                  </summary>
                   <div id="orders-delivered-list" class="orders-list">
                     <p class="orders-empty">Nenhum pedido entregue.</p>
                   </div>
-                </section>
+                </details>
 
-                <section class="orders-group" aria-label="Pedidos cancelados">
-                  <div class="orders-group-head">
+                <details class="orders-group" data-order-group>
+                  <summary class="orders-group-head">
                     <h3>Cancelados</h3>
                     <span class="orders-count" id="orders-cancelled-count">0</span>
-                  </div>
+                  </summary>
                   <div id="orders-cancelled-list" class="orders-list">
                     <p class="orders-empty">Nenhum pedido cancelado.</p>
                   </div>
-                </section>
+                </details>
               </div>
             </div>
           </div>
@@ -572,6 +576,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=46"></script>
+  <script src="script.js?v=48"></script>
 </body>
 </html>

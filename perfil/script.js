@@ -33,6 +33,7 @@ const cornerLabel = document.getElementById("corner-label");
 const tabBtns = document.querySelectorAll("[data-tab]");
 const tabPanels = document.querySelectorAll("[data-panel]");
 const openPanelBtns = document.querySelectorAll("[data-open-panel]");
+const orderGroups = document.querySelectorAll("[data-order-group]");
 
 const accFullName = document.getElementById("acc-full-name");
 const accCpf = document.getElementById("acc-cpf");
@@ -606,6 +607,16 @@ openPanelBtns.forEach((b) => {
     if (detailSections && typeof detailSections.scrollIntoView === "function") {
       detailSections.scrollIntoView({ behavior: "smooth", block: "start" });
     }
+  });
+});
+
+orderGroups.forEach((group) => {
+  group.addEventListener("toggle", () => {
+    if (!group.open) return;
+    orderGroups.forEach((other) => {
+      if (other === group) return;
+      other.open = false;
+    });
   });
 });
 
