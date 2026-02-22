@@ -8,18 +8,43 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../style.css?v=6" />
-  <link rel="stylesheet" href="../diretorios.css?v=1" />
+  <link rel="stylesheet" href="../diretorios.css?v=2" />
 </head>
 <body data-mode="processando">
   <header class="hero">
-    <nav class="nav nav-wide">
-      <a class="brand-pill" href="../../index.html#top" aria-label="Voltar para o inicio">Stop <span>mod</span></a>
-      <div class="nav-actions">
-        <a class="notify-link" href="../../notificacoes/" aria-label="Notificacoes">
+    <nav class="menu-top nav-wide">
+      <div class="menu-left">
+        <a class="brand-pill" href="../../index.html#top" aria-label="Voltar para o inicio">Stop <span>mod</span></a>
+        <a class="menu-location" href="../../entrega/" aria-label="Selecionar endereco">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 2c3.87 0 7 3.09 7 6.9 0 4.71-5.2 10.35-6.45 11.65a.8.8 0 0 1-1.1 0C10.2 19.25 5 13.61 5 8.9 5 5.09 8.13 2 12 2zm0 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"></path>
+          </svg>
+          <span class="menu-location-text">
+            <small>Enviar para</small>
+            <strong id="menu-location">Sao paulo</strong>
+          </span>
+        </a>
+      </div>
+
+      <div class="menu-right">
+        <div class="search-top-wrap">
+          <label class="sr-only" for="search-input">Pesquisar produto</label>
+          <input id="search-input" type="search" placeholder="Pesquisar produto" />
+        </div>
+
+        <a class="profile-top" href="../" aria-label="Perfil">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"></path>
+          </svg>
+          <span>Perfil</span>
+        </a>
+
+        <a class="notify-top" href="../../notificacoes/" aria-label="Notificacoes">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 1 0-14 0v5l-2 2v1h18v-1l-2-2z"></path>
           </svg>
         </a>
+
         <a class="cart-link" href="../../carrinho/" aria-label="Ir para o carrinho">
           <svg class="cart-icon" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M8 19a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm9 0a2 2 0 1 0 .001 4A2 2 0 0 0 17 19zM6.2 5l.6 3h11.6l-1.2 6H8.1L6.2 5zM3 2h2l2.2 11.2A2 2 0 0 0 9.2 15H18v-2H9.2l-.2-1h9.1A2 2 0 0 0 20 10.4l1-5A2 2 0 0 0 19 3H6.4l-.3-1.6A2 2 0 0 0 4.1 0H3v2z"></path>
@@ -29,6 +54,14 @@
         </a>
       </div>
     </nav>
+
+    <div class="hero-menu nav-wide">
+      <a class="em" href="../pedidos/">Pedidos</a>
+      <a href="../favoritos/">Favoritos</a>
+      <a href="../processando/">Processando</a>
+      <a class="em" href="../../cupons/">Cupons</a>
+      <a href="../../categorias/">Categorias</a>
+    </div>
 
     <div class="hero-bottom hero-wide" aria-label="Barra do usuario">
       <div class="hero-userchip">
@@ -74,6 +107,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="../diretorios.js?v=1"></script>
+  <script src="../diretorios.js?v=2"></script>
 </body>
 </html>

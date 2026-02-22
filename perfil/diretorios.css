@@ -13,6 +13,144 @@
   padding-inline: clamp(0.45rem, 1vw, 0.9rem);
 }
 
+.menu-top {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.menu-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.menu-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.48rem;
+  text-decoration: none;
+  color: #fff6ef;
+  min-width: 0;
+}
+
+.menu-location svg {
+  width: 25px;
+  height: 25px;
+  fill: #fff6ef;
+  flex: 0 0 auto;
+}
+
+.menu-location-text {
+  display: grid;
+  line-height: 1.02;
+}
+
+.menu-location-text small {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #ead9cc;
+}
+
+.menu-location-text strong {
+  font-size: clamp(0.95rem, 1.2vw, 1.15rem);
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 30ch;
+}
+
+.menu-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.search-top-wrap {
+  width: clamp(260px, 32vw, 520px);
+}
+
+.search-top-wrap input {
+  width: 100%;
+  border: 1px solid #ffffff40;
+  border-radius: 10px;
+  padding: 0.5rem 0.7rem;
+  font-family: inherit;
+  background: #fff9f5;
+  color: #2f2824;
+  font-size: 0.8rem;
+}
+
+.search-top-wrap input::placeholder {
+  color: #6d6057;
+}
+
+.profile-top {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #fff6ef;
+  text-decoration: none;
+  font-size: clamp(0.88rem, 1.1vw, 1.05rem);
+  font-weight: 800;
+}
+
+.profile-top svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  display: block;
+}
+
+.notify-top {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff6ef;
+  text-decoration: none;
+}
+
+.notify-top svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  display: block;
+}
+
+.hero-menu {
+  margin-top: 0.45rem;
+  display: flex;
+  align-items: center;
+  gap: clamp(0.8rem, 1.5vw, 2rem);
+  flex-wrap: wrap;
+}
+
+.hero-menu a {
+  text-decoration: none;
+  color: #fff6ef;
+  font-size: clamp(0.95rem, 1.1vw, 1.1rem);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.hero-menu a.em {
+  font-style: italic;
+  font-weight: 900;
+}
+
+.hero-menu a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .brand-pill {
   display: inline-flex;
   align-items: center;
@@ -332,6 +470,26 @@ details summary {
   border-radius: 10px;
   object-fit: cover;
   border: 1px solid var(--line);
+}
+
+@media (max-width: 980px) {
+  .menu-top {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .menu-left {
+    justify-content: space-between;
+  }
+
+  .menu-right {
+    justify-content: flex-start;
+  }
+
+  .search-top-wrap {
+    width: 100%;
+  }
 }
 
 @media (max-width: 720px) {

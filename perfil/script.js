@@ -1,4 +1,5 @@
 const CART_KEY = "stopmod_cart";
+const SHIP_KEY = "stopmod_ship_to";
 const GOOGLE_CLIENT_KEY = "stopmod_google_client_id";
 const DEFAULT_GOOGLE_CLIENT_ID = "887504211072-0elgoi3dbg80bb9640vvlqfl7cp8guq5.apps.googleusercontent.com";
 const PROFILE_KEY = "stopmod_profile";
@@ -10,6 +11,8 @@ const ORDERS_KEY = "stopmod_orders";
 const FAVORITES_KEY = "stopmod_favorites";
 
 const cartCount = document.getElementById("cart-count");
+const menuLocationEl = document.getElementById("menu-location");
+const searchInput = document.getElementById("search-input");
 const clientInput = document.getElementById("google-client");
 const saveClientBtn = document.getElementById("save-client");
 const clientMsg = document.getElementById("client-msg");
@@ -63,11 +66,35 @@ function loadCartIds() {
   }
 }
 
+function loadShipTo() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SHIP_KEY) || "{}");
+    return {
+      city: String(raw?.city || "").trim(),
+      cep: String(raw?.cep || "").trim()
+    };
+  } catch {
+    return { city: "", cep: "" };
+  }
+}
+
 function updateCartCount() {
   if (!cartCount) return;
   const ids = loadCartIds();
   cartCount.textContent = String(ids.length);
   cartCount.style.display = ids.length ? "inline-flex" : "none";
+}
+
+function renderMenuLocation() {
+  if (!menuLocationEl) return;
+  const shipTo = loadShipTo();
+  menuLocationEl.textContent = shipTo.city || "Sao paulo";
+}
+
+function goToStoreSearch() {
+  const query = String(searchInput?.value || "").trim();
+  const target = query ? `../index.html?q=${encodeURIComponent(query)}#produtos` : "../index.html#produtos";
+  window.location.href = target;
 }
 
 function loadClientId() {
@@ -645,7 +672,14 @@ if (clientInput) {
       : "Se voce tiver um Client ID proprio, voce pode configurar nas configuracoes avancadas.";
   } catch {}
 }
+searchInput?.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter") return;
+  event.preventDefault();
+  goToStoreSearch();
+});
+
 updateCartCount();
+renderMenuLocation();
 const authedNow = renderAuth();
 if (authedNow) {
   bindAuthActivity();

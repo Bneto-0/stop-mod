@@ -1,4 +1,5 @@
 const CART_KEY = "stopmod_cart";
+const SHIP_KEY = "stopmod_ship_to";
 const PROFILE_KEY = "stopmod_profile";
 const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
 const AUTH_TIMEOUT_MS = 30 * 60 * 1000;
@@ -56,6 +57,8 @@ const pageDescEl = document.getElementById("page-desc");
 const contentRoot = document.getElementById("content-root");
 const logoutBtn = document.getElementById("logout");
 const tabLinks = document.querySelectorAll("[data-dir-tab]");
+const menuLocationEl = document.getElementById("menu-location");
+const searchInput = document.getElementById("search-input");
 
 let lastAuthTouchAt = 0;
 
@@ -100,6 +103,14 @@ function loadJson(key, fallback) {
 function loadCartIds() {
   const ids = loadJson(CART_KEY, []);
   return Array.isArray(ids) ? ids : [];
+}
+
+function loadShipTo() {
+  const raw = loadJson(SHIP_KEY, {});
+  return {
+    city: String(raw?.city || "").trim(),
+    cep: String(raw?.cep || "").trim()
+  };
 }
 
 function loadOrders() {
@@ -359,6 +370,18 @@ function updateCartCount() {
   cartCount.style.display = ids.length ? "inline-flex" : "none";
 }
 
+function renderMenuLocation() {
+  if (!menuLocationEl) return;
+  const shipTo = loadShipTo();
+  menuLocationEl.textContent = shipTo.city || "Sao paulo";
+}
+
+function goToStoreSearch() {
+  const query = String(searchInput?.value || "").trim();
+  const target = query ? `../../index.html?q=${encodeURIComponent(query)}#produtos` : "../../index.html#produtos";
+  window.location.href = target;
+}
+
 function renderPageContent() {
   const meta = MODE_META[mode] || MODE_META.pedidos;
   if (pageTitleEl) pageTitleEl.textContent = meta.title;
@@ -396,6 +419,7 @@ function init() {
 
   touchAuthSession(true);
   renderHeader(profile);
+  renderMenuLocation();
   updateCartCount();
   renderPageContent();
   bindAuthActivity();
@@ -404,6 +428,12 @@ function init() {
 logoutBtn?.addEventListener("click", () => {
   clearAuthSession();
   goToLogin();
+});
+
+searchInput?.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter") return;
+  event.preventDefault();
+  goToStoreSearch();
 });
 
 init();
