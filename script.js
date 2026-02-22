@@ -394,8 +394,6 @@ function renderSavedAddresses() {
   savedAddressList.querySelectorAll("input[name=\"saved-address\"]").forEach((radioEl) => {
     radioEl.addEventListener("change", () => {
       selectedAddressId = String(radioEl.value || "");
-      const selected = loadShipList().find((x) => x.id === selectedAddressId);
-      if (selected) fillAddressForm(selected);
       validatedAddressSignature = "";
       setAddressFeedback("", false);
     });
@@ -423,7 +421,9 @@ function openAddressDirectory(event) {
   const currentMatch = list.find((item) => addressSignature(item) === addressSignature(current));
   selectedAddressId = currentMatch?.id || list[0]?.id || "";
 
-  fillAddressForm(currentMatch || list[0] || current);
+  if (addressCepInput) addressCepInput.value = "";
+  if (addressContactInput) addressContactInput.value = "";
+  clearAutoAddressFields(true);
   validatedAddressSignature = "";
   if (googleMapsApiKeyInput) {
     googleMapsApiKeyInput.value = loadGoogleMapsApiKey();
