@@ -523,21 +523,10 @@
       text-decoration: underline;
     }
 
-    .address-setup {
+    .address-edit-actions {
       margin-top: 0.62rem;
       border-top: 1px dashed #e2d5cb;
       padding-top: 0.55rem;
-    }
-
-    .address-setup summary {
-      cursor: pointer;
-      font-weight: 800;
-      color: #4d433d;
-      font-size: 0.84rem;
-    }
-
-    .address-setup-body {
-      margin-top: 0.45rem;
     }
 
     .address-modal-foot {
@@ -674,7 +663,7 @@
       <header class="address-modal-head">
         <div>
           <h3 id="address-modal-title">Selecione onde quer receber suas compras</h3>
-          <p>Voce pode salvar enderecos e validar no Google Maps sem sair da pagina.</p>
+          <p>Voce pode salvar enderecos e validar CEP automaticamente sem sair da pagina.</p>
         </div>
         <button class="address-close" type="button" data-address-close="1">X</button>
       </header>
@@ -732,23 +721,11 @@
               <input id="address-state" type="text" placeholder="UF" maxlength="2" readonly />
             </label>
           </div>
-        </div>
 
-        <details class="address-setup">
-          <summary>Configurar validador Google</summary>
-          <div class="address-setup-body">
-            <div class="address-form-grid">
-              <label class="full">
-                Google Maps API Key
-                <input id="google-maps-api-key" type="text" placeholder="Cole sua chave da Geocoding API" />
-              </label>
-            </div>
-            <div class="address-inline-actions">
-              <button id="save-google-key" class="address-btn ghost" type="button">Salvar chave</button>
-              <a class="address-link" href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer">Abrir Google Cloud</a>
-            </div>
+          <div class="address-inline-actions address-edit-actions">
+            <button id="address-edit-toggle" class="address-btn ghost" type="button" hidden>Alterar endereco</button>
           </div>
-        </details>
+        </div>
       </section>
 
       <div class="address-modal-foot">
@@ -767,6 +744,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=20"></script>
+  <script src="script.js?v=21"></script>
 </body>
 </html>
