@@ -8,6 +8,7 @@ const OTP_KEY = "stopmod_otp";
 const FACEBOOK_APP_ID_KEY = "stopmod_facebook_app_id";
 const DEFAULT_FACEBOOK_APP_ID = "484889158765114";
 const FACEBOOK_OAUTH_STATE_KEY = "stopmod_facebook_oauth_state";
+const FACEBOOK_PENDING_NEXT_KEY = "stopmod_facebook_pending_next";
 
 const loginForm = document.getElementById("login-form");
 const loginId = document.getElementById("login-id");
@@ -92,16 +93,30 @@ function saveFacebookAppId(appId) {
   localStorage.setItem(FACEBOOK_APP_ID_KEY, String(appId || "").trim());
 }
 
-function resolvePostLoginUrl() {
+function normalizeNextPath(raw) {
+  const next = String(raw || "").trim();
+  if (!next) return "";
+  if (/^[a-z]+:\/\//i.test(next)) return "";
+  if (next.startsWith("../") || next.startsWith("./") || next.startsWith("/")) return next;
+  return "";
+}
+
+function resolveRequestedPostLoginUrl() {
   try {
     const raw = String(new URLSearchParams(window.location.search).get("next") || "").trim();
-    if (!raw) return "../perfil/";
-    if (/^[a-z]+:\/\//i.test(raw)) return "../perfil/";
-    if (raw.startsWith("../") || raw.startsWith("./") || raw.startsWith("/")) return raw;
-    return "../perfil/";
+    return normalizeNextPath(raw) || "../perfil/";
   } catch {
     return "../perfil/";
   }
+}
+
+function resolvePostLoginUrl() {
+  const pending = normalizeNextPath(localStorage.getItem(FACEBOOK_PENDING_NEXT_KEY) || "");
+  if (pending) {
+    localStorage.removeItem(FACEBOOK_PENDING_NEXT_KEY);
+    return pending;
+  }
+  return resolveRequestedPostLoginUrl();
 }
 
 function randomStateToken() {
@@ -118,8 +133,13 @@ function startFacebookOAuthFallback(appId) {
   window.location.href = buildFacebookLoginUrl(appId);
 }
 
+function getFacebookRedirectUri() {
+  return `${window.location.origin}${window.location.pathname}`;
+}
+
 function buildFacebookLoginUrl(appId) {
-  const redirectUri = `${window.location.origin}${window.location.pathname}${window.location.search}`;
+  localStorage.setItem(FACEBOOK_PENDING_NEXT_KEY, resolveRequestedPostLoginUrl());
+  const redirectUri = getFacebookRedirectUri();
   const state = randomStateToken();
   localStorage.setItem(FACEBOOK_OAUTH_STATE_KEY, state);
 
