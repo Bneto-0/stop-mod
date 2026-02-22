@@ -173,13 +173,14 @@
     <section class="card">
       <h1>Diretorio de anuncios</h1>
       <p class="muted">Cole as URLs das fotos (uma por linha). Elas passam sozinhas na pagina inicial.</p>
+      <p class="muted">Limite: ate 10 anuncios por quadro.</p>
     </section>
 
     <section class="card">
       <h2>Quadro esquerdo (anuncio principal)</h2>
       <label for="left-target">Link de destino do anuncio</label>
       <input id="left-target" type="text" placeholder="Ex: produtos/ ou https://..." />
-      <label for="left-images">Fotos (uma URL por linha)</label>
+      <label for="left-images">Fotos (uma URL por linha, maximo 10)</label>
       <textarea id="left-images" placeholder="https://..."></textarea>
       <div class="row">
         <button id="save-left" class="btn" type="button">Salvar quadro esquerdo</button>
@@ -193,7 +194,7 @@
       <h2>Quadro direito (anuncio secundario)</h2>
       <label for="right-target">Link de destino do anuncio</label>
       <input id="right-target" type="text" placeholder="Ex: cupons/ ou https://..." />
-      <label for="right-images">Fotos (uma URL por linha)</label>
+      <label for="right-images">Fotos (uma URL por linha, maximo 10)</label>
       <textarea id="right-images" placeholder="https://..."></textarea>
       <div class="row">
         <button id="save-right" class="btn" type="button">Salvar quadro direito</button>
@@ -204,6 +205,6 @@
     </section>
   </main>
 
-  <script src="script.js?v=1"></script>
+  <script src="script.js?v=2"></script>
 </body>
 </html>

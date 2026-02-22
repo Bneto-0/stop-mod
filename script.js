@@ -1,5 +1,6 @@
 const CART_KEY = "stopmod_cart";
 const MAX_CART_ITEMS = 2000;
+const MAX_AD_SLIDES = 10;
 const SHIP_KEY = "stopmod_ship_to";
 
 const ADS_LEFT_IMAGES_KEY = "stopmod_ads_left_images";
@@ -70,11 +71,11 @@ function loadShipTo() {
 function loadStringArray(key, fallback) {
   try {
     const raw = JSON.parse(localStorage.getItem(key) || "[]");
-    if (!Array.isArray(raw)) return fallback;
+    if (!Array.isArray(raw)) return fallback.slice(0, MAX_AD_SLIDES);
     const items = raw.map((x) => String(x || "").trim()).filter(Boolean);
-    return items.length ? items : fallback;
+    return items.length ? items.slice(0, MAX_AD_SLIDES) : fallback.slice(0, MAX_AD_SLIDES);
   } catch {
-    return fallback;
+    return fallback.slice(0, MAX_AD_SLIDES);
   }
 }
 
@@ -108,25 +109,124 @@ function getFilteredProducts() {
   });
 }
 
-function startAdRotation(imgEl, linkEl, imageKey, targetKey, fallbackImages) {
-  if (!imgEl) return;
+function startAdSlider(frameEl, imgEl, imageKey, targetKey, fallbackImages) {
+  if (!frameEl || !imgEl) return;
   const images = loadStringArray(imageKey, fallbackImages);
   const target = loadLinkTarget(targetKey) || "anuncios/";
-  if (linkEl) linkEl.href = target;
+  frameEl.href = target;
 
   let index = 0;
+  let autoTimer = null;
+  let dragging = false;
+  let startX = 0;
+  let lastX = 0;
+  let suppressClick = false;
+
   const apply = () => {
-    imgEl.src = images[index];
-    imgEl.alt = `Anuncio ${index + 1}`;
+    imgEl.style.opacity = "0.2";
+    imgEl.style.transform = "translateX(0)";
+    setTimeout(() => {
+      imgEl.src = images[index];
+      imgEl.alt = `Anuncio ${index + 1}`;
+      imgEl.style.opacity = "1";
+    }, 120);
   };
 
-  apply();
-  if (images.length <= 1) return;
-
-  setInterval(() => {
+  const next = () => {
     index = (index + 1) % images.length;
     apply();
-  }, 3200);
+  };
+
+  const prev = () => {
+    index = (index - 1 + images.length) % images.length;
+    apply();
+  };
+
+  const stopAuto = () => {
+    if (autoTimer) {
+      clearInterval(autoTimer);
+      autoTimer = null;
+    }
+  };
+
+  const startAuto = () => {
+    stopAuto();
+    if (images.length <= 1) return;
+    autoTimer = setInterval(next, 3400);
+  };
+
+  const onPointerDown = (ev) => {
+    if (images.length <= 1) return;
+    dragging = true;
+    startX = ev.clientX;
+    lastX = ev.clientX;
+    suppressClick = false;
+    frameEl.classList.add("dragging");
+    stopAuto();
+    try {
+      frameEl.setPointerCapture(ev.pointerId);
+    } catch {}
+  };
+
+  const onPointerMove = (ev) => {
+    if (!dragging) return;
+    lastX = ev.clientX;
+    const dx = lastX - startX;
+    if (Math.abs(dx) > 8) suppressClick = true;
+    const shift = Math.max(-44, Math.min(44, dx * 0.2));
+    imgEl.style.transform = `translateX(${shift}px)`;
+  };
+
+  const onPointerUp = (ev) => {
+    if (!dragging) return;
+    dragging = false;
+    frameEl.classList.remove("dragging");
+    const dx = lastX - startX;
+    imgEl.style.transform = "translateX(0)";
+    if (Math.abs(dx) > 45) {
+      if (dx < 0) next();
+      else prev();
+    }
+    startAuto();
+    try {
+      frameEl.releasePointerCapture(ev.pointerId);
+    } catch {}
+    if (suppressClick) {
+      setTimeout(() => {
+        suppressClick = false;
+      }, 180);
+    }
+  };
+
+  frameEl.addEventListener("pointerdown", onPointerDown);
+  frameEl.addEventListener("pointermove", onPointerMove);
+  frameEl.addEventListener("pointerup", onPointerUp);
+  frameEl.addEventListener("pointercancel", onPointerUp);
+  frameEl.addEventListener("click", (ev) => {
+    if (!suppressClick) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+  });
+
+  if (!images.length) {
+    imgEl.removeAttribute("src");
+    imgEl.alt = "Sem anuncios";
+    return;
+  }
+
+  const firstImage = images[0];
+  if (firstImage) {
+    imgEl.src = firstImage;
+    imgEl.alt = "Anuncio 1";
+  }
+
+  if (images.length <= 1) return;
+
+  setTimeout(() => {
+    imgEl.src = images[index];
+    imgEl.alt = `Anuncio ${index + 1}`;
+  }, 0);
+  startAuto();
 }
 
 function renderProducts() {
@@ -172,5 +272,5 @@ searchInput?.addEventListener("input", renderProducts);
 renderProducts();
 updateCartCount();
 renderMenuLocation();
-startAdRotation(adLeftImage, adLeftLink, ADS_LEFT_IMAGES_KEY, ADS_LEFT_TARGET_KEY, DEFAULT_LEFT_ADS);
-startAdRotation(adRightImage, adRightLink, ADS_RIGHT_IMAGES_KEY, ADS_RIGHT_TARGET_KEY, DEFAULT_RIGHT_ADS);
+startAdSlider(adLeftLink, adLeftImage, ADS_LEFT_IMAGES_KEY, ADS_LEFT_TARGET_KEY, DEFAULT_LEFT_ADS);
+startAdSlider(adRightLink, adRightImage, ADS_RIGHT_IMAGES_KEY, ADS_RIGHT_TARGET_KEY, DEFAULT_RIGHT_ADS);

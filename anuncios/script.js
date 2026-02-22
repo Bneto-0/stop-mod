@@ -2,6 +2,7 @@ const ADS_LEFT_IMAGES_KEY = "stopmod_ads_left_images";
 const ADS_RIGHT_IMAGES_KEY = "stopmod_ads_right_images";
 const ADS_LEFT_TARGET_KEY = "stopmod_ads_left_target";
 const ADS_RIGHT_TARGET_KEY = "stopmod_ads_right_target";
+const MAX_ADS = 10;
 
 const leftTarget = document.getElementById("left-target");
 const rightTarget = document.getElementById("right-target");
@@ -21,13 +22,14 @@ function parseImages(text) {
   return String(text || "")
     .split(/\r?\n/)
     .map((line) => line.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .slice(0, MAX_ADS);
 }
 
 function loadArray(key) {
   try {
     const raw = JSON.parse(localStorage.getItem(key) || "[]");
-    return Array.isArray(raw) ? raw.map((x) => String(x || "").trim()).filter(Boolean) : [];
+    return Array.isArray(raw) ? raw.map((x) => String(x || "").trim()).filter(Boolean).slice(0, MAX_ADS) : [];
   } catch {
     return [];
   }
@@ -49,7 +51,7 @@ function saveSide(imagesKey, targetKey, imagesText, targetText, msgEl, previewEl
   localStorage.setItem(imagesKey, JSON.stringify(list));
   localStorage.setItem(targetKey, String(targetText || "").trim());
   if (previewEl) previewEl.src = list[0] || "";
-  if (msgEl) msgEl.textContent = "Anuncio salvo.";
+  if (msgEl) msgEl.textContent = `Anuncio salvo (${list.length}/${MAX_ADS}).`;
 }
 
 function clearSide(imagesKey, targetKey, imagesEl, targetEl, msgEl, previewEl) {
