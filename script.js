@@ -3,6 +3,7 @@ const MAX_CART_ITEMS = 2000;
 const MAX_AD_SLIDES = 10;
 const SHIP_KEY = "stopmod_ship_to";
 const SHIP_LIST_KEY = "stopmod_ship_list";
+const GOOGLE_MAPS_API_KEY = "stopmod_google_maps_api_key";
 
 const ADS_LEFT_IMAGES_KEY = "stopmod_ads_left_images";
 const ADS_RIGHT_IMAGES_KEY = "stopmod_ads_right_images";
@@ -85,8 +86,11 @@ const lookupCepBtn = document.getElementById("lookup-cep");
 const googleMapsCheckBtn = document.getElementById("google-maps-check");
 const saveAddressBtn = document.getElementById("save-address");
 const addressFeedback = document.getElementById("address-feedback");
+const googleMapsApiKeyInput = document.getElementById("google-maps-api-key");
+const saveGoogleKeyBtn = document.getElementById("save-google-key");
 
 let selectedAddressId = "";
+let validatedAddressSignature = "";
 
 function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -199,6 +203,20 @@ function dedupeAddresses(items) {
   });
 
   return out.slice(0, 30);
+}
+
+function loadGoogleMapsApiKey() {
+  return String(localStorage.getItem(GOOGLE_MAPS_API_KEY) || "").trim();
+}
+
+function saveGoogleMapsApiKey(value) {
+  localStorage.setItem(GOOGLE_MAPS_API_KEY, String(value || "").trim());
+}
+
+function readComponent(components, type, shortName) {
+  const comp = (components || []).find((item) => Array.isArray(item.types) && item.types.includes(type));
+  if (!comp) return "";
+  return String(shortName ? comp.short_name : comp.long_name || "").trim();
 }
 
 function applySearchFromUrl() {
@@ -354,6 +372,7 @@ function renderSavedAddresses() {
       selectedAddressId = String(radioEl.value || "");
       const selected = loadShipList().find((x) => x.id === selectedAddressId);
       if (selected) fillAddressForm(selected);
+      validatedAddressSignature = "";
       setAddressFeedback("", false);
     });
   });
@@ -381,6 +400,10 @@ function openAddressDirectory(event) {
   selectedAddressId = currentMatch?.id || list[0]?.id || "";
 
   fillAddressForm(currentMatch || list[0] || current);
+  validatedAddressSignature = "";
+  if (googleMapsApiKeyInput) {
+    googleMapsApiKeyInput.value = loadGoogleMapsApiKey();
+  }
   renderSavedAddresses();
   setAddressFeedback("", false);
 
@@ -429,25 +452,104 @@ async function lookupCep() {
     if (addressCityInput) addressCityInput.value = String(data.localidade || addressCityInput.value || "");
     if (addressStateInput) addressStateInput.value = normalizeState(data.uf || addressStateInput?.value || "");
 
+    validatedAddressSignature = "";
     setAddressFeedback("CEP validado e endereco preenchido.", false);
   } catch {
     setAddressFeedback("Falha ao consultar CEP. Tente novamente.", true);
   }
 }
 
-function openGoogleMapsValidation() {
-  const query = mapQueryFromAddress(readAddressForm());
-  if (!query) {
-    setAddressFeedback("Preencha o endereco para validar no Google Maps.", true);
-    return;
-  }
+function fillFromGoogleResult(result) {
+  const components = Array.isArray(result?.address_components) ? result.address_components : [];
+  const street = readComponent(components, "route", false);
+  const number = readComponent(components, "street_number", false);
+  const district = readComponent(components, "sublocality_level_1", false) || readComponent(components, "neighborhood", false);
+  const city = readComponent(components, "locality", false) || readComponent(components, "administrative_area_level_2", false);
+  const state = normalizeState(readComponent(components, "administrative_area_level_1", true));
+  const cep = normalizeCep(readComponent(components, "postal_code", false));
 
-  const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
-  window.open(url, "_blank", "noopener,noreferrer");
-  setAddressFeedback("Validacao aberta no Google Maps.", false);
+  if (street && addressStreetInput) addressStreetInput.value = street;
+  if (number && addressNumberInput) addressNumberInput.value = number;
+  if (district && addressDistrictInput) addressDistrictInput.value = district;
+  if (city && addressCityInput) addressCityInput.value = city;
+  if (state && addressStateInput) addressStateInput.value = state;
+  if (cep && addressCepInput) addressCepInput.value = cep;
 }
 
-function saveAddressFromForm() {
+async function validateAddressWithGoogle(openMapsAfter) {
+  const apiKey = loadGoogleMapsApiKey();
+  if (!apiKey) {
+    setAddressFeedback("Configure sua Google Maps API Key para validar endereco.", true);
+    return false;
+  }
+
+  const addr = readAddressForm();
+  if (!addr.street || !addr.city || !addr.state || !isCepValid(addr.cep)) {
+    setAddressFeedback("Preencha rua, cidade, estado e CEP valido antes de validar.", true);
+    return false;
+  }
+
+  const query = mapQueryFromAddress(addr);
+  setAddressFeedback("Validando endereco no Google...", false);
+
+  try {
+    const url =
+      `https://maps.googleapis.com/maps/api/geocode/json` +
+      `?address=${encodeURIComponent(query)}` +
+      `&components=${encodeURIComponent(`country:BR|postal_code:${addr.cep.replace(/\D/g, "")}`)}` +
+      `&region=br&language=pt-BR&key=${encodeURIComponent(apiKey)}`;
+
+    const response = await fetch(url, { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error("Falha no Google");
+    }
+
+    const data = await response.json();
+    if (String(data.status || "") !== "OK" || !Array.isArray(data.results) || !data.results.length) {
+      const reason = String(data.error_message || data.status || "Endereco nao encontrado");
+      setAddressFeedback(`Endereco invalido no Google: ${reason}`, true);
+      validatedAddressSignature = "";
+      return false;
+    }
+
+    const best = data.results[0];
+    fillFromGoogleResult(best);
+
+    const validatedAddress = readAddressForm();
+    const sig = addressSignature(validatedAddress);
+    const cepMatch = validatedAddress.cep.replace(/\D/g, "") === addr.cep.replace(/\D/g, "");
+    const cityMatch = normalizeText(validatedAddress.city) === normalizeText(addr.city);
+
+    if (!cepMatch || !cityMatch) {
+      setAddressFeedback("Endereco nao confere com cidade/CEP informados. Revise os dados.", true);
+      validatedAddressSignature = "";
+      return false;
+    }
+
+    validatedAddressSignature = sig;
+    setAddressFeedback("Endereco validado com sucesso pelo Google.", false);
+
+    if (openMapsAfter) {
+      const placeId = String(best.place_id || "").trim();
+      const mapsUrl = placeId
+        ? `https://www.google.com/maps/search/?api=1&query_place_id=${encodeURIComponent(placeId)}`
+        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQueryFromAddress(validatedAddress))}`;
+      window.open(mapsUrl, "_blank", "noopener,noreferrer");
+    }
+
+    return true;
+  } catch {
+    validatedAddressSignature = "";
+    setAddressFeedback("Nao foi possivel validar no Google agora. Tente novamente.", true);
+    return false;
+  }
+}
+
+async function openGoogleMapsValidation() {
+  await validateAddressWithGoogle(true);
+}
+
+async function saveAddressFromForm() {
   const addr = readAddressForm();
   if (!addr.city) {
     setAddressFeedback("Informe a cidade.", true);
@@ -462,8 +564,15 @@ function saveAddressFromForm() {
     return;
   }
 
-  const id = addr.id || buildAddressId(`${addr.street}|${addr.number}|${addr.cep}|${addr.city}`);
-  const completeAddress = normalizeShipAddress({ ...addr, id });
+  const currentSig = addressSignature(addr);
+  if (validatedAddressSignature !== currentSig) {
+    const ok = await validateAddressWithGoogle(false);
+    if (!ok) return;
+  }
+
+  const confirmed = readAddressForm();
+  const id = confirmed.id || buildAddressId(`${confirmed.street}|${confirmed.number}|${confirmed.cep}|${confirmed.city}`);
+  const completeAddress = normalizeShipAddress({ ...confirmed, id });
 
   const currentList = loadShipList();
   const filtered = currentList.filter((item) => addressSignature(item) !== addressSignature(completeAddress));
@@ -472,6 +581,7 @@ function saveAddressFromForm() {
   saveShipList(nextList);
   saveShipTo(completeAddress);
   selectedAddressId = completeAddress.id;
+  validatedAddressSignature = addressSignature(completeAddress);
 
   renderSavedAddresses();
   renderMenuLocation();
@@ -491,22 +601,54 @@ function initAddressDirectory() {
   });
 
   useSelectedAddressBtn?.addEventListener("click", useSelectedAddress);
-  lookupCepBtn?.addEventListener("click", lookupCep);
-  googleMapsCheckBtn?.addEventListener("click", openGoogleMapsValidation);
-  saveAddressBtn?.addEventListener("click", saveAddressFromForm);
+  lookupCepBtn?.addEventListener("click", () => { void lookupCep(); });
+  googleMapsCheckBtn?.addEventListener("click", () => { void openGoogleMapsValidation(); });
+  saveAddressBtn?.addEventListener("click", () => { void saveAddressFromForm(); });
+  saveGoogleKeyBtn?.addEventListener("click", () => {
+    const apiKey = String(googleMapsApiKeyInput?.value || "").trim();
+    saveGoogleMapsApiKey(apiKey);
+    validatedAddressSignature = "";
+    setAddressFeedback(apiKey ? "Chave Google salva." : "Chave removida.", false);
+  });
 
   addressCepInput?.addEventListener("input", () => {
     addressCepInput.value = normalizeCep(addressCepInput.value);
+    validatedAddressSignature = "";
+  });
+
+  addressStreetInput?.addEventListener("input", () => {
+    validatedAddressSignature = "";
+  });
+
+  addressNumberInput?.addEventListener("input", () => {
+    validatedAddressSignature = "";
+  });
+
+  addressDistrictInput?.addEventListener("input", () => {
+    validatedAddressSignature = "";
+  });
+
+  addressCityInput?.addEventListener("input", () => {
+    validatedAddressSignature = "";
   });
 
   addressStateInput?.addEventListener("input", () => {
     addressStateInput.value = normalizeState(addressStateInput.value);
+    validatedAddressSignature = "";
+  });
+
+  addressContactInput?.addEventListener("input", () => {
+    validatedAddressSignature = "";
   });
 
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape" || !addressModal || addressModal.hidden) return;
     closeAddressDirectory();
   });
+
+  if (googleMapsApiKeyInput) {
+    googleMapsApiKeyInput.value = loadGoogleMapsApiKey();
+  }
 }
 
 function loadStringArray(key, fallback) {
