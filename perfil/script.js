@@ -44,9 +44,12 @@ const accUsername = document.getElementById("acc-username");
 const accSave = document.getElementById("acc-save");
 const accMsg = document.getElementById("acc-msg");
 
-const ordersList = document.getElementById("orders-list");
-const purchasesList = document.getElementById("purchases-list");
-const trackList = document.getElementById("track-list");
+const ordersInProgressList = document.getElementById("orders-in-progress-list");
+const ordersDeliveredList = document.getElementById("orders-delivered-list");
+const ordersCancelledList = document.getElementById("orders-cancelled-list");
+const ordersInProgressCount = document.getElementById("orders-in-progress-count");
+const ordersDeliveredCount = document.getElementById("orders-delivered-count");
+const ordersCancelledCount = document.getElementById("orders-cancelled-count");
 const favoritesList = document.getElementById("favorites-list");
 
 let lastAuthTouchAt = 0;
@@ -189,6 +192,14 @@ function fmtDate(iso) {
   }
 }
 
+function normalizeText(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 function deriveUsername(profile, extra) {
   const custom = String(extra?.username || "").trim();
   if (custom) return custom;
@@ -287,7 +298,7 @@ function setTab(tabId) {
 function getRequestedTab() {
   try {
     const tab = String(new URLSearchParams(window.location.search).get("tab") || "").trim().toLowerCase();
-    const allowed = new Set(["account"]);
+    const allowed = new Set(["account", "orders"]);
     return allowed.has(tab) ? tab : "";
   } catch {
     return "";
@@ -317,89 +328,156 @@ function escapeHtml(s) {
     .replace(/'/g, "&#039;");
 }
 
-function renderOrders() {
-  const orders = loadOrders();
-  if (!ordersList && !purchasesList && !trackList) return;
+function paymentLabel(value) {
+  const key = normalizeText(value);
+  if (key.includes("credito")) return "Cartao de credito";
+  if (key.includes("debito")) return "Cartao de debito";
+  if (key.includes("boleto")) return "Boleto";
+  return "Pix";
+}
+
+function getStatusLabel(order) {
+  const raw = String(order?.tracking?.status || order?.status || "").trim();
+  if (raw) return raw;
+  return stageForOrder(order).key;
+}
+
+function getStatusBucket(order) {
+  const rawStatus = normalizeText(order?.tracking?.status || order?.status || "");
+
+  if (order?.cancelled === true || rawStatus.includes("cancel")) {
+    return "cancelled";
+  }
+
+  if (rawStatus.includes("entreg")) {
+    return "delivered";
+  }
+
+  if (
+    rawStatus.includes("prepar") ||
+    rawStatus.includes("process") ||
+    rawStatus.includes("envi") ||
+    rawStatus.includes("transit") ||
+    rawStatus.includes("transito") ||
+    rawStatus.includes("rota") ||
+    rawStatus.includes("saiu")
+  ) {
+    return "in-progress";
+  }
+
+  const stage = stageForOrder(order);
+  if (normalizeText(stage.key).includes("entreg")) return "delivered";
+  return "in-progress";
+}
+
+function statusChipClass(bucket) {
+  if (bucket === "delivered") return "chip status-delivered";
+  if (bucket === "cancelled") return "chip status-cancelled";
+  return "chip status-progress";
+}
+
+function itemCount(order) {
+  return (order?.items || []).reduce((sum, item) => sum + (Number(item?.qty) || 0), 0);
+}
+
+function renderOrderCard(order, bucket) {
+  const total = order?.totals?.total ?? 0;
+  const ship = order?.shipTo ? `${order.shipTo.city || ""} ${order.shipTo.cep || ""}`.trim() : "";
+  const stage = getStatusLabel(order);
+  const cardClass = statusChipClass(bucket);
+  const qty = itemCount(order);
+
+  return `
+    <article class="order">
+      <div class="order-top">
+        <div>
+          <div class="order-id">${escapeHtml(order?.id || "Pedido")}</div>
+          <div class="muted2">Data: ${escapeHtml(fmtDate(order?.createdAt || ""))}</div>
+          <div class="muted2">Entrega: ${escapeHtml(ship || "Nao informado")}</div>
+        </div>
+        <div class="order-total">R$ ${escapeHtml(fmtBRL(total))}</div>
+      </div>
+      <div class="order-mid">
+        <span class="${cardClass}">${escapeHtml(stage)}</span>
+        <span class="muted2">Itens: ${escapeHtml(qty)}</span>
+        <span class="muted2">Pagamento: ${escapeHtml(paymentLabel(order?.payment || "pix"))}</span>
+        <span class="muted2">Rastreio: ${escapeHtml(order?.tracking?.code || "--")}</span>
+      </div>
+      <details class="order-details">
+        <summary>Ver itens</summary>
+        <div class="items">
+          ${(order?.items || [])
+            .map((it) => `
+              <div class="item">
+                <img src="${escapeHtml(it.image)}" alt="${escapeHtml(it.name)}" loading="lazy" />
+                <div>
+                  <strong>${escapeHtml(it.name)}</strong>
+                  <div class="muted2">Qtd: ${escapeHtml(it.qty)} | R$ ${escapeHtml(fmtBRL(it.price))}</div>
+                </div>
+              </div>
+            `)
+            .join("")}
+        </div>
+      </details>
+    </article>
+  `;
+}
+
+function fillOrderBucket(listEl, countEl, orders, emptyText, bucket) {
+  if (countEl) countEl.textContent = String(orders.length);
+  if (!listEl) return;
 
   if (!orders.length) {
-    if (ordersList) ordersList.innerHTML = "<p class=\"muted2\">Voce ainda nao tem pedidos.</p>";
-    if (purchasesList) purchasesList.innerHTML = "<p class=\"muted2\">Voce ainda nao tem compras.</p>";
-    if (trackList) trackList.innerHTML = "<p class=\"muted2\">Voce ainda nao tem rastreio para acompanhar.</p>";
+    listEl.innerHTML = `<p class="orders-empty">${escapeHtml(emptyText)}</p>`;
     return;
   }
 
-  const ordersHtml = orders
-    .map((o) => {
-      const stage = stageForOrder(o);
-      const total = o?.totals?.total ?? 0;
-      const ship = o?.shipTo ? `${o.shipTo.city || ""} ${o.shipTo.cep || ""}`.trim() : "";
-      return `
-        <article class="order">
-          <div class="order-top">
-            <div>
-              <div class="order-id">${escapeHtml(o.id)}</div>
-              <div class="muted2">Data: ${escapeHtml(fmtDate(o.createdAt))}</div>
-              <div class="muted2">Entrega: ${escapeHtml(ship || "Nao informado")}</div>
-            </div>
-            <div class="order-total">R$ ${escapeHtml(fmtBRL(total))}</div>
-          </div>
-          <div class="order-mid">
-            <span class="chip">${escapeHtml(stage.key)}</span>
-            <span class="muted2">Pagamento: ${escapeHtml(o.payment || "pix")}</span>
-            <span class="muted2">Rastreio: ${escapeHtml(o?.tracking?.code || "--")}</span>
-          </div>
-          <details class="order-details">
-            <summary>Ver itens</summary>
-            <div class="items">
-              ${(o.items || [])
-                .map((it) => `
-                  <div class="item">
-                    <img src="${escapeHtml(it.image)}" alt="${escapeHtml(it.name)}" loading="lazy" />
-                    <div>
-                      <strong>${escapeHtml(it.name)}</strong>
-                      <div class="muted2">Qtd: ${escapeHtml(it.qty)} | R$ ${escapeHtml(fmtBRL(it.price))}</div>
-                    </div>
-                  </div>
-                `)
-                .join("")}
-            </div>
-          </details>
-        </article>
-      `;
-    })
-    .join("");
-  if (ordersList) ordersList.innerHTML = ordersHtml;
-  if (purchasesList) purchasesList.innerHTML = ordersHtml;
+  listEl.innerHTML = orders.map((order) => renderOrderCard(order, bucket)).join("");
+}
 
-  const trackingHtml = orders
-    .map((o) => {
-      const stage = stageForOrder(o);
-      const ship = o?.shipTo ? `${o.shipTo.city || ""} ${o.shipTo.cep || ""}`.trim() : "";
-      const steps = ["Preparando", "Enviado", "Saiu para entrega", "Entregue"];
-      const idx = steps.indexOf(stage.key);
-      return `
-        <article class="track">
-          <div class="order-top">
-            <div>
-              <div class="order-id">${escapeHtml(o.id)}</div>
-              <div class="muted2">Entrega: ${escapeHtml(ship || "Nao informado")}</div>
-              <div class="muted2">Rastreio: ${escapeHtml(o?.tracking?.code || "--")}</div>
-            </div>
-            <div class="chip">${escapeHtml(stage.key)}</div>
-          </div>
-          <div class="bar">
-            <div class="bar-fill" style="width:${stage.pct}%;"></div>
-          </div>
-          <div class="steps">
-            ${steps
-              .map((s, i) => `<span class="step ${i <= idx ? "done" : ""}">${escapeHtml(s)}</span>`)
-              .join("")}
-          </div>
-        </article>
-      `;
-    })
-    .join("");
-  if (trackList) trackList.innerHTML = trackingHtml;
+function renderOrders() {
+  const orders = loadOrders();
+  if (!ordersInProgressList && !ordersDeliveredList && !ordersCancelledList) return;
+
+  const buckets = {
+    "in-progress": [],
+    delivered: [],
+    cancelled: []
+  };
+
+  orders.forEach((order) => {
+    const bucket = getStatusBucket(order);
+    buckets[bucket].push(order);
+  });
+
+  fillOrderBucket(
+    ordersInProgressList,
+    ordersInProgressCount,
+    buckets["in-progress"],
+    "Nenhum pedido em entrega.",
+    "in-progress"
+  );
+  fillOrderBucket(
+    ordersDeliveredList,
+    ordersDeliveredCount,
+    buckets.delivered,
+    "Nenhum pedido entregue.",
+    "delivered"
+  );
+  fillOrderBucket(
+    ordersCancelledList,
+    ordersCancelledCount,
+    buckets.cancelled,
+    "Nenhum pedido cancelado.",
+    "cancelled"
+  );
+
+  if (!orders.length) {
+    if (ordersInProgressCount) ordersInProgressCount.textContent = "0";
+    if (ordersDeliveredCount) ordersDeliveredCount.textContent = "0";
+    if (ordersCancelledCount) ordersCancelledCount.textContent = "0";
+    return;
+  }
 }
 
 function renderFavorites() {
@@ -511,12 +589,20 @@ tabBtns.forEach((b) => {
 });
 
 openPanelBtns.forEach((b) => {
-  b.addEventListener("click", () => {
+  b.addEventListener("click", (event) => {
     const tabId = String(b.getAttribute("data-open-panel") || "account");
     const targetPanel = document.querySelector(`[data-panel="${tabId}"]`);
     if (!targetPanel) return;
+    event.preventDefault();
     if (detailSections) detailSections.hidden = false;
     setTab(tabId);
+    if (tabId === "orders") renderOrders();
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set("tab", tabId);
+      url.hash = "detail-sections";
+      window.history.replaceState(null, "", url.toString());
+    } catch {}
     if (detailSections && typeof detailSections.scrollIntoView === "function") {
       detailSections.scrollIntoView({ behavior: "smooth", block: "start" });
     }

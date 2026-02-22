@@ -285,6 +285,29 @@
     .repo-card p { color: var(--muted); font-size: .88rem; }
     .cancel-note { margin-top: .2rem; }
     #detail-sections { margin-top: 1rem; }
+    .orders-directory { display:grid; gap: .85rem; }
+    .orders-group {
+      border:1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      background:#fff;
+    }
+    .orders-group-head {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: .8rem;
+      padding: .72rem .85rem;
+      border-bottom:1px solid var(--line);
+      background:#fffdfb;
+    }
+    .orders-group-head h3 { font-size: 1rem; }
+    .orders-count { color: var(--muted); font-weight: 900; font-size: .85rem; }
+    .orders-list { display:grid; gap: .7rem; padding: .75rem; }
+    .orders-empty { color: var(--muted); font-size: .92rem; margin: 0; }
+    .chip.status-delivered { background:#e9fff1; border-color:#b9e3c8; color:#18663f; }
+    .chip.status-progress { background:#fff3e8; border-color:var(--line); color:#8c3c26; }
+    .chip.status-cancelled { background:#fff0f0; border-color:#f0baba; color:#8c2f2f; }
     .account-groups { display:grid; gap: .9rem; }
     .info-group {
       border:1px solid var(--line);
@@ -382,11 +405,11 @@
               <p>Dados pessoais e da conta.</p>
             </button>
 
-            <button class="repo-card" type="button" data-open-panel="orders">
+            <a class="repo-card" href="?tab=orders#detail-sections" data-open-panel="orders">
               <span class="icn">📦</span>
               <h3>Pedidos</h3>
               <p>Acompanhe seus pedidos salvos.</p>
-            </button>
+            </a>
 
             <button class="repo-card" type="button" data-open-panel="tracking">
               <span class="icn">🚚</span>
@@ -497,6 +520,45 @@
               </div>
             </div>
           </div>
+
+          <div class="grid2" data-panel="orders" hidden>
+            <div class="order">
+              <h2>Pedidos</h2>
+              <p class="muted2">Aqui voce ve todos os pedidos: entregues, em entrega e cancelados.</p>
+
+              <div class="orders-directory" style="margin-top:.7rem;">
+                <section class="orders-group" aria-label="Pedidos em entrega">
+                  <div class="orders-group-head">
+                    <h3>Em entrega</h3>
+                    <span class="orders-count" id="orders-in-progress-count">0</span>
+                  </div>
+                  <div id="orders-in-progress-list" class="orders-list">
+                    <p class="orders-empty">Nenhum pedido em entrega.</p>
+                  </div>
+                </section>
+
+                <section class="orders-group" aria-label="Pedidos entregues">
+                  <div class="orders-group-head">
+                    <h3>Entregues</h3>
+                    <span class="orders-count" id="orders-delivered-count">0</span>
+                  </div>
+                  <div id="orders-delivered-list" class="orders-list">
+                    <p class="orders-empty">Nenhum pedido entregue.</p>
+                  </div>
+                </section>
+
+                <section class="orders-group" aria-label="Pedidos cancelados">
+                  <div class="orders-group-head">
+                    <h3>Cancelados</h3>
+                    <span class="orders-count" id="orders-cancelled-count">0</span>
+                  </div>
+                  <div id="orders-cancelled-list" class="orders-list">
+                    <p class="orders-empty">Nenhum pedido cancelado.</p>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -510,6 +572,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=43"></script>
+  <script src="script.js?v=46"></script>
 </body>
 </html>
