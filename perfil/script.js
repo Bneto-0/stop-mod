@@ -305,9 +305,9 @@ function renderAccount() {
   if (accName) accName.value = displayName;
   if (accPhone) accPhone.value = String(extra.phone || "");
 
-  nameEl.textContent = displayName;
+  if (nameEl) nameEl.textContent = displayName;
   // Avoid showing personal email in the public UI; use a simple status line instead.
-  emailEl.textContent = "Conta conectada";
+  if (emailEl) emailEl.textContent = "Conta conectada";
   if (cornerLabel) cornerLabel.textContent = displayName;
   if (avatarEl) {
     const pic = String(p?.picture || "").trim();
@@ -323,8 +323,8 @@ function renderAuth() {
   if (logoutBtn) logoutBtn.style.display = authed ? "inline-flex" : "none";
 
   if (!authed) {
-    nameEl.textContent = "Nao logado";
-    emailEl.textContent = "Faca login para ver seus pedidos.";
+    if (nameEl) nameEl.textContent = "Nao logado";
+    if (emailEl) emailEl.textContent = "Faca login para ver seus pedidos.";
     if (cornerLabel) cornerLabel.textContent = "Perfil";
     if (avatarEl) avatarEl.src = "../assets/icons/user-solid.svg";
     return;
