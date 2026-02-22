@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anuncios | Stop mod</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f7f3ee;
+      --card: #ffffff;
+      --line: #e8dfd6;
+      --text: #1f1f1f;
+      --muted: #67605a;
+      --accent: #c7512f;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Outfit", sans-serif;
+      background:
+        radial-gradient(circle at 10% 10%, #fce9d8 0%, transparent 30%),
+        radial-gradient(circle at 80% 0%, #f7d8c8 0%, transparent 32%),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    .container {
+      width: min(1140px, 95%);
+      margin: 0 auto;
+    }
+
+    .top {
+      background: linear-gradient(130deg, #2f2824 0%, #4d3f35 45%, #725745 100%);
+      color: #fff6ef;
+      border-bottom-left-radius: 26px;
+      border-bottom-right-radius: 26px;
+      padding: 1rem 0;
+    }
+
+    .bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .logo {
+      text-decoration: none;
+      color: inherit;
+      font-weight: 900;
+      font-size: 1.7rem;
+    }
+
+    .logo em {
+      color: #ffb080;
+      font-style: normal;
+    }
+
+    .back {
+      text-decoration: none;
+      color: #fff6ef;
+      font-weight: 700;
+    }
+
+    .back:hover { text-decoration: underline; }
+
+    main {
+      padding: 1rem 0 2rem;
+      display: grid;
+      gap: 1rem;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: 0 10px 24px #2f211810;
+      padding: 1rem;
+      display: grid;
+      gap: .7rem;
+    }
+
+    h1 { font-size: 1.7rem; }
+    h2 { font-size: 1.2rem; }
+    .muted { color: var(--muted); }
+
+    label {
+      display: grid;
+      gap: .3rem;
+      font-weight: 800;
+    }
+
+    input, textarea {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: .6rem .7rem;
+      font-family: inherit;
+      font-size: .95rem;
+      background: #fff;
+    }
+
+    textarea {
+      min-height: 130px;
+      resize: vertical;
+    }
+
+    .row {
+      display: flex;
+      gap: .6rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 10px;
+      background: var(--accent);
+      color: #fff;
+      padding: .62rem .9rem;
+      font-family: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .btn2 {
+      border: 1px solid #d9c4b7;
+      border-radius: 10px;
+      background: #fff7f1;
+      color: #7f3b28;
+      padding: .62rem .9rem;
+      font-family: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .preview {
+      width: min(420px, 100%);
+      height: 180px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      overflow: hidden;
+      background: #f3ece6;
+    }
+
+    .preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .ok {
+      color: #18663f;
+      font-weight: 800;
+      min-height: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="container bar">
+      <a class="logo" href="../index.html#top">Stop <em>mod</em></a>
+      <a class="back" href="../index.html#top">Voltar para a loja</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h1>Diretorio de anuncios</h1>
+      <p class="muted">Cole as URLs das fotos (uma por linha). Elas passam sozinhas na pagina inicial.</p>
+    </section>
+
+    <section class="card">
+      <h2>Quadro esquerdo (anuncio principal)</h2>
+      <label for="left-target">Link de destino do anuncio</label>
+      <input id="left-target" type="text" placeholder="Ex: produtos/ ou https://..." />
+      <label for="left-images">Fotos (uma URL por linha)</label>
+      <textarea id="left-images" placeholder="https://..."></textarea>
+      <div class="row">
+        <button id="save-left" class="btn" type="button">Salvar quadro esquerdo</button>
+        <button id="clear-left" class="btn2" type="button">Limpar</button>
+      </div>
+      <div class="preview"><img id="left-preview" alt="Preview anuncio esquerdo" /></div>
+      <p id="left-msg" class="ok"></p>
+    </section>
+
+    <section class="card">
+      <h2>Quadro direito (anuncio secundario)</h2>
+      <label for="right-target">Link de destino do anuncio</label>
+      <input id="right-target" type="text" placeholder="Ex: cupons/ ou https://..." />
+      <label for="right-images">Fotos (uma URL por linha)</label>
+      <textarea id="right-images" placeholder="https://..."></textarea>
+      <div class="row">
+        <button id="save-right" class="btn" type="button">Salvar quadro direito</button>
+        <button id="clear-right" class="btn2" type="button">Limpar</button>
+      </div>
+      <div class="preview"><img id="right-preview" alt="Preview anuncio direito" /></div>
+      <p id="right-msg" class="ok"></p>
+    </section>
+  </main>
+
+  <script src="script.js?v=1"></script>
+</body>
+</html>

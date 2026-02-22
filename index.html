@@ -10,25 +10,283 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css?v=7" />
   <style>
-    .container { width: min(1280px, 95%); }
-    .hero { padding: 1.1rem 0 2.5rem; }
-    .search-top-wrap input { width: 420px; }
-    .hero-utilities { margin-top: 0.9rem; gap: 0.5rem; }
+    .container { width: min(1320px, 96%); }
+    .hero {
+      padding: 1rem 0 0.55rem;
+      border-bottom-left-radius: 34px;
+      border-bottom-right-radius: 34px;
+      overflow: hidden;
+    }
+
+    .menu-top {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 1.1rem;
+    }
+
+    .brand-wordmark {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.45rem;
+      text-decoration: none;
+      color: #fff6ef;
+      font-size: clamp(2rem, 2.6vw, 3.1rem);
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      line-height: 1;
+    }
+
+    .brand-wordmark em {
+      color: #e6a04e;
+      font-style: normal;
+    }
+
+    .menu-location {
+      justify-self: start;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.48rem;
+      text-decoration: none;
+      color: #fff6ef;
+      min-width: 0;
+    }
+
+    .menu-location svg {
+      width: 30px;
+      height: 30px;
+      fill: #fff6ef;
+      flex: 0 0 auto;
+    }
+
+    .menu-location-text {
+      display: grid;
+      line-height: 1.02;
+    }
+
+    .menu-location-text small {
+      font-size: 0.78rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #ead9cc;
+    }
+
+    .menu-location-text strong {
+      font-size: clamp(1.1rem, 1.6vw, 1.8rem);
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 34ch;
+    }
+
+    .menu-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.95rem;
+    }
+
+    .notify-top {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff6ef;
+      text-decoration: none;
+    }
+
+    .notify-top svg {
+      width: 38px;
+      height: 38px;
+      fill: currentColor;
+      display: block;
+    }
+
+    .menu-top .cart-link {
+      background: transparent;
+      color: #fff6ef;
+      padding: 0;
+      border-radius: 0;
+      font-size: clamp(1.25rem, 1.9vw, 2.1rem);
+      font-weight: 900;
+      gap: 0.5rem;
+    }
+
+    .menu-top .cart-icon {
+      width: 28px;
+      height: 28px;
+    }
+
+    .menu-top #cart-count {
+      min-width: 22px;
+      height: 22px;
+      font-size: 0.74rem;
+    }
+
+    .hero-main {
+      margin-top: 0.95rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+      align-items: stretch;
+    }
+
+    .hero-media {
+      border: 2px solid #1f1712;
+      border-radius: 46px;
+      min-height: clamp(250px, 31vw, 600px);
+      overflow: hidden;
+    }
+
+    .hero-copy {
+      display: grid;
+      align-content: center;
+      gap: 0.9rem;
+      text-align: center;
+      padding-inline: clamp(0.4rem, 1.2vw, 1.1rem);
+    }
+
+    .hero-copy h1 {
+      margin: 0;
+      line-height: 1.02;
+      display: grid;
+      gap: 0.15rem;
+    }
+
+    .hero-copy .line-1 {
+      font-size: clamp(2rem, 4vw, 5rem);
+      font-style: italic;
+      font-weight: 900;
+      color: #fff6ef;
+      letter-spacing: 0.02em;
+    }
+
+    .hero-copy .line-2 {
+      font-size: clamp(2.5rem, 5vw, 6rem);
+      font-weight: 900;
+      color: #d69544;
+      letter-spacing: 0.04em;
+    }
+
+    .hero-copy p {
+      margin: 0;
+      font-size: clamp(1rem, 1.45vw, 2rem);
+      font-weight: 600;
+      color: #fff6ef;
+      max-width: none;
+    }
+
+    .hero-box {
+      min-height: clamp(160px, 20vw, 380px);
+      border: 2px solid #1f1712;
+      overflow: hidden;
+    }
+
+    .hero-ad {
+      position: relative;
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      background:
+        radial-gradient(circle at 14% 20%, #ffffff10, transparent 25%),
+        linear-gradient(130deg, #3a2e25 0%, #6e5442 100%);
+    }
+
+    .hero-ad img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: opacity .6s ease;
+      opacity: 1;
+    }
+
+    .hero-ad::after {
+      content: "Anuncio";
+      position: absolute;
+      left: 10px;
+      bottom: 10px;
+      background: #00000070;
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.24rem 0.45rem;
+      border-radius: 999px;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .hero-menu {
+      margin-top: 0.32rem;
+      display: flex;
+      align-items: center;
+      gap: clamp(0.9rem, 1.6vw, 2.4rem);
+      flex-wrap: wrap;
+      padding-bottom: 0.25rem;
+    }
+
+    .hero-menu a {
+      text-decoration: none;
+      color: #fff6ef;
+      font-size: clamp(1.25rem, 2vw, 2.7rem);
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .hero-menu a.em {
+      font-style: italic;
+      font-weight: 900;
+    }
+
+    .hero-menu a:hover {
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+
     .mini-products { display: none !important; }
     .grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+
+    @media (max-width: 980px) {
+      .menu-top {
+        grid-template-columns: 1fr;
+        gap: 0.55rem;
+      }
+
+      .menu-actions {
+        justify-self: end;
+      }
+
+      .hero-main {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-copy {
+        text-align: left;
+      }
+    }
   </style>
 </head>
 <body id="top">
   <header class="hero">
-    <nav class="nav container">
-      <a class="logo-link" href="#top">
-        <img class="logo-img" src="assets/brand/stopmod-logo.svg" alt="Stop mod" height="44" />
+    <nav class="container menu-top">
+      <a class="brand-wordmark" href="#top" aria-label="Stop mod">
+        <span>Stop</span>
+        <em>mod</em>
       </a>
-      <div class="nav-actions full-bar">
-        <div class="search-top-wrap">
-          <label class="sr-only" for="search-input">Buscar produto</label>
-          <input id="search-input" type="search" placeholder="Pesquisar produto" />
-        </div>
+      <a class="menu-location" href="entrega/" aria-label="Selecionar endereco">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 2c3.87 0 7 3.09 7 6.9 0 4.71-5.2 10.35-6.45 11.65a.8.8 0 0 1-1.1 0C10.2 19.25 5 13.61 5 8.9 5 5.09 8.13 2 12 2zm0 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"></path>
+        </svg>
+        <span class="menu-location-text">
+          <small>Enviar para</small>
+          <strong id="menu-location">Sao paulo</strong>
+        </span>
+      </a>
+      <div class="menu-actions">
+        <a class="notify-top" href="notificacoes/" aria-label="Notificacoes">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 1 0-14 0v5l-2 2v1h18v-1l-2-2z"></path>
+          </svg>
+        </a>
         <a class="cart-link" href="carrinho/" aria-label="Ir para o carrinho">
           <svg class="cart-icon" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M8 19a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm9 0a2 2 0 1 0 .001 4A2 2 0 0 0 17 19zM6.2 5l.6 3h11.6l-1.2 6H8.1L6.2 5zM3 2h2l2.2 11.2A2 2 0 0 0 9.2 15H18v-2H9.2l-.2-1h9.1A2 2 0 0 0 20 10.4l1-5A2 2 0 0 0 19 3H6.4l-.3-1.6A2 2 0 0 0 4.1 0H3v2z"></path>
@@ -39,19 +297,28 @@
       </div>
     </nav>
 
-    <section class="hero-content container">
-      <p class="tag">Colecao 2026</p>
-      <h1>Vista atitude com a Stop mod</h1>
+    <section class="hero-main container" aria-label="Destaque inicial">
+      <a id="ad-left-link" class="hero-media hero-ad" href="anuncios/" aria-label="Anuncio em destaque">
+        <img id="ad-left-image" src="" alt="Anuncio destaque" loading="lazy" />
+      </a>
+      <div class="hero-copy">
+      <h1>
+        <span class="line-1">VISTA ATITUDE</span>
+        <span class="line-2">COM A STOP MOD</span>
+      </h1>
       <p>Roupas urbanas, caimento premium e pecas pensadas para o seu dia a dia.</p>
-      <a class="btn" href="#produtos">Ver colecao</a>
+      <a id="ad-right-link" class="hero-box hero-ad" href="anuncios/" aria-label="Anuncio secundario">
+        <img id="ad-right-image" src="" alt="Anuncio secundario" loading="lazy" />
+      </a>
+      </div>
     </section>
 
-    <div class="hero-utilities container">
-      <a class="pill" href="descontos/">Descontos</a>
-      <a class="pill" href="cupons/">Cupons</a>
-      <a class="pill" href="categorias/">Categorias</a>
-      <a class="pill" href="notificacoes/">Notificacoes</a>
-      <a class="pill" href="login/">Criar conta</a>
+    <div class="hero-menu container">
+      <a class="em" href="perfil/?tab=orders">Pedidos</a>
+      <a href="perfil/?tab=favorites">Favoritos</a>
+      <a href="perfil/?tab=processing">Processando</a>
+      <a class="em" href="cupons/">Cupons</a>
+      <a href="categorias/">Categorias</a>
     </div>
   </header>
 
@@ -72,6 +339,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=5"></script>
+  <script src="script.js?v=6"></script>
 </body>
 </html>

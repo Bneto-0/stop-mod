@@ -206,6 +206,16 @@ function setTab(tabId) {
   tabPanels.forEach((p) => p.hidden = p.getAttribute("data-panel") !== tabId);
 }
 
+function getRequestedTab() {
+  try {
+    const tab = String(new URLSearchParams(window.location.search).get("tab") || "").trim().toLowerCase();
+    const allowed = new Set(["account", "orders", "tracking", "processing", "favorites"]);
+    return allowed.has(tab) ? tab : "";
+  } catch {
+    return "";
+  }
+}
+
 function stageForOrder(order) {
   // Simple estimation based on time since purchase.
   try {
@@ -373,7 +383,7 @@ function renderAuth() {
   renderAccount();
   renderOrders();
   renderFavorites();
-  setTab("account");
+  setTab(getRequestedTab() || "account");
 }
 
 saveClientBtn?.addEventListener("click", () => {
