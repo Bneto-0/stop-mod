@@ -14,7 +14,7 @@
     .muted2 { color: var(--muted); font-size: .92rem; }
 
     .hero-row { margin-top: 3.2rem; display:flex; align-items:flex-end; justify-content:space-between; gap: 1.2rem; flex-wrap:wrap; }
-    .hero-row .hero-content { margin-top: 0; }
+    .hero-row .hero-content { margin-top: 0; max-width: 760px; }
     .hero-h1 { display:flex; align-items:center; gap: .65rem; }
     .hero-h1 svg { width: 34px; height: 34px; fill: #fff6ef; opacity: .95; }
 
@@ -106,15 +106,13 @@
           </svg>
           Perfil
         </h1>
-        <p>Entre com Google para ver seus dados pessoais, pedidos e acompanhar entregas.</p>
-        <a class="btn" href="#perfil">Abrir perfil</a>
       </div>
 
       <div class="hero-chip" aria-label="Resumo do usuario">
         <img id="avatar" alt="Foto do perfil" src="../assets/icons/user-solid.svg" />
         <div class="txt">
           <strong id="name">Nao logado</strong>
-          <span id="email" class="muted2">Entre com Google para ver seus pedidos.</span>
+          <span id="email" class="muted2">Faca login para ver seus pedidos.</span>
         </div>
         <div class="actions">
           <button id="logout" class="btn" type="button" style="background:#fff5ef; color:#8c3c26; border:1px solid #eac8bb;">Sair</button>
@@ -196,6 +194,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=8"></script>
+  <script src="script.js?v=9"></script>
 </body>
 </html>

@@ -300,13 +300,13 @@ function renderAccount() {
   const p = loadProfile();
   const extra = loadExtra();
   const displayName = String(extra.displayName || p?.name || "Cliente Stop mod");
-  const email = String(p?.email || "");
 
   if (accName) accName.value = displayName;
   if (accPhone) accPhone.value = String(extra.phone || "");
 
   nameEl.textContent = displayName;
-  emailEl.textContent = email || "email nao informado";
+  // Avoid showing personal email in the public UI; use a simple status line instead.
+  emailEl.textContent = "Conta conectada";
   if (avatarEl) {
     const pic = String(p?.picture || "").trim();
     avatarEl.src = pic || "../assets/icons/user-solid.svg";
@@ -318,10 +318,11 @@ function renderAuth() {
   const authed = !!p;
   if (viewAuthed) viewAuthed.hidden = !authed;
   if (viewGuest) viewGuest.hidden = authed;
+  if (logoutBtn) logoutBtn.style.display = authed ? "inline-flex" : "none";
 
   if (!authed) {
     nameEl.textContent = "Nao logado";
-    emailEl.textContent = "Entre com Google para ver seus pedidos.";
+    emailEl.textContent = "Faca login para ver seus pedidos.";
     if (avatarEl) avatarEl.src = "../assets/icons/user-solid.svg";
     return;
   }
