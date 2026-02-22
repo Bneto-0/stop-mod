@@ -15,57 +15,9 @@
 
     .hero-row { margin-top: 3.2rem; }
 
-    .hero-perfil-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 14px;
-      border: 1px solid #ffffff40;
-      background: #ffffff12;
-      display: grid;
-      place-items: center;
-      box-shadow: 0 18px 46px #00000022;
-      flex: 0 0 auto;
+    .hero-userchip {
       position: absolute;
       left: 1.1rem;
-      bottom: 1.15rem;
-    }
-    .hero-perfil-icon img {
-      width: 100%;
-      height: 100%;
-      border-radius: 14px;
-      object-fit: cover;
-      display: block;
-      border: 1px solid #ffffff40;
-      background: #fff;
-    }
-
-    .hero-perfil-label {
-      position: absolute;
-      left: calc(1.1rem + 44px + 10px);
-      bottom: 1.15rem;
-      height: 44px;
-      display: inline-flex;
-      align-items: center;
-      padding: 0 .75rem;
-      border-radius: 14px;
-      border: 1px solid #ffffff40;
-      background: #ffffff12;
-      box-shadow: 0 18px 46px #00000022;
-      color: #fff6ef;
-      font-weight: 900;
-      font-size: clamp(.98rem, 1.6vw, 1.1rem);
-      letter-spacing: .2px;
-      line-height: 1;
-      user-select: none;
-      max-width: min(340px, calc(100vw - 2.2rem - 44px - 10px));
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .hero-logout {
-      position: absolute;
-      right: 1.1rem;
       bottom: 1.15rem;
       width: 44px;
       height: 44px;
@@ -76,21 +28,52 @@
       box-shadow: 0 18px 46px #00000022;
       display: inline-flex;
       align-items: center;
-      justify-content: center;
+      gap: 0.55rem;
+      padding: 0.22rem 0.75rem 0.22rem 0.22rem;
+      width: auto;
+      height: 44px;
+    }
+
+    .hero-userchip img {
+      width: 32px;
+      height: 32px;
+      border-radius: 12px;
+      object-fit: cover;
+      display: block;
+      border: 1px solid #eac8bb;
+      background: #fff;
+    }
+
+    .hero-userchip strong {
+      font-weight: 900;
+      letter-spacing: .15px;
+      font-size: .98rem;
+      white-space: nowrap;
+      max-width: min(280px, calc(100vw - 2.2rem - 44px - 12px));
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .hero-logout-mini {
+      position: absolute;
+      right: 1.1rem;
+      bottom: 1.15rem;
+      height: 32px;
+      padding: 0 .7rem;
+      border-radius: 10px;
+      border: 1px solid #ffffff40;
+      background: #fff3e8;
+      color: #2f2824;
+      box-shadow: 0 18px 46px #00000022;
       cursor: pointer;
       font-weight: 900;
       font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .hero-logout:hover {
-      background: #ffd7b8;
-    }
-
-    .hero-logout svg {
-      width: 20px;
-      height: 20px;
-      fill: currentColor;
-    }
+    .hero-logout-mini:hover { background: #ffd7b8; }
 
     .hero-chip {
       display:flex;
@@ -151,9 +134,8 @@
       .header { justify-content:flex-start; }
       .hero-chip { width: 100%; }
       .hero-chip .txt { min-width: 0; }
-      .hero-perfil-icon { left: .9rem; bottom: .95rem; }
-      .hero-perfil-label { left: calc(.9rem + 44px + 10px); bottom: .95rem; }
-      .hero-logout { right: .9rem; bottom: .95rem; }
+      .hero-userchip { left: .9rem; bottom: .95rem; }
+      .hero-logout-mini { right: .9rem; bottom: .95rem; }
     }
   </style>
 </head>
@@ -174,17 +156,12 @@
       </div>
     </nav>
 
-    <div class="hero-perfil-icon" aria-label="Foto do perfil">
+    <div class="hero-userchip" aria-label="Usuario">
       <img id="avatar" alt="Foto do perfil" src="../assets/icons/user-solid.svg" />
+      <strong id="corner-label">Perfil</strong>
     </div>
-    <div class="hero-perfil-label" aria-label="Nome do cliente">
-      <span id="corner-label">Perfil</span>
-    </div>
-    <button id="logout" class="hero-logout" type="button" aria-label="Sair" title="Sair">
-      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path d="M10 17l1.41-1.41L8.83 13H21v-2H8.83l2.58-2.59L10 7l-7 7 7 7z"></path>
-      </svg>
-    </button>
+
+    <button id="logout" class="hero-logout-mini" type="button" aria-label="Sair">Sair</button>
   </header>
 
   <main class="container layout">
@@ -260,6 +237,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=21"></script>
+  <script src="script.js?v=22"></script>
 </body>
 </html>
