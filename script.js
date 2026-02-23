@@ -6,6 +6,7 @@ const SHIP_LIST_KEY = "stopmod_ship_list";
 const PROFILE_KEY = "stopmod_profile";
 const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
 const AUTH_TIMEOUT_MS = 30 * 60 * 1000;
+const INVALID_CEP_MSG = "CEP inválido, digite outro CEP.";
 const GOOGLE_MAPS_API_KEY = "stopmod_google_maps_api_key";
 const STATE_NAME_TO_UF = Object.freeze({
   acre: "AC",
@@ -175,6 +176,21 @@ function normalizeShipAddress(raw) {
   const id = String(raw?.id || "").trim() || buildAddressId(`${street}|${number}|${cep}|${city}`);
 
   return { id, street, number, district, city, state, cep, contact };
+}
+
+function isCompleteAddress(raw) {
+  const addr = normalizeShipAddress(raw);
+  return !!(
+    isCepValid(addr.cep) &&
+    String(addr.street || "").trim() &&
+    String(addr.number || "").trim() &&
+    String(addr.city || "").trim() &&
+    String(addr.state || "").trim()
+  );
+}
+
+function setInvalidCepFeedback() {
+  setAddressFeedback(INVALID_CEP_MSG, true);
 }
 
 function addressSignature(raw) {
@@ -549,7 +565,7 @@ function loadShipList() {
     const raw = JSON.parse(localStorage.getItem(SHIP_LIST_KEY) || "[]");
     if (!Array.isArray(raw)) return [];
     const filtered = raw.filter((item) => !LEGACY_SEEDED_SHIP_IDS.has(String(item?.id || "").trim()));
-    return dedupeAddresses(filtered);
+    return dedupeAddresses(filtered).filter((item) => isCompleteAddress(item));
   } catch {
     return [];
   }
@@ -620,8 +636,20 @@ function clearAutoAddressFields(resetNumber) {
   setAddressCompletionVisible(false);
 }
 
-function closeAddressDirectory() {
+function closeAddressDirectory(force = false) {
   if (!addressModal) return;
+  if (!force) {
+    const current = loadShipTo();
+    const hasCurrentValid = isCompleteAddress(current);
+    const hasSavedValid = loadShipList().some((item) => isCompleteAddress(item));
+    if (!hasCurrentValid && !hasSavedValid) {
+      setInvalidCepFeedback();
+      if (addressCepInput) {
+        setTimeout(() => addressCepInput.focus(), 40);
+      }
+      return;
+    }
+  }
   addressModal.hidden = true;
   document.body.classList.remove("address-modal-open");
 }
@@ -715,6 +743,10 @@ function useSelectedAddress() {
     setAddressFeedback("Nenhum endereco disponivel para selecionar.", true);
     return;
   }
+  if (!isCompleteAddress(selected)) {
+    setInvalidCepFeedback();
+    return;
+  }
 
   saveShipTo(selected);
   renderMenuLocation();
@@ -727,7 +759,7 @@ async function lookupCep() {
   if (addressCepInput) addressCepInput.value = cep;
   if (!isCepValid(cep)) {
     clearAutoAddressFields(true);
-    setAddressFeedback("Digite um CEP válido.", true);
+    setInvalidCepFeedback();
     return;
   }
 
@@ -738,14 +770,10 @@ async function lookupCep() {
     const data = await lookupCepAllProviders(digits);
     if (!data) {
       clearAutoAddressFields(true);
-      setAddressEditMode(true);
-      cepResolved = true;
-      setAddressCompletionVisible(true);
-      if (addressStreetInput) addressStreetInput.focus();
-      setAddressFeedback(
-        "CEP nao encontrado nas bases consultadas. Preencha rua, bairro, cidade e estado manualmente.",
-        true
-      );
+      setAddressEditMode(false);
+      cepResolved = false;
+      setAddressCompletionVisible(false);
+      setInvalidCepFeedback();
       return;
     }
 
@@ -756,14 +784,10 @@ async function lookupCep() {
 
     if (!city || !state) {
       clearAutoAddressFields(true);
-      setAddressEditMode(true);
-      cepResolved = true;
-      setAddressCompletionVisible(true);
-      if (addressStreetInput) addressStreetInput.focus();
-      setAddressFeedback(
-        "CEP encontrado com dados parciais. Complete rua, bairro, cidade e estado manualmente.",
-        true
-      );
+      setAddressEditMode(false);
+      cepResolved = false;
+      setAddressCompletionVisible(false);
+      setInvalidCepFeedback();
       return;
     }
 
@@ -890,11 +914,11 @@ async function openGoogleMapsValidation() {
 async function saveAddressFromForm() {
   const addr = readAddressForm();
   if (!isCepValid(addr.cep)) {
-    setAddressFeedback("Digite um CEP válido.", true);
+    setInvalidCepFeedback();
     return;
   }
   if (!cepResolved) {
-    setAddressFeedback("Aguarde a validacao automatica do CEP para continuar.", true);
+    setInvalidCepFeedback();
     return;
   }
   if (!addr.number) {
