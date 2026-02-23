@@ -6,6 +6,8 @@ const AUTH_TIMEOUT_MS = 30 * 60 * 1000;
 const AUTH_TOUCH_MIN_GAP_MS = 15 * 1000;
 const ORDERS_KEY = "stopmod_orders";
 const FAVORITES_KEY = "stopmod_favorites";
+const SHIP_LIST_KEY = "stopmod_ship_list";
+const NOTES_KEY = "stopmod_notifications";
 
 const PRODUCTS = [
   { id: 1, name: "Camiseta Oversized Street", image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80" },
@@ -40,6 +42,18 @@ const MODE_META = {
   favoritos: {
     title: "Favoritos",
     desc: "Produtos que voce marcou como favoritos."
+  },
+  enderecos: {
+    title: "Enderecos",
+    desc: "Enderecos salvos para entrega."
+  },
+  privacidade: {
+    title: "Privacidade",
+    desc: "Preferencias e controle dos seus dados."
+  },
+  comunicacoes: {
+    title: "Comunicacoes",
+    desc: "Promocoes e avisos da loja."
   }
 };
 
@@ -127,6 +141,27 @@ function loadProfile() {
   const profile = loadJson(PROFILE_KEY, null);
   if (!profile || typeof profile !== "object") return null;
   return profile;
+}
+
+function loadShipList() {
+  const list = loadJson(SHIP_LIST_KEY, []);
+  if (!Array.isArray(list)) return [];
+  return list
+    .map((item) => ({
+      city: String(item?.city || "").trim(),
+      cep: String(item?.cep || "").trim()
+    }))
+    .filter((item) => item.city || item.cep);
+}
+
+function loadNotifications() {
+  const notes = loadJson(NOTES_KEY, []);
+  if (!Array.isArray(notes) || !notes.length) {
+    return [
+      { id: "n1", type: "promo", title: "Sem notificacoes novas", text: "As proximas promocoes vao aparecer aqui.", date: "Agora" }
+    ];
+  }
+  return notes;
 }
 
 function clearAuthSession() {
@@ -350,6 +385,122 @@ function renderFavoritosPage() {
     .join("");
 }
 
+function formatAddress(item) {
+  const city = String(item?.city || "").trim();
+  const cep = String(item?.cep || "").trim();
+  if (city && cep) return `${city} - CEP ${cep}`;
+  if (city) return city;
+  if (cep) return `CEP ${cep}`;
+  return "Endereco sem dados";
+}
+
+function renderEnderecosPage() {
+  const current = loadShipTo();
+  const list = loadShipList();
+  const currentText = formatAddress(current);
+
+  const savedHtml = list.length
+    ? list
+      .map((item, idx) => `
+        <article class="mini-card">
+          <strong>Endereco ${escapeHtml(idx + 1)}</strong>
+          <p class="muted2">${escapeHtml(formatAddress(item))}</p>
+        </article>
+      `)
+      .join("")
+    : '<p class="orders-empty">Voce ainda nao tem enderecos salvos.</p>';
+
+  contentRoot.innerHTML = `
+    <section class="orders-group">
+      <div class="orders-group-head">
+        <h3>Endereco atual</h3>
+      </div>
+      <div class="orders-list">
+        <article class="mini-card">
+          <strong>Selecionado para entrega</strong>
+          <p class="muted2">${escapeHtml(currentText)}</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="orders-group">
+      <div class="orders-group-head">
+        <h3>Enderecos salvos</h3>
+        <span class="orders-count">${escapeHtml(list.length)}</span>
+      </div>
+      <div class="orders-list">${savedHtml}</div>
+    </section>
+
+    <a class="btn dir-link-btn" href="../../entrega/">Editar enderecos completos</a>
+  `;
+}
+
+function renderPrivacidadePage() {
+  const profile = loadProfile() || {};
+  const email = String(profile?.email || "Nao informado");
+
+  contentRoot.innerHTML = `
+    <section class="orders-group">
+      <div class="orders-group-head">
+        <h3>Dados da conta</h3>
+      </div>
+      <div class="orders-list">
+        <article class="mini-card">
+          <strong>Email principal</strong>
+          <p class="muted2">${escapeHtml(email)}</p>
+        </article>
+        <article class="mini-card">
+          <strong>Sessao de login</strong>
+          <p class="muted2">A sessao expira apos 30 minutos sem atividade.</p>
+        </article>
+        <article class="mini-card">
+          <strong>Controle de dados</strong>
+          <p class="muted2">Voce pode revisar politica e termos sempre que quiser.</p>
+        </article>
+      </div>
+    </section>
+
+    <div class="dir-actions">
+      <a class="btn dir-link-btn" href="../../privacidade/">Abrir politica de privacidade</a>
+      <a class="btn dir-link-btn alt" href="../../termos/">Abrir termos de servico</a>
+    </div>
+  `;
+}
+
+function notificationChip(type) {
+  const key = normalizeText(type);
+  if (key.includes("premio")) return '<span class="chip status-delivered">Premio</span>';
+  if (key.includes("promo")) return '<span class="chip status-progress">Promocao</span>';
+  return '<span class="chip">Aviso</span>';
+}
+
+function renderComunicacoesPage() {
+  const notes = loadNotifications();
+  const listHtml = notes
+    .map((note) => `
+      <article class="mini-card">
+        <div class="mini-head">
+          <strong>${escapeHtml(note?.title || "Notificacao")}</strong>
+          ${notificationChip(note?.type || "")}
+        </div>
+        <p class="muted2">${escapeHtml(note?.text || "")}</p>
+        <p class="muted2">Data: ${escapeHtml(note?.date || "Hoje")}</p>
+      </article>
+    `)
+    .join("");
+
+  contentRoot.innerHTML = `
+    <section class="orders-group">
+      <div class="orders-group-head">
+        <h3>Minhas comunicacoes</h3>
+        <span class="orders-count">${escapeHtml(notes.length)}</span>
+      </div>
+      <div class="orders-list">${listHtml}</div>
+    </section>
+    <a class="btn dir-link-btn" href="../../notificacoes/">Abrir central completa de notificacoes</a>
+  `;
+}
+
 function renderHeader(profile) {
   const displayName = String(profile?.name || "Cliente Stop mod");
   const email = String(profile?.email || "Conta conectada");
@@ -393,6 +544,21 @@ function renderPageContent() {
 
   if (mode === "favoritos") {
     renderFavoritosPage();
+    return;
+  }
+
+  if (mode === "enderecos") {
+    renderEnderecosPage();
+    return;
+  }
+
+  if (mode === "privacidade") {
+    renderPrivacidadePage();
+    return;
+  }
+
+  if (mode === "comunicacoes") {
+    renderComunicacoesPage();
     return;
   }
 
