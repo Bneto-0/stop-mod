@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -397,7 +397,7 @@
     }
     .repo-grid {
       display:grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: .8rem;
     }
     .repo-card {
@@ -407,6 +407,8 @@
       padding: .85rem;
       display:grid;
       gap: .32rem;
+      min-height: 108px;
+      align-content: start;
       text-align: left;
       color: #1f1f1f;
       text-decoration: none;
@@ -419,13 +421,13 @@
       box-shadow: 0 8px 18px #2f211810;
     }
     .repo-card.active {
-      border-color: #d7c6bb;
-      background: #fffaf6;
-      box-shadow: 0 10px 20px #2f211814;
+      border:2px solid #1f1f1f;
+      background:#fff;
+      box-shadow:none;
     }
-    .repo-card .icn { font-size: 1.05rem; }
+    .repo-card .icn { font-size: .92rem; line-height: 1; }
     .repo-card h3 { font-size: 1.02rem; }
-    .repo-card p { color: var(--muted); font-size: .88rem; }
+    .repo-card p { color: var(--muted); font-size: .88rem; line-height: 1.32; }
     .cancel-note { margin-top: .2rem; }
     #detail-sections { margin-top: 1rem; }
     .orders-directory { display:grid; gap: .85rem; }
@@ -490,6 +492,10 @@
     .line-field input[readonly] { background:#f8f4ef; color:#6e6761; }
 
     @media (max-width: 980px) {
+      .repo-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
       .menu-top {
         flex-direction: column;
         align-items: stretch;
@@ -510,12 +516,17 @@
     }
 
     @media (max-width: 720px) {
+      .repo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .header { justify-content:flex-start; }
       .hero-chip { width: 100%; }
       .hero-chip .txt { min-width: 0; }
       .hero-userchip strong { max-width: 22ch; }
       .hero-tabs-text { margin-left: 0; }
       .line-field { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 460px) {
+      .repo-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -600,49 +611,49 @@
 
                     <div class="repo-grid">
             <a class="repo-card active" href="./">
-              <span class="icn">Conta</span>
+              <span class="icn" aria-hidden="true">👤</span>
               <h3>Informacoes do seu perfil</h3>
               <p>Dados pessoais e da conta.</p>
             </a>
 
             <a class="repo-card" href="pedidos/">
-              <span class="icn">Pedidos</span>
+              <span class="icn" aria-hidden="true">📦</span>
               <h3>Pedidos</h3>
               <p>Acompanhe seus pedidos salvos.</p>
             </a>
 
             <a class="repo-card" href="minhas-compras/">
-              <span class="icn">Compras</span>
+              <span class="icn" aria-hidden="true">🚚</span>
               <h3>Minhas compras</h3>
               <p>Veja rastreio e atualizacoes da entrega.</p>
             </a>
 
             <a class="repo-card" href="processando/">
-              <span class="icn">Status</span>
+              <span class="icn" aria-hidden="true">⏳</span>
               <h3>Processando</h3>
               <p>Status dos pedidos em preparacao.</p>
             </a>
 
             <a class="repo-card" href="favoritos/">
-              <span class="icn">Favoritos</span>
+              <span class="icn" aria-hidden="true">❤</span>
               <h3>Favoritos</h3>
               <p>Produtos favoritos da sua conta.</p>
             </a>
 
             <a class="repo-card" href="../entrega/">
-              <span class="icn">Entrega</span>
+              <span class="icn" aria-hidden="true">📍</span>
               <h3>Enderecos</h3>
               <p>Enderecos salvos para entrega.</p>
             </a>
 
             <a class="repo-card" href="../privacidade/">
-              <span class="icn">Privacidade</span>
+              <span class="icn" aria-hidden="true">🔒</span>
               <h3>Privacidade</h3>
               <p>Preferencias e controle dos seus dados.</p>
             </a>
 
             <a class="repo-card" href="../notificacoes/">
-              <span class="icn">Avisos</span>
+              <span class="icn" aria-hidden="true">💬</span>
               <h3>Comunicacoes</h3>
               <p>Promocoes e avisos da loja.</p>
             </a>
@@ -737,3 +748,4 @@
   <script src="script.js?v=61"></script>
 </body>
 </html>
+

@@ -299,7 +299,7 @@
 .repo-grid {
   margin-top: 0.85rem;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.8rem;
 }
 
@@ -310,6 +310,8 @@
   padding: 0.85rem;
   display: grid;
   gap: 0.32rem;
+  min-height: 108px;
+  align-content: start;
   text-align: left;
   color: #1f1f1f;
   text-decoration: none;
@@ -323,15 +325,16 @@
 }
 
 .repo-card.active {
-  border-color: #d7c6bb;
-  background: #fffaf6;
-  box-shadow: 0 10px 20px #2f211814;
+  border: 2px solid #1f1f1f;
+  background: #fff;
+  box-shadow: none;
 }
 
 .repo-card .icn {
-  font-size: 0.82rem;
+  font-size: 0.92rem;
   font-weight: 900;
   color: #6e6761;
+  line-height: 1;
 }
 
 .repo-card h3 {
@@ -341,6 +344,7 @@
 .repo-card p {
   color: var(--muted);
   font-size: 0.88rem;
+  line-height: 1.32;
 }
 
 .directory-nav {
@@ -520,6 +524,10 @@ details summary {
 }
 
 @media (max-width: 980px) {
+  .repo-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .menu-top {
     flex-direction: column;
     align-items: stretch;
@@ -540,10 +548,20 @@ details summary {
 }
 
 @media (max-width: 720px) {
+  .repo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .hero-userchip strong {
     max-width: 22ch;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+}
+
+@media (max-width: 460px) {
+  .repo-grid {
+    grid-template-columns: 1fr;
   }
 }
