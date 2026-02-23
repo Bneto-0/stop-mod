@@ -9,16 +9,7 @@ const AUTH_TIMEOUT_MS = 30 * 60 * 1000;
 const AUTH_TOUCH_MIN_GAP_MS = 15 * 1000;
 const ORDERS_KEY = "stopmod_orders";
 const FAVORITES_KEY = "stopmod_favorites";
-const TAB_IDS = new Set([
-  "account",
-  "orders",
-  "purchases",
-  "processing",
-  "favorites",
-  "addresses",
-  "privacy",
-  "communications"
-]);
+const DEFAULT_PROFILE_PANEL = "account";
 
 const cartCount = document.getElementById("cart-count");
 const menuLocationEl = document.getElementById("menu-location");
@@ -36,11 +27,7 @@ const heroTabs = document.getElementById("hero-tabs");
 
 const viewAuthed = document.getElementById("view-authed");
 const viewGuest = document.getElementById("view-guest");
-const directoryGrid = document.getElementById("directory-grid");
-const directoryNote = document.getElementById("directory-note");
 const detailSections = document.getElementById("detail-sections");
-const backToDirectoriesBtn = document.getElementById("back-to-directories");
-const directoryCardBtns = document.querySelectorAll("#directory-grid [data-open-panel]");
 const avatarEl = document.getElementById("avatar");
 const accountAvatarEl = document.getElementById("account-avatar");
 const nameEl = document.getElementById("name");
@@ -48,7 +35,6 @@ const emailEl = document.getElementById("email");
 const cornerLabel = document.getElementById("corner-label");
 
 const tabPanels = document.querySelectorAll("[data-panel]");
-const openPanelBtns = document.querySelectorAll("[data-open-panel]");
 
 const accFullName = document.getElementById("acc-full-name");
 const accCpf = document.getElementById("acc-cpf");
@@ -335,53 +321,12 @@ function initGoogle() {
 }
 
 function setTab(tabId) {
-  const safeTabId = TAB_IDS.has(tabId) ? tabId : "account";
-  openPanelBtns.forEach((btn) => {
-    btn.classList.toggle("active", String(btn.getAttribute("data-open-panel") || "") === safeTabId);
-  });
+  const requested = String(tabId || "").trim() || DEFAULT_PROFILE_PANEL;
+  const hasPanel = Array.from(tabPanels).some((panel) => panel.getAttribute("data-panel") === requested);
+  const safeTabId = hasPanel ? requested : DEFAULT_PROFILE_PANEL;
   tabPanels.forEach((panel) => {
     panel.hidden = panel.getAttribute("data-panel") !== safeTabId;
   });
-}
-
-function setDirectoryCardsState(activeTabId) {
-  const selected = String(activeTabId || "").trim();
-  directoryCardBtns.forEach((btn) => {
-    const tabId = String(btn.getAttribute("data-open-panel") || "").trim();
-    if (!selected) {
-      btn.hidden = false;
-      btn.classList.remove("active");
-      return;
-    }
-    const isActive = tabId === selected;
-    btn.hidden = !isActive;
-    btn.classList.toggle("active", isActive);
-  });
-}
-
-function showDirectoryCards() {
-  setDirectoryCardsState("");
-  if (directoryGrid) directoryGrid.hidden = false;
-  if (directoryNote) directoryNote.hidden = false;
-  if (detailSections) detailSections.hidden = true;
-  openPanelBtns.forEach((btn) => btn.classList.remove("active"));
-}
-
-function showDirectoryPanel(tabId) {
-  setDirectoryCardsState(tabId);
-  if (directoryGrid) directoryGrid.hidden = true;
-  if (directoryNote) directoryNote.hidden = true;
-  if (detailSections) detailSections.hidden = false;
-  setTab(tabId);
-}
-
-function getRequestedTab() {
-  try {
-    const tab = String(new URLSearchParams(window.location.search).get("tab") || "").trim().toLowerCase();
-    return TAB_IDS.has(tab) ? tab : "";
-  } catch {
-    return "";
-  }
 }
 
 function stageForOrder(order) {
@@ -654,7 +599,8 @@ function renderAuth() {
   renderAccount(p);
   renderOrders();
   renderFavorites();
-  showDirectoryCards();
+  if (detailSections) detailSections.hidden = false;
+  setTab(DEFAULT_PROFILE_PANEL);
   return true;
 }
 
@@ -681,22 +627,6 @@ clientInput?.addEventListener("input", () => {
 logoutBtn?.addEventListener("click", () => {
   clearAuthSession();
   goToLoginFromProfile();
-});
-
-openPanelBtns.forEach((b) => {
-  b.addEventListener("click", (event) => {
-    const tabId = String(b.getAttribute("data-open-panel") || "account");
-    const targetPanel = document.querySelector(`[data-panel="${tabId}"]`);
-    if (!targetPanel) return;
-    event.preventDefault();
-    showDirectoryPanel(tabId);
-    if (tabId === "orders" || tabId === "purchases" || tabId === "processing") renderOrders();
-    if (tabId === "favorites") renderFavorites();
-  });
-});
-
-backToDirectoriesBtn?.addEventListener("click", () => {
-  showDirectoryCards();
 });
 
 accSave?.addEventListener("click", () => {

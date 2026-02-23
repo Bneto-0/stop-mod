@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../style.css?v=6" />
-  <link rel="stylesheet" href="../diretorios.css?v=2" />
+  <link rel="stylesheet" href="../diretorios.css?v=4" />
 </head>
 <body data-mode="compras">
   <header class="hero">
@@ -87,13 +87,55 @@
         <p id="page-desc">Compras ja entregues para voce.</p>
       </div>
 
-      <nav class="directory-nav" aria-label="Diretorios">
-        <a href="../pedidos/" data-dir-tab="pedidos">Pedidos</a>
-        <a href="../minhas-compras/" data-dir-tab="compras">Minhas compras</a>
-        <a href="../processando/" data-dir-tab="processando">Processando</a>
-        <a href="../favoritos/" data-dir-tab="favoritos">Favoritos</a>
-        <a href="../">Minha conta</a>
-      </nav>
+            <div class="repo-grid">
+        <a class="repo-card" href="../">
+          <span class="icn">Conta</span>
+          <h3>Informacoes do seu perfil</h3>
+          <p>Dados pessoais e da conta.</p>
+        </a>
+
+        <a class="repo-card" href="../pedidos/">
+          <span class="icn">Pedidos</span>
+          <h3>Pedidos</h3>
+          <p>Acompanhe seus pedidos salvos.</p>
+        </a>
+
+        <a class="repo-card active" href="../minhas-compras/">
+          <span class="icn">Compras</span>
+          <h3>Minhas compras</h3>
+          <p>Veja rastreio e atualizacoes da entrega.</p>
+        </a>
+
+        <a class="repo-card" href="../processando/">
+          <span class="icn">Status</span>
+          <h3>Processando</h3>
+          <p>Status dos pedidos em preparacao.</p>
+        </a>
+
+        <a class="repo-card" href="../favoritos/">
+          <span class="icn">Favoritos</span>
+          <h3>Favoritos</h3>
+          <p>Produtos favoritos da sua conta.</p>
+        </a>
+
+        <a class="repo-card" href="../../entrega/">
+          <span class="icn">Entrega</span>
+          <h3>Enderecos</h3>
+          <p>Enderecos salvos para entrega.</p>
+        </a>
+
+        <a class="repo-card" href="../../privacidade/">
+          <span class="icn">Privacidade</span>
+          <h3>Privacidade</h3>
+          <p>Preferencias e controle dos seus dados.</p>
+        </a>
+
+        <a class="repo-card" href="../../notificacoes/">
+          <span class="icn">Avisos</span>
+          <h3>Comunicacoes</h3>
+          <p>Promocoes e avisos da loja.</p>
+        </a>
+      </div>
 
       <section id="content-root" class="directory-content"></section>
     </section>
@@ -107,6 +149,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="../diretorios.js?v=2"></script>
+  <script src="../diretorios.js?v=4"></script>
 </body>
 </html>

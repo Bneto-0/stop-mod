@@ -296,6 +296,53 @@
   margin-top: 0.1rem;
 }
 
+.repo-grid {
+  margin-top: 0.85rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.8rem;
+}
+
+.repo-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  padding: 0.85rem;
+  display: grid;
+  gap: 0.32rem;
+  text-align: left;
+  color: #1f1f1f;
+  text-decoration: none;
+  font-family: inherit;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.repo-card:hover {
+  border-color: #d7c6bb;
+  box-shadow: 0 8px 18px #2f211810;
+}
+
+.repo-card.active {
+  border-color: #d7c6bb;
+  background: #fffaf6;
+  box-shadow: 0 10px 20px #2f211814;
+}
+
+.repo-card .icn {
+  font-size: 0.82rem;
+  font-weight: 900;
+  color: #6e6761;
+}
+
+.repo-card h3 {
+  font-size: 1.02rem;
+}
+
+.repo-card p {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
 .directory-nav {
   margin-top: 0.85rem;
   display: flex;

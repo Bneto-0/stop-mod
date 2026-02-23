@@ -567,9 +567,9 @@
     </nav>
 
     <div class="hero-menu nav-wide">
-      <button class="hero-tab-link em" type="button" data-open-panel="orders">Pedidos</button>
-      <button class="hero-tab-link" type="button" data-open-panel="favorites">Favoritos</button>
-      <button class="hero-tab-link" type="button" data-open-panel="processing">Processando</button>
+      <a class="em" href="pedidos/">Pedidos</a>
+      <a href="favoritos/">Favoritos</a>
+      <a href="processando/">Processando</a>
       <a class="em" href="../cupons/">Cupons</a>
       <a href="../categorias/">Categorias</a>
     </div>
@@ -598,63 +598,60 @@
             </div>
           </div>
 
-          <div id="directory-grid" class="repo-grid">
-            <button class="repo-card" type="button" data-open-panel="account">
-              <span class="icn">👤</span>
+                    <div class="repo-grid">
+            <a class="repo-card active" href="./">
+              <span class="icn">Conta</span>
               <h3>Informacoes do seu perfil</h3>
               <p>Dados pessoais e da conta.</p>
-            </button>
+            </a>
 
-            <button class="repo-card" type="button" data-open-panel="orders">
-              <span class="icn">📦</span>
+            <a class="repo-card" href="pedidos/">
+              <span class="icn">Pedidos</span>
               <h3>Pedidos</h3>
               <p>Acompanhe seus pedidos salvos.</p>
-            </button>
+            </a>
 
-            <button class="repo-card" type="button" data-open-panel="purchases">
-              <span class="icn">🚚</span>
+            <a class="repo-card" href="minhas-compras/">
+              <span class="icn">Compras</span>
               <h3>Minhas compras</h3>
               <p>Veja rastreio e atualizacoes da entrega.</p>
-            </button>
+            </a>
 
-            <button class="repo-card" type="button" data-open-panel="processing">
-              <span class="icn">⏳</span>
+            <a class="repo-card" href="processando/">
+              <span class="icn">Status</span>
               <h3>Processando</h3>
               <p>Status dos pedidos em preparacao.</p>
-            </button>
+            </a>
 
-            <button class="repo-card" type="button" data-open-panel="favorites">
-              <span class="icn">❤</span>
+            <a class="repo-card" href="favoritos/">
+              <span class="icn">Favoritos</span>
               <h3>Favoritos</h3>
               <p>Produtos favoritos da sua conta.</p>
-            </button>
+            </a>
 
-            <button class="repo-card" type="button" data-open-panel="addresses">
-              <span class="icn">📍</span>
+            <a class="repo-card" href="../entrega/">
+              <span class="icn">Entrega</span>
               <h3>Enderecos</h3>
               <p>Enderecos salvos para entrega.</p>
-            </button>
+            </a>
 
-            <button class="repo-card" type="button" data-open-panel="privacy">
-              <span class="icn">🔒</span>
+            <a class="repo-card" href="../privacidade/">
+              <span class="icn">Privacidade</span>
               <h3>Privacidade</h3>
               <p>Preferencias e controle dos seus dados.</p>
-            </button>
+            </a>
 
-            <button class="repo-card" type="button" data-open-panel="communications">
-              <span class="icn">💬</span>
+            <a class="repo-card" href="../notificacoes/">
+              <span class="icn">Avisos</span>
               <h3>Comunicacoes</h3>
               <p>Promocoes e avisos da loja.</p>
-            </button>
+            </a>
           </div>
-
-          <p id="directory-note" class="muted2 cancel-note">Voce pode cancelar sua conta quando quiser.</p>
+          <p class="muted2 cancel-note">Voce pode cancelar sua conta quando quiser.</p>
         </div>
 
-        <div id="detail-sections" hidden>
-          <div class="header" style="margin-bottom:.8rem;">
-            <button id="back-to-directories" class="btn" type="button" style="max-width:260px;">Voltar para diretorios</button>
-          </div>
+        <div id="detail-sections">
+
           <div class="grid2" data-panel="account">
             <div class="order">
               <h2>Informacoes do perfil</h2>
@@ -724,97 +721,6 @@
             </div>
           </div>
 
-          <div class="grid2" data-panel="orders" hidden>
-            <div class="order">
-              <h2>Pedidos</h2>
-              <p class="muted2">Veja todos os pedidos: em entrega, entregues e cancelados.</p>
-              <div class="orders-directory" style="margin-top:.7rem;">
-                <details class="orders-group" open>
-                  <summary class="orders-group-head">
-                    <h3>Em entrega</h3>
-                    <span id="orders-in-progress-count" class="orders-count">0</span>
-                  </summary>
-                  <div id="orders-in-progress-list" class="orders-list"></div>
-                </details>
-
-                <details class="orders-group" open>
-                  <summary class="orders-group-head">
-                    <h3>Entregues</h3>
-                    <span id="orders-delivered-count" class="orders-count">0</span>
-                  </summary>
-                  <div id="orders-delivered-list" class="orders-list"></div>
-                </details>
-
-                <details class="orders-group" open>
-                  <summary class="orders-group-head">
-                    <h3>Cancelados</h3>
-                    <span id="orders-cancelled-count" class="orders-count">0</span>
-                  </summary>
-                  <div id="orders-cancelled-list" class="orders-list"></div>
-                </details>
-              </div>
-            </div>
-          </div>
-
-          <div class="grid2" data-panel="purchases" hidden>
-            <div class="order">
-              <h2>Minhas compras</h2>
-              <p class="muted2">Aqui ficam as compras entregues.</p>
-              <section class="orders-group" style="margin-top:.7rem;">
-                <div class="orders-group-head">
-                  <h3>Compras entregues</h3>
-                  <span id="purchases-delivered-count" class="orders-count">0</span>
-                </div>
-                <div id="purchases-delivered-list" class="orders-list"></div>
-              </section>
-            </div>
-          </div>
-
-          <div class="grid2" data-panel="processing" hidden>
-            <div class="order">
-              <h2>Processando</h2>
-              <p class="muted2">Pedidos em preparo ou em rota de entrega.</p>
-              <section class="orders-group" style="margin-top:.7rem;">
-                <div class="orders-group-head">
-                  <h3>Pedidos em andamento</h3>
-                  <span id="processing-orders-count" class="orders-count">0</span>
-                </div>
-                <div id="processing-orders-list" class="orders-list"></div>
-              </section>
-            </div>
-          </div>
-
-          <div class="grid2" data-panel="favorites" hidden>
-            <div class="order">
-              <h2>Favoritos</h2>
-              <p class="muted2">Produtos salvos para voce acompanhar depois.</p>
-              <div id="favorites-list" class="orders-list" style="margin-top:.7rem; padding:0;"></div>
-            </div>
-          </div>
-
-          <div class="grid2" data-panel="addresses" hidden>
-            <div class="order">
-              <h2>Enderecos</h2>
-              <p class="muted2">Gerencie seus enderecos de entrega sem sair da sua conta.</p>
-              <a class="btn" href="../entrega/" style="text-decoration:none; display:inline-flex; margin-top:.7rem;">Abrir diretorio de enderecos</a>
-            </div>
-          </div>
-
-          <div class="grid2" data-panel="privacy" hidden>
-            <div class="order">
-              <h2>Privacidade</h2>
-              <p class="muted2">Controle suas preferencias e veja informacoes de seguranca.</p>
-              <a class="btn" href="../privacidade/" style="text-decoration:none; display:inline-flex; margin-top:.7rem;">Abrir privacidade</a>
-            </div>
-          </div>
-
-          <div class="grid2" data-panel="communications" hidden>
-            <div class="order">
-              <h2>Comunicacoes</h2>
-              <p class="muted2">Veja promocoes, avisos e novidades da loja.</p>
-              <a class="btn" href="../notificacoes/" style="text-decoration:none; display:inline-flex; margin-top:.7rem;">Abrir comunicacoes</a>
-            </div>
-          </div>
         </div>
       </div>
     </section>
@@ -828,6 +734,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=59"></script>
+  <script src="script.js?v=61"></script>
 </body>
 </html>
