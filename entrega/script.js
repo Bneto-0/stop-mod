@@ -106,6 +106,12 @@ function shipText(value) {
   return `Frete: R$ ${formatBRL(value)}`;
 }
 
+function setFeedback(text, isError) {
+  if (!feedback) return;
+  feedback.textContent = String(text || "");
+  feedback.classList.toggle("error", !!isError);
+}
+
 function renderCurrent() {
   const ids = loadCartIds();
   const subtotal = cartSubtotal(ids);
@@ -174,11 +180,11 @@ form?.addEventListener("submit", (e) => {
   const city = String(cityInput?.value || "").trim();
   const cep = normalizeCep(String(cepInput?.value || ""));
   if (!city) {
-    feedback.textContent = "Informe a cidade.";
+    setFeedback("Informe a cidade.", true);
     return;
   }
   if (!isCepValid(cep)) {
-    feedback.textContent = "CEP invalido. Use 8 numeros.";
+    setFeedback("Digite um CEP válido.", true);
     return;
   }
 
@@ -197,7 +203,7 @@ form?.addEventListener("submit", (e) => {
   });
   saveList(uniq.slice(0, 20));
 
-  feedback.textContent = "Endereco salvo e selecionado.";
+  setFeedback("Endereco salvo e selecionado.", false);
   renderCurrent();
   renderList();
   window.location.href = "../carrinho/";
@@ -205,4 +211,3 @@ form?.addEventListener("submit", (e) => {
 
 renderCurrent();
 renderList();
-

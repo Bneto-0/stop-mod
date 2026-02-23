@@ -207,6 +207,27 @@ input:focus {
   font-weight: 900;
 }
 
+.feedback.error {
+  color: #dc2626;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.feedback.error::before {
+  content: "!";
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #fff;
+  background: #dc2626;
+}
+
 footer {
   text-align: center;
   color: var(--muted);

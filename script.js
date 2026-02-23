@@ -727,7 +727,7 @@ async function lookupCep() {
   if (addressCepInput) addressCepInput.value = cep;
   if (!isCepValid(cep)) {
     clearAutoAddressFields(true);
-    setAddressFeedback("CEP invalido. Use 8 numeros.", true);
+    setAddressFeedback("Digite um CEP válido.", true);
     return;
   }
 
@@ -890,7 +890,7 @@ async function openGoogleMapsValidation() {
 async function saveAddressFromForm() {
   const addr = readAddressForm();
   if (!isCepValid(addr.cep)) {
-    setAddressFeedback("Informe um CEP valido com 8 numeros.", true);
+    setAddressFeedback("Digite um CEP válido.", true);
     return;
   }
   if (!cepResolved) {
