@@ -123,12 +123,39 @@
       text-decoration: none;
       font-size: clamp(0.92rem, 1.1vw, 1.18rem);
       font-weight: 800;
+      min-width: 0;
+    }
+
+    .profile-top span {
+      max-width: 16ch;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .profile-top svg {
       width: 18px;
       height: 18px;
       fill: currentColor;
+      display: block;
+    }
+
+    .profile-top-photo {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      object-fit: cover;
+      border: 1px solid #ffffff66;
+      display: none;
+      background: #2f2824;
+      flex: 0 0 auto;
+    }
+
+    .profile-top.logged .profile-top-icon {
+      display: none;
+    }
+
+    .profile-top.logged .profile-top-photo {
       display: block;
     }
 
@@ -609,11 +636,12 @@
           <label class="sr-only" for="search-input">Pesquisar produto</label>
           <input id="search-input" type="search" placeholder="Pesquisar produto" />
         </div>
-        <a class="profile-top" href="perfil/" aria-label="Perfil">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
+        <a id="profile-top-link" class="profile-top" href="perfil/" aria-label="Perfil">
+          <svg class="profile-top-icon" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"></path>
           </svg>
-          <span>Perfil</span>
+          <img id="profile-top-photo" class="profile-top-photo" src="assets/icons/user-solid.svg" alt="" hidden />
+          <span id="profile-top-name">Perfil</span>
         </a>
         <a class="notify-top" href="notificacoes/" aria-label="Notificacoes">
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -744,6 +772,6 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=22"></script>
+  <script src="script.js?v=23"></script>
 </body>
 </html>

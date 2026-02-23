@@ -3,6 +3,9 @@ const MAX_CART_ITEMS = 2000;
 const MAX_AD_SLIDES = 10;
 const SHIP_KEY = "stopmod_ship_to";
 const SHIP_LIST_KEY = "stopmod_ship_list";
+const PROFILE_KEY = "stopmod_profile";
+const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
+const AUTH_TIMEOUT_MS = 30 * 60 * 1000;
 const GOOGLE_MAPS_API_KEY = "stopmod_google_maps_api_key";
 const STATE_NAME_TO_UF = Object.freeze({
   acre: "AC",
@@ -77,6 +80,9 @@ const productGrid = document.getElementById("product-grid");
 const searchInput = document.getElementById("search-input");
 const cartCount = document.getElementById("cart-count");
 const menuLocation = document.getElementById("menu-location");
+const profileTopLink = document.getElementById("profile-top-link");
+const profileTopName = document.getElementById("profile-top-name");
+const profileTopPhoto = document.getElementById("profile-top-photo");
 const adMainImage = document.getElementById("ad-main-image");
 const adMainLink = document.getElementById("ad-main-link");
 const adMainDots = document.getElementById("ad-main-dots");
@@ -1072,10 +1078,61 @@ function updateCartCount() {
   cartCount.style.display = ids.length ? "inline-flex" : "none";
 }
 
+function loadProfile() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PROFILE_KEY) || "null");
+    return raw && typeof raw === "object" ? raw : null;
+  } catch {
+    return null;
+  }
+}
+
+function loadActiveProfile() {
+  const profile = loadProfile();
+  if (!profile) return null;
+
+  const rawLastSeen = Number(localStorage.getItem(AUTH_LAST_SEEN_KEY) || "0");
+  if (Number.isFinite(rawLastSeen) && rawLastSeen > 0 && Date.now() - rawLastSeen > AUTH_TIMEOUT_MS) {
+    return null;
+  }
+
+  return profile;
+}
+
+function renderTopProfile() {
+  if (!profileTopName || !profileTopLink) return;
+  const profile = loadActiveProfile();
+
+  if (!profile) {
+    profileTopLink.classList.remove("logged");
+    profileTopName.textContent = "Perfil";
+    profileTopLink.setAttribute("aria-label", "Perfil");
+    if (profileTopPhoto) {
+      profileTopPhoto.hidden = true;
+      profileTopPhoto.alt = "";
+      profileTopPhoto.src = "assets/icons/user-solid.svg";
+    }
+    return;
+  }
+
+  const displayName = String(profile.name || "").trim() || "Perfil";
+  const picture = String(profile.picture || "").trim();
+  profileTopName.textContent = displayName;
+  profileTopLink.setAttribute("aria-label", `Perfil de ${displayName}`);
+  profileTopLink.classList.add("logged");
+
+  if (profileTopPhoto) {
+    profileTopPhoto.hidden = false;
+    profileTopPhoto.src = picture || "assets/icons/user-solid.svg";
+    profileTopPhoto.alt = `Foto de ${displayName}`;
+  }
+}
+
 function renderMenuLocation() {
   if (!menuLocation) return;
   const to = loadShipTo();
-  menuLocation.textContent = to.city || "Sao paulo";
+  const streetLine = [String(to.street || "").trim(), String(to.number || "").trim()].filter(Boolean).join(", ");
+  menuLocation.textContent = streetLine || to.city || "Sao paulo";
 }
 
 function getFilteredProducts() {
@@ -1331,9 +1388,16 @@ renderProducts();
 updateCartCount();
 initAddressDirectory();
 renderMenuLocation();
+renderTopProfile();
 startAdSlider(adMainLink, adMainImage, adMainDots, loadHomeAds(), loadHomeTarget());
 syncSearchQueryInUrl();
 
 if (openedWithQuery) {
   setTimeout(() => scrollToProducts(false), 70);
 }
+
+window.addEventListener("storage", (event) => {
+  const key = String(event?.key || "");
+  if (key === SHIP_KEY) renderMenuLocation();
+  if (key === PROFILE_KEY || key === AUTH_LAST_SEEN_KEY) renderTopProfile();
+});
