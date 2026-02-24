@@ -14,6 +14,9 @@ const DEFAULT_PROFILE_PANEL = "account";
 const cartCount = document.getElementById("cart-count");
 const menuLocationEl = document.getElementById("menu-location");
 const searchInput = document.getElementById("search-input");
+const profileTopLink = document.getElementById("profile-top-link");
+const profileTopName = document.getElementById("profile-top-name");
+const profileTopPhoto = document.getElementById("profile-top-photo");
 const clientInput = document.getElementById("google-client");
 const saveClientBtn = document.getElementById("save-client");
 const clientMsg = document.getElementById("client-msg");
@@ -73,11 +76,13 @@ function loadShipTo() {
   try {
     const raw = JSON.parse(localStorage.getItem(SHIP_KEY) || "{}");
     return {
+      street: String(raw?.street || "").trim(),
+      number: String(raw?.number || "").trim(),
       city: String(raw?.city || "").trim(),
       cep: String(raw?.cep || "").trim()
     };
   } catch {
-    return { city: "", cep: "" };
+    return { street: "", number: "", city: "", cep: "" };
   }
 }
 
@@ -91,7 +96,37 @@ function updateCartCount() {
 function renderMenuLocation() {
   if (!menuLocationEl) return;
   const shipTo = loadShipTo();
-  menuLocationEl.textContent = shipTo.city || "Sao paulo";
+  const street = String(shipTo.street || "").trim();
+  const number = String(shipTo.number || "").trim();
+  const streetLine = street ? [street, number].filter(Boolean).join(", ") : "";
+  menuLocationEl.textContent = streetLine || "Rua nao informada";
+}
+
+function renderTopProfile(profile, nameOverride) {
+  if (!profileTopLink || !profileTopName) return;
+
+  if (!profile) {
+    profileTopName.textContent = "Perfil";
+    profileTopLink.classList.remove("logged");
+    profileTopLink.setAttribute("aria-label", "Perfil");
+    if (profileTopPhoto) {
+      profileTopPhoto.hidden = true;
+      profileTopPhoto.removeAttribute("src");
+      profileTopPhoto.alt = "";
+    }
+    return;
+  }
+
+  const displayName = String(nameOverride || profile?.name || "").trim() || "Perfil";
+  const picture = String(profile?.picture || "").trim();
+  profileTopName.textContent = displayName;
+  profileTopLink.classList.add("logged");
+  profileTopLink.setAttribute("aria-label", `Perfil de ${displayName}`);
+  if (profileTopPhoto) {
+    profileTopPhoto.hidden = false;
+    profileTopPhoto.src = picture || "../assets/icons/user-solid.svg";
+    profileTopPhoto.alt = `Foto de ${displayName}`;
+  }
 }
 
 function goToStoreSearch() {
@@ -568,6 +603,7 @@ function renderAccount(activeProfile) {
   // Avoid showing personal email in the public UI; use a simple status line instead.
   if (emailEl) emailEl.textContent = String(p?.email || "Conta conectada");
   if (cornerLabel) cornerLabel.textContent = preferredName;
+  renderTopProfile(p, preferredName);
   if (avatarEl) {
     const pic = String(p?.picture || "").trim();
     avatarEl.src = pic || "../assets/icons/user-solid.svg";
@@ -591,6 +627,7 @@ function renderAuth() {
     if (emailEl) emailEl.textContent = "Faca login para ver seus pedidos.";
     if (cornerLabel) cornerLabel.textContent = "Perfil";
     if (avatarEl) avatarEl.src = "../assets/icons/user-solid.svg";
+    renderTopProfile(null);
     goToLoginFromProfile();
     return false;
   }

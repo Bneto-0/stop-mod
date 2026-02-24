@@ -73,6 +73,9 @@ const logoutBtn = document.getElementById("logout");
 const tabLinks = document.querySelectorAll("[data-dir-tab]");
 const menuLocationEl = document.getElementById("menu-location");
 const searchInput = document.getElementById("search-input");
+const profileTopLink = document.getElementById("profile-top-link");
+const profileTopName = document.getElementById("profile-top-name");
+const profileTopPhoto = document.getElementById("profile-top-photo");
 
 let lastAuthTouchAt = 0;
 
@@ -122,6 +125,8 @@ function loadCartIds() {
 function loadShipTo() {
   const raw = loadJson(SHIP_KEY, {});
   return {
+    street: String(raw?.street || "").trim(),
+    number: String(raw?.number || "").trim(),
     city: String(raw?.city || "").trim(),
     cep: String(raw?.cep || "").trim()
   };
@@ -512,6 +517,16 @@ function renderHeader(profile) {
   if (accountAvatarEl) accountAvatarEl.src = avatar;
   if (nameEl) nameEl.textContent = displayName;
   if (emailEl) emailEl.textContent = email;
+  if (profileTopLink && profileTopName) {
+    profileTopName.textContent = displayName;
+    profileTopLink.classList.add("logged");
+    profileTopLink.setAttribute("aria-label", `Perfil de ${displayName}`);
+    if (profileTopPhoto) {
+      profileTopPhoto.hidden = false;
+      profileTopPhoto.src = avatar;
+      profileTopPhoto.alt = `Foto de ${displayName}`;
+    }
+  }
 }
 
 function updateCartCount() {
@@ -524,7 +539,10 @@ function updateCartCount() {
 function renderMenuLocation() {
   if (!menuLocationEl) return;
   const shipTo = loadShipTo();
-  menuLocationEl.textContent = shipTo.city || "Sao paulo";
+  const street = String(shipTo.street || "").trim();
+  const number = String(shipTo.number || "").trim();
+  const streetLine = street ? [street, number].filter(Boolean).join(", ") : "";
+  menuLocationEl.textContent = streetLine || "Rua nao informada";
 }
 
 function goToStoreSearch() {

@@ -1,8 +1,7 @@
 .hero {
-  padding: 1.1rem 0 1.4rem;
-  min-height: 165px;
-  display: flex;
-  flex-direction: column;
+  padding: 1.1rem 0 0.9rem;
+  min-height: 0;
+  display: block;
 }
 
 .nav-wide,
@@ -27,6 +26,23 @@
   gap: 1rem;
   flex-wrap: wrap;
   min-width: 0;
+}
+
+.brand-wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  text-decoration: none;
+  color: #fff6ef;
+  font-size: clamp(2rem, 2.7vw, 3rem);
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+
+.brand-wordmark em {
+  color: #e6a04e;
+  font-style: normal;
 }
 
 .menu-location {
@@ -107,6 +123,32 @@
   width: 18px;
   height: 18px;
   fill: currentColor;
+  display: block;
+}
+
+.profile-top .profile-top-icon {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  display: block;
+}
+
+.profile-top-photo {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid #ffffff66;
+  background: #2f2824;
+  display: none;
+  flex: 0 0 auto;
+}
+
+.profile-top.logged .profile-top-icon {
+  display: none;
+}
+
+.profile-top.logged .profile-top-photo {
   display: block;
 }
 
@@ -200,6 +242,11 @@
   justify-content: space-between;
   gap: 0.8rem;
   flex-wrap: wrap;
+}
+
+/* Keep one standard header shape across all pages. */
+.hero-bottom {
+  display: none;
 }
 
 .hero-userchip {

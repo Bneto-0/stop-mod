@@ -44,6 +44,9 @@ const checkoutBtn = document.getElementById("checkout");
 const searchInput = document.getElementById("search-input");
 const cartCount = document.getElementById("cart-count");
 const shipSummary = document.getElementById("ship-summary");
+const profileTopLink = document.getElementById("profile-top-link");
+const profileTopName = document.getElementById("profile-top-name");
+const profileTopPhoto = document.getElementById("profile-top-photo");
 const paymentSelected = document.getElementById("payment-selected");
 const checkoutModal = document.getElementById("checkout-modal");
 const paymentForm = document.getElementById("payment-form");
@@ -83,6 +86,32 @@ function loadProfile() {
     return JSON.parse(localStorage.getItem(PROFILE_KEY) || "null");
   } catch {
     return null;
+  }
+}
+
+function renderTopProfile() {
+  if (!profileTopLink || !profileTopName) return;
+  const profile = loadProfile();
+  if (!profile) {
+    profileTopName.textContent = "Perfil";
+    profileTopLink.classList.remove("logged");
+    if (profileTopPhoto) {
+      profileTopPhoto.hidden = true;
+      profileTopPhoto.removeAttribute("src");
+      profileTopPhoto.alt = "";
+    }
+    return;
+  }
+
+  const displayName = String(profile.name || "").trim() || "Perfil";
+  const picture = String(profile.picture || "").trim();
+  profileTopName.textContent = displayName;
+  profileTopLink.classList.add("logged");
+  profileTopLink.setAttribute("aria-label", `Perfil de ${displayName}`);
+  if (profileTopPhoto) {
+    profileTopPhoto.hidden = false;
+    profileTopPhoto.src = picture || "../assets/icons/user-solid.svg";
+    profileTopPhoto.alt = `Foto de ${displayName}`;
   }
 }
 
@@ -133,13 +162,15 @@ function saveCartIds(ids) {
 }
 
 function loadShipTo() {
-  // New format: JSON { city, cep }
+  // New format: JSON { street, number, city, cep }
   try {
     const raw = localStorage.getItem(SHIP_KEY);
     if (raw) {
       const obj = JSON.parse(raw);
       if (obj && typeof obj === "object") {
         return {
+          street: String(obj.street || "").trim(),
+          number: String(obj.number || "").trim(),
           city: String(obj.city || "").trim(),
           cep: normalizeCep(String(obj.cep || "")),
         };
@@ -152,7 +183,7 @@ function loadShipTo() {
   // Legacy: stored CEP string
   const legacy = String(localStorage.getItem(LEGACY_SHIP_KEY) || "").trim();
   if (legacy) {
-    const to = { city: "", cep: normalizeCep(legacy) };
+    const to = { street: "", number: "", city: "", cep: normalizeCep(legacy) };
     try {
       localStorage.setItem(SHIP_KEY, JSON.stringify(to));
     } catch {
@@ -160,16 +191,14 @@ function loadShipTo() {
     }
     return to;
   }
-  return { city: "", cep: "" };
+  return { street: "", number: "", city: "", cep: "" };
 }
 
 function shipSummaryText(to) {
-  const city = String(to?.city || "").trim();
-  const cep = String(to?.cep || "").trim();
-  if (city && cep) return `${city} ${cep}`;
-  if (cep) return cep;
-  if (city) return city;
-  return "Selecionar endereco";
+  const street = String(to?.street || "").trim();
+  const number = String(to?.number || "").trim();
+  const streetLine = street ? [street, number].filter(Boolean).join(", ") : "";
+  return streetLine || "Rua nao informada";
 }
 
 function normalizeCep(value) {
@@ -372,6 +401,8 @@ function renderCart() {
   const ids = loadCartIds();
   updateCartCount();
   setCartExtraSpace(ids.length);
+  const shipTo = loadShipTo();
+  if (shipSummary) shipSummary.textContent = shipSummaryText(shipTo);
 
   if (!ids.length) {
     cartItems.innerHTML = "<li class=\"empty\">Seu carrinho esta vazio.</li>";
@@ -396,8 +427,6 @@ function renderCart() {
     return;
   }
 
-  const shipTo = loadShipTo();
-  if (shipSummary) shipSummary.textContent = shipSummaryText(shipTo);
   const cep = shipTo.cep;
 
   const term = normalizeText(searchInput?.value);
@@ -555,3 +584,8 @@ document.addEventListener("keydown", (e) => {
 
 bindAuthActivity();
 renderCart();
+renderTopProfile();
+
+window.addEventListener("storage", (event) => {
+  if (event.key === PROFILE_KEY) renderTopProfile();
+});

@@ -84,6 +84,154 @@ body {
   color: inherit;
 }
 
+.menu-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.menu-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.brand-wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  text-decoration: none;
+  color: #fff6ef;
+  font-size: clamp(2rem, 2.7vw, 3rem);
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+
+.brand-wordmark em {
+  color: #e6a04e;
+  font-style: normal;
+}
+
+.menu-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.menu-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.48rem;
+  text-decoration: none;
+  color: #fff6ef;
+  min-width: 0;
+}
+
+.menu-location svg {
+  width: 26px;
+  height: 26px;
+  fill: #fff6ef;
+  flex: 0 0 auto;
+}
+
+.menu-location-text {
+  display: grid;
+  line-height: 1.02;
+}
+
+.menu-location-text small {
+  font-size: 0.74rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #ead9cc;
+}
+
+.menu-location-text strong {
+  font-size: clamp(1rem, 1.35vw, 1.3rem);
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 34ch;
+}
+
+.profile-top {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.34rem;
+  color: #fff6ef;
+  text-decoration: none;
+  font-size: clamp(0.92rem, 1.1vw, 1.14rem);
+  font-weight: 800;
+  min-width: 0;
+}
+
+.profile-top span {
+  max-width: 16ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-top svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  display: block;
+}
+
+.profile-top .profile-top-icon {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  display: block;
+}
+
+.profile-top-photo,
+.profile-avatar-top {
+  display: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: 0 0 auto;
+  border: 1px solid #ffffff66;
+  background: #2f2824;
+}
+
+.profile-top.logged .profile-top-icon {
+  display: none;
+}
+
+.profile-top.logged .profile-top-photo,
+.profile-top.logged .profile-avatar-top {
+  display: block;
+}
+
+.notify-top {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff6ef;
+  text-decoration: none;
+}
+
+.notify-top svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  display: block;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -96,13 +244,14 @@ body {
 }
 
 .search-top-wrap input {
-  width: 420px;
+  width: clamp(300px, 34vw, 560px);
   border: 1px solid #ffffff40;
   border-radius: 10px;
   padding: 0.5rem 0.7rem;
   font-family: inherit;
   background: #fff9f5;
   color: #2f2824;
+  font-size: 0.8rem;
 }
 
 .search-top-wrap input::placeholder {
@@ -114,11 +263,11 @@ body {
   align-items: center;
   gap: 0.45rem;
   text-decoration: none;
-  color: #2f2824;
-  background: #ffe3d2;
-  border-radius: 10px;
-  padding: 0.45rem 0.65rem;
-  font-weight: 700;
+  color: #fff6ef;
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  font-weight: 800;
 }
 
 .cart-icon {
@@ -142,6 +291,46 @@ body {
 .hero-content {
   margin-top: 3.2rem;
   max-width: 620px;
+}
+
+.menu-top .cart-link {
+  gap: 0.35rem;
+  font-size: clamp(0.95rem, 1.35vw, 1.45rem);
+}
+
+.menu-top .cart-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.menu-top #cart-count {
+  font-size: 0.74rem;
+}
+
+.hero-menu {
+  margin-top: 0.45rem;
+  display: flex;
+  align-items: center;
+  gap: clamp(0.8rem, 1.5vw, 2rem);
+  flex-wrap: wrap;
+}
+
+.hero-menu a {
+  text-decoration: none;
+  color: #fff6ef;
+  font-size: clamp(0.95rem, 1.1vw, 1.1rem);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.hero-menu a.em {
+  font-style: italic;
+  font-weight: 900;
+}
+
+.hero-menu a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .hero-utilities {
@@ -325,6 +514,20 @@ footer {
 @media (max-width: 920px) {
   .layout {
     grid-template-columns: 1fr;
+  }
+
+  .menu-right {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .menu-right .search-top-wrap {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .menu-location-text strong {
+    max-width: 24ch;
   }
 
   .nav {

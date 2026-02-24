@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -7,21 +7,23 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../../style.css?v=6" />
-  <link rel="stylesheet" href="../diretorios.css?v=6" />
+  <link rel="stylesheet" href="../../style.css?v=9" />
+  <link rel="stylesheet" href="../diretorios.css?v=7" />
 </head>
 <body data-mode="comunicacoes">
   <header class="hero">
     <nav class="menu-top nav-wide">
       <div class="menu-left">
-        <a class="brand-pill" href="../../index.html#top" aria-label="Voltar para o inicio">Stop <span>mod</span></a>
+        <a class="brand-wordmark" href="../../index.html#top" aria-label="Voltar para o inicio da loja">
+          Stop <em>mod</em>
+        </a>
         <a class="menu-location" href="../enderecos/" aria-label="Selecionar endereco">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 2c3.87 0 7 3.09 7 6.9 0 4.71-5.2 10.35-6.45 11.65a.8.8 0 0 1-1.1 0C10.2 19.25 5 13.61 5 8.9 5 5.09 8.13 2 12 2zm0 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"></path>
           </svg>
           <span class="menu-location-text">
             <small>Enviar para</small>
-            <strong id="menu-location">Sao paulo</strong>
+            <strong id="menu-location">Rua nao informada</strong>
           </span>
         </a>
       </div>
@@ -32,14 +34,15 @@
           <input id="search-input" type="search" placeholder="Pesquisar produto" />
         </div>
 
-        <a class="profile-top" href="../" aria-label="Perfil">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
+        <a id="profile-top-link" class="profile-top" href="../" aria-label="Perfil">
+          <img id="profile-top-photo" class="profile-top-photo" src="../../assets/icons/user-solid.svg" alt="" hidden />
+          <svg class="profile-top-icon" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"></path>
           </svg>
-          <span>Perfil</span>
+          <span id="profile-top-name">Perfil</span>
         </a>
 
-        <a class="notify-top" href="../comunicacoes/" aria-label="Notificacoes">
+        <a class="notify-top" href="../../notificacoes/" aria-label="Notificacoes">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 1 0-14 0v5l-2 2v1h18v-1l-2-2z"></path>
           </svg>
@@ -89,49 +92,49 @@
 
             <div class="repo-grid">
         <a class="repo-card" href="../">
-          <span class="icn" aria-hidden="true">👤</span>
+          <span class="icn" aria-hidden="true">::</span>
           <h3>Informacoes do seu perfil</h3>
           <p>Dados pessoais e da conta.</p>
         </a>
 
         <a class="repo-card" href="../pedidos/">
-          <span class="icn" aria-hidden="true">📦</span>
+          <span class="icn" aria-hidden="true">::</span>
           <h3>Pedidos</h3>
           <p>Acompanhe seus pedidos salvos.</p>
         </a>
 
         <a class="repo-card" href="../minhas-compras/">
-          <span class="icn" aria-hidden="true">🚚</span>
+          <span class="icn" aria-hidden="true">::</span>
           <h3>Minhas compras</h3>
           <p>Veja rastreio e atualizacoes da entrega.</p>
         </a>
 
         <a class="repo-card" href="../processando/">
-          <span class="icn" aria-hidden="true">⏳</span>
+          <span class="icn" aria-hidden="true">::</span>
           <h3>Processando</h3>
           <p>Status dos pedidos em preparacao.</p>
         </a>
 
         <a class="repo-card" href="../favoritos/">
-          <span class="icn" aria-hidden="true">❤</span>
+          <span class="icn" aria-hidden="true">::</span>
           <h3>Favoritos</h3>
           <p>Produtos favoritos da sua conta.</p>
         </a>
 
         <a class="repo-card" href="../enderecos/">
-          <span class="icn" aria-hidden="true">📍</span>
+          <span class="icn" aria-hidden="true">::</span>
           <h3>Enderecos</h3>
           <p>Enderecos salvos para entrega.</p>
         </a>
 
         <a class="repo-card" href="../privacidade/">
-          <span class="icn" aria-hidden="true">🔒</span>
+          <span class="icn" aria-hidden="true">::</span>
           <h3>Privacidade</h3>
           <p>Preferencias e controle dos seus dados.</p>
         </a>
 
         <a class="repo-card active" href="../comunicacoes/">
-          <span class="icn" aria-hidden="true">💬</span>
+          <span class="icn" aria-hidden="true">::</span>
           <h3>Comunicacoes</h3>
           <p>Promocoes e avisos da loja.</p>
         </a>
@@ -149,7 +152,7 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="../diretorios.js?v=5"></script>
+  <script src="../diretorios.js?v=7"></script>
 </body>
 </html>
 

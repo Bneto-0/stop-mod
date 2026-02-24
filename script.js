@@ -1155,8 +1155,10 @@ function renderTopProfile() {
 function renderMenuLocation() {
   if (!menuLocation) return;
   const to = loadShipTo();
-  const streetLine = [String(to.street || "").trim(), String(to.number || "").trim()].filter(Boolean).join(", ");
-  menuLocation.textContent = streetLine || to.city || "Sao paulo";
+  const street = String(to.street || "").trim();
+  const number = String(to.number || "").trim();
+  const streetLine = street ? [street, number].filter(Boolean).join(", ") : "";
+  menuLocation.textContent = streetLine || "Rua nao informada";
 }
 
 function getFilteredProducts() {

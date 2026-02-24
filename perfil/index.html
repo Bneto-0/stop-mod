@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -7,14 +7,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../style.css?v=6" />
+  <link rel="stylesheet" href="../style.css?v=9" />
   <style>
     /* Layout resilient to zoom: bottom bar is in normal flow (no overlap with nav). */
     .hero {
-      padding: 1.1rem 0 1.4rem;
-      min-height: 180px;
-      display: flex;
-      flex-direction: column;
+      padding: 1.1rem 0 0.9rem;
+      min-height: 0;
+      display: block;
     }
 
     /* Perfil header is "wide" like the exemplar (edge-aligned, with padding). */
@@ -116,12 +115,26 @@
       font-weight: 800;
     }
 
-    .profile-top svg {
+    .profile-top .profile-top-icon {
       width: 18px;
       height: 18px;
       fill: currentColor;
       display: block;
     }
+
+    .profile-top-photo {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      object-fit: cover;
+      border: 1px solid #ffffff66;
+      background: #2f2824;
+      display: none;
+      flex: 0 0 auto;
+    }
+
+    .profile-top.logged .profile-top-icon { display: none; }
+    .profile-top.logged .profile-top-photo { display: block; }
 
     .notify-top {
       display: inline-flex;
@@ -164,23 +177,22 @@
       text-underline-offset: 3px;
     }
 
-    .brand-pill {
+    .brand-wordmark {
       display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      padding: 0;
-      border-radius: 0;
-      background: transparent;
-      border: none;
-      box-shadow: none;
+      align-items: baseline;
+      gap: 0.45rem;
+      text-decoration: none;
       color: #fff6ef;
+      font-size: clamp(2rem, 2.7vw, 3rem);
       font-weight: 900;
-      letter-spacing: 0.2px;
-      font-size: 1.12rem;
+      letter-spacing: 0.5px;
       line-height: 1;
     }
 
-    .brand-pill span { color: #ffb080; }
+    .brand-wordmark em {
+      color: #e6a04e;
+      font-style: normal;
+    }
 
     /* Remove "pill/circle" shapes for user name, cart and logout (no bg, no shadow, no rounded box). */
     .hero .cart-link,
@@ -204,14 +216,7 @@
     .panel { background: var(--card); border:1px solid var(--line); border-radius: 16px; padding: 1rem; box-shadow: 0 10px 24px #2f211810; }
     .muted2 { color: var(--muted); font-size: .92rem; }
 
-    .hero-bottom {
-      margin-top: auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.9rem;
-      flex-wrap: wrap;
-    }
+    .hero-bottom { display: none; }
 
     .hero-left {
       display: flex;
@@ -534,8 +539,8 @@
   <header class="hero">
     <nav class="menu-top nav-wide">
       <div class="menu-left">
-        <a class="logo-link brand-pill" href="../index.html#top" aria-label="Voltar para o inicio">
-          Stop <span>mod</span>
+        <a class="brand-wordmark" href="../index.html#top" aria-label="Voltar para o inicio da loja">
+          Stop <em>mod</em>
         </a>
         <a class="menu-location" href="../entrega/" aria-label="Selecionar endereco">
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -543,7 +548,7 @@
           </svg>
           <span class="menu-location-text">
             <small>Enviar para</small>
-            <strong id="menu-location">Sao paulo</strong>
+            <strong id="menu-location">Rua nao informada</strong>
           </span>
         </a>
       </div>
@@ -554,11 +559,12 @@
           <input id="search-input" type="search" placeholder="Pesquisar produto" />
         </div>
 
-        <a class="profile-top" href="./" aria-label="Perfil">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
+        <a id="profile-top-link" class="profile-top" href="./" aria-label="Perfil">
+          <img id="profile-top-photo" class="profile-top-photo" src="../assets/icons/user-solid.svg" alt="" hidden />
+          <svg class="profile-top-icon" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"></path>
           </svg>
-          <span>Perfil</span>
+          <span id="profile-top-name">Perfil</span>
         </a>
 
         <a class="notify-top" href="../notificacoes/" aria-label="Notificacoes">
@@ -611,49 +617,49 @@
 
                     <div class="repo-grid">
             <a class="repo-card active" href="./">
-              <span class="icn" aria-hidden="true">👤</span>
+              <span class="icn" aria-hidden="true">::</span>
               <h3>Informacoes do seu perfil</h3>
               <p>Dados pessoais e da conta.</p>
             </a>
 
             <a class="repo-card" href="pedidos/">
-              <span class="icn" aria-hidden="true">📦</span>
+              <span class="icn" aria-hidden="true">::</span>
               <h3>Pedidos</h3>
               <p>Acompanhe seus pedidos salvos.</p>
             </a>
 
             <a class="repo-card" href="minhas-compras/">
-              <span class="icn" aria-hidden="true">🚚</span>
+              <span class="icn" aria-hidden="true">::</span>
               <h3>Minhas compras</h3>
               <p>Veja rastreio e atualizacoes da entrega.</p>
             </a>
 
             <a class="repo-card" href="processando/">
-              <span class="icn" aria-hidden="true">⏳</span>
+              <span class="icn" aria-hidden="true">::</span>
               <h3>Processando</h3>
               <p>Status dos pedidos em preparacao.</p>
             </a>
 
             <a class="repo-card" href="favoritos/">
-              <span class="icn" aria-hidden="true">❤</span>
+              <span class="icn" aria-hidden="true">::</span>
               <h3>Favoritos</h3>
               <p>Produtos favoritos da sua conta.</p>
             </a>
 
             <a class="repo-card" href="enderecos/">
-              <span class="icn" aria-hidden="true">📍</span>
+              <span class="icn" aria-hidden="true">::</span>
               <h3>Enderecos</h3>
               <p>Enderecos salvos para entrega.</p>
             </a>
 
             <a class="repo-card" href="privacidade/">
-              <span class="icn" aria-hidden="true">🔒</span>
+              <span class="icn" aria-hidden="true">::</span>
               <h3>Privacidade</h3>
               <p>Preferencias e controle dos seus dados.</p>
             </a>
 
             <a class="repo-card" href="comunicacoes/">
-              <span class="icn" aria-hidden="true">💬</span>
+              <span class="icn" aria-hidden="true">::</span>
               <h3>Comunicacoes</h3>
               <p>Promocoes e avisos da loja.</p>
             </a>
@@ -745,7 +751,7 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=61"></script>
+  <script src="script.js?v=63"></script>
 </body>
 </html>
 

@@ -481,6 +481,7 @@ function googleSignIn() {
       const tokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id: clientId,
         scope: "openid email profile",
+        ux_mode: "popup",
         callback: async (tokenResponse) => {
           const accessToken = String(tokenResponse?.access_token || "").trim();
           if (!accessToken) {
