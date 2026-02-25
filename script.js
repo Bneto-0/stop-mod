@@ -87,6 +87,9 @@ const profileTopPhoto = document.getElementById("profile-top-photo");
 const adMainImage = document.getElementById("ad-main-image");
 const adMainLink = document.getElementById("ad-main-link");
 const adMainDots = document.getElementById("ad-main-dots");
+const heroCategoryDropdown = document.getElementById("hero-category-dropdown");
+const heroCategoryBtn = document.getElementById("hero-category-btn");
+const heroCategoryPanel = document.getElementById("hero-category-panel");
 const openAddressModal = document.getElementById("open-address-modal");
 const addressModal = document.getElementById("address-modal");
 const addressCloseEls = document.querySelectorAll("[data-address-close=\"1\"]");
@@ -115,6 +118,7 @@ let cepResolved = false;
 let addressEditMode = false;
 let autoCepLookupTimer = null;
 let lastAutoLookupCep = "";
+let selectedCategory = "";
 
 function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -520,12 +524,30 @@ function applySearchFromUrl() {
   }
 }
 
+function applyCategoryFromUrl() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const raw = String(params.get("cat") || "").trim();
+    if (!raw) return false;
+
+    const categories = new Set(products.map((product) => normalizeText(product.category)));
+    if (!categories.has(normalizeText(raw))) return false;
+    selectedCategory = raw;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function syncSearchQueryInUrl() {
   if (!searchInput) return;
   const params = new URLSearchParams(window.location.search);
   const query = String(searchInput.value || "").trim();
+  const category = String(selectedCategory || "").trim();
   if (query) params.set("q", query);
   else params.delete("q");
+  if (category) params.set("cat", category);
+  else params.delete("cat");
 
   const queryString = params.toString();
   const nextUrl = `${window.location.pathname}${queryString ? `?${queryString}` : ""}${window.location.hash || ""}`;
@@ -1176,12 +1198,86 @@ function renderMenuLocation() {
 
 function getFilteredProducts() {
   const term = normalizeText(searchInput?.value);
-  if (!term) return products;
+  const selectedCategoryKey = normalizeText(selectedCategory);
 
   return products.filter((product) => {
+    const categoryOk = !selectedCategoryKey || normalizeText(product.category) === selectedCategoryKey;
+    if (!term) return categoryOk;
     const target = normalizeText(`${product.name} ${product.category} ${product.size}`);
     const textOk = target.includes(term);
-    return textOk;
+    return textOk && categoryOk;
+  });
+}
+
+function updateCategoryButtonLabel() {
+  if (!heroCategoryBtn) return;
+  heroCategoryBtn.innerHTML = `Categorias <span class="hero-menu-cat-caret" aria-hidden="true">&#9662;</span>`;
+}
+
+function openCategoryDropdown() {
+  if (!heroCategoryDropdown || !heroCategoryBtn || !heroCategoryPanel) return;
+  heroCategoryDropdown.classList.add("open");
+  heroCategoryPanel.hidden = false;
+  heroCategoryBtn.setAttribute("aria-expanded", "true");
+}
+
+function closeCategoryDropdown() {
+  if (!heroCategoryDropdown || !heroCategoryBtn || !heroCategoryPanel) return;
+  heroCategoryDropdown.classList.remove("open");
+  heroCategoryPanel.hidden = true;
+  heroCategoryBtn.setAttribute("aria-expanded", "false");
+}
+
+function renderCategoryDropdownItems() {
+  if (!heroCategoryPanel) return;
+
+  const categories = Array.from(new Set(products.map((product) => String(product.category || "").trim()).filter(Boolean))).sort((a, b) =>
+    a.localeCompare(b, "pt-BR")
+  );
+
+  const items = ['<a href="#produtos" data-category="">Todas</a>']
+    .concat(categories.map((category) => `<a href="#produtos" data-category="${escapeHtml(category)}">${escapeHtml(category)}</a>`))
+    .join("");
+
+  heroCategoryPanel.innerHTML = items;
+
+  heroCategoryPanel.querySelectorAll("a[data-category]").forEach((item) => {
+    const value = String(item.getAttribute("data-category") || "").trim();
+    const isActive = normalizeText(value) === normalizeText(selectedCategory);
+    item.classList.toggle("active", isActive);
+    item.addEventListener("click", (event) => {
+      event.preventDefault();
+      selectedCategory = value;
+      updateCategoryButtonLabel();
+      renderCategoryDropdownItems();
+      renderProducts();
+      syncSearchQueryInUrl();
+      closeCategoryDropdown();
+      const section = document.getElementById("produtos");
+      section?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+}
+
+function initCategoryDropdown() {
+  if (!heroCategoryDropdown || !heroCategoryBtn || !heroCategoryPanel) return;
+
+  renderCategoryDropdownItems();
+  updateCategoryButtonLabel();
+
+  heroCategoryBtn.addEventListener("click", () => {
+    const isOpen = heroCategoryDropdown.classList.contains("open");
+    if (isOpen) closeCategoryDropdown();
+    else openCategoryDropdown();
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!heroCategoryDropdown.contains(event.target)) closeCategoryDropdown();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    closeCategoryDropdown();
   });
 }
 
@@ -1425,11 +1521,13 @@ searchInput?.addEventListener("keydown", (event) => {
 normalizeHomeHashToTop();
 ensureHeroVisibleOnLoad();
 applySearchFromUrl();
+applyCategoryFromUrl();
 renderProducts();
 updateCartCount();
 initAddressDirectory();
 renderMenuLocation();
 renderTopProfile();
+initCategoryDropdown();
 startAdSlider(adMainLink, adMainImage, adMainDots, loadHomeAds(), loadHomeTarget());
 syncSearchQueryInUrl();
 
