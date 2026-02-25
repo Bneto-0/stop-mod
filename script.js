@@ -540,6 +540,17 @@ function normalizeHomeHashToTop() {
   window.scrollTo({ top: 0, behavior: "auto" });
 }
 
+function ensureHeroVisibleOnLoad() {
+  const hash = String(window.location.hash || "").trim();
+  if (hash && hash !== "#top" && hash !== "#produtos") return;
+  if ("scrollRestoration" in window.history) {
+    window.history.scrollRestoration = "manual";
+  }
+  const goTop = () => window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  goTop();
+  setTimeout(goTop, 70);
+}
+
 function loadCartIds() {
   try {
     return JSON.parse(localStorage.getItem(CART_KEY) || "[]");
@@ -1160,7 +1171,7 @@ function renderMenuLocation() {
   const street = String(to.street || "").trim();
   const number = String(to.number || "").trim();
   const streetLine = street ? [street, number].filter(Boolean).join(", ") : "";
-  menuLocation.textContent = streetLine || "Rua nao informada";
+  menuLocation.textContent = streetLine || "Sao paulo";
 }
 
 function getFilteredProducts() {
@@ -1412,6 +1423,7 @@ searchInput?.addEventListener("keydown", (event) => {
 });
 
 normalizeHomeHashToTop();
+ensureHeroVisibleOnLoad();
 applySearchFromUrl();
 renderProducts();
 updateCartCount();
