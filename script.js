@@ -532,10 +532,12 @@ function syncSearchQueryInUrl() {
   window.history.replaceState(null, "", nextUrl);
 }
 
-function scrollToProducts(smooth) {
-  const section = document.getElementById("produtos");
-  if (!section) return;
-  section.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "start" });
+function normalizeHomeHashToTop() {
+  if (window.location.hash !== "#produtos") return;
+  const query = window.location.search || "";
+  const nextUrl = `${window.location.pathname}${query}#top`;
+  window.history.replaceState(null, "", nextUrl);
+  window.scrollTo({ top: 0, behavior: "auto" });
 }
 
 function loadCartIds() {
@@ -1406,10 +1408,11 @@ searchInput?.addEventListener("input", syncSearchQueryInUrl);
 searchInput?.addEventListener("keydown", (event) => {
   if (event.key !== "Enter") return;
   event.preventDefault();
-  scrollToProducts(true);
+  syncSearchQueryInUrl();
 });
 
-const openedWithQuery = applySearchFromUrl();
+normalizeHomeHashToTop();
+applySearchFromUrl();
 renderProducts();
 updateCartCount();
 initAddressDirectory();
@@ -1417,10 +1420,6 @@ renderMenuLocation();
 renderTopProfile();
 startAdSlider(adMainLink, adMainImage, adMainDots, loadHomeAds(), loadHomeTarget());
 syncSearchQueryInUrl();
-
-if (openedWithQuery) {
-  setTimeout(() => scrollToProducts(false), 70);
-}
 
 window.addEventListener("storage", (event) => {
   const key = String(event?.key || "");
