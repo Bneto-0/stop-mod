@@ -24,6 +24,8 @@
       gap: 1rem;
       justify-content: space-between;
       flex-wrap: wrap;
+      position: relative;
+      z-index: 8;
     }
 
     .menu-left {
@@ -199,8 +201,6 @@
       margin-top: 0.35rem;
       display: block;
       position: relative;
-      z-index: 0;
-      isolation: isolate;
       margin-bottom: -1px;
     }
 
@@ -217,6 +217,7 @@
       color: inherit;
       border: none;
       border-radius: 0;
+      overflow: hidden;
       background:
         radial-gradient(circle at 14% 20%, #ffffff10, transparent 25%),
         linear-gradient(130deg, #3a2e25 0%, #6e5442 100%);
@@ -244,7 +245,7 @@
     }
 
     /* Transparent effect only on the bottom edge of the banner. */
-    .hero-main::after {
+    .hero-ad::after {
       content: "";
       position: absolute;
       left: 0;
@@ -253,7 +254,7 @@
       height: clamp(110px, 15vw, 230px);
       background: linear-gradient(to bottom, #f7f3ee00 0%, #f7f3eecf 70%, #f7f3ee 100%);
       pointer-events: none;
-      z-index: 2;
+      z-index: 1;
     }
 
     .ad-arrow {
@@ -320,6 +321,8 @@
       gap: clamp(0.9rem, 1.6vw, 2.4rem);
       flex-wrap: wrap;
       padding-bottom: 0;
+      position: relative;
+      z-index: 7;
     }
 
     .hero-menu a {
