@@ -333,6 +333,94 @@ body {
   text-underline-offset: 3px;
 }
 
+.hero-menu-dropdown {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  z-index: 12;
+}
+
+.hero-menu-cat-btn {
+  border: none;
+  background: transparent;
+  color: #fff6ef;
+  font-family: inherit;
+  font-size: clamp(0.95rem, 1.1vw, 1.1rem);
+  font-weight: 800;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.34rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.hero-menu-cat-btn:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.hero-menu-cat-btn:focus-visible {
+  outline: 2px solid #ffd7b8;
+  outline-offset: 4px;
+}
+
+.hero-menu-cat-caret {
+  font-size: 0.78em;
+  transition: transform 0.2s ease;
+  transform-origin: 50% 45%;
+}
+
+.hero-menu-dropdown.open .hero-menu-cat-caret,
+.hero-menu-dropdown:hover .hero-menu-cat-caret,
+.hero-menu-dropdown:focus-within .hero-menu-cat-caret {
+  transform: rotate(180deg);
+}
+
+.hero-menu-cat-panel {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 0.5rem);
+  min-width: 220px;
+  border-radius: 12px;
+  border: 1px solid #dbcbbf;
+  background: #fff8f2;
+  box-shadow: 0 14px 28px #2f21182a;
+  padding: 0.35rem;
+  display: none;
+  gap: 0.12rem;
+}
+
+.hero-menu-dropdown.open .hero-menu-cat-panel,
+.hero-menu-dropdown:hover .hero-menu-cat-panel,
+.hero-menu-dropdown:focus-within .hero-menu-cat-panel {
+  display: grid;
+}
+
+.hero-menu-cat-panel[hidden] {
+  display: none !important;
+}
+
+.hero-menu-cat-panel a {
+  color: #2f2824;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-style: normal;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 0.45rem 0.58rem;
+  line-height: 1.2;
+}
+
+.hero-menu-cat-panel a:hover,
+.hero-menu-cat-panel a:focus-visible,
+.hero-menu-cat-panel a.active {
+  background: #f0dfd1;
+  color: #6e3b27;
+  text-decoration: none;
+  outline: none;
+}
+
 .hero-utilities {
   margin-top: 0.9rem;
   display: flex;

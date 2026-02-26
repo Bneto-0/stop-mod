@@ -62,7 +62,19 @@
       <a href="../perfil/favoritos/">Favoritos</a>
       <a href="../perfil/processando/">Processando</a>
       <a class="em" href="../cupons/">Cupons</a>
-      <a href="../categorias/">Categorias</a>
+      <div class="hero-menu-dropdown">
+        <button class="hero-menu-cat-btn" type="button" aria-haspopup="true" aria-expanded="false">
+          Categorias <span class="hero-menu-cat-caret" aria-hidden="true">&#9662;</span>
+        </button>
+        <div class="hero-menu-cat-panel" role="menu" aria-label="Categorias">
+          <a href="../categorias/" role="menuitem">Ver todas</a>
+          <a href="../index.html?cat=Camisetas#produtos" role="menuitem">Camisetas</a>
+          <a href="../index.html?cat=Calcas#produtos" role="menuitem">Calcas</a>
+          <a href="../index.html?cat=Jaquetas#produtos" role="menuitem">Jaquetas</a>
+          <a href="../index.html?cat=Moletons#produtos" role="menuitem">Moletons</a>
+          <a href="../index.html?cat=Vestidos#produtos" role="menuitem">Vestidos</a>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -152,3 +164,4 @@
   <script src="script.js?v=18"></script>
 </body>
 </html>
+

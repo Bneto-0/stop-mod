@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../style.css?v=9" />
+  <link rel="stylesheet" href="../style.css?v=10" />
   <style>
     .products { margin-top: 1.2rem; }
     .discount-badge { display:inline-flex; font-weight:800; font-size:.78rem; padding:.18rem .55rem; border-radius:999px; background:#ffe3d2; color:#2f2824; border:1px solid var(--line); }
@@ -65,7 +65,19 @@
       <a href="../perfil/favoritos/">Favoritos</a>
       <a href="../perfil/processando/">Processando</a>
       <a class="em" href="../cupons/">Cupons</a>
-      <a href="../categorias/">Categorias</a>
+      <div class="hero-menu-dropdown">
+        <button class="hero-menu-cat-btn" type="button" aria-haspopup="true" aria-expanded="false">
+          Categorias <span class="hero-menu-cat-caret" aria-hidden="true">&#9662;</span>
+        </button>
+        <div class="hero-menu-cat-panel" role="menu" aria-label="Categorias">
+          <a href="../categorias/" role="menuitem">Ver todas</a>
+          <a href="../index.html?cat=Camisetas#produtos" role="menuitem">Camisetas</a>
+          <a href="../index.html?cat=Calcas#produtos" role="menuitem">Calcas</a>
+          <a href="../index.html?cat=Jaquetas#produtos" role="menuitem">Jaquetas</a>
+          <a href="../index.html?cat=Moletons#produtos" role="menuitem">Moletons</a>
+          <a href="../index.html?cat=Vestidos#produtos" role="menuitem">Vestidos</a>
+        </div>
+      </div>
     </div>
 
     <section class="hero-content container" style="max-width: 760px;">
@@ -97,3 +109,5 @@
   <script src="script.js?v=3"></script>
 </body>
 </html>
+
+
