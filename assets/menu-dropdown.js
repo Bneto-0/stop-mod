@@ -409,8 +409,9 @@
         badge.style.justifyContent = "center";
         badge.style.lineHeight = "1";
         badge.style.position = "absolute";
-        badge.style.top = "-7px";
-        badge.style.right = "-9px";
+        badge.style.top = "-9px";
+        badge.style.right = "-7px";
+        badge.style.zIndex = "3";
         badge.style.pointerEvents = "none";
         button.append(badge);
       }
