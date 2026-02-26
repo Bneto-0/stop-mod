@@ -1,6 +1,8 @@
 "use strict";
 
 (function initSharedCategoryDropdowns() {
+  const HIDE_NOTIFY_TEXTS = true;
+
   const ensureFavoritesDropdown = () => {
     document.querySelectorAll(".hero-menu").forEach((menu) => {
       const favoriteLink = Array.from(menu.querySelectorAll('a[href="/perfil/favoritos/"], a[href="/perfil/favoritos"]')).find(
@@ -126,6 +128,9 @@
       header.style.fontWeight = "900";
       header.style.color = "#6e3b27";
       header.style.padding = "0.42rem 0.58rem";
+      if (HIDE_NOTIFY_TEXTS) {
+        header.style.color = "transparent";
+      }
 
       const notifyHref = String(notifyLink.getAttribute("href") || "/notificacoes/").trim() || "/notificacoes/";
       const alerts = [
@@ -142,6 +147,11 @@
         item.setAttribute("role", "menuitem");
         item.innerHTML = `<span>${alert.title}</span><small style="font-size:0.76rem;color:#6f635c;font-weight:700;">${alert.detail}</small>`;
         styleNotifyPanelLink(item);
+        if (HIDE_NOTIFY_TEXTS) {
+          item.style.color = "transparent";
+          const small = item.querySelector("small");
+          if (small) small.style.color = "transparent";
+        }
         panel.append(item);
       });
 
