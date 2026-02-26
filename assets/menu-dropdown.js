@@ -65,21 +65,27 @@
   window.addEventListener("resize", closeAllDropdowns);
   document.addEventListener("scroll", closeAllDropdowns, true);
 
-  document.querySelectorAll("a.notify-top[href]").forEach((link) => {
-    if (link.dataset.notifyNavBound === "1") return;
-    link.dataset.notifyNavBound = "1";
-    link.addEventListener(
-      "click",
-      (event) => {
-        if (event.button !== 0) return;
-        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-        const href = String(link.getAttribute("href") || "").trim();
-        if (!href || href.startsWith("javascript:")) return;
-        event.preventDefault();
-        event.stopPropagation();
-        window.location.assign(link.href);
-      },
-      true
-    );
-  });
+  const bindForcedNav = (selector, flagName) => {
+    document.querySelectorAll(selector).forEach((link) => {
+      if (link.dataset[flagName] === "1") return;
+      link.dataset[flagName] = "1";
+      link.addEventListener(
+        "click",
+        (event) => {
+          if (event.button !== 0) return;
+          if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+          const href = String(link.getAttribute("href") || "").trim();
+          if (!href || href.startsWith("javascript:")) return;
+          event.preventDefault();
+          event.stopPropagation();
+          closeAllDropdowns();
+          window.location.assign(link.href);
+        },
+        true
+      );
+    });
+  };
+
+  bindForcedNav("a.notify-top[href]", "notifyNavBound");
+  bindForcedNav(".hero-menu a[href*=\"favoritos/\"]", "favNavBound");
 })();
