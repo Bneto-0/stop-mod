@@ -438,7 +438,7 @@
       if (HIDE_NOTIFY_TEXTS) header.style.color = "transparent";
 
       const notifyHref = String(notifyLink.getAttribute("href") || "/notificacoes/").trim() || "/notificacoes/";
-      const alerts = listVisibleNotifications(8);
+      const alerts = listVisibleNotifications(50);
 
       panel.append(header);
       if (!alerts.length) {
@@ -526,6 +526,11 @@
     button.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
+      if (dropdown.classList.contains("hero-favorites-dropdown")) {
+        closeAllDropdowns();
+        window.location.assign("/perfil/favoritos/");
+        return;
+      }
       const isOpen = dropdown.classList.contains("open");
       closeAllDropdowns();
       if (!isOpen) openDropdown(dropdown);
@@ -552,7 +557,15 @@
 
   window.addEventListener("blur", closeAllDropdowns);
   window.addEventListener("resize", closeAllDropdowns);
-  document.addEventListener("scroll", closeAllDropdowns, true);
+  document.addEventListener(
+    "scroll",
+    (event) => {
+      const target = event.target instanceof Element ? event.target : null;
+      if (target && target.closest(".hero-notify-panel")) return;
+      closeAllDropdowns();
+    },
+    true
+  );
 
   const bindForcedNav = (selector, flagName) => {
     document.querySelectorAll(selector).forEach((link) => {
