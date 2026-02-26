@@ -376,6 +376,7 @@
       button.style.display = "inline-flex";
       button.style.alignItems = "center";
       button.style.justifyContent = "center";
+      button.style.position = "relative";
 
       const btnSvg = button.querySelector("svg");
       if (btnSvg) {
@@ -407,6 +408,10 @@
         badge.style.alignItems = "center";
         badge.style.justifyContent = "center";
         badge.style.lineHeight = "1";
+        badge.style.position = "absolute";
+        badge.style.top = "-7px";
+        badge.style.right = "-9px";
+        badge.style.pointerEvents = "none";
         button.append(badge);
       }
 
