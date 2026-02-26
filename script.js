@@ -1217,14 +1217,12 @@ function updateCategoryButtonLabel() {
 function openCategoryDropdown() {
   if (!heroCategoryDropdown || !heroCategoryBtn || !heroCategoryPanel) return;
   heroCategoryDropdown.classList.add("open");
-  heroCategoryPanel.hidden = false;
   heroCategoryBtn.setAttribute("aria-expanded", "true");
 }
 
 function closeCategoryDropdown() {
   if (!heroCategoryDropdown || !heroCategoryBtn || !heroCategoryPanel) return;
   heroCategoryDropdown.classList.remove("open");
-  heroCategoryPanel.hidden = true;
   heroCategoryBtn.setAttribute("aria-expanded", "false");
 }
 

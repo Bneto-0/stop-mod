@@ -370,6 +370,11 @@
       transform: rotate(180deg);
     }
 
+    .hero-menu-dropdown:hover .hero-menu-cat-caret,
+    .hero-menu-dropdown:focus-within .hero-menu-cat-caret {
+      transform: rotate(180deg);
+    }
+
     .hero-menu-cat-panel {
       position: absolute;
       left: 0;
@@ -380,12 +385,18 @@
       background: #fff8f2;
       box-shadow: 0 14px 28px #2f21182a;
       padding: 0.35rem;
-      display: grid;
+      display: none;
       gap: 0.12rem;
     }
 
+    .hero-menu-dropdown.open .hero-menu-cat-panel,
+    .hero-menu-dropdown:hover .hero-menu-cat-panel,
+    .hero-menu-dropdown:focus-within .hero-menu-cat-panel {
+      display: grid;
+    }
+
     .hero-menu-cat-panel[hidden] {
-      display: none;
+      display: none !important;
     }
 
     .hero-menu-cat-panel a {
@@ -767,7 +778,7 @@
         >
           Categorias <span class="hero-menu-cat-caret" aria-hidden="true">&#9662;</span>
         </button>
-        <div id="hero-category-panel" class="hero-menu-cat-panel" hidden></div>
+        <div id="hero-category-panel" class="hero-menu-cat-panel"></div>
       </div>
     </div>
 
@@ -877,7 +888,7 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=26"></script>
+  <script src="script.js?v=27"></script>
 </body>
 </html>
 
