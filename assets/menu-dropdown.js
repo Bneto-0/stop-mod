@@ -1,7 +1,7 @@
 "use strict";
 
 (function initSharedCategoryDropdowns() {
-  const HIDE_NOTIFY_TEXTS = true;
+  const HIDE_NOTIFY_TEXTS = false;
   const NOTES_KEY = "stopmod_notifications";
   const COUPON_KEY = "stopmod_coupons";
   const ORDERS_KEY = "stopmod_orders";
@@ -429,18 +429,19 @@
       if (HIDE_NOTIFY_TEXTS) header.style.color = "transparent";
 
       const notifyHref = String(notifyLink.getAttribute("href") || "/notificacoes/").trim() || "/notificacoes/";
-      const notes = listVisibleNotifications(8);
-      const alerts = notes.length
-        ? notes
-        : [
-            {
-              href: notifyHref,
-              title: "Sem novas notificacoes",
-              text: "As proximas atualizacoes vao aparecer aqui."
-            }
-          ];
+      const alerts = listVisibleNotifications(8);
 
       panel.append(header);
+      if (!alerts.length) {
+        const empty = document.createElement("div");
+        empty.style.padding = "0.5rem 0.58rem";
+        empty.style.fontSize = "0.84rem";
+        empty.style.fontWeight = "800";
+        empty.style.color = "#6f635c";
+        empty.textContent = "Sem alertas no momento.";
+        panel.append(empty);
+      }
+
       alerts.forEach((alert) => {
         const item = document.createElement("a");
         item.href = String(alert.href || notifyHref);
