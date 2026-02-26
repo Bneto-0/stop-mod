@@ -6,7 +6,7 @@ const SHIP_LIST_KEY = "stopmod_ship_list";
 const PROFILE_KEY = "stopmod_profile";
 const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
 const AUTH_TIMEOUT_MS = 30 * 60 * 1000;
-const INVALID_CEP_MSG = "CEP inválido, digite outro CEP.";
+const INVALID_CEP_MSG = "CEP invalido, digite outro CEP.";
 const GOOGLE_MAPS_API_KEY = "stopmod_google_maps_api_key";
 const STATE_NAME_TO_UF = Object.freeze({
   acre: "AC",
@@ -1216,6 +1216,8 @@ function updateCategoryButtonLabel() {
 
 function openCategoryDropdown() {
   if (!heroCategoryDropdown || !heroCategoryBtn || !heroCategoryPanel) return;
+  heroCategoryPanel.hidden = false;
+  heroCategoryPanel.removeAttribute("hidden");
   heroCategoryDropdown.classList.add("open");
   heroCategoryBtn.setAttribute("aria-expanded", "true");
 }
@@ -1224,6 +1226,7 @@ function closeCategoryDropdown() {
   if (!heroCategoryDropdown || !heroCategoryBtn || !heroCategoryPanel) return;
   heroCategoryDropdown.classList.remove("open");
   heroCategoryBtn.setAttribute("aria-expanded", "false");
+  heroCategoryPanel.hidden = true;
 }
 
 function renderCategoryDropdownItems() {
@@ -1260,8 +1263,11 @@ function renderCategoryDropdownItems() {
 function initCategoryDropdown() {
   if (!heroCategoryDropdown || !heroCategoryBtn || !heroCategoryPanel) return;
 
+  heroCategoryPanel.hidden = false;
+  heroCategoryPanel.removeAttribute("hidden");
   renderCategoryDropdownItems();
   updateCategoryButtonLabel();
+  closeCategoryDropdown();
 
   heroCategoryBtn.addEventListener("click", () => {
     const isOpen = heroCategoryDropdown.classList.contains("open");
