@@ -80,7 +80,7 @@
 
       const button = document.createElement("button");
       button.type = "button";
-      button.className = "hero-menu-cat-btn notify-top hero-notify-btn";
+      button.className = "hero-menu-cat-btn hero-notify-btn";
       button.setAttribute("aria-haspopup", "true");
       button.setAttribute("aria-expanded", "false");
       button.setAttribute("aria-label", "Alertas do site");
@@ -89,6 +89,20 @@
         '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 1 0-14 0v5l-2 2v1h18v-1l-2-2z"></path></svg>';
       button.innerHTML = `${svgHtml}<span class="hero-menu-cat-caret" aria-hidden="true">&#9662;</span>`;
       button.style.gap = "0.26rem";
+      button.style.width = "auto";
+      button.style.height = "auto";
+      button.style.padding = "0";
+      button.style.display = "inline-flex";
+      button.style.alignItems = "center";
+      button.style.justifyContent = "center";
+
+      const btnSvg = button.querySelector("svg");
+      if (btnSvg) {
+        btnSvg.style.width = "18px";
+        btnSvg.style.height = "18px";
+        btnSvg.style.fill = "currentColor";
+        btnSvg.style.display = "block";
+      }
 
       const panel = document.createElement("div");
       panel.className = "hero-menu-cat-panel hero-notify-panel";
