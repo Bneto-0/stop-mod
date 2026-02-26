@@ -368,7 +368,7 @@
       const svgHtml =
         notifyLink.querySelector("svg")?.outerHTML ||
         '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 1 0-14 0v5l-2 2v1h18v-1l-2-2z"></path></svg>';
-      button.innerHTML = `${svgHtml}<span class="hero-menu-cat-caret" aria-hidden="true">&#9662;</span>`;
+      button.innerHTML = `<span class="hero-notify-icon-wrap" style="position:relative;display:inline-flex;align-items:center;justify-content:center;">${svgHtml}</span><span class="hero-menu-cat-caret" aria-hidden="true">&#9662;</span>`;
       button.style.gap = "0.26rem";
       button.style.width = "auto";
       button.style.height = "auto";
@@ -376,7 +376,6 @@
       button.style.display = "inline-flex";
       button.style.alignItems = "center";
       button.style.justifyContent = "center";
-      button.style.position = "relative";
 
       const btnSvg = button.querySelector("svg");
       if (btnSvg) {
@@ -394,6 +393,7 @@
 
       const visibleCount = listVisibleNotifications(99).length;
       if (visibleCount > 0) {
+        const iconWrap = button.querySelector(".hero-notify-icon-wrap") || button;
         const badge = document.createElement("span");
         badge.textContent = String(Math.min(visibleCount, 99));
         badge.style.minWidth = "16px";
@@ -409,11 +409,11 @@
         badge.style.justifyContent = "center";
         badge.style.lineHeight = "1";
         badge.style.position = "absolute";
-        badge.style.top = "-9px";
-        badge.style.right = "-7px";
+        badge.style.top = "-4px";
+        badge.style.right = "-6px";
         badge.style.zIndex = "3";
         badge.style.pointerEvents = "none";
-        button.append(badge);
+        iconWrap.append(badge);
       }
 
       const panel = document.createElement("div");

@@ -14,6 +14,7 @@ const menuLocation = document.getElementById("menu-location");
 const profileTopLink = document.getElementById("profile-top-link");
 const profileTopName = document.getElementById("profile-top-name");
 const profileTopPhoto = document.getElementById("profile-top-photo");
+const listCount = document.getElementById("list-count");
 
 function loadJson(key, fallback) {
   try {
@@ -320,6 +321,7 @@ function noteDate(note) {
 function render() {
   const notes = loadNotes();
   const list = filteredNotes(notes);
+  if (listCount) listCount.textContent = String(list.length);
   listEl.innerHTML = list
     .map((n) => {
       const action =
