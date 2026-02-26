@@ -1,5 +1,6 @@
 const CART_KEY = "stopmod_cart";
 const COUPON_KEY = "stopmod_coupons";
+const NOTES_KEY = "stopmod_notifications";
 const SHIP_KEY = "stopmod_ship_to";
 const PROFILE_KEY = "stopmod_profile";
 
@@ -95,6 +96,64 @@ function saveCoupon(code) {
   localStorage.setItem(COUPON_KEY, JSON.stringify(normalized ? [normalized] : []));
 }
 
+function loadNotes() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(NOTES_KEY) || "[]");
+    return Array.isArray(raw) ? raw : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveNotes(notes) {
+  localStorage.setItem(NOTES_KEY, JSON.stringify(Array.isArray(notes) ? notes : []));
+}
+
+function userKey() {
+  const p = loadProfile();
+  return String(p?.email || "").trim().toLowerCase();
+}
+
+function addCouponNotification(code) {
+  const normalized = String(code || "").trim().toUpperCase();
+  if (!normalized) return;
+
+  if (window.StopModNotifications && typeof window.StopModNotifications.add === "function") {
+    window.StopModNotifications.add({
+      id: `coupon-activated-${userKey() || "guest"}-${normalized}`,
+      scope: "individual",
+      type: "cupom",
+      userKey: userKey(),
+      title: `Cupom ativado: ${normalized}`,
+      text: "Seu cupom esta pronto para uso no carrinho.",
+      href: "/carrinho/",
+      date: "Agora"
+    });
+    if (typeof window.StopModNotifications.sync === "function") {
+      window.StopModNotifications.sync();
+    }
+    return;
+  }
+
+  const notes = loadNotes();
+  const id = `coupon-activated-${userKey() || "guest"}-${normalized}`;
+  const next = {
+    id,
+    scope: "individual",
+    type: "cupom",
+    userKey: userKey(),
+    title: `Cupom ativado: ${normalized}`,
+    text: "Seu cupom esta pronto para uso no carrinho.",
+    href: "/carrinho/",
+    date: "Agora",
+    createdAt: new Date().toISOString()
+  };
+  const idx = notes.findIndex((n) => String(n?.id || "") === id);
+  if (idx >= 0) notes[idx] = { ...notes[idx], ...next };
+  else notes.unshift(next);
+  saveNotes(notes.slice(0, 500));
+}
+
 function loadCoupon() {
   try {
     const raw = JSON.parse(localStorage.getItem(COUPON_KEY) || "[]");
@@ -139,6 +198,7 @@ function render() {
     btn.addEventListener("click", () => {
       const code = String(btn.getAttribute("data-code") || "");
       saveCoupon(code);
+      addCouponNotification(code);
       feedback.textContent = `Cupom ativado: ${code.toUpperCase()}`;
       render();
     });

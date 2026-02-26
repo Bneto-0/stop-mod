@@ -5,6 +5,7 @@ const LEGACY_SHIP_KEY = "stopmod_ship_cep";
 const COUPON_KEY = "stopmod_coupons";
 const PAY_KEY = "stopmod_payment";
 const ORDERS_KEY = "stopmod_orders";
+const NOTES_KEY = "stopmod_notifications";
 const PROFILE_KEY = "stopmod_profile";
 const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
 const AUTH_TIMEOUT_MS = 30 * 60 * 1000;
@@ -238,6 +239,19 @@ function saveOrders(orders) {
   localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
 }
 
+function loadNotes() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(NOTES_KEY) || "[]");
+    return Array.isArray(raw) ? raw : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveNotes(notes) {
+  localStorage.setItem(NOTES_KEY, JSON.stringify(Array.isArray(notes) ? notes : []));
+}
+
 function loadPayment() {
   return String(localStorage.getItem(PAY_KEY) || "pix");
 }
@@ -323,6 +337,7 @@ function createOrder(paymentMethod) {
   const ids = loadCartIds();
   if (!ids.length) return null;
 
+  const profile = loadProfile();
   const shipTo = loadShipTo();
   const coupons = loadCoupons();
   const grouped = groupedCart(ids);
@@ -334,6 +349,8 @@ function createOrder(paymentMethod) {
   const order = {
     id: genOrderId(),
     createdAt: new Date().toISOString(),
+    ownerName: String(profile?.name || "").trim(),
+    ownerEmail: String(profile?.email || "").trim().toLowerCase(),
     payment: String(paymentMethod || "pix"),
     shipTo,
     coupon: coupons[0] || "",
@@ -353,7 +370,40 @@ function createOrder(paymentMethod) {
   const orders = loadOrders();
   orders.unshift(order);
   saveOrders(orders.slice(0, 100));
+  addOrderNotification(order);
   return order;
+}
+
+function addOrderNotification(order) {
+  if (!order || !order.id) return;
+  const owner = String(order.ownerEmail || "").trim().toLowerCase();
+  const title = `Pedido ${order.id} criado`;
+  const text = `Pagamento: ${paymentLabel(order.payment)}. Total: R$ ${formatBRL(Number(order?.totals?.total || 0))}.`;
+  const payload = {
+    id: `order-${order.id}-created`,
+    scope: "individual",
+    type: "pedido",
+    userKey: owner,
+    title,
+    text,
+    href: "/perfil/pedidos/",
+    date: "Agora",
+    createdAt: String(order.createdAt || new Date().toISOString())
+  };
+
+  if (window.StopModNotifications && typeof window.StopModNotifications.add === "function") {
+    window.StopModNotifications.add(payload);
+    if (typeof window.StopModNotifications.sync === "function") {
+      window.StopModNotifications.sync();
+    }
+    return;
+  }
+
+  const notes = loadNotes();
+  const idx = notes.findIndex((n) => String(n?.id || "") === payload.id);
+  if (idx >= 0) notes[idx] = { ...notes[idx], ...payload };
+  else notes.unshift(payload);
+  saveNotes(notes.slice(0, 500));
 }
 
 function setCartExtraSpace(itemCount) {

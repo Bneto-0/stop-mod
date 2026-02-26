@@ -593,6 +593,18 @@
   flex-wrap: wrap;
 }
 
+.dir-inline-link {
+  color: var(--accent);
+  font-weight: 900;
+  text-decoration: none;
+  font-size: 0.86rem;
+}
+
+.dir-inline-link:hover,
+.dir-inline-link:focus-visible {
+  text-decoration: underline;
+}
+
 .order-top {
   display: flex;
   gap: 0.8rem;

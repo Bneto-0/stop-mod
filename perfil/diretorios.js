@@ -6,6 +6,7 @@ const AUTH_TIMEOUT_MS = 30 * 60 * 1000;
 const AUTH_TOUCH_MIN_GAP_MS = 15 * 1000;
 const ORDERS_KEY = "stopmod_orders";
 const FAVORITES_KEY = "stopmod_favorites";
+const COUPON_KEY = "stopmod_coupons";
 const SHIP_LIST_KEY = "stopmod_ship_list";
 const NOTES_KEY = "stopmod_notifications";
 
@@ -159,14 +160,211 @@ function loadShipList() {
     .filter((item) => item.city || item.cep);
 }
 
-function loadNotifications() {
-  const notes = loadJson(NOTES_KEY, []);
-  if (!Array.isArray(notes) || !notes.length) {
-    return [
-      { id: "n1", type: "promo", title: "Sem notificacoes novas", text: "As proximas promocoes vao aparecer aqui.", date: "Agora" }
-    ];
+function activeUserKey() {
+  const profile = loadProfile();
+  return normalizeText(profile?.email || "");
+}
+
+function noteTime(value) {
+  const parsed = Date.parse(String(value || ""));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function upsertNotification(list, incoming) {
+  const id = String(incoming?.id || "").trim();
+  if (!id) return;
+
+  const next = {
+    id,
+    scope: String(incoming.scope || "general"),
+    type: String(incoming.type || "aviso"),
+    title: String(incoming.title || "Notificacao"),
+    text: String(incoming.text || ""),
+    href: String(incoming.href || "/notificacoes/"),
+    userKey: String(incoming.userKey || "").trim(),
+    date: String(incoming.date || "Hoje"),
+    createdAt: String(incoming.createdAt || new Date().toISOString())
+  };
+
+  const idx = list.findIndex((note) => String(note?.id || "") === id);
+  if (idx === -1) {
+    list.push(next);
+    return;
   }
-  return notes;
+
+  const prev = list[idx] || {};
+  list[idx] = {
+    ...prev,
+    ...next,
+    createdAt: String(prev.createdAt || next.createdAt || new Date().toISOString())
+  };
+}
+
+function removeNotification(list, id) {
+  const key = String(id || "").trim();
+  if (!key) return;
+  const idx = list.findIndex((note) => String(note?.id || "") === key);
+  if (idx >= 0) list.splice(idx, 1);
+}
+
+function isVisibleNotification(note, userKey) {
+  if (!note || typeof note !== "object") return false;
+  const scope = String(note.scope || "general");
+  if (scope !== "individual") return true;
+  const owner = normalizeText(note.userKey || "");
+  if (!owner) return !!userKey;
+  if (!userKey) return false;
+  return owner === userKey;
+}
+
+function syncNotificationsFallback() {
+  const notes = loadJson(NOTES_KEY, []);
+  const list = Array.isArray(notes) ? notes.filter(Boolean) : [];
+  const userKey = activeUserKey();
+
+  [
+    {
+      id: "general-discounts",
+      scope: "general",
+      type: "desconto",
+      title: "Descontos ativos na loja",
+      text: "Novos produtos em promocao foram publicados.",
+      href: "/descontos/",
+      date: "Hoje"
+    },
+    {
+      id: "general-coupons",
+      scope: "general",
+      type: "cupom",
+      title: "Cupons disponiveis",
+      text: "Confira e ative seu cupom na aba Cupons.",
+      href: "/cupons/",
+      date: "Hoje"
+    },
+    {
+      id: "general-new-products",
+      scope: "general",
+      type: "novo",
+      title: "Produtos novos na colecao",
+      text: "A loja recebeu novas pecas para voce.",
+      href: "/index.html#produtos",
+      date: "Hoje"
+    },
+    {
+      id: "general-promotions",
+      scope: "general",
+      type: "promo",
+      title: "Promocoes gerais atualizadas",
+      text: "Ofertas relampago e campanhas da semana ativas.",
+      href: "/descontos/",
+      date: "Hoje"
+    }
+  ].forEach((seed) => upsertNotification(list, seed));
+
+  const coupons = loadJson(COUPON_KEY, []);
+  const activeCoupon = Array.isArray(coupons) ? String(coupons[0] || "").trim().toUpperCase() : "";
+  const couponPrefix = `coupon-active-${userKey || "guest"}-`;
+  for (let i = list.length - 1; i >= 0; i -= 1) {
+    const noteId = String(list[i]?.id || "");
+    if (noteId.startsWith(couponPrefix)) list.splice(i, 1);
+  }
+  if (activeCoupon) {
+    upsertNotification(list, {
+      id: `${couponPrefix}${activeCoupon}`,
+      scope: "individual",
+      type: "cupom",
+      userKey,
+      title: `Cupom ativo: ${activeCoupon}`,
+      text: "Use este cupom no carrinho antes de finalizar a compra.",
+      href: "/carrinho/",
+      date: "Agora"
+    });
+  }
+
+  const favoriteIds = loadFavoriteIds();
+  const favoriteCount = Array.isArray(favoriteIds) ? favoriteIds.length : 0;
+  const favoriteId = `favorites-count-${userKey || "guest"}`;
+  if (favoriteCount > 0) {
+    upsertNotification(list, {
+      id: favoriteId,
+      scope: "individual",
+      type: "favorito",
+      userKey,
+      title: `${favoriteCount} produto(s) nos favoritos`,
+      text: "Seus favoritos estao salvos no perfil.",
+      href: "/perfil/favoritos/",
+      date: "Agora"
+    });
+  } else {
+    removeNotification(list, favoriteId);
+  }
+
+  const orders = loadOrders();
+  if (Array.isArray(orders)) {
+    orders.forEach((order) => {
+      const id = String(order?.id || "").trim();
+      if (!id) return;
+
+      const owner = normalizeText(order?.ownerEmail || "");
+      const noteUserKey = owner || userKey || "";
+      const bucket = getOrderBucket(order);
+
+      ["in-progress", "delivered", "cancelled"].forEach((candidate) => {
+        if (candidate === bucket) return;
+        removeNotification(list, `order-${id}-${candidate}`);
+      });
+
+      const status = getStatusLabel(order);
+      const total = Number(order?.totals?.total || 0);
+
+      let title = `Pedido ${id} atualizado`;
+      if (bucket === "in-progress") title = `Pedido ${id} em andamento`;
+      if (bucket === "delivered") title = `Pedido ${id} entregue`;
+      if (bucket === "cancelled") title = `Pedido ${id} cancelado`;
+
+      upsertNotification(list, {
+        id: `order-${id}-${bucket}`,
+        scope: "individual",
+        type: "pedido",
+        userKey: noteUserKey,
+        title,
+        text: `Status: ${status}. Total: R$ ${fmtBRL(total)}. Pagamento: ${paymentLabel(order?.payment)}.`,
+        href: "/perfil/pedidos/",
+        date: "Agora",
+        createdAt: String(order?.createdAt || new Date().toISOString())
+      });
+    });
+  }
+
+  list.sort((a, b) => noteTime(b?.createdAt) - noteTime(a?.createdAt));
+  const capped = list.slice(0, 500);
+  localStorage.setItem(NOTES_KEY, JSON.stringify(capped));
+  return capped;
+}
+
+function loadNotifications() {
+  if (window.StopModNotifications && typeof window.StopModNotifications.sync === "function") {
+    window.StopModNotifications.sync();
+    if (typeof window.StopModNotifications.listVisible === "function") {
+      const visible = window.StopModNotifications.listVisible(300);
+      if (Array.isArray(visible) && visible.length) return visible;
+    }
+  }
+
+  const userKey = activeUserKey();
+  const visible = syncNotificationsFallback().filter((note) => isVisibleNotification(note, userKey));
+  if (visible.length) return visible;
+
+  return [
+    {
+      id: "n-empty",
+      type: "aviso",
+      title: "Sem notificacoes novas",
+      text: "As proximas atualizacoes vao aparecer aqui.",
+      date: "Agora",
+      href: "/notificacoes/"
+    }
+  ];
 }
 
 function clearAuthSession() {
@@ -474,8 +672,12 @@ function renderPrivacidadePage() {
 
 function notificationChip(type) {
   const key = normalizeText(type);
-  if (key.includes("premio")) return '<span class="chip status-delivered">Premio</span>';
-  if (key.includes("promo")) return '<span class="chip status-progress">Promocao</span>';
+  if (key.includes("pedido")) return '<span class="chip status-progress">Pedido</span>';
+  if (key.includes("cupom")) return '<span class="chip status-delivered">Cupom</span>';
+  if (key.includes("promo") || key.includes("desconto")) return '<span class="chip status-progress">Promocao</span>';
+  if (key.includes("favorito")) return '<span class="chip">Favorito</span>';
+  if (key.includes("novo")) return '<span class="chip">Novo</span>';
+  if (key.includes("cancel")) return '<span class="chip status-cancelled">Cancelado</span>';
   return '<span class="chip">Aviso</span>';
 }
 
@@ -490,6 +692,7 @@ function renderComunicacoesPage() {
         </div>
         <p class="muted2">${escapeHtml(note?.text || "")}</p>
         <p class="muted2">Data: ${escapeHtml(note?.date || "Hoje")}</p>
+        ${note?.href ? `<a class="dir-inline-link" href="${escapeHtml(note.href)}">Abrir</a>` : ""}
       </article>
     `)
     .join("");
@@ -618,6 +821,20 @@ searchInput?.addEventListener("keydown", (event) => {
   if (event.key !== "Enter") return;
   event.preventDefault();
   goToStoreSearch();
+});
+
+window.addEventListener("load", () => {
+  renderMenuLocation();
+  updateCartCount();
+  if (mode === "comunicacoes") renderComunicacoesPage();
+});
+
+window.addEventListener("storage", (event) => {
+  if (event.key === SHIP_KEY) renderMenuLocation();
+  if (event.key === CART_KEY) updateCartCount();
+  if (event.key === NOTES_KEY || event.key === ORDERS_KEY || event.key === FAVORITES_KEY || event.key === COUPON_KEY) {
+    if (mode === "comunicacoes") renderComunicacoesPage();
+  }
 });
 
 init();

@@ -2,6 +2,285 @@
 
 (function initSharedCategoryDropdowns() {
   const HIDE_NOTIFY_TEXTS = true;
+  const NOTES_KEY = "stopmod_notifications";
+  const COUPON_KEY = "stopmod_coupons";
+  const ORDERS_KEY = "stopmod_orders";
+  const PROFILE_KEY = "stopmod_profile";
+  const FAVORITES_KEY = "stopmod_favorites";
+
+  const loadJson = (key, fallback) => {
+    try {
+      const raw = JSON.parse(localStorage.getItem(key) || "null");
+      return raw == null ? fallback : raw;
+    } catch {
+      return fallback;
+    }
+  };
+
+  const saveJson = (key, value) => {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+      // ignore storage errors
+    }
+  };
+
+  const normalizeText = (value) =>
+    String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+
+  const nowIso = () => new Date().toISOString();
+  const parseTime = (value) => {
+    const ts = Date.parse(String(value || ""));
+    return Number.isFinite(ts) ? ts : 0;
+  };
+
+  const activeProfile = () => {
+    const profile = loadJson(PROFILE_KEY, null);
+    return profile && typeof profile === "object" ? profile : null;
+  };
+
+  const activeUserKey = () => {
+    const email = normalizeText(activeProfile()?.email || "");
+    return email || "";
+  };
+
+  const paymentLabel = (value) => {
+    const key = normalizeText(value);
+    if (key.includes("credito")) return "Cartao de credito";
+    if (key.includes("debito")) return "Cartao de debito";
+    if (key.includes("boleto")) return "Boleto";
+    return "Pix";
+  };
+
+  const orderBucket = (order) => {
+    const status = normalizeText(order?.tracking?.status || order?.status || "");
+    if (order?.cancelled === true || status.includes("cancel")) return "cancelled";
+    if (status.includes("entreg")) return "delivered";
+    if (
+      status.includes("prepar") ||
+      status.includes("process") ||
+      status.includes("envi") ||
+      status.includes("transit") ||
+      status.includes("transito") ||
+      status.includes("rota") ||
+      status.includes("saiu")
+    ) {
+      return "in-progress";
+    }
+    return "in-progress";
+  };
+
+  const orderStatusLabel = (order) => {
+    const raw = String(order?.tracking?.status || order?.status || "").trim();
+    if (raw) return raw;
+    return orderBucket(order) === "delivered" ? "Entregue" : "Em andamento";
+  };
+
+  const upsertNotification = (list, incoming) => {
+    const id = String(incoming?.id || "").trim();
+    if (!id) return;
+
+    const next = {
+      id,
+      scope: String(incoming.scope || "general"),
+      type: String(incoming.type || "aviso"),
+      title: String(incoming.title || "Notificacao"),
+      text: String(incoming.text || ""),
+      href: String(incoming.href || "/notificacoes/"),
+      userKey: String(incoming.userKey || "").trim(),
+      date: String(incoming.date || "Hoje"),
+      createdAt: String(incoming.createdAt || nowIso())
+    };
+
+    const idx = list.findIndex((n) => String(n?.id || "") === id);
+    if (idx === -1) {
+      list.push(next);
+      return;
+    }
+
+    const prev = list[idx] || {};
+    list[idx] = {
+      ...prev,
+      ...next,
+      createdAt: String(prev.createdAt || next.createdAt || nowIso())
+    };
+  };
+
+  const removeNotification = (list, id) => {
+    const key = String(id || "").trim();
+    if (!key) return;
+    const idx = list.findIndex((n) => String(n?.id || "") === key);
+    if (idx >= 0) list.splice(idx, 1);
+  };
+
+  const syncNotifications = () => {
+    const notes = loadJson(NOTES_KEY, []);
+    const list = Array.isArray(notes) ? notes.filter(Boolean) : [];
+    const userKey = activeUserKey();
+
+    const generalSeeds = [
+      {
+        id: "general-discounts",
+        scope: "general",
+        type: "desconto",
+        title: "Descontos ativos na loja",
+        text: "Novos produtos em promocao foram publicados.",
+        href: "/descontos/",
+        date: "Hoje"
+      },
+      {
+        id: "general-coupons",
+        scope: "general",
+        type: "cupom",
+        title: "Cupons disponiveis",
+        text: "Confira e ative seu cupom na aba Cupons.",
+        href: "/cupons/",
+        date: "Hoje"
+      },
+      {
+        id: "general-new-products",
+        scope: "general",
+        type: "novo",
+        title: "Produtos novos na colecao",
+        text: "A loja recebeu novas pecas para voce.",
+        href: "/index.html#produtos",
+        date: "Hoje"
+      },
+      {
+        id: "general-promotions",
+        scope: "general",
+        type: "promo",
+        title: "Promocoes gerais atualizadas",
+        text: "Ofertas relampago e campanhas da semana ativas.",
+        href: "/descontos/",
+        date: "Hoje"
+      }
+    ];
+
+    generalSeeds.forEach((seed) => upsertNotification(list, seed));
+
+    const coupons = loadJson(COUPON_KEY, []);
+    const activeCoupon = Array.isArray(coupons) ? String(coupons[0] || "").trim().toUpperCase() : "";
+    const couponPrefix = `coupon-active-${userKey || "guest"}-`;
+    for (let i = list.length - 1; i >= 0; i -= 1) {
+      const noteId = String(list[i]?.id || "");
+      if (noteId.startsWith(couponPrefix)) list.splice(i, 1);
+    }
+    if (activeCoupon) {
+      upsertNotification(list, {
+        id: `${couponPrefix}${activeCoupon}`,
+        scope: "individual",
+        type: "cupom",
+        userKey,
+        title: `Cupom ativo: ${activeCoupon}`,
+        text: "Use este cupom no carrinho antes de finalizar a compra.",
+        href: "/carrinho/",
+        date: "Agora"
+      });
+    }
+
+    const favoriteIds = loadJson(FAVORITES_KEY, []);
+    const favoriteCount = Array.isArray(favoriteIds) ? favoriteIds.length : 0;
+    const favId = `favorites-count-${userKey || "guest"}`;
+    if (favoriteCount > 0) {
+      upsertNotification(list, {
+        id: favId,
+        scope: "individual",
+        type: "favorito",
+        userKey,
+        title: `${favoriteCount} produto(s) nos favoritos`,
+        text: "Seus favoritos estao salvos no perfil.",
+        href: "/perfil/favoritos/",
+        date: "Agora"
+      });
+    } else {
+      removeNotification(list, favId);
+    }
+
+    const orders = loadJson(ORDERS_KEY, []);
+    if (Array.isArray(orders)) {
+      orders.forEach((order) => {
+        const id = String(order?.id || "").trim();
+        if (!id) return;
+
+        const owner = normalizeText(order?.ownerEmail || "");
+        const noteUserKey = owner || userKey || "";
+        const bucket = orderBucket(order);
+        ["in-progress", "delivered", "cancelled"].forEach((candidate) => {
+          if (candidate === bucket) return;
+          removeNotification(list, `order-${id}-${candidate}`);
+        });
+        const status = orderStatusLabel(order);
+        const total = Number(order?.totals?.total || 0).toLocaleString("pt-BR", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+
+        let title = `Pedido ${id} atualizado`;
+        if (bucket === "in-progress") title = `Pedido ${id} em andamento`;
+        if (bucket === "delivered") title = `Pedido ${id} entregue`;
+        if (bucket === "cancelled") title = `Pedido ${id} cancelado`;
+
+        upsertNotification(list, {
+          id: `order-${id}-${bucket}`,
+          scope: "individual",
+          type: "pedido",
+          userKey: noteUserKey,
+          title,
+          text: `Status: ${status}. Total: R$ ${total}. Pagamento: ${paymentLabel(order?.payment)}.`,
+          href: "/perfil/pedidos/",
+          date: "Agora",
+          createdAt: String(order?.createdAt || nowIso())
+        });
+      });
+    }
+
+    list.sort((a, b) => parseTime(b?.createdAt) - parseTime(a?.createdAt));
+    const capped = list.slice(0, 500);
+    saveJson(NOTES_KEY, capped);
+    return capped;
+  };
+
+  const isVisibleNote = (note, userKey) => {
+    if (!note || typeof note !== "object") return false;
+    const scope = String(note.scope || "general");
+    if (scope !== "individual") return true;
+    const owner = normalizeText(note.userKey || "");
+    if (!owner) return !!userKey;
+    if (!userKey) return false;
+    return owner === userKey;
+  };
+
+  const listVisibleNotifications = (limit) => {
+    const userKey = activeUserKey();
+    const notes = syncNotifications().filter((note) => isVisibleNote(note, userKey));
+    if (Number.isFinite(limit) && limit > 0) return notes.slice(0, limit);
+    return notes;
+  };
+
+  const addNotification = (payload) => {
+    const list = loadJson(NOTES_KEY, []);
+    const arr = Array.isArray(list) ? list : [];
+    upsertNotification(arr, {
+      ...payload,
+      createdAt: String(payload?.createdAt || nowIso())
+    });
+    arr.sort((a, b) => parseTime(b?.createdAt) - parseTime(a?.createdAt));
+    saveJson(NOTES_KEY, arr.slice(0, 500));
+    return arr;
+  };
+
+  window.StopModNotifications = {
+    sync: syncNotifications,
+    listVisible: listVisibleNotifications,
+    add: addNotification
+  };
+
+  syncNotifications();
 
   const ensureFavoritesDropdown = () => {
     document.querySelectorAll(".hero-menu").forEach((menu) => {
@@ -112,6 +391,25 @@
         btnCaret.style.pointerEvents = "none";
       }
 
+      const visibleCount = listVisibleNotifications(99).length;
+      if (visibleCount > 0) {
+        const badge = document.createElement("span");
+        badge.textContent = String(Math.min(visibleCount, 99));
+        badge.style.minWidth = "16px";
+        badge.style.height = "16px";
+        badge.style.padding = "0 4px";
+        badge.style.borderRadius = "999px";
+        badge.style.background = "#c9512b";
+        badge.style.color = "#fff";
+        badge.style.fontSize = "0.62rem";
+        badge.style.fontWeight = "900";
+        badge.style.display = "inline-flex";
+        badge.style.alignItems = "center";
+        badge.style.justifyContent = "center";
+        badge.style.lineHeight = "1";
+        button.append(badge);
+      }
+
       const panel = document.createElement("div");
       panel.className = "hero-menu-cat-panel hero-notify-panel";
       panel.setAttribute("role", "menu");
@@ -128,24 +426,28 @@
       header.style.fontWeight = "900";
       header.style.color = "#6e3b27";
       header.style.padding = "0.42rem 0.58rem";
-      if (HIDE_NOTIFY_TEXTS) {
-        header.style.color = "transparent";
-      }
+      if (HIDE_NOTIFY_TEXTS) header.style.color = "transparent";
 
       const notifyHref = String(notifyLink.getAttribute("href") || "/notificacoes/").trim() || "/notificacoes/";
-      const alerts = [
-        { href: notifyHref, title: "Ver todas notificacoes", detail: "Abrir central de avisos" },
-        { href: "/descontos/", title: "Promocao do dia", detail: "Novos descontos ja disponiveis" },
-        { href: "/cupons/", title: "Novo cupom ativo", detail: "Confira seus cupons na loja" },
-        { href: "/perfil/processando/", title: "Atualizacao de pedidos", detail: "Acompanhe rastreio e entrega" }
-      ];
+      const notes = listVisibleNotifications(8);
+      const alerts = notes.length
+        ? notes
+        : [
+            {
+              href: notifyHref,
+              title: "Sem novas notificacoes",
+              text: "As proximas atualizacoes vao aparecer aqui."
+            }
+          ];
 
       panel.append(header);
       alerts.forEach((alert) => {
         const item = document.createElement("a");
-        item.href = alert.href;
+        item.href = String(alert.href || notifyHref);
         item.setAttribute("role", "menuitem");
-        item.innerHTML = `<span>${alert.title}</span><small style="font-size:0.76rem;color:#6f635c;font-weight:700;">${alert.detail}</small>`;
+        const title = String(alert.title || "Notificacao");
+        const detail = String(alert.text || "Abrir central de avisos");
+        item.innerHTML = `<span>${title}</span><small style="font-size:0.76rem;color:#6f635c;font-weight:700;">${detail}</small>`;
         styleNotifyPanelLink(item);
         if (HIDE_NOTIFY_TEXTS) {
           item.style.color = "transparent";
@@ -206,7 +508,6 @@
 
     dropdown.addEventListener("mouseenter", () => openDropdown(dropdown));
     dropdown.addEventListener("mouseleave", () => closeDropdown(dropdown));
-
     dropdown.addEventListener("focusin", () => openDropdown(dropdown));
     dropdown.addEventListener("focusout", (event) => {
       if (!dropdown.contains(event.relatedTarget)) closeDropdown(dropdown);
@@ -253,7 +554,8 @@
     "click",
     (event) => {
       if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-      const target = event.target instanceof Element ? event.target.closest('a[href="/perfil/favoritos/"], a[href="/perfil/favoritos"]') : null;
+      const target =
+        event.target instanceof Element ? event.target.closest('a[href="/perfil/favoritos/"], a[href="/perfil/favoritos"]') : null;
       if (!target) return;
       const href = String(target.getAttribute("href") || "").trim();
       if (!href || href.startsWith("javascript:")) return;
