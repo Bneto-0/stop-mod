@@ -87,5 +87,5 @@
   };
 
   bindForcedNav("a.notify-top[href]", "notifyNavBound");
-  bindForcedNav(".hero-menu a[href*=\"favoritos/\"]", "favNavBound");
+  bindForcedNav(".hero-menu > a[href]", "menuNavBound");
 })();

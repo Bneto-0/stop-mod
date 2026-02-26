@@ -225,6 +225,9 @@ body {
   align-items: center;
   gap: clamp(0.8rem, 1.5vw, 2rem);
   flex-wrap: wrap;
+  position: relative;
+  z-index: 23;
+  pointer-events: auto;
 }
 
 .hero-menu a {
@@ -233,6 +236,9 @@ body {
   font-size: clamp(0.95rem, 1.1vw, 1.1rem);
   font-weight: 800;
   line-height: 1;
+  position: relative;
+  z-index: 24;
+  pointer-events: auto;
 }
 
 .hero-menu a.em {
