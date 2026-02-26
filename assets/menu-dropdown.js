@@ -104,6 +104,12 @@
         btnSvg.style.display = "block";
       }
 
+      const btnCaret = button.querySelector(".hero-menu-cat-caret");
+      if (btnCaret) {
+        btnCaret.style.opacity = "0";
+        btnCaret.style.pointerEvents = "none";
+      }
+
       const panel = document.createElement("div");
       panel.className = "hero-menu-cat-panel hero-notify-panel";
       panel.setAttribute("role", "menu");
