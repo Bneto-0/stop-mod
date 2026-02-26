@@ -419,6 +419,8 @@
       panel.style.right = "0";
       panel.style.minWidth = "290px";
       panel.style.maxWidth = "320px";
+      panel.style.maxHeight = "340px";
+      panel.style.overflowY = "auto";
 
       const header = document.createElement("div");
       header.textContent = "Alertas do site";
@@ -448,7 +450,13 @@
         item.setAttribute("role", "menuitem");
         const title = String(alert.title || "Notificacao");
         const detail = String(alert.text || "Abrir central de avisos");
-        item.innerHTML = `<span>${title}</span><small style="font-size:0.76rem;color:#6f635c;font-weight:700;">${detail}</small>`;
+        item.innerHTML = `
+          <span style="display:flex;align-items:center;justify-content:space-between;gap:.45rem;">
+            <strong style="font-size:.9rem;font-weight:900;line-height:1.15;">${title}</strong>
+            <span style="font-size:.72rem;font-weight:900;color:#c9512b;">Abrir</span>
+          </span>
+          <small style="font-size:0.76rem;color:#6f635c;font-weight:700;">${detail}</small>
+        `;
         styleNotifyPanelLink(item);
         if (HIDE_NOTIFY_TEXTS) {
           item.style.color = "transparent";
