@@ -72,11 +72,10 @@
       link.addEventListener(
         "click",
         (event) => {
-          if (event.button !== 0) return;
           if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
           const href = String(link.getAttribute("href") || "").trim();
           if (!href || href.startsWith("javascript:")) return;
-          event.preventDefault();
+          if (event.cancelable) event.preventDefault();
           event.stopPropagation();
           closeAllDropdowns();
           window.location.assign(link.href);
@@ -88,4 +87,20 @@
 
   bindForcedNav("a.notify-top[href]", "notifyNavBound");
   bindForcedNav(".hero-menu > a[href]", "menuNavBound");
+
+  document.addEventListener(
+    "click",
+    (event) => {
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const target = event.target instanceof Element ? event.target.closest('a[href="/perfil/favoritos/"], a[href="/perfil/favoritos"]') : null;
+      if (!target) return;
+      const href = String(target.getAttribute("href") || "").trim();
+      if (!href || href.startsWith("javascript:")) return;
+      if (event.cancelable) event.preventDefault();
+      event.stopPropagation();
+      closeAllDropdowns();
+      window.location.assign(target.href);
+    },
+    true
+  );
 })();
