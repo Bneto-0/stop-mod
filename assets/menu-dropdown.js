@@ -1,6 +1,47 @@
 "use strict";
 
 (function initSharedCategoryDropdowns() {
+  const ensureFavoritesDropdown = () => {
+    document.querySelectorAll(".hero-menu").forEach((menu) => {
+      const favoriteLink = Array.from(menu.querySelectorAll('a[href="/perfil/favoritos/"], a[href="/perfil/favoritos"]')).find(
+        (link) => link.parentElement === menu && !link.closest(".hero-menu-dropdown")
+      );
+      if (!favoriteLink) return;
+
+      const dropdown = document.createElement("div");
+      dropdown.className = "hero-menu-dropdown hero-favorites-dropdown";
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "hero-menu-cat-btn hero-favorites-btn";
+      button.setAttribute("aria-haspopup", "true");
+      button.setAttribute("aria-expanded", "false");
+      button.innerHTML = 'Favoritos <span class="hero-menu-cat-caret" aria-hidden="true">&#9662;</span>';
+
+      const panel = document.createElement("div");
+      panel.className = "hero-menu-cat-panel hero-favorites-panel";
+      panel.setAttribute("role", "menu");
+      panel.setAttribute("aria-label", "Favoritos");
+      panel.hidden = true;
+
+      const openFavorites = document.createElement("a");
+      openFavorites.href = "/perfil/favoritos/";
+      openFavorites.setAttribute("role", "menuitem");
+      openFavorites.textContent = "Ver favoritos";
+
+      const openSaved = document.createElement("a");
+      openSaved.href = "/perfil/favoritos/#salvos";
+      openSaved.setAttribute("role", "menuitem");
+      openSaved.textContent = "Itens salvos";
+
+      panel.append(openFavorites, openSaved);
+      dropdown.append(button, panel);
+      favoriteLink.replaceWith(dropdown);
+    });
+  };
+
+  ensureFavoritesDropdown();
+
   const dropdowns = Array.from(document.querySelectorAll(".hero-menu-dropdown")).filter(
     (el) => el.id !== "hero-category-dropdown"
   );
