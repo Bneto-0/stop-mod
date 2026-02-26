@@ -421,6 +421,7 @@
       panel.style.maxWidth = "320px";
       panel.style.maxHeight = "340px";
       panel.style.overflowY = "auto";
+      panel.style.pointerEvents = "auto";
 
       const header = document.createElement("div");
       header.textContent = "Alertas do site";
@@ -448,6 +449,7 @@
         const item = document.createElement("a");
         item.href = String(alert.href || notifyHref);
         item.setAttribute("role", "menuitem");
+        item.style.pointerEvents = "auto";
         const title = String(alert.title || "Notificacao");
         const detail = String(alert.text || "Abrir central de avisos");
         item.innerHTML = `
@@ -463,6 +465,13 @@
           const small = item.querySelector("small");
           if (small) small.style.color = "transparent";
         }
+        item.addEventListener("click", (event) => {
+          if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+          if (event.cancelable) event.preventDefault();
+          event.stopPropagation();
+          closeAllDropdowns();
+          window.location.assign(item.href);
+        });
         panel.append(item);
       });
 
@@ -504,6 +513,7 @@
     const button = dropdown.querySelector(".hero-menu-cat-btn");
     const panel = dropdown.querySelector(".hero-menu-cat-panel");
     if (!button || !panel) return;
+    const isNotifyDropdown = dropdown.classList.contains("hero-notify-dropdown");
 
     closeDropdown(dropdown);
 
@@ -515,8 +525,10 @@
       if (!isOpen) openDropdown(dropdown);
     });
 
-    dropdown.addEventListener("mouseenter", () => openDropdown(dropdown));
-    dropdown.addEventListener("mouseleave", () => closeDropdown(dropdown));
+    if (!isNotifyDropdown) {
+      dropdown.addEventListener("mouseenter", () => openDropdown(dropdown));
+      dropdown.addEventListener("mouseleave", () => closeDropdown(dropdown));
+    }
     dropdown.addEventListener("focusin", () => openDropdown(dropdown));
     dropdown.addEventListener("focusout", (event) => {
       if (!dropdown.contains(event.relatedTarget)) closeDropdown(dropdown);
