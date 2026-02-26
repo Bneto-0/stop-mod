@@ -88,6 +88,8 @@
   gap: 0.7rem;
   margin-left: auto;
   flex-wrap: wrap;
+  position: relative;
+  z-index: 20;
 }
 
 .search-top-wrap {
@@ -117,6 +119,9 @@
   text-decoration: none;
   font-size: clamp(0.88rem, 1.1vw, 1.05rem);
   font-weight: 800;
+  position: relative;
+  z-index: 21;
+  pointer-events: auto;
 }
 
 .profile-top svg {
@@ -158,6 +163,10 @@
   justify-content: center;
   color: #fff6ef;
   text-decoration: none;
+  position: relative;
+  z-index: 22;
+  pointer-events: auto;
+  cursor: pointer;
 }
 
 .notify-top svg {
@@ -316,6 +325,9 @@
 .hero .cart-link,
 .hero .notify-link {
   padding: 0;
+  position: relative;
+  z-index: 21;
+  pointer-events: auto;
 }
 
 .hero .cart-link:hover,

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=14" />
+  <link rel="stylesheet" href="style.css?v=15" />
   <style>
     .container { width: min(1320px, 96%); }
     .hero {
@@ -96,6 +96,8 @@
       gap: 0.7rem;
       margin-left: auto;
       flex-wrap: wrap;
+      position: relative;
+      z-index: 20;
     }
 
     .search-top-wrap {
@@ -126,6 +128,9 @@
       font-size: clamp(0.92rem, 1.1vw, 1.18rem);
       font-weight: 800;
       min-width: 0;
+      position: relative;
+      z-index: 21;
+      pointer-events: auto;
     }
 
     .profile-top span {
@@ -167,6 +172,10 @@
       justify-content: center;
       color: #fff6ef;
       text-decoration: none;
+      position: relative;
+      z-index: 22;
+      pointer-events: auto;
+      cursor: pointer;
     }
 
     .notify-top svg {
@@ -184,6 +193,9 @@
       font-size: clamp(0.95rem, 1.35vw, 1.45rem);
       font-weight: 800;
       gap: 0.35rem;
+      position: relative;
+      z-index: 21;
+      pointer-events: auto;
     }
 
     .menu-top .cart-icon {

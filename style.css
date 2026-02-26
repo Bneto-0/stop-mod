@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --bg: #f7f3ee;
   --card: #ffffff;
   --text: #1f1f1f;
@@ -123,6 +123,8 @@ body {
   gap: 0.7rem;
   margin-left: auto;
   flex-wrap: wrap;
+  position: relative;
+  z-index: 20;
 }
 
 .menu-location {
@@ -171,6 +173,9 @@ body {
   font-size: clamp(0.92rem, 1.1vw, 1.14rem);
   font-weight: 800;
   min-width: 0;
+  position: relative;
+  z-index: 21;
+  pointer-events: auto;
 }
 
 .profile-top span {
@@ -223,6 +228,10 @@ body {
   justify-content: center;
   color: #fff6ef;
   text-decoration: none;
+  position: relative;
+  z-index: 22;
+  pointer-events: auto;
+  cursor: pointer;
 }
 
 .notify-top svg {
@@ -296,6 +305,9 @@ body {
 .menu-top .cart-link {
   gap: 0.35rem;
   font-size: clamp(0.95rem, 1.35vw, 1.45rem);
+  position: relative;
+  z-index: 21;
+  pointer-events: auto;
 }
 
 .menu-top .cart-icon {
