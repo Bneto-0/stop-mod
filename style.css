@@ -604,6 +604,120 @@ body {
   font-size: 0.82rem;
 }
 
+.products-extra {
+  margin-top: 0.95rem;
+}
+
+.hero-banner.hero-ad-secondary {
+  height: clamp(170px, 22vw, 320px);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.hero-ad.hero-ad-secondary::after {
+  display: none;
+}
+
+.product-slides-shell {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.55rem;
+  align-items: stretch;
+}
+
+.product-slides-viewport {
+  overflow: hidden;
+}
+
+.product-slides-track {
+  display: grid;
+  gap: 0.58rem;
+  grid-template-columns: repeat(var(--slides-count, 4), minmax(0, 1fr));
+}
+
+.slide-product-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.slide-product-card img {
+  width: 100%;
+  height: 136px;
+  object-fit: cover;
+  display: block;
+}
+
+.slide-product-card .product-info {
+  padding: 0.56rem;
+}
+
+.slide-product-card .product-info h4 {
+  font-size: 0.92rem;
+  line-height: 1.25;
+  margin-bottom: 0.15rem;
+  min-height: 2.2em;
+}
+
+.slide-product-card .product-info .meta {
+  font-size: 0.76rem;
+  color: var(--muted);
+  line-height: 1.25;
+}
+
+.slide-product-card .price {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0.24rem 0;
+}
+
+.slide-product-card .btn {
+  width: 100%;
+  margin-top: 0;
+  padding: 0.42rem 0.44rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+}
+
+.slide-nav {
+  width: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.slide-nav[disabled] {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.slide-dots {
+  margin-top: 0.55rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.slide-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  border: 1px solid #00000028;
+  background: #d8cec4;
+  cursor: pointer;
+}
+
+.slide-dot.active {
+  width: 20px;
+  background: var(--accent);
+}
+
 footer {
   text-align: center;
   color: var(--muted);
@@ -695,10 +809,22 @@ footer {
   .product-card img {
     height: 116px;
   }
+
+  .slide-product-card img {
+    height: 122px;
+  }
 }
 
 @media (max-width: 520px) {
   #product-grid.grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .product-slides-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .slide-nav {
+    height: 34px;
   }
 }

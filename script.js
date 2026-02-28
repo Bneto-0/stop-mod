@@ -96,9 +96,16 @@ const profileTopPhoto = document.getElementById("profile-top-photo");
 const adMainImage = document.getElementById("ad-main-image");
 const adMainLink = document.getElementById("ad-main-link");
 const adMainDots = document.getElementById("ad-main-dots");
+const adSeqImage = document.getElementById("ad-seq-image");
+const adSeqLink = document.getElementById("ad-seq-link");
+const adSeqDots = document.getElementById("ad-seq-dots");
 const heroCategoryDropdown = document.getElementById("hero-category-dropdown");
 const heroCategoryBtn = document.getElementById("hero-category-btn");
 const heroCategoryPanel = document.getElementById("hero-category-panel");
+const productSlidesTrack = document.getElementById("product-slides-track");
+const productSlidesPrev = document.getElementById("product-slides-prev");
+const productSlidesNext = document.getElementById("product-slides-next");
+const productSlidesDots = document.getElementById("product-slides-dots");
 const openAddressModal = document.getElementById("open-address-modal");
 const addressModal = document.getElementById("address-modal");
 const addressCloseEls = document.querySelectorAll("[data-address-close=\"1\"]");
@@ -128,6 +135,10 @@ let addressEditMode = false;
 let autoCepLookupTimer = null;
 let lastAutoLookupCep = "";
 let selectedCategory = "";
+let productSlidesPage = 0;
+let productSlidesTotalPages = 1;
+let productSlidesPerPage = 1;
+let productSlidesAutoTimer = null;
 
 function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -1471,6 +1482,112 @@ function startAdSlider(frameEl, imgEl, dotsEl, images, targetHref) {
   startAuto();
 }
 
+function getProductSlidesPerPage() {
+  const width = window.innerWidth || document.documentElement.clientWidth || 1280;
+  if (width <= 520) return 1;
+  if (width <= 760) return 2;
+  if (width <= 1120) return 3;
+  if (width <= 1420) return 4;
+  return 5;
+}
+
+function stopProductSlidesAuto() {
+  if (!productSlidesAutoTimer) return;
+  clearInterval(productSlidesAutoTimer);
+  productSlidesAutoTimer = null;
+}
+
+function startProductSlidesAuto() {
+  stopProductSlidesAuto();
+  if (!productSlidesTrack || productSlidesTotalPages <= 1) return;
+  productSlidesAutoTimer = setInterval(() => {
+    productSlidesPage = (productSlidesPage + 1) % productSlidesTotalPages;
+    renderProductSlides();
+  }, 4200);
+}
+
+function renderProductSlides() {
+  if (!productSlidesTrack) return;
+
+  productSlidesPerPage = getProductSlidesPerPage();
+  productSlidesTotalPages = Math.max(1, Math.ceil(products.length / productSlidesPerPage));
+  productSlidesPage = Math.max(0, Math.min(productSlidesPage, productSlidesTotalPages - 1));
+
+  const startIndex = productSlidesPage * productSlidesPerPage;
+  const items = products.slice(startIndex, startIndex + productSlidesPerPage);
+  productSlidesTrack.style.setProperty("--slides-count", String(Math.max(1, items.length)));
+
+  productSlidesTrack.innerHTML = items
+    .map(
+      (product) => `
+      <article class="slide-product-card">
+        <img src="${product.image}" alt="${product.name}" loading="lazy" />
+        <div class="product-info">
+          <h4>${product.name}</h4>
+          <p class="meta">${product.category} | Tam: ${product.size}</p>
+          <p class="price">R$ ${formatBRL(product.price)}</p>
+          <button class="btn" data-product-slide="${product.id}">Adicionar</button>
+        </div>
+      </article>
+    `
+    )
+    .join("");
+
+  productSlidesTrack.querySelectorAll("button[data-product-slide]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = Number(btn.getAttribute("data-product-slide"));
+      addToCart(id);
+    });
+  });
+
+  if (productSlidesPrev) productSlidesPrev.disabled = productSlidesPage <= 0;
+  if (productSlidesNext) productSlidesNext.disabled = productSlidesPage >= productSlidesTotalPages - 1;
+
+  if (productSlidesDots) {
+    productSlidesDots.innerHTML = Array.from({ length: productSlidesTotalPages }, (_, index) => {
+      const active = index === productSlidesPage ? " active" : "";
+      return `<button class="slide-dot${active}" data-slide-dot="${index}" type="button" aria-label="Ir para slide ${index + 1}"></button>`;
+    }).join("");
+
+    productSlidesDots.querySelectorAll("button[data-slide-dot]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const index = Number(btn.getAttribute("data-slide-dot"));
+        if (!Number.isInteger(index)) return;
+        productSlidesPage = Math.max(0, Math.min(productSlidesTotalPages - 1, index));
+        renderProductSlides();
+      });
+    });
+  }
+
+  startProductSlidesAuto();
+}
+
+function initProductSlides() {
+  if (!productSlidesTrack) return;
+
+  productSlidesPrev?.addEventListener("click", () => {
+    if (productSlidesPage <= 0) return;
+    productSlidesPage -= 1;
+    renderProductSlides();
+  });
+
+  productSlidesNext?.addEventListener("click", () => {
+    if (productSlidesPage >= productSlidesTotalPages - 1) return;
+    productSlidesPage += 1;
+    renderProductSlides();
+  });
+
+  const shell = productSlidesTrack.closest(".product-slides-shell");
+  shell?.addEventListener("mouseenter", stopProductSlidesAuto);
+  shell?.addEventListener("mouseleave", startProductSlidesAuto);
+
+  window.addEventListener("resize", () => {
+    renderProductSlides();
+  });
+
+  renderProductSlides();
+}
+
 function renderProducts() {
   if (!productGrid) return;
   const filtered = getFilteredProducts();
@@ -1541,7 +1658,16 @@ initAddressDirectory();
 renderMenuLocation();
 renderTopProfile();
 initCategoryDropdown();
-startAdSlider(adMainLink, adMainImage, adMainDots, loadHomeAds(), loadHomeTarget());
+const homeAds = loadHomeAds();
+startAdSlider(adMainLink, adMainImage, adMainDots, homeAds, loadHomeTarget());
+const sequenceAds = uniqueUrls([
+  ...homeAds.slice(1),
+  ...DEFAULT_LEFT_ADS,
+  ...DEFAULT_RIGHT_ADS,
+  ...homeAds.slice(0, 1)
+]).slice(0, MAX_AD_SLIDES);
+startAdSlider(adSeqLink, adSeqImage, adSeqDots, sequenceAds, loadHomeTarget());
+initProductSlides();
 syncSearchQueryInUrl();
 
 window.addEventListener("storage", (event) => {
