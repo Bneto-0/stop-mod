@@ -1,0 +1,26 @@
+{
+  "name": "Stop mod",
+  "short_name": "Stop mod",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#2f2824",
+  "theme_color": "#2f2824",
+  "icons": [
+    {
+      "src": "/assets/brand/favicon-96.png?v=6",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/brand/favicon-180.png?v=6",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/brand/stopmod-banner-512.png?v=6",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
