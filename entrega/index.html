@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../style.css?v=15" />
-  <link rel="stylesheet" href="style.css?v=5" />
+  <link rel="stylesheet" href="style.css?v=6" />
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6485539380158983" crossorigin="anonymous"></script>
 </head>
 <body id="top">
@@ -88,10 +88,13 @@
   </header>
 
   <main class="container delivery-main">
-    <h1>Entrega</h1>
-    <p class="muted">Escolha para onde enviar. O frete aparece calculado aqui.</p>
+    <section class="delivery-intro">
+      <p class="eyebrow">Endereco de entrega</p>
+      <h1>Entrega</h1>
+      <p class="muted">Escolha para onde enviar. O frete aparece calculado aqui.</p>
+    </section>
 
-    <section class="card">
+    <section class="card card-current">
       <h2>Endereco atual</h2>
       <div class="current">
         <span class="pin" aria-hidden="true">
@@ -106,13 +109,13 @@
       </div>
     </section>
 
-    <section class="card">
+    <section class="card card-list">
       <h2>Meus enderecos</h2>
       <div id="addr-list" class="addr-list"></div>
       <p id="addr-empty" class="muted" hidden>Voce ainda nao salvou enderecos.</p>
     </section>
 
-    <section class="card">
+    <section class="card card-form">
       <h2>Adicionar endereco</h2>
       <form id="addr-form" class="form">
         <label>
