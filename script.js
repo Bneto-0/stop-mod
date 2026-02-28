@@ -1508,67 +1508,12 @@ function stopProductSlidesAuto() {
   productSlidesAutoTimer = null;
 }
 
-function getProductSlidesMaxScroll() {
-  if (!productSlidesViewport) return 0;
-  return Math.max(0, productSlidesViewport.scrollWidth - productSlidesViewport.clientWidth);
-}
-
-function renderProductSlideDots() {
-  if (!productSlidesDots) return;
-
-  productSlidesDots.innerHTML = Array.from({ length: productSlidesTotalPages }, (_, index) => {
-    const active = index === productSlidesPage ? " active" : "";
-    return `<button class="slide-dot${active}" data-slide-dot="${index}" type="button" aria-label="Ir para slide ${index + 1}"></button>`;
-  }).join("");
-
-  productSlidesDots.querySelectorAll("button[data-slide-dot]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const index = Number(btn.getAttribute("data-slide-dot"));
-      if (!Number.isInteger(index)) return;
-      scrollProductSlidesToPage(index, true);
-    });
-  });
-}
-
-function updateProductSlideControls() {
-  if (productSlidesPrev) productSlidesPrev.disabled = productSlidesPage <= 0;
-  if (productSlidesNext) productSlidesNext.disabled = productSlidesPage >= productSlidesTotalPages - 1;
-  renderProductSlideDots();
-}
-
-function scrollProductSlidesToPage(page, smooth) {
-  if (!productSlidesViewport) return;
-  const maxScroll = getProductSlidesMaxScroll();
-  const bounded = Math.max(0, Math.min(productSlidesTotalPages - 1, Number(page) || 0));
-  productSlidesPage = bounded;
-  const left = Math.min(maxScroll, bounded * productSlidesStep);
-  productSlidesViewport.scrollTo({ left, behavior: smooth ? "smooth" : "auto" });
-  updateProductSlideControls();
-}
-
-function refreshProductSlidesMetrics() {
-  if (!productSlidesViewport) return;
-  productSlidesStep = Math.max(1, productSlidesViewport.clientWidth);
-  const maxScroll = getProductSlidesMaxScroll();
-  productSlidesTotalPages = maxScroll <= 0 ? 1 : Math.ceil(maxScroll / productSlidesStep) + 1;
-  const pageByScroll = Math.round(productSlidesViewport.scrollLeft / productSlidesStep);
-  productSlidesPage = Math.max(0, Math.min(productSlidesTotalPages - 1, pageByScroll));
-  updateProductSlideControls();
-}
-
-function startProductSlidesAuto() {
-  stopProductSlidesAuto();
-  if (!productSlidesViewport || productSlidesTotalPages <= 1) return;
-  productSlidesAutoTimer = setInterval(() => {
-    const nextPage = productSlidesPage >= productSlidesTotalPages - 1 ? 0 : productSlidesPage + 1;
-    scrollProductSlidesToPage(nextPage, true);
-  }, 4200);
-}
-
 function renderProductSlides() {
-  if (!productSlidesTrack || !productSlidesViewport) return;
+  if (!productSlidesTrack) return;
 
-  productSlidesTrack.innerHTML = products
+  const slideProducts = products.slice(0, 21);
+
+  productSlidesTrack.innerHTML = slideProducts
     .map(
       (product) => `
       <article class="slide-product-card">
@@ -1591,51 +1536,12 @@ function renderProductSlides() {
     });
   });
 
-  refreshProductSlidesMetrics();
-  scrollProductSlidesToPage(productSlidesPage, false);
-  startProductSlidesAuto();
+  if (productSlidesPrev) productSlidesPrev.hidden = true;
+  if (productSlidesNext) productSlidesNext.hidden = true;
+  if (productSlidesDots) productSlidesDots.hidden = true;
 }
 
 function initProductSlides() {
-  if (!productSlidesTrack || !productSlidesViewport) return;
-
-  productSlidesPrev?.addEventListener("click", () => {
-    scrollProductSlidesToPage(productSlidesPage - 1, true);
-  });
-
-  productSlidesNext?.addEventListener("click", () => {
-    scrollProductSlidesToPage(productSlidesPage + 1, true);
-  });
-
-  productSlidesViewport.addEventListener("scroll", () => {
-    const pageByScroll = Math.round(productSlidesViewport.scrollLeft / productSlidesStep);
-    const bounded = Math.max(0, Math.min(productSlidesTotalPages - 1, pageByScroll));
-    if (bounded === productSlidesPage) return;
-    productSlidesPage = bounded;
-    updateProductSlideControls();
-  });
-
-  productSlidesViewport.addEventListener(
-    "wheel",
-    (event) => {
-      if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
-      event.preventDefault();
-      productSlidesViewport.scrollLeft += event.deltaY;
-    },
-    { passive: false }
-  );
-
-  const shell = productSlidesTrack.closest(".product-slides-shell");
-  shell?.addEventListener("mouseenter", stopProductSlidesAuto);
-  shell?.addEventListener("mouseleave", startProductSlidesAuto);
-  productSlidesViewport.addEventListener("pointerdown", stopProductSlidesAuto);
-  productSlidesViewport.addEventListener("pointerup", startProductSlidesAuto);
-
-  window.addEventListener("resize", () => {
-    refreshProductSlidesMetrics();
-    scrollProductSlidesToPage(productSlidesPage, false);
-  });
-
   renderProductSlides();
 }
 
