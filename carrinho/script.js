@@ -8,6 +8,7 @@ const ORDERS_KEY = "stopmod_orders";
 const NOTES_KEY = "stopmod_notifications";
 const PROFILE_KEY = "stopmod_profile";
 const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
+const ADDRESS_CONFIRM_FINGERPRINT_KEY = "stopmod_address_confirmed_fp";
 const AUTH_TIMEOUT_MS = 2 * 60 * 60 * 1000;
 const AUTH_TOUCH_MIN_GAP_MS = 15 * 1000;
 const PAGBANK_API_BASE_KEY = "stopmod_pagbank_api_base";
@@ -63,6 +64,13 @@ const paymentSelected = document.getElementById("payment-selected");
 const checkoutModal = document.getElementById("checkout-modal");
 const paymentForm = document.getElementById("payment-form");
 const confirmPaymentBtn = document.getElementById("confirm-payment");
+const checkoutAddressLine = document.getElementById("checkout-address-line");
+const checkoutAddressShip = document.getElementById("checkout-address-ship");
+const checkoutFeedback = document.getElementById("checkout-feedback");
+const confirmAddress = document.getElementById("confirm-address");
+const addressInlineText = document.getElementById("address-inline-text");
+const addressInlineState = document.getElementById("address-inline-state");
+const addressInlineConfirm = document.getElementById("address-inline-confirm");
 const confirmPaymentDefaultLabel = String(confirmPaymentBtn?.textContent || "Ir para pagamento");
 
 let lastAuthTouchAt = 0;
@@ -274,6 +282,92 @@ function shipSummaryText(to) {
   const number = String(to?.number || "").trim();
   const streetLine = street ? [street, number].filter(Boolean).join(", ") : "";
   return streetLine || "Rua nao informada";
+}
+
+function addressLineText(to) {
+  const street = String(to?.street || "").trim();
+  const number = String(to?.number || "").trim();
+  const city = String(to?.city || "").trim();
+  const cep = String(to?.cep || "").trim();
+
+  const lineA = street ? [street, number].filter(Boolean).join(", ") : "";
+  const lineB = [city, cep].filter(Boolean).join(" ");
+
+  if (lineA && lineB) return `${lineA} - ${lineB}`;
+  if (lineA) return lineA;
+  if (lineB) return lineB;
+  return "Rua nao informada";
+}
+
+function shipValueText(value) {
+  if (value === null) return "Frete: informe o CEP";
+  if (value === 0) return "Frete: Gratis";
+  return `Frete: R$ ${formatBRL(value)}`;
+}
+
+function addressFingerprint(to) {
+  const street = normalizeText(to?.street || "");
+  const number = normalizeText(to?.number || "");
+  const city = normalizeText(to?.city || "");
+  const cep = String(to?.cep || "").replace(/\D/g, "");
+  return [street, number, city, cep].join("|");
+}
+
+function isAddressConfirmed(to) {
+  const fp = addressFingerprint(to);
+  if (!fp || !isCepValid(to?.cep)) return false;
+  return String(localStorage.getItem(ADDRESS_CONFIRM_FINGERPRINT_KEY) || "") === fp;
+}
+
+function setAddressConfirmed(to, confirmed) {
+  if (!confirmed) {
+    localStorage.removeItem(ADDRESS_CONFIRM_FINGERPRINT_KEY);
+    return;
+  }
+  const fp = addressFingerprint(to);
+  if (!fp || !isCepValid(to?.cep)) return;
+  localStorage.setItem(ADDRESS_CONFIRM_FINGERPRINT_KEY, fp);
+}
+
+function clearCheckoutFeedback() {
+  if (!checkoutFeedback) return;
+  checkoutFeedback.textContent = "";
+  checkoutFeedback.classList.remove("error");
+}
+
+function setCheckoutFeedback(text, isError) {
+  if (!checkoutFeedback) return;
+  checkoutFeedback.textContent = String(text || "");
+  checkoutFeedback.classList.toggle("error", !!isError);
+}
+
+function renderAddressConfirmation() {
+  const to = loadShipTo();
+  const ids = loadCartIds();
+  const subtotal = groupedCart(ids).reduce((sum, item) => sum + item.price * item.qty, 0);
+  const shipping = calcShipping(subtotal, ids.length, to.cep);
+  const confirmed = isAddressConfirmed(to);
+
+  if (checkoutAddressLine) checkoutAddressLine.textContent = addressLineText(to);
+  if (checkoutAddressShip) {
+    checkoutAddressShip.textContent = shipValueText(shipping);
+    checkoutAddressShip.classList.toggle("free", shipping === 0);
+  }
+
+  if (addressInlineText) {
+    addressInlineText.textContent = `Endereco padrao: ${addressLineText(to)}`;
+  }
+  if (addressInlineState) {
+    addressInlineState.textContent = confirmed ? "Endereco confirmado" : "Aguardando confirmacao";
+    addressInlineState.classList.toggle("ok", confirmed);
+  }
+  if (addressInlineConfirm) {
+    addressInlineConfirm.textContent = confirmed ? "Confirmado" : "Confirmar endereco";
+    addressInlineConfirm.classList.toggle("confirmed", confirmed);
+  }
+  if (confirmAddress) {
+    confirmAddress.checked = confirmed;
+  }
 }
 
 function normalizeCep(value) {
@@ -566,11 +660,14 @@ function updatePaymentUI(method) {
 
 function openModal() {
   if (!checkoutModal) return;
+  renderAddressConfirmation();
+  clearCheckoutFeedback();
   checkoutModal.hidden = false;
 }
 
 function closeModal() {
   if (!checkoutModal) return;
+  clearCheckoutFeedback();
   checkoutModal.hidden = true;
 }
 
@@ -596,6 +693,7 @@ function renderCart() {
   setCartExtraSpace(ids.length);
   const shipTo = loadShipTo();
   if (shipSummary) shipSummary.textContent = shipSummaryText(shipTo);
+  renderAddressConfirmation();
 
   if (!ids.length) {
     cartItems.innerHTML = "<li class=\"empty\">Seu carrinho esta vazio.</li>";
@@ -731,6 +829,7 @@ checkoutBtn.addEventListener("click", () => {
     return;
   }
   feedback.textContent = "";
+  clearCheckoutFeedback();
   syncPaymentRadios();
   openModal();
 });
@@ -746,6 +845,27 @@ checkoutModal?.querySelectorAll("[data-close]").forEach((el) => {
   el.addEventListener("click", closeModal);
 });
 
+addressInlineConfirm?.addEventListener("click", () => {
+  const to = loadShipTo();
+  if (!isCepValid(to?.cep)) {
+    feedback.textContent = "Selecione o endereco de entrega antes de confirmar.";
+    return;
+  }
+  setAddressConfirmed(to, true);
+  feedback.textContent = "Endereco confirmado para finalizar a compra.";
+  renderAddressConfirmation();
+});
+
+confirmAddress?.addEventListener("change", () => {
+  const to = loadShipTo();
+  if (confirmAddress.checked && isCepValid(to?.cep)) {
+    setAddressConfirmed(to, true);
+  } else if (!confirmAddress.checked) {
+    setAddressConfirmed(to, false);
+  }
+  renderAddressConfirmation();
+});
+
 paymentForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
   if (!hasActiveAuthSession()) {
@@ -758,13 +878,30 @@ paymentForm?.addEventListener("submit", async (e) => {
   touchAuthSession(true);
   const method = selectedPaymentFromModal();
   if (!method) {
-    feedback.textContent = "Escolha a forma de pagamento para continuar.";
+    setCheckoutFeedback("Escolha a forma de pagamento para continuar.", true);
+    feedback.textContent = "";
     return;
   }
 
+  const shipTo = loadShipTo();
+  const confirmedInModal = !!confirmAddress?.checked;
+  if (!isCepValid(shipTo?.cep)) {
+    setCheckoutFeedback("Selecione um endereco valido para entrega.", true);
+    feedback.textContent = "";
+    return;
+  }
+  if (!confirmedInModal && !isAddressConfirmed(shipTo)) {
+    setCheckoutFeedback("Confirme o endereco ou altere antes de continuar.", true);
+    feedback.textContent = "";
+    return;
+  }
+  setAddressConfirmed(shipTo, true);
+  clearCheckoutFeedback();
+
   const payload = buildPagBankCheckoutPayload(method);
   if (!payload) {
-    feedback.textContent = "Seu carrinho esta vazio.";
+    setCheckoutFeedback("Seu carrinho esta vazio.", true);
+    feedback.textContent = "";
     return;
   }
 
@@ -819,4 +956,7 @@ renderTopProfile();
 
 window.addEventListener("storage", (event) => {
   if (event.key === PROFILE_KEY) renderTopProfile();
+  if (event.key === SHIP_KEY || event.key === LEGACY_SHIP_KEY || event.key === CART_KEY) {
+    renderCart();
+  }
 });

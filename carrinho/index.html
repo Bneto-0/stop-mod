@@ -89,7 +89,19 @@
   <main id="cart" class="cart-page container">
     <div class="cart-shell">
       <header class="cart-titlebar">
-        <a class="back" href="../index.html#produtos"><- Voltar para loja</a>
+        <div class="cart-title-left">
+          <a class="back" href="../index.html#produtos"><- Voltar para loja</a>
+          <div class="address-inline-box" aria-label="Endereco para entrega">
+            <div class="address-inline-main">
+              <strong id="address-inline-text">Endereco padrao: Rua nao informada</strong>
+              <span id="address-inline-state" class="address-inline-state">Aguardando confirmacao</span>
+            </div>
+            <div class="address-inline-actions">
+              <a class="address-inline-link" href="../entrega/">Alterar endereco</a>
+              <button id="address-inline-confirm" class="address-inline-confirm" type="button">Confirmar endereco</button>
+            </div>
+          </div>
+        </div>
         <h1 class="sr-only">Carrinho</h1>
         <div class="cart-title-logo" aria-hidden="true">Stop <span>mod</span></div>
       </header>
@@ -148,10 +160,24 @@
     <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <h2 id="modal-title">Escolha a forma de pagamento</h2>
       <form id="payment-form" class="modal-form">
+        <section class="checkout-address-box" aria-label="Endereco para entrega">
+          <div class="checkout-address-head">
+            <strong>Endereco de entrega</strong>
+            <a id="edit-address-link" class="edit-address-link" href="../entrega/">Alterar endereco</a>
+          </div>
+          <p id="checkout-address-line" class="checkout-address-line">Nenhum endereco selecionado.</p>
+          <p id="checkout-address-ship" class="checkout-address-ship">Frete: --</p>
+          <label class="confirm-address-check">
+            <input id="confirm-address" type="checkbox" />
+            <span>Confirmo que o endereco esta correto.</span>
+          </label>
+        </section>
+
         <label class="pay-option"><input type="radio" name="pay" value="pix" /> Pix</label>
         <label class="pay-option"><input type="radio" name="pay" value="credito" /> Cartao de credito</label>
         <label class="pay-option"><input type="radio" name="pay" value="debito" /> Cartao de debito</label>
         <label class="pay-option"><input type="radio" name="pay" value="boleto" /> Boleto</label>
+        <p id="checkout-feedback" class="feedback" aria-live="polite"></p>
 
         <div class="modal-actions">
           <button id="confirm-payment" class="btn primary" type="submit">Ir para pagamento</button>
@@ -169,7 +195,7 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=22"></script>
+  <script src="script.js?v=23"></script>
   <script src="../assets/menu-dropdown.js?v=18"></script>
 </body>
 </html>

@@ -15,6 +15,8 @@ const port = Number(process.env.PORT || 8787);
 
 const pagBankEnv = String(process.env.PAGBANK_ENV || "sandbox").trim().toLowerCase() === "production" ? "production" : "sandbox";
 const pagBankToken = String(process.env.PAGBANK_TOKEN || "").trim();
+const pagBankEmail = String(process.env.PAGBANK_EMAIL || "").trim();
+const hasValidPagBankToken = isRealTokenValue(pagBankToken);
 const pagBankApiBase = pagBankEnv === "production" ? "https://api.pagseguro.com" : "https://sandbox.api.pagseguro.com";
 
 const frontendOrigins = parseCsvList(
@@ -50,15 +52,16 @@ app.get("/api/health", (_req, res) => {
   res.json({
     ok: true,
     service: "stopmod-pagbank-backend",
-    environment: pagBankEnv
+    environment: pagBankEnv,
+    pagbankTokenConfigured: hasValidPagBankToken
   });
 });
 
 app.post("/api/pagbank/checkout", async (req, res) => {
-  if (!pagBankToken) {
+  if (!hasValidPagBankToken) {
     return res.status(500).json({
       error: "missing_pagbank_token",
-      message: "Configure PAGBANK_TOKEN no backend."
+      message: "Configure PAGBANK_TOKEN com o token real do PagBank (nao use SEU_TOKEN_AQUI)."
     });
   }
 
@@ -103,21 +106,31 @@ app.post("/api/pagbank/checkout", async (req, res) => {
   }
 
   try {
-    const response = await fetch(`${pagBankApiBase}/checkouts`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${pagBankToken}`,
-        "Content-Type": "application/json",
-        Accept: "application/json"
-      },
-      body: JSON.stringify(payload)
-    });
+    const authCandidates = buildAuthorizationCandidates(pagBankToken, pagBankEmail);
+    let response = null;
+    let text = "";
+    let data = null;
 
-    const text = await response.text();
-    const data = safeParseJson(text);
+    for (const authHeader of authCandidates) {
+      response = await fetch(`${pagBankApiBase}/checkouts`, {
+        method: "POST",
+        headers: {
+          Authorization: authHeader,
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
 
-    if (!response.ok) {
-      return res.status(response.status).json({
+      text = await response.text();
+      data = safeParseJson(text);
+
+      if (response.ok) break;
+      if (!isInvalidAuthorizationError(response.status, data, text)) break;
+    }
+
+    if (!response || !response.ok) {
+      return res.status(response?.status || 500).json({
         error: "pagbank_checkout_error",
         message: extractErrorMessage(data, text),
         details: data
@@ -195,6 +208,14 @@ function parseCsvList(value) {
   );
 }
 
+function isRealTokenValue(value) {
+  const token = String(value || "").trim();
+  if (!token) return false;
+  if (/^seu[_\s-]*token/i.test(token)) return false;
+  if (token.toLowerCase().includes("token_aqui")) return false;
+  return token.length >= 24;
+}
+
 function safeParseJson(value) {
   try {
     return JSON.parse(String(value || ""));
@@ -207,11 +228,50 @@ function extractErrorMessage(data, fallback) {
   if (data && typeof data === "object") {
     if (typeof data.error_message === "string" && data.error_message.trim()) return data.error_message.trim();
     if (typeof data.message === "string" && data.message.trim()) return data.message.trim();
-    if (Array.isArray(data.error_messages) && data.error_messages.length) return String(data.error_messages[0]);
+    if (Array.isArray(data.error_messages) && data.error_messages.length) {
+      const first = data.error_messages[0];
+      if (typeof first === "string" && first.trim()) return first.trim();
+      if (first && typeof first === "object") {
+        if (typeof first.description === "string" && first.description.trim()) return first.description.trim();
+        if (typeof first.error === "string" && first.error.trim()) return first.error.trim();
+      }
+    }
   }
   const text = String(fallback || "").trim();
   if (!text) return "Erro desconhecido ao criar checkout.";
   return text.slice(0, 400);
+}
+
+function buildAuthorizationCandidates(token, email) {
+  const tokenValue = String(token || "").trim();
+  const emailValue = String(email || "").trim();
+  if (!tokenValue) return [];
+
+  const out = [];
+  if (/^Bearer\s+/i.test(tokenValue)) out.push(tokenValue);
+  else out.push(`Bearer ${tokenValue}`);
+
+  if (emailValue && emailValue.includes("@")) {
+    const basic = Buffer.from(`${emailValue}:${tokenValue}`).toString("base64");
+    out.push(`Basic ${basic}`);
+  }
+
+  return Array.from(new Set(out));
+}
+
+function isInvalidAuthorizationError(status, data, rawText) {
+  if (Number(status) !== 401) return false;
+  const text = String(rawText || "").toLowerCase();
+  if (text.includes("invalid_authorization_header") || text.includes("invalid credential")) return true;
+  if (!data || typeof data !== "object") return false;
+  const list = Array.isArray(data.error_messages) ? data.error_messages : [];
+  return list.some((item) => {
+    if (!item || typeof item !== "object") return false;
+    return (
+      String(item.error || "").toLowerCase().includes("invalid_authorization_header") ||
+      String(item.description || "").toLowerCase().includes("invalid credential")
+    );
+  });
 }
 
 function findPayUrl(links) {
