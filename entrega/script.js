@@ -1,6 +1,7 @@
 const CART_KEY = "stopmod_cart";
 const SHIP_KEY = "stopmod_ship_to";
 const LIST_KEY = "stopmod_ship_list";
+const PROFILE_KEY = "stopmod_profile";
 
 const products = [
   { id: 1, price: 89.9 },
@@ -28,6 +29,22 @@ const cityInput = document.getElementById("addr-city");
 const cepInput = document.getElementById("addr-cep");
 const feedback = document.getElementById("feedback");
 
+const cartCount = document.getElementById("cart-count");
+const menuLocation = document.getElementById("menu-location");
+const profileTopLink = document.getElementById("profile-top-link");
+const profileTopName = document.getElementById("profile-top-name");
+const profileTopPhoto = document.getElementById("profile-top-photo");
+const searchInput = document.getElementById("search-input");
+
+function loadJson(key, fallback) {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(key) || "");
+    return parsed ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
@@ -43,11 +60,7 @@ function isCepValid(value) {
 }
 
 function loadCartIds() {
-  try {
-    return JSON.parse(localStorage.getItem(CART_KEY) || "[]");
-  } catch {
-    return [];
-  }
+  return loadJson(CART_KEY, []);
 }
 
 function cartSubtotal(ids) {
@@ -61,14 +74,8 @@ function calcShipping(subtotal, itemCount, cep) {
 }
 
 function loadShipTo() {
-  try {
-    const raw = localStorage.getItem(SHIP_KEY);
-    if (!raw) return { city: "", cep: "" };
-    const obj = JSON.parse(raw);
-    return { city: String(obj.city || "").trim(), cep: normalizeCep(String(obj.cep || "")) };
-  } catch {
-    return { city: "", cep: "" };
-  }
+  const obj = loadJson(SHIP_KEY, {});
+  return { city: String(obj.city || "").trim(), cep: normalizeCep(String(obj.cep || "")) };
 }
 
 function saveShipTo(to) {
@@ -76,15 +83,11 @@ function saveShipTo(to) {
 }
 
 function loadList() {
-  try {
-    const raw = JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
-    if (!Array.isArray(raw)) return [];
-    return raw
-      .map((x) => ({ city: String(x.city || "").trim(), cep: normalizeCep(String(x.cep || "")) }))
-      .filter((x) => x.city || x.cep);
-  } catch {
-    return [];
-  }
+  const raw = loadJson(LIST_KEY, []);
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((x) => ({ city: String(x.city || "").trim(), cep: normalizeCep(String(x.cep || "")) }))
+    .filter((x) => x.city || x.cep);
 }
 
 function saveList(list) {
@@ -112,7 +115,66 @@ function setFeedback(text, isError) {
   feedback.classList.toggle("error", !!isError);
 }
 
+function updateCartCount() {
+  if (!cartCount) return;
+  const ids = loadCartIds();
+  if (Array.isArray(ids) && ids.length) {
+    cartCount.textContent = String(ids.length);
+    cartCount.style.display = "inline-flex";
+  } else {
+    cartCount.textContent = "0";
+    cartCount.style.display = "none";
+  }
+}
+
+function renderMenuLocation() {
+  if (!menuLocation) return;
+  const to = loadJson(SHIP_KEY, {});
+  const street = String(to?.street || "").trim();
+  const number = String(to?.number || "").trim();
+  const city = String(to?.city || "").trim();
+  const cep = normalizeCep(String(to?.cep || ""));
+
+  if (street) {
+    menuLocation.textContent = [street, number].filter(Boolean).join(", ");
+    return;
+  }
+
+  if (city || cep) {
+    menuLocation.textContent = [city, cep].filter(Boolean).join(" ");
+    return;
+  }
+
+  menuLocation.textContent = "Rua nao informada";
+}
+
+function renderTopProfile() {
+  if (!profileTopLink || !profileTopName) return;
+  const profile = loadJson(PROFILE_KEY, null);
+  if (!profile || typeof profile !== "object") {
+    profileTopName.textContent = "Perfil";
+    profileTopLink.classList.remove("logged");
+    if (profileTopPhoto) {
+      profileTopPhoto.hidden = true;
+      profileTopPhoto.removeAttribute("src");
+      profileTopPhoto.alt = "";
+    }
+    return;
+  }
+
+  const displayName = String(profile.name || "").trim() || "Perfil";
+  const picture = String(profile.picture || "").trim();
+  profileTopName.textContent = displayName;
+  profileTopLink.classList.add("logged");
+  if (profileTopPhoto) {
+    profileTopPhoto.hidden = false;
+    profileTopPhoto.src = picture || "../assets/icons/user-solid.svg";
+    profileTopPhoto.alt = `Foto de ${displayName}`;
+  }
+}
+
 function renderCurrent() {
+  if (!currentDest || !currentShip) return;
   const ids = loadCartIds();
   const subtotal = cartSubtotal(ids);
   const to = loadShipTo();
@@ -123,6 +185,7 @@ function renderCurrent() {
 }
 
 function renderList() {
+  if (!emptyEl || !listEl) return;
   const ids = loadCartIds();
   const subtotal = cartSubtotal(ids);
   const list = loadList();
@@ -155,6 +218,7 @@ function renderList() {
       if (!selected) return;
       saveShipTo(selected);
       renderCurrent();
+      renderMenuLocation();
       window.location.href = "../carrinho/";
     });
   });
@@ -167,6 +231,7 @@ function renderList() {
       saveList(list2);
       renderList();
       renderCurrent();
+      renderMenuLocation();
     });
   });
 }
@@ -184,7 +249,7 @@ form?.addEventListener("submit", (e) => {
     return;
   }
   if (!isCepValid(cep)) {
-    setFeedback("Digite um CEP válido.", true);
+    setFeedback("Digite um CEP valido.", true);
     return;
   }
 
@@ -192,7 +257,6 @@ form?.addEventListener("submit", (e) => {
   saveShipTo(to);
 
   const list = loadList();
-  const key = `${to.city.toLowerCase()}|${to.cep.replace(/\D/g, "")}`;
   const uniq = [];
   const seen = new Set();
   [to, ...list].forEach((x) => {
@@ -205,9 +269,30 @@ form?.addEventListener("submit", (e) => {
 
   setFeedback("Endereco salvo e selecionado.", false);
   renderCurrent();
+  renderMenuLocation();
   renderList();
   window.location.href = "../carrinho/";
 });
 
+searchInput?.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter") return;
+  event.preventDefault();
+  const query = String(searchInput.value || "").trim();
+  const target = query ? `../index.html?q=${encodeURIComponent(query)}#produtos` : "../index.html#produtos";
+  window.location.href = target;
+});
+
+window.addEventListener("storage", (event) => {
+  if (event.key === CART_KEY) updateCartCount();
+  if (event.key === SHIP_KEY) {
+    renderCurrent();
+    renderMenuLocation();
+  }
+  if (event.key === PROFILE_KEY) renderTopProfile();
+});
+
 renderCurrent();
 renderList();
+updateCartCount();
+renderMenuLocation();
+renderTopProfile();

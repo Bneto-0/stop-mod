@@ -24,7 +24,7 @@ body {
   line-height: 1.5;
 }
 
-.container {
+.delivery-main {
   width: min(980px, 95%);
   margin: 0 auto;
 }
@@ -160,6 +160,10 @@ h1 {
   padding: 0.6rem 0.8rem;
   font-weight: 900;
   cursor: pointer;
+  margin-top: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn {
@@ -168,6 +172,7 @@ h1 {
 }
 
 .btn:hover {
+  transform: none;
   background: #af4124;
 }
 
