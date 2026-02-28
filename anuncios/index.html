@@ -14,6 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../style.css?v=15" />
   <style>
     :root {
       --bg: #f7f3ee;
@@ -36,48 +37,9 @@
       line-height: 1.45;
     }
 
-    .container {
+    .ads-main {
       width: min(1140px, 95%);
       margin: 0 auto;
-    }
-
-    .top {
-      background: linear-gradient(130deg, #2f2824 0%, #4d3f35 45%, #725745 100%);
-      color: #fff6ef;
-      border-bottom-left-radius: 26px;
-      border-bottom-right-radius: 26px;
-      padding: 1rem 0;
-    }
-
-    .bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-
-    .logo {
-      text-decoration: none;
-      color: inherit;
-      font-weight: 900;
-      font-size: 1.7rem;
-    }
-
-    .logo em {
-      color: #ffb080;
-      font-style: normal;
-    }
-
-    .back {
-      text-decoration: none;
-      color: #fff6ef;
-      font-weight: 700;
-    }
-
-    .back:hover { text-decoration: underline; }
-
-    main {
       padding: 1rem 0 2rem;
       display: grid;
       gap: 1rem;
@@ -132,6 +94,10 @@
       font-family: inherit;
       font-weight: 800;
       cursor: pointer;
+      margin-top: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .btn2 {
@@ -143,6 +109,14 @@
       font-family: inherit;
       font-weight: 800;
       cursor: pointer;
+      margin-top: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn:hover {
+      transform: none;
     }
 
     .preview {
@@ -169,15 +143,76 @@
   </style>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6485539380158983" crossorigin="anonymous"></script>
 </head>
-<body>
-  <header class="top">
-    <div class="container bar">
-      <a class="logo" href="../index.html#top">Stop <em>mod</em></a>
-      <a class="back" href="../index.html#top">Voltar para a loja</a>
+<body id="top">
+  <header class="hero">
+    <nav class="menu-top container">
+      <div class="menu-left">
+        <a class="brand-wordmark" href="../index.html#top" aria-label="Voltar para o inicio da loja">
+          Stop <em>mod</em>
+        </a>
+        <a class="menu-location" href="../entrega/" aria-label="Selecionar endereco de entrega">
+          <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+            <path d="M12 2c3.87 0 7 3.09 7 6.9 0 4.71-5.2 10.35-6.45 11.65a.8.8 0 0 1-1.1 0C10.2 19.25 5 13.61 5 8.9 5 5.09 8.13 2 12 2zm0 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"></path>
+          </svg>
+          <span class="menu-location-text">
+            <small>Enviar para</small>
+            <strong id="menu-location" class="ship-dest">Rua nao informada</strong>
+          </span>
+        </a>
+      </div>
+
+      <div class="menu-right">
+        <div class="search-top-wrap">
+          <label class="sr-only" for="search-input">Buscar produto</label>
+          <input id="search-input" type="search" placeholder="Pesquisar produto" />
+        </div>
+
+        <a id="profile-top-link" class="profile-top" href="../perfil/" aria-label="Perfil">
+          <img id="profile-top-photo" class="profile-top-photo" src="../assets/icons/user-solid.svg" alt="" hidden />
+          <svg class="profile-top-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"></path>
+          </svg>
+          <span id="profile-top-name">Perfil</span>
+        </a>
+
+        <a class="notify-top" href="../notificacoes/" aria-label="Notificacoes">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 1 0-14 0v5l-2 2v1h18v-1l-2-2z"></path>
+          </svg>
+        </a>
+
+        <a class="cart-link" href="../carrinho/" aria-label="Carrinho">
+          <svg class="cart-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 19a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm9 0a2 2 0 1 0 .001 4A2 2 0 0 0 17 19zM6.2 5l.6 3h11.6l-1.2 6H8.1L6.2 5zM3 2h2l2.2 11.2A2 2 0 0 0 9.2 15H18v-2H9.2l-.2-1h9.1A2 2 0 0 0 20 10.4l1-5A2 2 0 0 0 19 3H6.4l-.3-1.6A2 2 0 0 0 4.1 0H3v2z"></path>
+          </svg>
+          <span>Carrinho</span>
+          <strong id="cart-count">0</strong>
+        </a>
+      </div>
+    </nav>
+
+    <div class="hero-menu container">
+      <a class="em" href="../perfil/pedidos/">Pedidos</a>
+      <a href="/perfil/favoritos/">Favoritos</a>
+      <a href="../perfil/processando/">Processando</a>
+      <a class="em" href="../cupons/">Cupons</a>
+      <div class="hero-menu-dropdown">
+        <button class="hero-menu-cat-btn" type="button" aria-haspopup="true" aria-expanded="false">
+          Categorias <span class="hero-menu-cat-caret" aria-hidden="true">&#9662;</span>
+        </button>
+        <div class="hero-menu-cat-panel" role="menu" aria-label="Categorias">
+          <a href="../categorias/" role="menuitem">Ver todas</a>
+          <a href="../index.html?cat=Camisetas#produtos" role="menuitem">Camisetas</a>
+          <a href="../index.html?cat=Calcas#produtos" role="menuitem">Calcas</a>
+          <a href="../index.html?cat=Jaquetas#produtos" role="menuitem">Jaquetas</a>
+          <a href="../index.html?cat=Moletons#produtos" role="menuitem">Moletons</a>
+          <a href="../index.html?cat=Vestidos#produtos" role="menuitem">Vestidos</a>
+        </div>
+      </div>
     </div>
   </header>
 
-  <main class="container">
+  <main class="ads-main">
     <section class="card">
       <h1>Diretorio de anuncios</h1>
       <p class="muted">Cole as URLs das fotos (uma por linha). Elas passam sozinhas na pagina inicial.</p>
@@ -213,7 +248,8 @@
     </section>
   </main>
 
-  <script src="script.js?v=2"></script>
+  <script src="script.js?v=3"></script>
+  <script src="../assets/menu-dropdown.js?v=18"></script>
 </body>
 </html>
 
