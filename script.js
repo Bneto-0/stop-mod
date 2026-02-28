@@ -102,6 +102,7 @@ const adSeqDots = document.getElementById("ad-seq-dots");
 const heroCategoryDropdown = document.getElementById("hero-category-dropdown");
 const heroCategoryBtn = document.getElementById("hero-category-btn");
 const heroCategoryPanel = document.getElementById("hero-category-panel");
+const productSlidesViewport = document.getElementById("product-slides-viewport");
 const productSlidesTrack = document.getElementById("product-slides-track");
 const productSlidesPrev = document.getElementById("product-slides-prev");
 const productSlidesNext = document.getElementById("product-slides-next");
@@ -137,7 +138,7 @@ let lastAutoLookupCep = "";
 let selectedCategory = "";
 let productSlidesPage = 0;
 let productSlidesTotalPages = 1;
-let productSlidesPerPage = 1;
+let productSlidesStep = 1;
 let productSlidesAutoTimer = null;
 
 function formatBRL(value) {
@@ -1317,6 +1318,7 @@ function startAdSlider(frameEl, imgEl, dotsEl, images, targetHref) {
   let startX = 0;
   let lastX = 0;
   let suppressClick = false;
+  let loadFailures = 0;
 
   const syncDots = () => {
     if (!dotsEl) return;
@@ -1436,6 +1438,24 @@ function startAdSlider(frameEl, imgEl, dotsEl, images, targetHref) {
     ev.preventDefault();
     ev.stopPropagation();
   });
+  imgEl.addEventListener("load", () => {
+    loadFailures = 0;
+  });
+  imgEl.addEventListener("error", () => {
+    loadFailures += 1;
+    if (!list.length) return;
+    if (loadFailures >= list.length) {
+      const fallback = String(products?.[0]?.image || DEFAULT_LEFT_ADS?.[0] || "").trim();
+      if (fallback) {
+        imgEl.src = fallback;
+        imgEl.alt = "Anuncio";
+      }
+      return;
+    }
+    index = (index + 1) % list.length;
+    imgEl.src = list[index];
+    imgEl.alt = `Anuncio ${index + 1}`;
+  });
 
   navEls.forEach((navEl) => {
     const go = (ev) => {
@@ -1482,42 +1502,73 @@ function startAdSlider(frameEl, imgEl, dotsEl, images, targetHref) {
   startAuto();
 }
 
-function getProductSlidesPerPage() {
-  const width = window.innerWidth || document.documentElement.clientWidth || 1280;
-  if (width <= 520) return 1;
-  if (width <= 760) return 2;
-  if (width <= 1120) return 3;
-  if (width <= 1420) return 4;
-  return 5;
-}
-
 function stopProductSlidesAuto() {
   if (!productSlidesAutoTimer) return;
   clearInterval(productSlidesAutoTimer);
   productSlidesAutoTimer = null;
 }
 
+function getProductSlidesMaxScroll() {
+  if (!productSlidesViewport) return 0;
+  return Math.max(0, productSlidesViewport.scrollWidth - productSlidesViewport.clientWidth);
+}
+
+function renderProductSlideDots() {
+  if (!productSlidesDots) return;
+
+  productSlidesDots.innerHTML = Array.from({ length: productSlidesTotalPages }, (_, index) => {
+    const active = index === productSlidesPage ? " active" : "";
+    return `<button class="slide-dot${active}" data-slide-dot="${index}" type="button" aria-label="Ir para slide ${index + 1}"></button>`;
+  }).join("");
+
+  productSlidesDots.querySelectorAll("button[data-slide-dot]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const index = Number(btn.getAttribute("data-slide-dot"));
+      if (!Number.isInteger(index)) return;
+      scrollProductSlidesToPage(index, true);
+    });
+  });
+}
+
+function updateProductSlideControls() {
+  if (productSlidesPrev) productSlidesPrev.disabled = productSlidesPage <= 0;
+  if (productSlidesNext) productSlidesNext.disabled = productSlidesPage >= productSlidesTotalPages - 1;
+  renderProductSlideDots();
+}
+
+function scrollProductSlidesToPage(page, smooth) {
+  if (!productSlidesViewport) return;
+  const maxScroll = getProductSlidesMaxScroll();
+  const bounded = Math.max(0, Math.min(productSlidesTotalPages - 1, Number(page) || 0));
+  productSlidesPage = bounded;
+  const left = Math.min(maxScroll, bounded * productSlidesStep);
+  productSlidesViewport.scrollTo({ left, behavior: smooth ? "smooth" : "auto" });
+  updateProductSlideControls();
+}
+
+function refreshProductSlidesMetrics() {
+  if (!productSlidesViewport) return;
+  productSlidesStep = Math.max(1, productSlidesViewport.clientWidth);
+  const maxScroll = getProductSlidesMaxScroll();
+  productSlidesTotalPages = maxScroll <= 0 ? 1 : Math.ceil(maxScroll / productSlidesStep) + 1;
+  const pageByScroll = Math.round(productSlidesViewport.scrollLeft / productSlidesStep);
+  productSlidesPage = Math.max(0, Math.min(productSlidesTotalPages - 1, pageByScroll));
+  updateProductSlideControls();
+}
+
 function startProductSlidesAuto() {
   stopProductSlidesAuto();
-  if (!productSlidesTrack || productSlidesTotalPages <= 1) return;
+  if (!productSlidesViewport || productSlidesTotalPages <= 1) return;
   productSlidesAutoTimer = setInterval(() => {
-    productSlidesPage = (productSlidesPage + 1) % productSlidesTotalPages;
-    renderProductSlides();
+    const nextPage = productSlidesPage >= productSlidesTotalPages - 1 ? 0 : productSlidesPage + 1;
+    scrollProductSlidesToPage(nextPage, true);
   }, 4200);
 }
 
 function renderProductSlides() {
-  if (!productSlidesTrack) return;
+  if (!productSlidesTrack || !productSlidesViewport) return;
 
-  productSlidesPerPage = getProductSlidesPerPage();
-  productSlidesTotalPages = Math.max(1, Math.ceil(products.length / productSlidesPerPage));
-  productSlidesPage = Math.max(0, Math.min(productSlidesPage, productSlidesTotalPages - 1));
-
-  const startIndex = productSlidesPage * productSlidesPerPage;
-  const items = products.slice(startIndex, startIndex + productSlidesPerPage);
-  productSlidesTrack.style.setProperty("--slides-count", String(Math.max(1, items.length)));
-
-  productSlidesTrack.innerHTML = items
+  productSlidesTrack.innerHTML = products
     .map(
       (product) => `
       <article class="slide-product-card">
@@ -1540,49 +1591,49 @@ function renderProductSlides() {
     });
   });
 
-  if (productSlidesPrev) productSlidesPrev.disabled = productSlidesPage <= 0;
-  if (productSlidesNext) productSlidesNext.disabled = productSlidesPage >= productSlidesTotalPages - 1;
-
-  if (productSlidesDots) {
-    productSlidesDots.innerHTML = Array.from({ length: productSlidesTotalPages }, (_, index) => {
-      const active = index === productSlidesPage ? " active" : "";
-      return `<button class="slide-dot${active}" data-slide-dot="${index}" type="button" aria-label="Ir para slide ${index + 1}"></button>`;
-    }).join("");
-
-    productSlidesDots.querySelectorAll("button[data-slide-dot]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const index = Number(btn.getAttribute("data-slide-dot"));
-        if (!Number.isInteger(index)) return;
-        productSlidesPage = Math.max(0, Math.min(productSlidesTotalPages - 1, index));
-        renderProductSlides();
-      });
-    });
-  }
-
+  refreshProductSlidesMetrics();
+  scrollProductSlidesToPage(productSlidesPage, false);
   startProductSlidesAuto();
 }
 
 function initProductSlides() {
-  if (!productSlidesTrack) return;
+  if (!productSlidesTrack || !productSlidesViewport) return;
 
   productSlidesPrev?.addEventListener("click", () => {
-    if (productSlidesPage <= 0) return;
-    productSlidesPage -= 1;
-    renderProductSlides();
+    scrollProductSlidesToPage(productSlidesPage - 1, true);
   });
 
   productSlidesNext?.addEventListener("click", () => {
-    if (productSlidesPage >= productSlidesTotalPages - 1) return;
-    productSlidesPage += 1;
-    renderProductSlides();
+    scrollProductSlidesToPage(productSlidesPage + 1, true);
   });
+
+  productSlidesViewport.addEventListener("scroll", () => {
+    const pageByScroll = Math.round(productSlidesViewport.scrollLeft / productSlidesStep);
+    const bounded = Math.max(0, Math.min(productSlidesTotalPages - 1, pageByScroll));
+    if (bounded === productSlidesPage) return;
+    productSlidesPage = bounded;
+    updateProductSlideControls();
+  });
+
+  productSlidesViewport.addEventListener(
+    "wheel",
+    (event) => {
+      if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+      event.preventDefault();
+      productSlidesViewport.scrollLeft += event.deltaY;
+    },
+    { passive: false }
+  );
 
   const shell = productSlidesTrack.closest(".product-slides-shell");
   shell?.addEventListener("mouseenter", stopProductSlidesAuto);
   shell?.addEventListener("mouseleave", startProductSlidesAuto);
+  productSlidesViewport.addEventListener("pointerdown", stopProductSlidesAuto);
+  productSlidesViewport.addEventListener("pointerup", startProductSlidesAuto);
 
   window.addEventListener("resize", () => {
-    renderProductSlides();
+    refreshProductSlidesMetrics();
+    scrollProductSlidesToPage(productSlidesPage, false);
   });
 
   renderProductSlides();
