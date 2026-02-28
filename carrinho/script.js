@@ -253,11 +253,14 @@ function saveNotes(notes) {
 }
 
 function loadPayment() {
-  return String(localStorage.getItem(PAY_KEY) || "pix");
+  const method = String(localStorage.getItem(PAY_KEY) || "").trim();
+  return /^(pix|credito|debito|boleto)$/.test(method) ? method : "";
 }
 
 function savePayment(method) {
-  localStorage.setItem(PAY_KEY, method);
+  const value = String(method || "").trim();
+  if (!/^(pix|credito|debito|boleto)$/.test(value)) return;
+  localStorage.setItem(PAY_KEY, value);
 }
 
 function updateCartCount() {
@@ -419,7 +422,14 @@ function updatePaymentUI(method) {
     debito: "Cartao de debito",
     boleto: "Boleto"
   };
-  paymentSelected.textContent = `com ${labels[method] || "Pix"}`;
+  const label = labels[String(method || "").trim()];
+  if (!label) {
+    paymentSelected.textContent = "";
+    paymentSelected.hidden = true;
+    return;
+  }
+  paymentSelected.textContent = `com ${label}`;
+  paymentSelected.hidden = false;
 }
 
 function openModal() {
@@ -442,13 +452,14 @@ function syncPaymentRadios() {
 }
 
 function selectedPaymentFromModal() {
-  if (!paymentForm) return "pix";
+  if (!paymentForm) return "";
   const checked = paymentForm.querySelector("input[name=\"pay\"]:checked");
-  return checked ? String(checked.value) : "pix";
+  return checked ? String(checked.value) : "";
 }
 
 function renderCart() {
   const ids = loadCartIds();
+  updatePaymentUI(loadPayment());
   updateCartCount();
   setCartExtraSpace(ids.length);
   const shipTo = loadShipTo();
@@ -562,7 +573,6 @@ function renderCart() {
   }
 
   checkoutBtn.disabled = false;
-  updatePaymentUI(loadPayment());
 
   cartItems.querySelectorAll("button[data-action][data-id]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -615,6 +625,10 @@ paymentForm?.addEventListener("submit", (e) => {
 
   touchAuthSession(true);
   const method = selectedPaymentFromModal();
+  if (!method) {
+    feedback.textContent = "Escolha a forma de pagamento para continuar.";
+    return;
+  }
   savePayment(method);
   updatePaymentUI(method);
   const order = createOrder(method);
