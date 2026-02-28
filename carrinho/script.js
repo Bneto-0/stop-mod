@@ -110,14 +110,78 @@ function optionalHttpUrlFromStorage(key) {
   return /^https?:\/\//i.test(value) ? value : "";
 }
 
-function resolvePagBankCheckoutEndpoint() {
-  const raw = String(localStorage.getItem(PAGBANK_API_BASE_KEY) || "").trim();
-  if (!raw) return "/api/pagbank/checkout";
-
-  const base = raw.replace(/\/+$/, "");
+function buildPagBankCheckoutEndpointFromBase(raw) {
+  const base = String(raw || "").trim().replace(/\/+$/, "");
+  if (!base) return "/api/pagbank/checkout";
   if (/\/api\/pagbank\/checkout$/i.test(base)) return base;
   if (/\/api$/i.test(base)) return `${base}/pagbank/checkout`;
   return `${base}/api/pagbank/checkout`;
+}
+
+function hasConfiguredPagBankApiBase() {
+  return !!String(localStorage.getItem(PAGBANK_API_BASE_KEY) || "").trim();
+}
+
+function resolvePagBankCheckoutEndpoint() {
+  const raw = String(localStorage.getItem(PAGBANK_API_BASE_KEY) || "").trim();
+  return buildPagBankCheckoutEndpointFromBase(raw);
+}
+
+async function isBackendHealthy(url, timeoutMs) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), Number(timeoutMs) || 4500);
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      signal: controller.signal
+    });
+    if (!response.ok) return false;
+    const data = await response.json().catch(() => null);
+    return !!data?.ok;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function resolveWorkingPagBankCheckoutEndpoint() {
+  const configuredEndpoint = resolvePagBankCheckoutEndpoint();
+  if (hasConfiguredPagBankApiBase()) {
+    return configuredEndpoint;
+  }
+
+  const sameOriginHealthy = await isBackendHealthy("/api/health", 2600);
+  if (sameOriginHealthy) return "/api/pagbank/checkout";
+
+  const localBase = "http://localhost:8787";
+  const localHealthy = await isBackendHealthy(`${localBase}/api/health`, 3200);
+  if (localHealthy) {
+    localStorage.setItem(PAGBANK_API_BASE_KEY, localBase);
+    return `${localBase}/api/pagbank/checkout`;
+  }
+
+  return configuredEndpoint;
+}
+
+function isNotAllowedHtmlError(message) {
+  const text = String(message || "").toLowerCase();
+  if (!text) return false;
+  return text.includes("405") && text.includes("not allowed");
+}
+
+function normalizeCheckoutErrorMessage(error) {
+  const raw = String(error?.message || "").trim();
+  const lower = raw.toLowerCase();
+
+  if (isNotAllowedHtmlError(raw)) {
+    return "Backend de pagamento nao esta ativo neste dominio. Inicie o backend local (porta 8787) ou configure stopmod_pagbank_api_base.";
+  }
+  if (lower.includes("failed to fetch") || lower.includes("connection refused")) {
+    return "Nao foi possivel conectar ao backend de pagamento. Verifique se ele esta ligado.";
+  }
+  return raw || "tente novamente.";
 }
 
 async function postJson(url, payload, timeoutMs) {
@@ -937,8 +1001,25 @@ paymentForm?.addEventListener("submit", async (e) => {
   updatePaymentUI(method);
 
   try {
-    const endpoint = resolvePagBankCheckoutEndpoint();
-    const data = await postJson(endpoint, payload, 22000);
+    const endpoint = await resolveWorkingPagBankCheckoutEndpoint();
+    let data;
+
+    try {
+      data = await postJson(endpoint, payload, 22000);
+    } catch (firstError) {
+      const shouldTryLocalFallback =
+        !hasConfiguredPagBankApiBase() &&
+        isNotAllowedHtmlError(firstError?.message) &&
+        !/^https?:\/\/localhost:8787\/api\/pagbank\/checkout$/i.test(String(endpoint || ""));
+
+      if (!shouldTryLocalFallback) throw firstError;
+
+      const localBase = "http://localhost:8787";
+      const localEndpoint = `${localBase}/api/pagbank/checkout`;
+      data = await postJson(localEndpoint, payload, 22000);
+      localStorage.setItem(PAGBANK_API_BASE_KEY, localBase);
+    }
+
     const checkoutUrl = String(data?.checkoutUrl || "").trim();
 
     if (!checkoutUrl) {
@@ -958,7 +1039,7 @@ paymentForm?.addEventListener("submit", async (e) => {
     feedback.textContent = "Redirecionando para o PagBank...";
     window.location.href = checkoutUrl;
   } catch (error) {
-    feedback.textContent = `Falha ao iniciar pagamento real: ${String(error?.message || "tente novamente.")}`;
+    feedback.textContent = `Falha ao iniciar pagamento real: ${normalizeCheckoutErrorMessage(error)}`;
   } finally {
     if (confirmPaymentBtn) {
       confirmPaymentBtn.disabled = false;
