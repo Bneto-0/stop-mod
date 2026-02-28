@@ -881,26 +881,121 @@ body {
   margin-top: 0.13rem;
 }
 
-.pay-option {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
+.payment-list {
   border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 0.6rem 0.7rem;
-  font-weight: 900;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.payment-more[hidden] {
+  display: none !important;
+}
+
+.pay-row {
+  display: grid;
+  grid-template-columns: 22px 34px 1fr;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.75rem 0.85rem;
+  border-bottom: 1px solid #ece3da;
   cursor: pointer;
 }
 
-.pay-option:hover {
-  background: #fff7f2;
+.pay-row:last-child {
+  border-bottom: none;
+}
+
+.pay-row:hover {
+  background: #fffaf5;
+}
+
+.pay-row input[type="radio"] {
+  margin: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.pay-row-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid #e8ddd2;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pay-row-icon svg {
+  width: 16px;
+  height: 16px;
+  fill: #1f1f1f;
+}
+
+.pay-row-body {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.pay-row-body strong {
+  font-size: 1.03rem;
+  font-weight: 800;
+  color: #1f1f1f;
+}
+
+.pay-row-body small {
+  font-size: 0.8rem;
+  color: #6f655d;
+  font-weight: 600;
+}
+
+.pay-row input[type="radio"]:checked ~ .pay-row-body strong {
+  color: #000;
+}
+
+.pay-row input[type="radio"]:checked ~ .pay-row-icon {
+  border-color: #d8c4b5;
+  background: #fff3ea;
+}
+
+.more-payments-btn {
+  width: 100%;
+  border: none;
+  border-top: 1px solid #ece3da;
+  background: #fff;
+  color: #1b66d8;
+  text-align: left;
+  padding: 0.72rem 0.85rem;
+  font-family: inherit;
+  font-size: 0.83rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.more-payments-btn:hover {
+  background: #f8f5f2;
+}
+
+.more-payments-btn::after {
+  content: "v";
+  float: right;
+  color: #6f655d;
+}
+
+.more-payments-btn[aria-expanded="true"]::after {
+  content: "^";
 }
 
 .modal-actions {
-  display: grid;
+  display: flex;
   gap: 0.6rem;
-  grid-template-columns: 1fr 1fr;
+  justify-content: flex-end;
   margin-top: 0.2rem;
+}
+
+.modal-actions .btn {
+  margin-top: 0;
 }
 
 .back {

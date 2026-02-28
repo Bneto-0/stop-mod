@@ -64,6 +64,8 @@ const paymentSelected = document.getElementById("payment-selected");
 const checkoutModal = document.getElementById("checkout-modal");
 const paymentForm = document.getElementById("payment-form");
 const confirmPaymentBtn = document.getElementById("confirm-payment");
+const morePaymentOptions = document.getElementById("more-payment-options");
+const toggleMorePaymentsBtn = document.getElementById("toggle-more-payments");
 const checkoutAddressLine = document.getElementById("checkout-address-line");
 const checkoutAddressShip = document.getElementById("checkout-address-ship");
 const checkoutFeedback = document.getElementById("checkout-feedback");
@@ -71,7 +73,7 @@ const confirmAddress = document.getElementById("confirm-address");
 const addressInlineText = document.getElementById("address-inline-text");
 const addressInlineState = document.getElementById("address-inline-state");
 const addressInlineConfirm = document.getElementById("address-inline-confirm");
-const confirmPaymentDefaultLabel = String(confirmPaymentBtn?.textContent || "Ir para pagamento");
+const confirmPaymentDefaultLabel = String(confirmPaymentBtn?.textContent || "Continuar");
 
 let lastAuthTouchAt = 0;
 
@@ -678,12 +680,28 @@ function syncPaymentRadios() {
   radios.forEach((r) => {
     r.checked = String(r.value) === cur;
   });
+  setMorePaymentsOpen(shouldExpandMorePayments(cur));
 }
 
 function selectedPaymentFromModal() {
   if (!paymentForm) return "";
   const checked = paymentForm.querySelector("input[name=\"pay\"]:checked");
   return checked ? String(checked.value) : "";
+}
+
+function shouldExpandMorePayments(method) {
+  const value = String(method || "").trim();
+  return value === "debito" || value === "boleto";
+}
+
+function setMorePaymentsOpen(open) {
+  if (!morePaymentOptions || !toggleMorePaymentsBtn) return;
+  const expanded = !!open;
+  morePaymentOptions.hidden = !expanded;
+  toggleMorePaymentsBtn.setAttribute("aria-expanded", expanded ? "true" : "false");
+  toggleMorePaymentsBtn.textContent = expanded
+    ? "Mostrar menos meios de pagamento"
+    : "Mostrar mais meios de pagamento";
 }
 
 function renderCart() {
@@ -845,6 +863,11 @@ checkoutModal?.querySelectorAll("[data-close]").forEach((el) => {
   el.addEventListener("click", closeModal);
 });
 
+toggleMorePaymentsBtn?.addEventListener("click", () => {
+  const isOpen = String(toggleMorePaymentsBtn.getAttribute("aria-expanded") || "false") === "true";
+  setMorePaymentsOpen(!isOpen);
+});
+
 addressInlineConfirm?.addEventListener("click", () => {
   const to = loadShipTo();
   if (!isCepValid(to?.cep)) {
@@ -951,6 +974,7 @@ document.addEventListener("keydown", (e) => {
 });
 
 bindAuthActivity();
+setMorePaymentsOpen(false);
 renderCart();
 renderTopProfile();
 
