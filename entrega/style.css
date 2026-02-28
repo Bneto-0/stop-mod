@@ -300,6 +300,19 @@ h1 {
   font-weight: 900;
 }
 
+.form .field-full {
+  grid-column: 1 / -1;
+}
+
+.form .field-half {
+  grid-column: span 1;
+}
+
+.form .field-small {
+  grid-column: span 1;
+  max-width: 220px;
+}
+
 .form .btn {
   grid-column: 1 / -1;
 }
@@ -317,6 +330,10 @@ input:focus {
   outline: none;
   border-color: #e0a57f;
   box-shadow: 0 0 0 4px #f6c7aa4d;
+}
+
+#addr-state {
+  text-transform: uppercase;
 }
 
 .feedback {
@@ -410,5 +427,9 @@ footer {
 
   .form {
     grid-template-columns: 1fr;
+  }
+
+  .form .field-small {
+    max-width: 100%;
   }
 }

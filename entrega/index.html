@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../style.css?v=15" />
-  <link rel="stylesheet" href="style.css?v=7" />
+  <link rel="stylesheet" href="style.css?v=8" />
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6485539380158983" crossorigin="anonymous"></script>
 </head>
 <body id="top">
@@ -129,13 +129,33 @@
       <section class="card card-form">
         <h2>Adicionar endereco</h2>
         <form id="addr-form" class="form">
-          <label>
+          <label class="field-full">
+            Rua / Avenida
+            <input id="addr-street" type="text" placeholder="Ex: Rua Miguel Loung" required />
+          </label>
+          <label class="field-small">
+            Numero
+            <input id="addr-number" type="text" placeholder="Ex: 320" required />
+          </label>
+          <label class="field-full">
+            Bairro
+            <input id="addr-district" type="text" placeholder="Ex: Jardim Guaruja" required />
+          </label>
+          <label class="field-half">
             Cidade
             <input id="addr-city" type="text" placeholder="Ex: Sao Paulo" required />
           </label>
-          <label>
+          <label class="field-half">
+            Estado (UF)
+            <input id="addr-state" type="text" placeholder="Ex: SP" maxlength="2" required />
+          </label>
+          <label class="field-half">
             CEP
             <input id="addr-cep" type="text" inputmode="numeric" placeholder="00000-000" maxlength="9" required />
+          </label>
+          <label class="field-half">
+            Complemento (opcional)
+            <input id="addr-complement" type="text" placeholder="Ex: Casa, Bloco, Apto" />
           </label>
           <button class="btn" type="submit">Salvar e usar</button>
         </form>
@@ -151,7 +171,7 @@
     </div>
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
-  <script src="script.js?v=3"></script>
+  <script src="script.js?v=4"></script>
   <script src="../assets/menu-dropdown.js?v=18"></script>
 </body>
 </html>

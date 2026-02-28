@@ -25,8 +25,13 @@ const currentShip = document.getElementById("current-ship");
 const listEl = document.getElementById("addr-list");
 const emptyEl = document.getElementById("addr-empty");
 const form = document.getElementById("addr-form");
+const streetInput = document.getElementById("addr-street");
+const numberInput = document.getElementById("addr-number");
+const districtInput = document.getElementById("addr-district");
 const cityInput = document.getElementById("addr-city");
+const stateInput = document.getElementById("addr-state");
 const cepInput = document.getElementById("addr-cep");
+const complementInput = document.getElementById("addr-complement");
 const feedback = document.getElementById("feedback");
 
 const cartCount = document.getElementById("cart-count");
@@ -49,10 +54,47 @@ function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function normalizeText(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 function normalizeCep(value) {
   const digits = String(value || "").replace(/\D/g, "").slice(0, 8);
   if (digits.length <= 5) return digits;
   return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+}
+
+function normalizeState(value) {
+  return String(value || "").replace(/[^a-zA-Z]/g, "").slice(0, 2).toUpperCase();
+}
+
+function normalizeAddress(raw) {
+  return {
+    street: String(raw?.street || "").trim(),
+    number: String(raw?.number || "").trim(),
+    district: String(raw?.district || "").trim(),
+    city: String(raw?.city || "").trim(),
+    state: normalizeState(raw?.state || ""),
+    cep: normalizeCep(String(raw?.cep || "")),
+    complement: String(raw?.complement || "").trim()
+  };
+}
+
+function hasAddressData(addr) {
+  return !!(addr?.street || addr?.city || addr?.cep);
+}
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function isCepValid(value) {
@@ -75,7 +117,7 @@ function calcShipping(subtotal, itemCount, cep) {
 
 function loadShipTo() {
   const obj = loadJson(SHIP_KEY, {});
-  return { city: String(obj.city || "").trim(), cep: normalizeCep(String(obj.cep || "")) };
+  return normalizeAddress(obj);
 }
 
 function saveShipTo(to) {
@@ -86,8 +128,8 @@ function loadList() {
   const raw = loadJson(LIST_KEY, []);
   if (!Array.isArray(raw)) return [];
   return raw
-    .map((x) => ({ city: String(x.city || "").trim(), cep: normalizeCep(String(x.cep || "")) }))
-    .filter((x) => x.city || x.cep);
+    .map((x) => normalizeAddress(x))
+    .filter((x) => hasAddressData(x));
 }
 
 function saveList(list) {
@@ -95,11 +137,19 @@ function saveList(list) {
 }
 
 function summaryText(to) {
-  const city = String(to.city || "").trim();
-  const cep = String(to.cep || "").trim();
-  if (city && cep) return `${city} ${cep}`;
-  if (cep) return cep;
-  if (city) return city;
+  const streetLine = [String(to?.street || "").trim(), String(to?.number || "").trim()].filter(Boolean).join(", ");
+  const cityState = [String(to?.city || "").trim(), String(to?.state || "").trim()].filter(Boolean).join(" - ");
+  const meta = [
+    String(to?.district || "").trim(),
+    cityState,
+    String(to?.cep || "").trim() ? `CEP ${String(to.cep).trim()}` : "",
+    String(to?.complement || "").trim()
+  ]
+    .filter(Boolean)
+    .join(" | ");
+  if (streetLine && meta) return `${streetLine} - ${meta}`;
+  if (streetLine) return streetLine;
+  if (meta) return meta;
   return "Nenhum endereco selecionado";
 }
 
@@ -129,7 +179,7 @@ function updateCartCount() {
 
 function renderMenuLocation() {
   if (!menuLocation) return;
-  const to = loadJson(SHIP_KEY, {});
+  const to = loadShipTo();
   const street = String(to?.street || "").trim();
   const number = String(to?.number || "").trim();
   const city = String(to?.city || "").trim();
@@ -196,10 +246,14 @@ function renderList() {
       const ship = calcShipping(subtotal, ids.length, to.cep);
       const shipLabel = ship === 0 ? "Gratis" : ship === null ? "--" : `R$ ${formatBRL(ship)}`;
       const shipClass = ship === 0 ? "free" : "";
+      const title = [to.street, to.number].filter(Boolean).join(", ") || summaryText(to);
+      const cityState = [to.city, to.state].filter(Boolean).join(" - ");
+      const detail = [to.district, cityState, to.cep ? `CEP ${to.cep}` : "", to.complement].filter(Boolean).join(" | ");
       return `
         <div class="addr-item">
           <div>
-            <strong>${summaryText(to)}</strong>
+            <strong>${escapeHtml(title)}</strong>
+            ${detail ? `<div class="small">${escapeHtml(detail)}</div>` : ""}
             <div class="small">Frete: <span class="ship ${shipClass}">${shipLabel}</span></div>
           </div>
           <div class="addr-actions">
@@ -240,34 +294,67 @@ cepInput?.addEventListener("input", () => {
   cepInput.value = normalizeCep(cepInput.value);
 });
 
+stateInput?.addEventListener("input", () => {
+  stateInput.value = normalizeState(stateInput.value);
+});
+
 form?.addEventListener("submit", (e) => {
   e.preventDefault();
-  const city = String(cityInput?.value || "").trim();
-  const cep = normalizeCep(String(cepInput?.value || ""));
-  if (!city) {
+  const to = normalizeAddress({
+    street: streetInput?.value,
+    number: numberInput?.value,
+    district: districtInput?.value,
+    city: cityInput?.value,
+    state: stateInput?.value,
+    cep: cepInput?.value,
+    complement: complementInput?.value
+  });
+
+  if (!to.street) {
+    setFeedback("Informe a rua.", true);
+    return;
+  }
+  if (!to.number) {
+    setFeedback("Informe o numero.", true);
+    return;
+  }
+  if (!to.district) {
+    setFeedback("Informe o bairro.", true);
+    return;
+  }
+  if (!to.city) {
     setFeedback("Informe a cidade.", true);
     return;
   }
-  if (!isCepValid(cep)) {
+  if (to.state.length !== 2) {
+    setFeedback("Informe o estado com 2 letras (UF).", true);
+    return;
+  }
+  if (!isCepValid(to.cep)) {
     setFeedback("Digite um CEP valido.", true);
     return;
   }
-
-  const to = { city, cep };
   saveShipTo(to);
 
   const list = loadList();
   const uniq = [];
   const seen = new Set();
   [to, ...list].forEach((x) => {
-    const k = `${String(x.city || "").toLowerCase()}|${String(x.cep || "").replace(/\D/g, "")}`;
+    const k = [
+      normalizeText(x.street),
+      normalizeText(x.number),
+      normalizeText(x.district),
+      normalizeText(x.city),
+      normalizeState(x.state),
+      String(x.cep || "").replace(/\D/g, "")
+    ].join("|");
     if (seen.has(k)) return;
     seen.add(k);
     uniq.push(x);
   });
   saveList(uniq.slice(0, 20));
 
-  setFeedback("Endereco salvo e selecionado.", false);
+  setFeedback("Endereco completo salvo e selecionado.", false);
   renderCurrent();
   renderMenuLocation();
   renderList();
