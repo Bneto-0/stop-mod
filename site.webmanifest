@@ -8,21 +8,23 @@
   "theme_color": "#2f2824",
   "icons": [
     {
-      "src": "/assets/brand/favicon-96.png?v=8",
+      "src": "/favicon-96x96.png",
       "sizes": "96x96",
       "type": "image/png"
     },
     {
-      "src": "/assets/brand/favicon-180.png?v=8",
+      "src": "/apple-touch-icon.png",
       "sizes": "180x180",
       "type": "image/png"
     },
     {
-      "src": "/assets/brand/stopmod-banner-512.png?v=8",
+      "src": "/logo-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
   ]
 }
+
+
 
 
