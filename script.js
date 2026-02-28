@@ -1,7 +1,6 @@
 const CART_KEY = "stopmod_cart";
 const MAX_CART_ITEMS = 2000;
 const MAX_AD_SLIDES = 10;
-const PRODUCTS_PER_PAGE = 7;
 const SHIP_KEY = "stopmod_ship_to";
 const SHIP_LIST_KEY = "stopmod_ship_list";
 const PROFILE_KEY = "stopmod_profile";
@@ -86,7 +85,6 @@ const products = [
 ];
 
 const productGrid = document.getElementById("product-grid");
-const productPagination = document.getElementById("product-pagination");
 const searchInput = document.getElementById("search-input");
 const cartCount = document.getElementById("cart-count");
 const menuLocation = document.getElementById("menu-location");
@@ -128,7 +126,6 @@ let addressEditMode = false;
 let autoCepLookupTimer = null;
 let lastAutoLookupCep = "";
 let selectedCategory = "";
-let currentProductPage = 1;
 
 function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -1259,7 +1256,6 @@ function renderCategoryDropdownItems() {
     item.addEventListener("click", (event) => {
       event.preventDefault();
       selectedCategory = value;
-      currentProductPage = 1;
       updateCategoryButtonLabel();
       renderCategoryDropdownItems();
       renderProducts();
@@ -1473,44 +1469,6 @@ function startAdSlider(frameEl, imgEl, dotsEl, images, targetHref) {
   startAuto();
 }
 
-function renderProductPagination(totalPages, totalItems) {
-  if (!productPagination) return;
-
-  if (totalPages <= 1) {
-    productPagination.hidden = true;
-    productPagination.innerHTML = "";
-    return;
-  }
-
-  const prevDisabled = currentProductPage <= 1 ? "disabled" : "";
-  const nextDisabled = currentProductPage >= totalPages ? "disabled" : "";
-  const pageButtons = Array.from({ length: totalPages }, (_, index) => {
-    const page = index + 1;
-    const active = page === currentProductPage ? " active" : "";
-    const current = page === currentProductPage ? ' aria-current="page"' : "";
-    return `<button class="page-btn${active}" data-page="${page}"${current}>${page}</button>`;
-  }).join("");
-
-  productPagination.hidden = false;
-  productPagination.innerHTML = `
-    <button class="page-btn" data-page="${currentProductPage - 1}" ${prevDisabled}>Anterior</button>
-    ${pageButtons}
-    <button class="page-btn" data-page="${currentProductPage + 1}" ${nextDisabled}>Proxima</button>
-    <span class="page-status">Pagina ${currentProductPage} de ${totalPages} (${totalItems} produtos)</span>
-  `;
-
-  productPagination.querySelectorAll("button[data-page]").forEach((button) => {
-    if (button.disabled) return;
-    button.addEventListener("click", () => {
-      const nextPage = Number(button.getAttribute("data-page"));
-      if (!Number.isInteger(nextPage)) return;
-      currentProductPage = Math.max(1, Math.min(totalPages, nextPage));
-      renderProducts();
-      document.getElementById("produtos")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  });
-}
-
 function renderProducts() {
   if (!productGrid) return;
   const filtered = getFilteredProducts();
@@ -1525,19 +1483,10 @@ function renderProducts() {
         </div>
       </article>
     `;
-    if (productPagination) {
-      productPagination.hidden = true;
-      productPagination.innerHTML = "";
-    }
     return;
   }
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PRODUCTS_PER_PAGE));
-  currentProductPage = Math.min(Math.max(1, currentProductPage), totalPages);
-  const startIndex = (currentProductPage - 1) * PRODUCTS_PER_PAGE;
-  const pageItems = filtered.slice(startIndex, startIndex + PRODUCTS_PER_PAGE);
-
-  productGrid.innerHTML = pageItems
+  productGrid.innerHTML = filtered
     .map(
       (product) => `
       <article class="product-card">
@@ -1559,8 +1508,6 @@ function renderProducts() {
       addToCart(id);
     });
   });
-
-  renderProductPagination(totalPages, filtered.length);
 }
 
 function addToCart(productId) {
@@ -1574,10 +1521,7 @@ function addToCart(productId) {
   updateCartCount();
 }
 
-searchInput?.addEventListener("input", () => {
-  currentProductPage = 1;
-  renderProducts();
-});
+searchInput?.addEventListener("input", renderProducts);
 searchInput?.addEventListener("input", syncSearchQueryInUrl);
 searchInput?.addEventListener("keydown", (event) => {
   if (event.key !== "Enter") return;
