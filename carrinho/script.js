@@ -8,7 +8,7 @@ const ORDERS_KEY = "stopmod_orders";
 const NOTES_KEY = "stopmod_notifications";
 const PROFILE_KEY = "stopmod_profile";
 const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
-const AUTH_TIMEOUT_MS = 30 * 60 * 1000;
+const AUTH_TIMEOUT_MS = 2 * 60 * 60 * 1000;
 const AUTH_TOUCH_MIN_GAP_MS = 15 * 1000;
 
 const products = [

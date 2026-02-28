@@ -2,7 +2,7 @@ const CART_KEY = "stopmod_cart";
 const SHIP_KEY = "stopmod_ship_to";
 const PROFILE_KEY = "stopmod_profile";
 const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
-const AUTH_TIMEOUT_MS = 30 * 60 * 1000;
+const AUTH_TIMEOUT_MS = 2 * 60 * 60 * 1000;
 const AUTH_TOUCH_MIN_GAP_MS = 15 * 1000;
 const ORDERS_KEY = "stopmod_orders";
 const FAVORITES_KEY = "stopmod_favorites";
@@ -654,7 +654,7 @@ function renderPrivacidadePage() {
         </article>
         <article class="mini-card">
           <strong>Sessao de login</strong>
-          <p class="muted2">A sessao expira apos 30 minutos sem atividade.</p>
+          <p class="muted2">A sessao expira apos 2 horas sem atividade.</p>
         </article>
         <article class="mini-card">
           <strong>Controle de dados</strong>
