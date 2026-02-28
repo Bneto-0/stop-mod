@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../style.css?v=15" />
-  <link rel="stylesheet" href="style.css?v=6" />
+  <link rel="stylesheet" href="style.css?v=7" />
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6485539380158983" crossorigin="anonymous"></script>
 </head>
 <body id="top">
@@ -94,42 +94,54 @@
       <p class="muted">Escolha para onde enviar. O frete aparece calculado aqui.</p>
     </section>
 
-    <section class="card card-current">
-      <h2>Endereco atual</h2>
-      <div class="current">
-        <span class="pin" aria-hidden="true">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 2c3.87 0 7 3.09 7 6.9 0 4.71-5.2 10.35-6.45 11.65a.8.8 0 0 1-1.1 0C10.2 19.25 5 13.61 5 8.9 5 5.09 8.13 2 12 2zm0 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"></path>
-          </svg>
-        </span>
-        <div>
-          <strong id="current-dest">Nenhum endereco selecionado</strong>
-          <div id="current-ship" class="ship">Frete: --</div>
+    <div class="delivery-grid">
+      <section class="card card-current">
+        <h2>Endereco atual</h2>
+        <div class="current">
+          <span class="pin" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 2c3.87 0 7 3.09 7 6.9 0 4.71-5.2 10.35-6.45 11.65a.8.8 0 0 1-1.1 0C10.2 19.25 5 13.61 5 8.9 5 5.09 8.13 2 12 2zm0 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"></path>
+            </svg>
+          </span>
+          <div>
+            <strong id="current-dest">Nenhum endereco selecionado</strong>
+            <div id="current-ship" class="ship">Frete: --</div>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="card card-list">
-      <h2>Meus enderecos</h2>
-      <div id="addr-list" class="addr-list"></div>
-      <p id="addr-empty" class="muted" hidden>Voce ainda nao salvou enderecos.</p>
-    </section>
+      <aside class="card card-help">
+        <h2>Dicas rapidas</h2>
+        <ul class="delivery-tips">
+          <li>Confirme cidade e CEP antes de finalizar o pedido.</li>
+          <li>Frete gratis para subtotal acima de R$ 249,90 ou 5 itens.</li>
+          <li>Voce pode salvar varios enderecos e trocar quando quiser.</li>
+        </ul>
+        <a class="btn ghost" href="../carrinho/">Voltar para o carrinho</a>
+      </aside>
 
-    <section class="card card-form">
-      <h2>Adicionar endereco</h2>
-      <form id="addr-form" class="form">
-        <label>
-          Cidade
-          <input id="addr-city" type="text" placeholder="Ex: Sao Paulo" required />
-        </label>
-        <label>
-          CEP
-          <input id="addr-cep" type="text" inputmode="numeric" placeholder="00000-000" maxlength="9" required />
-        </label>
-        <button class="btn" type="submit">Salvar e usar</button>
-      </form>
-      <p id="feedback" class="feedback"></p>
-    </section>
+      <section class="card card-list">
+        <h2>Meus enderecos</h2>
+        <div id="addr-list" class="addr-list"></div>
+        <p id="addr-empty" class="muted" hidden>Voce ainda nao salvou enderecos.</p>
+      </section>
+
+      <section class="card card-form">
+        <h2>Adicionar endereco</h2>
+        <form id="addr-form" class="form">
+          <label>
+            Cidade
+            <input id="addr-city" type="text" placeholder="Ex: Sao Paulo" required />
+          </label>
+          <label>
+            CEP
+            <input id="addr-cep" type="text" inputmode="numeric" placeholder="00000-000" maxlength="9" required />
+          </label>
+          <button class="btn" type="submit">Salvar e usar</button>
+        </form>
+        <p id="feedback" class="feedback"></p>
+      </section>
+    </div>
   </main>
 
   <footer>

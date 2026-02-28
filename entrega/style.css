@@ -24,9 +24,13 @@ body {
   line-height: 1.5;
 }
 
+.hero {
+  box-shadow: 0 18px 34px #2f211824;
+}
+
 .delivery-main {
-  width: min(1080px, 94%);
-  margin: 1rem auto 2.1rem;
+  width: min(1160px, 94%);
+  margin: 1rem auto 2rem;
   display: grid;
   gap: 1rem;
 }
@@ -64,11 +68,36 @@ body {
 h1 {
   font-size: clamp(1.5rem, 2.6vw, 2rem);
   line-height: 1.1;
-  margin-bottom: 0.22rem;
+  margin-bottom: 0.2rem;
 }
 
 .muted {
   color: var(--muted);
+}
+
+.delivery-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  grid-template-areas:
+    "current help"
+    "list form";
+  gap: 1rem;
+}
+
+.card-current {
+  grid-area: current;
+}
+
+.card-help {
+  grid-area: help;
+}
+
+.card-list {
+  grid-area: list;
+}
+
+.card-form {
+  grid-area: form;
 }
 
 .card {
@@ -131,19 +160,44 @@ h1 {
 }
 
 #current-dest {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   line-height: 1.2;
   font-weight: 900;
 }
 
 .ship {
-  margin-top: 0.18rem;
+  margin-top: 0.2rem;
   font-weight: 900;
   color: #6f665e;
 }
 
 .ship.free {
   color: #2aa56a;
+}
+
+.delivery-tips {
+  list-style: none;
+  display: grid;
+  gap: 0.45rem;
+  margin-bottom: 0.8rem;
+}
+
+.delivery-tips li {
+  position: relative;
+  padding-left: 1.08rem;
+  color: #554d46;
+  font-size: 0.93rem;
+}
+
+.delivery-tips li::before {
+  content: "";
+  position: absolute;
+  top: 0.55em;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #ce5e35;
 }
 
 .addr-list {
@@ -204,11 +258,24 @@ h1 {
   background: linear-gradient(180deg, #cf5b33 0%, #bf4e2b 100%);
   color: #fff;
   box-shadow: 0 8px 18px #b54e2d2f;
+  text-decoration: none;
 }
 
 .btn:hover {
   transform: translateY(-1px);
   background: linear-gradient(180deg, #ca552f 0%, #a84425 100%);
+}
+
+.btn.ghost {
+  width: 100%;
+  background: #fff2e8;
+  color: #8c3c26;
+  border: 1px solid #efccb7;
+  box-shadow: none;
+}
+
+.btn.ghost:hover {
+  background: #ffe7d7;
 }
 
 .btn2 {
@@ -233,8 +300,6 @@ h1 {
   font-weight: 900;
 }
 
-.form label:nth-child(1),
-.form label:nth-child(2),
 .form .btn {
   grid-column: 1 / -1;
 }
@@ -306,9 +371,18 @@ footer {
   text-decoration: underline;
 }
 
-@media (max-width: 860px) {
+@media (max-width: 980px) {
   .delivery-main {
-    width: min(940px, 95%);
+    width: min(980px, 95%);
+  }
+
+  .delivery-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "current"
+      "help"
+      "list"
+      "form";
   }
 }
 
@@ -332,5 +406,9 @@ footer {
   .addr-actions {
     width: 100%;
     justify-content: flex-start;
+  }
+
+  .form {
+    grid-template-columns: 1fr;
   }
 }
