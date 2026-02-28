@@ -10,6 +10,17 @@ const PROFILE_KEY = "stopmod_profile";
 const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
 const AUTH_TIMEOUT_MS = 2 * 60 * 60 * 1000;
 const AUTH_TOUCH_MIN_GAP_MS = 15 * 1000;
+const PAGBANK_API_BASE_KEY = "stopmod_pagbank_api_base";
+const PAGBANK_RETURN_URL_KEY = "stopmod_pagbank_return_url";
+const PAGBANK_REDIRECT_URL_KEY = "stopmod_pagbank_redirect_url";
+const PAGBANK_NOTIFICATION_URL_KEY = "stopmod_pagbank_notification_url";
+const PAGBANK_PAYMENT_NOTIFICATION_URL_KEY = "stopmod_pagbank_payment_notification_url";
+const PAYMENT_METHOD_LABELS = Object.freeze({
+  pix: "Pix",
+  credito: "Cartao de credito",
+  debito: "Cartao de debito",
+  boleto: "Boleto"
+});
 
 const products = [
   { id: 1, name: "Camiseta Oversized Street", category: "Camisetas", size: "P ao GG", price: 89.9, image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80" },
@@ -52,6 +63,7 @@ const paymentSelected = document.getElementById("payment-selected");
 const checkoutModal = document.getElementById("checkout-modal");
 const paymentForm = document.getElementById("payment-form");
 const confirmPaymentBtn = document.getElementById("confirm-payment");
+const confirmPaymentDefaultLabel = String(confirmPaymentBtn?.textContent || "Ir para pagamento");
 
 let lastAuthTouchAt = 0;
 
@@ -67,11 +79,73 @@ function normalizeText(value) {
     .trim();
 }
 
+function paymentLabel(method) {
+  return PAYMENT_METHOD_LABELS[String(method || "").trim()] || "";
+}
+
 function moneyParts(value) {
   const fixed = (Number(value) || 0).toFixed(2);
   const [a, b] = fixed.split(".");
   const main = Number(a).toLocaleString("pt-BR");
   return { main, cents: b || "00" };
+}
+
+function moneyToCents(value) {
+  return Math.round((Number(value) || 0) * 100);
+}
+
+function optionalHttpUrlFromStorage(key) {
+  const value = String(localStorage.getItem(key) || "").trim();
+  if (!value) return "";
+  return /^https?:\/\//i.test(value) ? value : "";
+}
+
+function resolvePagBankCheckoutEndpoint() {
+  const raw = String(localStorage.getItem(PAGBANK_API_BASE_KEY) || "").trim();
+  if (!raw) return "/api/pagbank/checkout";
+
+  const base = raw.replace(/\/+$/, "");
+  if (/\/api\/pagbank\/checkout$/i.test(base)) return base;
+  if (/\/api$/i.test(base)) return `${base}/pagbank/checkout`;
+  return `${base}/api/pagbank/checkout`;
+}
+
+async function postJson(url, payload, timeoutMs) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), Number(timeoutMs) || 15000);
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+
+    const text = await response.text();
+    let data = null;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      data = null;
+    }
+
+    if (!response.ok) {
+      const message = String(data?.message || data?.error || text || `HTTP ${response.status}`);
+      throw new Error(message);
+    }
+
+    return data || {};
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error("Tempo esgotado ao iniciar pagamento no PagBank.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function loadCartIds() {
@@ -326,6 +400,70 @@ function calcDiscount(subtotal, coupons) {
   return subtotal * 0.1;
 }
 
+function checkoutSnapshot() {
+  const ids = loadCartIds();
+  const grouped = groupedCart(ids);
+  const shipTo = loadShipTo();
+  const coupons = loadCoupons();
+  const subtotal = grouped.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const shipping = calcShipping(subtotal, ids.length, shipTo.cep);
+  const discount = calcDiscount(subtotal, coupons);
+  const total = Math.max(0, Math.max(0, subtotal - discount) + (shipping ?? 0));
+
+  return {
+    ids,
+    grouped,
+    shipTo,
+    coupons,
+    subtotal,
+    shipping: shipping ?? 0,
+    discount,
+    total
+  };
+}
+
+function buildPagBankCheckoutPayload(paymentMethod) {
+  const snapshot = checkoutSnapshot();
+  if (!snapshot.ids.length || !snapshot.grouped.length) return null;
+
+  const profile = loadProfile() || {};
+  const returnUrl = optionalHttpUrlFromStorage(PAGBANK_RETURN_URL_KEY);
+  const redirectUrl = optionalHttpUrlFromStorage(PAGBANK_REDIRECT_URL_KEY);
+  const notificationUrl = optionalHttpUrlFromStorage(PAGBANK_NOTIFICATION_URL_KEY);
+  const paymentNotificationUrl = optionalHttpUrlFromStorage(PAGBANK_PAYMENT_NOTIFICATION_URL_KEY);
+
+  return {
+    referenceId: genOrderId(),
+    paymentMethod: String(paymentMethod || "").trim(),
+    customer: {
+      name: String(profile?.name || "").trim(),
+      email: String(profile?.email || "").trim().toLowerCase()
+    },
+    coupon: snapshot.coupons[0] || "",
+    shipTo: snapshot.shipTo,
+    discountAmount: moneyToCents(snapshot.discount),
+    shippingAmount: moneyToCents(snapshot.shipping),
+    items: snapshot.grouped.map((item) => ({
+      id: String(item.id),
+      referenceId: `SKU-${item.id}`,
+      name: String(item.name || "").trim(),
+      description: [item.category, item.size].filter(Boolean).join(" | ").slice(0, 240),
+      quantity: Number(item.qty) || 1,
+      unitAmount: moneyToCents(item.price)
+    })),
+    totals: {
+      subtotal: moneyToCents(snapshot.subtotal),
+      discount: moneyToCents(snapshot.discount),
+      shipping: moneyToCents(snapshot.shipping),
+      total: moneyToCents(snapshot.total)
+    },
+    returnUrl,
+    redirectUrl,
+    notificationUrl,
+    paymentNotificationUrl
+  };
+}
+
 function genOrderId() {
   const rnd = Math.random().toString(16).slice(2, 6).toUpperCase();
   return `SM-${Date.now().toString(36).toUpperCase()}-${rnd}`;
@@ -416,13 +554,7 @@ function setCartExtraSpace(itemCount) {
 
 function updatePaymentUI(method) {
   if (!paymentSelected) return;
-  const labels = {
-    pix: "Pix",
-    credito: "Cartao de credito",
-    debito: "Cartao de debito",
-    boleto: "Boleto"
-  };
-  const label = labels[String(method || "").trim()];
+  const label = paymentLabel(method);
   if (!label) {
     paymentSelected.textContent = "";
     paymentSelected.hidden = true;
@@ -614,7 +746,7 @@ checkoutModal?.querySelectorAll("[data-close]").forEach((el) => {
   el.addEventListener("click", closeModal);
 });
 
-paymentForm?.addEventListener("submit", (e) => {
+paymentForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
   if (!hasActiveAuthSession()) {
     closeModal();
@@ -629,15 +761,50 @@ paymentForm?.addEventListener("submit", (e) => {
     feedback.textContent = "Escolha a forma de pagamento para continuar.";
     return;
   }
+
+  const payload = buildPagBankCheckoutPayload(method);
+  if (!payload) {
+    feedback.textContent = "Seu carrinho esta vazio.";
+    return;
+  }
+
+  if (confirmPaymentBtn) {
+    confirmPaymentBtn.disabled = true;
+    confirmPaymentBtn.textContent = "Gerando pagamento...";
+  }
+
   savePayment(method);
   updatePaymentUI(method);
-  const order = createOrder(method);
-  feedback.textContent = order ? `Pedido confirmado: ${order.id}` : "Pedido enviado! Obrigado pela compra.";
-  saveCartIds([]);
-  // Consome o cupom (1 por compra).
-  saveCoupons([]);
-  closeModal();
-  renderCart();
+
+  try {
+    const endpoint = resolvePagBankCheckoutEndpoint();
+    const data = await postJson(endpoint, payload, 22000);
+    const checkoutUrl = String(data?.checkoutUrl || "").trim();
+
+    if (!checkoutUrl) {
+      throw new Error("PagBank nao retornou URL de pagamento.");
+    }
+
+    localStorage.setItem(
+      "stopmod_pending_checkout",
+      JSON.stringify({
+        referenceId: String(data?.referenceId || payload.referenceId),
+        method,
+        createdAt: new Date().toISOString()
+      })
+    );
+
+    closeModal();
+    feedback.textContent = "Redirecionando para o PagBank...";
+    window.location.href = checkoutUrl;
+  } catch (error) {
+    feedback.textContent = `Falha ao iniciar pagamento real: ${String(error?.message || "tente novamente.")}`;
+  } finally {
+    if (confirmPaymentBtn) {
+      confirmPaymentBtn.disabled = false;
+      confirmPaymentBtn.textContent = confirmPaymentDefaultLabel;
+    }
+  }
 });
 
 document.addEventListener("keydown", (e) => {
