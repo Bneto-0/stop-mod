@@ -47,7 +47,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=15" />
+  <link rel="stylesheet" href="style.css?v=16" />
   <style>
     .container { width: min(1320px, 96%); }
     .hero {
@@ -261,7 +261,7 @@
       height: clamp(210px, 31vw, 540px);
     }
 
-    .hero-ad {
+    .hero-promo {
       position: relative;
       display: block;
       text-decoration: none;
@@ -274,7 +274,7 @@
         linear-gradient(130deg, #3a2e25 0%, #6e5442 100%);
     }
 
-    .hero-ad img {
+    .hero-promo img {
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -285,18 +285,18 @@
       -webkit-user-drag: none;
     }
 
-    .hero-ad {
+    .hero-promo {
       touch-action: pan-y;
       user-select: none;
       cursor: grab;
     }
 
-    .hero-ad.dragging {
+    .hero-promo.dragging {
       cursor: grabbing;
     }
 
     /* Transparent effect only on the bottom edge of the banner. */
-    .hero-ad::after {
+    .hero-promo::after {
       content: "";
       position: absolute;
       left: 0;
@@ -308,7 +308,7 @@
       z-index: 1;
     }
 
-    .ad-arrow {
+    .promo-arrow {
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
@@ -329,16 +329,16 @@
       transition: background .2s ease, transform .2s ease;
     }
 
-    .ad-arrow:hover {
+    .promo-arrow:hover {
       background: #0000008a;
       transform: translateY(-50%) scale(1.05);
     }
 
-    .ad-prev { left: 8px; }
-    .ad-next { right: 8px; }
-    .hero-ad .ad-arrow { display: none; }
+    .promo-prev { left: 8px; }
+    .promo-next { right: 8px; }
+    .hero-promo .promo-arrow { display: none; }
 
-    .ad-dots {
+    .promo-dots {
       position: absolute;
       left: 50%;
       bottom: 9px;
@@ -349,7 +349,7 @@
       z-index: 3;
     }
 
-    .ad-dot {
+    .promo-dot {
       width: 8px;
       height: 8px;
       border-radius: 999px;
@@ -359,7 +359,7 @@
       opacity: 0.9;
     }
 
-    .ad-dot.active {
+    .promo-dot.active {
       width: 20px;
       background: #fff;
       opacity: 1;
@@ -847,11 +847,11 @@
     </div>
 
     <section class="hero-main" aria-label="Destaque inicial">
-      <a id="ad-main-link" class="hero-banner hero-ad" href="anuncios/" aria-label="Anuncio em destaque">
-        <img id="ad-main-image" src="" alt="Anuncio destaque" loading="lazy" />
-        <span class="ad-arrow ad-prev" data-nav="prev" role="button" tabindex="0" aria-label="Anuncio anterior">&#10094;</span>
-        <span class="ad-arrow ad-next" data-nav="next" role="button" tabindex="0" aria-label="Proximo anuncio">&#10095;</span>
-        <div id="ad-main-dots" class="ad-dots" aria-hidden="true"></div>
+      <a id="promo-main-link" class="hero-banner hero-promo" href="anuncios/" aria-label="Anuncio em destaque">
+        <img id="promo-main-image" src="" alt="Anuncio destaque" loading="lazy" />
+        <span class="promo-arrow promo-prev" data-nav="prev" role="button" tabindex="0" aria-label="Anuncio anterior">&#10094;</span>
+        <span class="promo-arrow promo-next" data-nav="next" role="button" tabindex="0" aria-label="Proximo anuncio">&#10095;</span>
+        <div id="promo-main-dots" class="promo-dots" aria-hidden="true"></div>
       </a>
     </section>
   </header>
@@ -864,18 +864,18 @@
       <div id="product-grid" class="grid"></div>
     </section>
 
-    <section id="anuncios-sequencia" class="products products-extra ads-tab">
+    <section id="anuncios-sequencia" class="products products-extra promo-tab">
       <div class="products-head">
         <h2>Anuncios</h2>
       </div>
-      <a id="ad-seq-link" class="hero-banner hero-ad hero-ad-secondary" href="anuncios/" aria-label="Anuncios da loja">
-        <img id="ad-seq-image" src="" alt="Anuncio da loja" loading="lazy" />
-        <span class="ad-arrow ad-prev" data-nav="prev" role="button" tabindex="0" aria-label="Anuncio anterior">&#10094;</span>
-        <span class="ad-arrow ad-next" data-nav="next" role="button" tabindex="0" aria-label="Proximo anuncio">&#10095;</span>
-        <div id="ad-seq-dots" class="ad-dots" aria-hidden="true"></div>
+      <a id="promo-seq-link" class="hero-banner hero-promo hero-promo-secondary" href="anuncios/" aria-label="Anuncios da loja">
+        <img id="promo-seq-image" src="" alt="Anuncio da loja" loading="lazy" />
+        <span class="promo-arrow promo-prev" data-nav="prev" role="button" tabindex="0" aria-label="Anuncio anterior">&#10094;</span>
+        <span class="promo-arrow promo-next" data-nav="next" role="button" tabindex="0" aria-label="Proximo anuncio">&#10095;</span>
+        <div id="promo-seq-dots" class="promo-dots" aria-hidden="true"></div>
       </a>
-      <div id="mais-produtos-slides" class="ads-products-block">
-        <div class="ads-products-head">
+      <div id="mais-produtos-slides" class="promo-products-block">
+        <div class="promo-products-head">
           <h3>Produtos em sequencia</h3>
         </div>
         <div class="product-slides-shell">
@@ -977,7 +977,7 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=28"></script>
+  <script src="script.js?v=29"></script>
   <script src="assets/menu-dropdown.js?v=18"></script>
 </body>
 </html>

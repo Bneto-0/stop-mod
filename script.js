@@ -93,12 +93,12 @@ const menuLocation = document.getElementById("menu-location");
 const profileTopLink = document.getElementById("profile-top-link");
 const profileTopName = document.getElementById("profile-top-name");
 const profileTopPhoto = document.getElementById("profile-top-photo");
-const adMainImage = document.getElementById("ad-main-image");
-const adMainLink = document.getElementById("ad-main-link");
-const adMainDots = document.getElementById("ad-main-dots");
-const adSeqImage = document.getElementById("ad-seq-image");
-const adSeqLink = document.getElementById("ad-seq-link");
-const adSeqDots = document.getElementById("ad-seq-dots");
+const promoMainImage = document.getElementById("promo-main-image");
+const promoMainLink = document.getElementById("promo-main-link");
+const promoMainDots = document.getElementById("promo-main-dots");
+const promoSeqImage = document.getElementById("promo-seq-image");
+const promoSeqLink = document.getElementById("promo-seq-link");
+const promoSeqDots = document.getElementById("promo-seq-dots");
 const heroCategoryDropdown = document.getElementById("hero-category-dropdown");
 const heroCategoryBtn = document.getElementById("hero-category-btn");
 const heroCategoryPanel = document.getElementById("hero-category-panel");
@@ -1322,7 +1322,7 @@ function startAdSlider(frameEl, imgEl, dotsEl, images, targetHref) {
 
   const syncDots = () => {
     if (!dotsEl) return;
-    dotsEl.querySelectorAll(".ad-dot").forEach((dot, i) => {
+    dotsEl.querySelectorAll(".promo-dot").forEach((dot, i) => {
       dot.classList.toggle("active", i === index);
     });
   };
@@ -1330,9 +1330,9 @@ function startAdSlider(frameEl, imgEl, dotsEl, images, targetHref) {
   const buildDots = () => {
     if (!dotsEl) return;
     dotsEl.innerHTML = list
-      .map((_, i) => `<span class="ad-dot ${i === 0 ? "active" : ""}" data-i="${i}"></span>`)
+      .map((_, i) => `<span class="promo-dot ${i === 0 ? "active" : ""}" data-i="${i}"></span>`)
       .join("");
-    dotsEl.querySelectorAll(".ad-dot").forEach((dotEl) => {
+    dotsEl.querySelectorAll(".promo-dot").forEach((dotEl) => {
       dotEl.addEventListener("click", (ev) => {
         ev.preventDefault();
         ev.stopPropagation();
@@ -1616,14 +1616,14 @@ renderMenuLocation();
 renderTopProfile();
 initCategoryDropdown();
 const homeAds = loadHomeAds();
-startAdSlider(adMainLink, adMainImage, adMainDots, homeAds, loadHomeTarget());
+startAdSlider(promoMainLink, promoMainImage, promoMainDots, homeAds, loadHomeTarget());
 const sequenceAds = uniqueUrls([
   ...homeAds.slice(1),
   ...DEFAULT_LEFT_ADS,
   ...DEFAULT_RIGHT_ADS,
   ...homeAds.slice(0, 1)
 ]).slice(0, MAX_AD_SLIDES);
-startAdSlider(adSeqLink, adSeqImage, adSeqDots, sequenceAds, loadHomeTarget());
+startAdSlider(promoSeqLink, promoSeqImage, promoSeqDots, sequenceAds, loadHomeTarget());
 initProductSlides();
 syncSearchQueryInUrl();
 

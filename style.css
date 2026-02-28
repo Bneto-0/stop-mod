@@ -608,27 +608,27 @@ body {
   margin-top: 0.95rem;
 }
 
-.ads-tab {
+.promo-tab {
   display: grid;
   gap: 0.9rem;
 }
 
-.hero-banner.hero-ad-secondary {
+.hero-banner.hero-promo-secondary {
   height: clamp(170px, 22vw, 320px);
   border-radius: 12px;
   overflow: hidden;
 }
 
-.hero-ad.hero-ad-secondary::after {
+.hero-promo.hero-promo-secondary::after {
   display: none;
 }
 
-.ads-products-block {
+.promo-products-block {
   display: grid;
   gap: 0.5rem;
 }
 
-.ads-products-head h3 {
+.promo-products-head h3 {
   font-size: 1.15rem;
 }
 
