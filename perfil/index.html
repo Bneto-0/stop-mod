@@ -402,7 +402,14 @@
       padding: .9rem;
       display:flex;
       align-items:center;
+      justify-content: space-between;
       gap: .8rem;
+    }
+    .account-head-main {
+      display:flex;
+      align-items:center;
+      gap: .8rem;
+      min-width: 0;
     }
     .account-head img {
       width: 52px;
@@ -421,6 +428,21 @@
       color: var(--muted);
       font-weight: 700;
       font-size: .9rem;
+    }
+    .account-logout {
+      border: 1px solid #c84f2e;
+      background: #fff;
+      color: #c84f2e;
+      border-radius: 10px;
+      padding: .36rem .82rem;
+      font-family: inherit;
+      font-size: .85rem;
+      font-weight: 900;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .account-logout:hover {
+      background: #fff3eb;
     }
     .repo-grid {
       display:grid;
@@ -550,6 +572,10 @@
       .hero-userchip strong { max-width: 22ch; }
       .hero-tabs-text { margin-left: 0; }
       .line-field { grid-template-columns: 1fr; }
+      .account-head {
+        flex-direction: column;
+        align-items: flex-start;
+      }
     }
 
     @media (max-width: 460px) {
@@ -633,8 +659,6 @@
           <strong id="corner-label">Perfil</strong>
         </div>
       </div>
-
-      <button id="logout" class="hero-logout-mini" type="button" aria-label="Sair">Sair</button>
     </div>
   </header>
 
@@ -643,11 +667,14 @@
       <div id="view-authed" hidden>
         <div class="profile-hub">
           <div class="account-head">
-            <img id="account-avatar" src="../assets/icons/user-solid.svg" alt="Perfil" />
-            <div>
-              <strong id="name">Cliente Stop mod</strong>
-              <span id="email">Conta conectada</span>
+            <div class="account-head-main">
+              <img id="account-avatar" src="../assets/icons/user-solid.svg" alt="Perfil" />
+              <div>
+                <strong id="name">Cliente Stop mod</strong>
+                <span id="email">Conta conectada</span>
+              </div>
             </div>
+            <button id="logout" class="account-logout" type="button" aria-label="Sair">Sair</button>
           </div>
 
                     <div class="repo-grid">
