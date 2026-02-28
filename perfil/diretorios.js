@@ -634,7 +634,6 @@ function renderEnderecosPage() {
       <div class="orders-list">${savedHtml}</div>
     </section>
 
-    <a class="btn dir-link-btn" href="../../entrega/">Editar enderecos completos</a>
   `;
 }
 
