@@ -1738,18 +1738,6 @@ searchInput?.addEventListener("keydown", (event) => {
   syncSearchQueryInUrl();
 });
 
-function onOpenProductClick(event) {
-  const trigger = event.target.closest("[data-product-open]");
-  if (!trigger) return;
-  event.preventDefault();
-  const id = Number(trigger.getAttribute("data-product-open"));
-  if (!Number.isInteger(id) || id <= 0) return;
-  openProductModal(id);
-}
-
-productGrid?.addEventListener("click", onOpenProductClick);
-productSlidesTrack?.addEventListener("click", onOpenProductClick);
-
 productModalCloseEls.forEach((el) => {
   el.addEventListener("click", closeProductModal);
 });

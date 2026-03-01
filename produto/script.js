@@ -1,6 +1,10 @@
 const CART_KEY = "stopmod_cart";
 const MAX_CART_ITEMS = 2000;
 const LAST_PRODUCT_CHOICE_KEY = "stopmod_last_product_choice";
+const SHIP_KEY = "stopmod_ship_to";
+const PROFILE_KEY = "stopmod_profile";
+const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
+const AUTH_TIMEOUT_MS = 2 * 60 * 60 * 1000;
 
 const SIZE_ORDER = ["PP", "P", "M", "G", "GG", "XG", "XXG"];
 
@@ -42,11 +46,24 @@ const feedbackEl = document.getElementById("product-feedback");
 const addCartBtn = document.getElementById("add-cart-btn");
 const buyNowBtn = document.getElementById("buy-now-btn");
 const cartCountEl = document.getElementById("cart-count");
+const searchInputEl = document.getElementById("search-input");
+const menuLocationEl = document.getElementById("menu-location");
+const profileTopLink = document.getElementById("profile-top-link");
+const profileTopName = document.getElementById("profile-top-name");
+const profileTopPhoto = document.getElementById("profile-top-photo");
 
 let activeProduct = null;
 
 function formatBRL(value) {
   return Number(value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function normalizeText(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
 }
 
 function loadCartIds() {
@@ -68,6 +85,81 @@ function updateCartCount() {
   const ids = loadCartIds();
   cartCountEl.textContent = String(ids.length);
   cartCountEl.style.display = ids.length ? "inline-flex" : "none";
+}
+
+function loadShipTo() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SHIP_KEY) || "{}");
+    return raw && typeof raw === "object" ? raw : {};
+  } catch {
+    return {};
+  }
+}
+
+function renderMenuLocation() {
+  if (!menuLocationEl) return;
+  const shipTo = loadShipTo();
+  const street = String(shipTo?.street || "").trim();
+  const number = String(shipTo?.number || "").trim();
+  const city = String(shipTo?.city || "").trim();
+  const streetLine = [street, number].filter(Boolean).join(", ");
+  menuLocationEl.textContent = streetLine || city || "Sao paulo";
+}
+
+function loadProfile() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PROFILE_KEY) || "null");
+    return raw && typeof raw === "object" ? raw : null;
+  } catch {
+    return null;
+  }
+}
+
+function loadActiveProfile() {
+  const profile = loadProfile();
+  if (!profile) return null;
+
+  const rawLastSeen = Number(localStorage.getItem(AUTH_LAST_SEEN_KEY) || "0");
+  if (Number.isFinite(rawLastSeen) && rawLastSeen > 0 && Date.now() - rawLastSeen > AUTH_TIMEOUT_MS) {
+    return null;
+  }
+  return profile;
+}
+
+function renderTopProfile() {
+  if (!profileTopLink || !profileTopName) return;
+  const profile = loadActiveProfile();
+
+  if (!profile) {
+    profileTopName.textContent = "Perfil";
+    profileTopLink.classList.remove("logged");
+    profileTopLink.setAttribute("aria-label", "Perfil");
+    if (profileTopPhoto) {
+      profileTopPhoto.hidden = true;
+      profileTopPhoto.src = "/assets/icons/user-solid.svg";
+      profileTopPhoto.alt = "";
+    }
+    return;
+  }
+
+  const displayName = String(profile.name || "").trim() || "Perfil";
+  const photo = String(profile.picture || "").trim();
+  profileTopName.textContent = displayName;
+  profileTopLink.classList.add("logged");
+  profileTopLink.setAttribute("aria-label", `Perfil de ${displayName}`);
+  if (profileTopPhoto) {
+    profileTopPhoto.hidden = false;
+    profileTopPhoto.src = photo || "/assets/icons/user-solid.svg";
+    profileTopPhoto.alt = `Foto de ${displayName}`;
+  }
+}
+
+function openStoreSearch() {
+  const query = String(searchInputEl?.value || "").trim();
+  const params = new URLSearchParams();
+  if (query) params.set("q", query);
+  const q = params.toString();
+  window.location.href = `/index.html${q ? `?${q}` : ""}#produtos`;
 }
 
 function setFeedback(text, isError) {
@@ -233,7 +325,7 @@ buyNowBtn?.addEventListener("click", () => {
     setFeedback(result.message, true);
     return;
   }
-  window.location.href = "../carrinho/";
+  window.location.href = "/carrinho/";
 });
 
 qtyEl?.addEventListener("input", () => {
@@ -241,8 +333,23 @@ qtyEl?.addEventListener("input", () => {
   qtyEl.value = String(qty);
 });
 
+searchInputEl?.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter") return;
+  event.preventDefault();
+  openStoreSearch();
+});
+
 const requestedId = readProductIdFromUrl();
 const foundProduct = productById.get(requestedId);
 if (foundProduct) renderProduct(foundProduct);
 else renderNotFound();
 updateCartCount();
+renderMenuLocation();
+renderTopProfile();
+
+window.addEventListener("storage", (event) => {
+  const key = normalizeText(event?.key || "");
+  if (key === normalizeText(SHIP_KEY)) renderMenuLocation();
+  if (key === normalizeText(PROFILE_KEY) || key === normalizeText(AUTH_LAST_SEEN_KEY)) renderTopProfile();
+  if (key === normalizeText(CART_KEY)) updateCartCount();
+});
