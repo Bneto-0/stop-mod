@@ -79,13 +79,8 @@ h1 {
   display: grid;
   grid-template-columns: 1.3fr 1fr;
   grid-template-areas:
-    "current current"
     "list form";
   gap: 1rem;
-}
-
-.card-current {
-  grid-area: current;
 }
 
 .card-list {
@@ -124,40 +119,6 @@ h1 {
 .card h2 {
   font-size: 1.06rem;
   margin-bottom: 0.72rem;
-  font-weight: 900;
-}
-
-.card-current .current {
-  display: flex;
-  gap: 0.86rem;
-  align-items: center;
-  padding: 0.72rem;
-  border-radius: 14px;
-  border: 1px solid #ece1d5;
-  background: linear-gradient(180deg, #fff 0%, #fff8f2 100%);
-}
-
-.pin {
-  width: 34px;
-  height: 34px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: #fff2e8;
-  border: 1px solid #f0d4c4;
-  flex: 0 0 auto;
-}
-
-.pin svg {
-  width: 18px;
-  height: 18px;
-  fill: var(--accent);
-}
-
-#current-dest {
-  font-size: 1.1rem;
-  line-height: 1.2;
   font-weight: 900;
 }
 
@@ -355,7 +316,6 @@ footer {
   .delivery-grid {
     grid-template-columns: 1fr;
     grid-template-areas:
-      "current"
       "list"
       "form";
   }
