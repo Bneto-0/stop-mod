@@ -1,10 +1,16 @@
 const CART_KEY = "stopmod_cart";
 const MAX_CART_ITEMS = 2000;
 const LAST_PRODUCT_CHOICE_KEY = "stopmod_last_product_choice";
+const FAVORITES_KEY = "stopmod_favorites";
+const SOLD_COUNTS_KEY = "stopmod_sold_counts";
 const SHIP_KEY = "stopmod_ship_to";
 const PROFILE_KEY = "stopmod_profile";
 const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
 const AUTH_TIMEOUT_MS = 2 * 60 * 60 * 1000;
+const SHIPPING_PROMO_SUBTOTAL = 249.9;
+const SHIPPING_PROMO_ITEM_COUNT = 5;
+const SHIPPING_DEFAULT_PRICE = 19.9;
+const FULL_PRICE_MULTIPLIER = 1.07;
 
 const SIZE_ORDER = ["PP", "P", "M", "G", "GG", "XG", "XXG"];
 
@@ -43,6 +49,10 @@ const installmentEl = document.getElementById("product-installment");
 const soldEl = document.getElementById("product-sold");
 const ratingEl = document.getElementById("product-rating");
 const arrivalEl = document.getElementById("product-arrival");
+const favBtnEl = document.getElementById("product-fav-btn");
+const shipChipEl = document.getElementById("product-ship-chip");
+const shipCostEl = document.getElementById("product-ship-cost");
+const shipCostValueEl = document.getElementById("product-ship-cost-value");
 const sizePillsEl = document.getElementById("product-size-pills");
 const colorSwatchesEl = document.getElementById("product-color-swatches");
 const sizeEl = document.getElementById("product-size");
@@ -100,11 +110,6 @@ function starsByRating(rating) {
   return `${"*".repeat(full)}${"-".repeat(5 - full)}`;
 }
 
-function estimateSoldCount(productId) {
-  const base = Number(productId) || 0;
-  return 120 + base * 17;
-}
-
 function estimateRating(productId) {
   const base = Number(productId) || 0;
   const raw = 4.6 + (base % 5) * 0.08;
@@ -138,11 +143,127 @@ function saveCartIds(ids) {
   localStorage.setItem(CART_KEY, JSON.stringify(ids));
 }
 
+function loadFavoriteIds() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(FAVORITES_KEY) || "[]");
+    if (!Array.isArray(raw)) return [];
+    const ids = raw.map((item) => Number(item)).filter((item) => Number.isInteger(item) && item > 0);
+    return Array.from(new Set(ids));
+  } catch {
+    return [];
+  }
+}
+
+function saveFavoriteIds(ids) {
+  localStorage.setItem(FAVORITES_KEY, JSON.stringify(Array.from(new Set(ids))));
+}
+
+function loadSoldCounters() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SOLD_COUNTS_KEY) || "{}");
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+    return raw;
+  } catch {
+    return {};
+  }
+}
+
+function getSoldCount(productId) {
+  const id = Number(productId);
+  if (!Number.isInteger(id) || id <= 0) return 0;
+  const counts = loadSoldCounters();
+  const value = Number(counts[String(id)] || 0);
+  if (!Number.isFinite(value) || value < 0) return 0;
+  return Math.max(0, Math.floor(value));
+}
+
+function renderSoldCount() {
+  if (!soldEl || !activeProduct) return;
+  soldEl.textContent = `+ ${getSoldCount(activeProduct.id)} quantidade vendida`;
+}
+
+function isProductFavorite(productId) {
+  const id = Number(productId);
+  if (!Number.isInteger(id) || id <= 0) return false;
+  return loadFavoriteIds().includes(id);
+}
+
+function renderFavoriteButton() {
+  if (!favBtnEl) return;
+
+  if (!activeProduct) {
+    favBtnEl.disabled = true;
+    favBtnEl.classList.remove("active");
+    favBtnEl.textContent = "\u2661";
+    favBtnEl.setAttribute("aria-label", "Favoritar produto");
+    return;
+  }
+
+  favBtnEl.disabled = false;
+  const active = isProductFavorite(activeProduct.id);
+  favBtnEl.classList.toggle("active", active);
+  favBtnEl.textContent = active ? "\u2665" : "\u2661";
+  favBtnEl.setAttribute("aria-label", active ? "Remover dos favoritos" : "Favoritar produto");
+}
+
+function toggleFavoriteCurrentProduct() {
+  if (!activeProduct) return;
+  const id = Number(activeProduct.id);
+  if (!Number.isInteger(id) || id <= 0) return;
+
+  const favorites = loadFavoriteIds();
+  const index = favorites.indexOf(id);
+  if (index >= 0) favorites.splice(index, 1);
+  else favorites.push(id);
+  saveFavoriteIds(favorites);
+  renderFavoriteButton();
+}
+
 function updateCartCount() {
   if (!cartCountEl) return;
   const ids = loadCartIds();
   cartCountEl.textContent = String(ids.length);
   cartCountEl.style.display = ids.length ? "inline-flex" : "none";
+}
+
+function getProjectedCartTotals() {
+  const ids = loadCartIds();
+  const currentQty = getSelectedQty();
+  let subtotal = 0;
+
+  ids.forEach((id) => {
+    const product = productById.get(Number(id));
+    if (!product) return;
+    subtotal += Number(product.price || 0);
+  });
+
+  if (activeProduct) {
+    subtotal += Number(activeProduct.price || 0) * currentQty;
+  }
+
+  return {
+    subtotal,
+    itemCount: ids.length + (activeProduct ? currentQty : 0)
+  };
+}
+
+function renderShippingPreview() {
+  if (!shipChipEl || !shipCostEl || !shipCostValueEl) return;
+
+  if (!activeProduct) {
+    shipChipEl.hidden = true;
+    shipCostEl.hidden = true;
+    return;
+  }
+
+  const totals = getProjectedCartTotals();
+  const isFree = totals.subtotal >= SHIPPING_PROMO_SUBTOTAL || totals.itemCount >= SHIPPING_PROMO_ITEM_COUNT;
+  const shippingValue = isFree ? 0 : SHIPPING_DEFAULT_PRICE;
+
+  shipChipEl.hidden = !isFree;
+  shipCostEl.hidden = false;
+  shipCostEl.classList.toggle("is-free", isFree);
+  shipCostValueEl.textContent = formatBRL(shippingValue);
 }
 
 function loadShipTo() {
@@ -319,6 +440,7 @@ function renderColorSwatches() {
 }
 
 function renderNotFound() {
+  activeProduct = null;
   if (categoryEl) categoryEl.textContent = "Produto";
   if (nameEl) nameEl.textContent = "Produto nao encontrado";
   if (priceEl) priceEl.textContent = "R$ 0,00";
@@ -338,6 +460,8 @@ function renderNotFound() {
   if (qtyEl) qtyEl.value = "1";
   if (addCartBtn) addCartBtn.disabled = true;
   if (buyNowBtn) buyNowBtn.disabled = true;
+  renderFavoriteButton();
+  renderShippingPreview();
   setFeedback("Produto nao encontrado. Volte para a loja e escolha novamente.", true);
 }
 
@@ -346,10 +470,10 @@ function renderProduct(product) {
   if (categoryEl) categoryEl.textContent = String(product.category || "Produto");
   if (nameEl) nameEl.textContent = String(product.name || "Produto");
   if (priceEl) priceEl.textContent = `R$ ${formatBRL(product.price)}`;
-  const oldPrice = Number((Number(product.price || 0) * 1.07).toFixed(2));
+  const oldPrice = Number((Number(product.price || 0) * FULL_PRICE_MULTIPLIER).toFixed(2));
   if (oldPriceEl) oldPriceEl.textContent = `R$ ${formatBRL(oldPrice)}`;
-  if (installmentEl) installmentEl.textContent = `ou ${formatBRL(product.price)}`;
-  if (soldEl) soldEl.textContent = `+ ${estimateSoldCount(product.id)} quantidade vendida`;
+  if (installmentEl) installmentEl.textContent = `ou ${formatBRL(oldPrice)}`;
+  renderSoldCount();
   if (ratingEl) ratingEl.innerHTML = `${estimateRating(product.id).toFixed(1)} <span>${starsByRating(estimateRating(product.id))}</span>`;
   if (arrivalEl) arrivalEl.textContent = formatArrivalRange();
   if (imageEl) {
@@ -367,6 +491,8 @@ function renderProduct(product) {
 
   if (addCartBtn) addCartBtn.disabled = false;
   if (buyNowBtn) buyNowBtn.disabled = false;
+  renderFavoriteButton();
+  renderShippingPreview();
   setFeedback("", false);
 }
 
@@ -413,6 +539,7 @@ addCartBtn?.addEventListener("click", () => {
     return;
   }
   setFeedback(`Produto adicionado ao carrinho (${qty}x).`, false);
+  renderShippingPreview();
 });
 
 buyNowBtn?.addEventListener("click", () => {
@@ -422,22 +549,30 @@ buyNowBtn?.addEventListener("click", () => {
     setFeedback(result.message, true);
     return;
   }
+  renderShippingPreview();
   window.location.href = "/carrinho/";
+});
+
+favBtnEl?.addEventListener("click", () => {
+  toggleFavoriteCurrentProduct();
 });
 
 qtyEl?.addEventListener("input", () => {
   const qty = getSelectedQty();
   qtyEl.value = String(qty);
+  renderShippingPreview();
 });
 
 qtyDecBtn?.addEventListener("click", () => {
   const next = Math.max(1, getSelectedQty() - 1);
   if (qtyEl) qtyEl.value = String(next);
+  renderShippingPreview();
 });
 
 qtyIncBtn?.addEventListener("click", () => {
   const next = Math.min(10, getSelectedQty() + 1);
   if (qtyEl) qtyEl.value = String(next);
+  renderShippingPreview();
 });
 
 sizePillsEl?.addEventListener("click", (event) => {
@@ -476,5 +611,10 @@ window.addEventListener("storage", (event) => {
   const key = normalizeText(event?.key || "");
   if (key === normalizeText(SHIP_KEY)) renderMenuLocation();
   if (key === normalizeText(PROFILE_KEY) || key === normalizeText(AUTH_LAST_SEEN_KEY)) renderTopProfile();
-  if (key === normalizeText(CART_KEY)) updateCartCount();
+  if (key === normalizeText(FAVORITES_KEY)) renderFavoriteButton();
+  if (key === normalizeText(SOLD_COUNTS_KEY)) renderSoldCount();
+  if (key === normalizeText(CART_KEY)) {
+    updateCartCount();
+    renderShippingPreview();
+  }
 });

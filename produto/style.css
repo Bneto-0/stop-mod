@@ -98,6 +98,17 @@ body {
   cursor: pointer;
 }
 
+.product-fav-btn.active {
+  border-color: #c55a34;
+  background: #c55a34;
+  color: #fff;
+}
+
+.product-fav-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
 .product-panel h1 {
   margin: 0.1rem 0 0;
   font-size: clamp(2rem, 2.9vw, 3rem);
@@ -242,10 +253,10 @@ body {
 }
 
 .ship-chip {
-  border: 1px solid #d4cec7;
+  border: 1px solid #9fd7b8;
   border-radius: 4px;
-  background: #fff;
-  color: #302826;
+  background: #e9f9ef;
+  color: #11874d;
   font-size: 0.76rem;
   font-weight: 800;
   padding: 0.08rem 0.38rem;
@@ -258,7 +269,11 @@ body {
 }
 
 .ship-cost strong {
-  color: #1da35d;
+  color: #27211f;
+}
+
+.ship-cost.is-free strong {
+  color: #11874d;
 }
 
 .product-arrival {

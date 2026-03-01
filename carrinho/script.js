@@ -6,6 +6,7 @@ const COUPON_KEY = "stopmod_coupons";
 const PAY_KEY = "stopmod_payment";
 const ORDERS_KEY = "stopmod_orders";
 const NOTES_KEY = "stopmod_notifications";
+const SOLD_COUNTS_KEY = "stopmod_sold_counts";
 const PROFILE_KEY = "stopmod_profile";
 const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
 const ADDRESS_CONFIRM_FINGERPRINT_KEY = "stopmod_address_confirmed_fp";
@@ -472,6 +473,36 @@ function loadOrders() {
 
 function saveOrders(orders) {
   localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+}
+
+function loadSoldCounters() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SOLD_COUNTS_KEY) || "{}");
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+    return raw;
+  } catch {
+    return {};
+  }
+}
+
+function saveSoldCounters(counters) {
+  localStorage.setItem(SOLD_COUNTS_KEY, JSON.stringify(counters || {}));
+}
+
+function registerSoldItemsFromCheckout(items) {
+  if (!Array.isArray(items) || !items.length) return;
+  const counters = loadSoldCounters();
+
+  items.forEach((item) => {
+    const id = Number(item?.id);
+    const qty = Number(item?.quantity);
+    if (!Number.isInteger(id) || id <= 0) return;
+    if (!Number.isFinite(qty) || qty <= 0) return;
+    const prev = Number(counters[String(id)] || 0);
+    counters[String(id)] = Math.max(0, Math.floor(prev + qty));
+  });
+
+  saveSoldCounters(counters);
 }
 
 function loadNotes() {
@@ -1041,6 +1072,8 @@ paymentForm?.addEventListener("submit", async (e) => {
     if (!checkoutUrl) {
       throw new Error("PagBank nao retornou URL de pagamento.");
     }
+
+    registerSoldItemsFromCheckout(payload.items);
 
     localStorage.setItem(
       "stopmod_pending_checkout",
