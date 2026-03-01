@@ -192,7 +192,18 @@ function formatArrivalRange() {
 
 function renderArrivalPreview() {
   if (!arrivalEl) return;
-  arrivalEl.textContent = "Chegara entre:";
+  if (!activeProduct) {
+    arrivalEl.textContent = "Chegara entre:";
+    return;
+  }
+
+  const shipTo = loadShipTo();
+  const cepDigits = String(shipTo?.cep || "").replace(/\D/g, "");
+  const city = String(shipTo?.city || "").trim();
+  const street = String(shipTo?.street || "").trim();
+  const hasAddress = cepDigits.length === 8 && (!!city || !!street);
+
+  arrivalEl.textContent = hasAddress ? formatArrivalRange() : "Chegara entre:";
 }
 
 function loadCartIds() {
