@@ -40,6 +40,10 @@ const modalTitle = document.getElementById("modal-title");
 const modalBody = document.getElementById("modal-body");
 
 let resolvedApiBase = "";
+let regCpfLookupTimer = null;
+let regCpfLookupSeq = 0;
+let regCepLookupTimer = null;
+let regCepLookupSeq = 0;
 
 function setMsg(el, text, isErr = false) {
   if (!el) return;
@@ -106,10 +110,35 @@ function formatCpf(value) {
   return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6, 9)}-${cpf.slice(9)}`;
 }
 
+function isValidCpfDigits(cpfValue) {
+  const cpf = digitsOnly(cpfValue).slice(0, 11);
+  if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+
+  let sum = 0;
+  for (let i = 0; i < 9; i += 1) sum += Number(cpf[i]) * (10 - i);
+  let first = (sum * 10) % 11;
+  if (first === 10) first = 0;
+  if (first !== Number(cpf[9])) return false;
+
+  sum = 0;
+  for (let i = 0; i < 10; i += 1) sum += Number(cpf[i]) * (11 - i);
+  let second = (sum * 10) % 11;
+  if (second === 10) second = 0;
+  return second === Number(cpf[10]);
+}
+
 function formatCep(value) {
   const cep = digitsOnly(value).slice(0, 8);
   if (cep.length <= 5) return cep;
   return `${cep.slice(0, 5)}-${cep.slice(5)}`;
+}
+
+function normalizeCepDigits(value) {
+  return digitsOnly(value).slice(0, 8);
+}
+
+function isValidCepDigits(value) {
+  return /^\d{8}$/.test(String(value || ""));
 }
 
 function normalizeState(value) {
@@ -218,6 +247,183 @@ async function postJson(endpoint, payload, timeoutMs = 12000) {
   }
 }
 
+async function lookupCpfByBackend(cpfDigits, timeoutMs = 12000) {
+  const base = await resolveApiBase();
+  const url = buildApiUrl(base, "/api/auth/cpf/lookup");
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), Number(timeoutMs) || 12000);
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+      body: JSON.stringify({ cpf: String(cpfDigits || "") }),
+      signal: controller.signal
+    });
+
+    const text = await response.text();
+    let data = null;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      data = null;
+    }
+
+    if (!response.ok) {
+      const err = new Error(String(data?.message || data?.error || text || `HTTP ${response.status}`));
+      err.code = String(data?.error || "");
+      err.status = response.status;
+      throw err;
+    }
+    return data || {};
+  } catch (error) {
+    if (error?.name === "AbortError") throw new Error("Tempo esgotado na consulta CPF.");
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function lookupCpfAndFillRegisterName(forceFeedback = false) {
+  if (!regCpf) return;
+  const cpfDigits = digitsOnly(regCpf.value).slice(0, 11);
+  if (!cpfDigits) return;
+
+  if (cpfDigits.length !== 11) {
+    if (forceFeedback) setMsg(regMsg, "CPF incompleto.", true);
+    return;
+  }
+  if (!isValidCpfDigits(cpfDigits)) {
+    setMsg(regMsg, "CPF invalido.", true);
+    return;
+  }
+
+  const lookupSeq = ++regCpfLookupSeq;
+  setMsg(regMsg, "Validando CPF...", false);
+  try {
+    const data = await lookupCpfByBackend(cpfDigits);
+    if (lookupSeq !== regCpfLookupSeq) return;
+    const fullName = String(data?.name || "").trim();
+    if (!fullName) {
+      setMsg(regMsg, "CPF valido, mas sem nome retornado.", true);
+      return;
+    }
+
+    if (regName) regName.value = fullName;
+    const birthDate = String(data?.birthDate || "").trim();
+    if (regBirth && !String(regBirth.value || "").trim() && /^\d{4}-\d{2}-\d{2}$/.test(birthDate)) {
+      regBirth.value = birthDate;
+    }
+
+    setMsg(regMsg, "CPF confirmado. Nome preenchido automaticamente.", false);
+  } catch (error) {
+    if (lookupSeq !== regCpfLookupSeq) return;
+    const code = String(error?.code || "");
+    if (code === "cpf_lookup_not_configured") {
+      setMsg(regMsg, "Consulta externa de CPF nao configurada no backend.", true);
+      return;
+    }
+    if (code === "cpf_name_not_found") {
+      setMsg(regMsg, "CPF consultado, mas sem nome retornado.", true);
+      return;
+    }
+    if (forceFeedback) {
+      setMsg(regMsg, `Falha na consulta CPF: ${String(error?.message || "tente novamente.")}`, true);
+    }
+  }
+}
+
+async function fetchJsonWithTimeout(url, timeoutMs = 5200) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), Number(timeoutMs) || 5200);
+  try {
+    const response = await fetch(String(url || ""), {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      signal: controller.signal
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    if (error?.name === "AbortError") throw new Error("timeout");
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function normalizeLookupAddress(raw, fallbackCepDigits) {
+  if (!raw || typeof raw !== "object") return null;
+  const street = String(raw.street || raw.logradouro || "").trim();
+  const district = String(raw.district || raw.bairro || "").trim();
+  const city = String(raw.city || raw.localidade || "").trim();
+  const state = normalizeState(raw.state || raw.uf || "");
+  const cepDigits = normalizeCepDigits(raw.cep || fallbackCepDigits);
+  if (!street && !district && !city && !state) return null;
+  if (!isValidCepDigits(cepDigits)) return null;
+  return {
+    cep: formatCep(cepDigits),
+    street,
+    district,
+    city,
+    state
+  };
+}
+
+async function lookupCepViaCep(cepDigits) {
+  const data = await fetchJsonWithTimeout(`https://viacep.com.br/ws/${cepDigits}/json/`, 5200);
+  if (data?.erro) return null;
+  return normalizeLookupAddress(data, cepDigits);
+}
+
+async function lookupCepBrasilApi(cepDigits) {
+  const data = await fetchJsonWithTimeout(`https://brasilapi.com.br/api/cep/v1/${cepDigits}`, 5400);
+  return normalizeLookupAddress(data, cepDigits);
+}
+
+async function lookupCepAndFillRegisterAddress(forceFeedback = false) {
+  const cepDigits = normalizeCepDigits(regCep?.value || "");
+  if (!cepDigits) return;
+
+  if (!isValidCepDigits(cepDigits)) {
+    if (forceFeedback) setMsg(regMsg, "CEP invalido. Use 8 digitos.", true);
+    return;
+  }
+
+  const seq = ++regCepLookupSeq;
+  setMsg(regMsg, "Consultando CEP...", false);
+
+  const providers = [lookupCepViaCep, lookupCepBrasilApi];
+  let found = null;
+  for (const provider of providers) {
+    try {
+      const value = await provider(cepDigits);
+      if (value) {
+        found = value;
+        break;
+      }
+    } catch {
+      // tenta o proximo provedor
+    }
+  }
+
+  if (seq !== regCepLookupSeq) return;
+
+  if (!found) {
+    if (forceFeedback) setMsg(regMsg, "CEP nao encontrado. Verifique e tente novamente.", true);
+    return;
+  }
+
+  if (regCep) regCep.value = String(found.cep || formatCep(cepDigits));
+  if (regStreet) regStreet.value = String(found.street || regStreet.value || "");
+  if (regDistrict) regDistrict.value = String(found.district || regDistrict.value || "");
+  if (regCity) regCity.value = String(found.city || regCity.value || "");
+  if (regState) regState.value = normalizeState(found.state || regState.value || "");
+  setMsg(regMsg, "CEP valido. Endereco preenchido automaticamente.", false);
+}
+
 function normalizeAddressForLocalStorage(raw) {
   return {
     street: String(raw?.street || "").trim(),
@@ -308,6 +514,11 @@ async function handleRegisterSubmit(event) {
     return;
   }
 
+  if (!isValidCepDigits(payload.address.cep)) {
+    setMsg(regMsg, "Informe CEP valido com 8 digitos.", true);
+    return;
+  }
+
   if (
     !payload.address.cep ||
     !payload.address.street ||
@@ -372,10 +583,30 @@ loginForm?.addEventListener("submit", handleLoginSubmit);
 registerForm?.addEventListener("submit", handleRegisterSubmit);
 
 regCpf?.addEventListener("input", () => {
-  regCpf.value = formatCpf(regCpf.value);
+  const cpfDigits = digitsOnly(regCpf.value).slice(0, 11);
+  regCpf.value = formatCpf(cpfDigits);
+  if (regCpfLookupTimer) clearTimeout(regCpfLookupTimer);
+  if (cpfDigits.length !== 11) return;
+  regCpfLookupTimer = setTimeout(() => {
+    void lookupCpfAndFillRegisterName(false);
+  }, 600);
+});
+regCpf?.addEventListener("blur", () => {
+  if (regCpfLookupTimer) clearTimeout(regCpfLookupTimer);
+  void lookupCpfAndFillRegisterName(true);
 });
 regCep?.addEventListener("input", () => {
-  regCep.value = formatCep(regCep.value);
+  const cepDigits = normalizeCepDigits(regCep.value);
+  regCep.value = formatCep(cepDigits);
+  if (regCepLookupTimer) clearTimeout(regCepLookupTimer);
+  if (!isValidCepDigits(cepDigits)) return;
+  regCepLookupTimer = setTimeout(() => {
+    void lookupCepAndFillRegisterAddress(false);
+  }, 450);
+});
+regCep?.addEventListener("blur", () => {
+  if (regCepLookupTimer) clearTimeout(regCepLookupTimer);
+  void lookupCepAndFillRegisterAddress(true);
 });
 regState?.addEventListener("input", () => {
   regState.value = normalizeState(regState.value);
@@ -395,7 +626,7 @@ forgotBtn?.addEventListener("click", () => {
 });
 
 googleBtn?.addEventListener("click", () => {
-  setMsg(msg, "Login Google permanece opcional. O cadastro seguro principal e por email/CPF.", false);
+  setMsg(msg, "");
 });
 
 modal?.querySelectorAll("[data-close]").forEach((el) => el.addEventListener("click", closeModal));

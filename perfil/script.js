@@ -5,6 +5,9 @@ const DEFAULT_GOOGLE_CLIENT_ID = "887504211072-0elgoi3dbg80bb9640vvlqfl7cp8guq5.
 const PROFILE_KEY = "stopmod_profile";
 const PROFILE_EXTRA_KEY = "stopmod_profile_extra";
 const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
+const AUTH_TOKEN_KEY = "stopmod_auth_token";
+const API_BASE_KEY = "stopmod_api_base";
+const PAGBANK_API_BASE_KEY = "stopmod_pagbank_api_base";
 const AUTH_TIMEOUT_MS = 2 * 60 * 60 * 1000;
 const AUTH_TOUCH_MIN_GAP_MS = 15 * 1000;
 const ORDERS_KEY = "stopmod_orders";
@@ -41,6 +44,7 @@ const tabPanels = document.querySelectorAll("[data-panel]");
 
 const accFullName = document.getElementById("acc-full-name");
 const accCpf = document.getElementById("acc-cpf");
+const accCpfLookupBtn = document.getElementById("acc-cpf-lookup");
 const accPreferredName = document.getElementById("acc-preferred-name");
 const accTaxAddress = document.getElementById("acc-tax-address");
 const accEmail = document.getElementById("acc-email");
@@ -63,6 +67,7 @@ const favoritesList = document.getElementById("favorites-list");
 
 let lastAuthTouchAt = 0;
 let redirectingToLogin = false;
+let cpfLookupTimer = null;
 
 function loadCartIds() {
   try {
@@ -148,6 +153,137 @@ function isLikelyGoogleClientId(v) {
   return !!s && /\.apps\.googleusercontent\.com$/i.test(s);
 }
 
+function digitsOnly(value) {
+  return String(value || "").replace(/\D/g, "");
+}
+
+function formatCpf(value) {
+  const cpf = digitsOnly(value).slice(0, 11);
+  if (cpf.length <= 3) return cpf;
+  if (cpf.length <= 6) return `${cpf.slice(0, 3)}.${cpf.slice(3)}`;
+  if (cpf.length <= 9) return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6)}`;
+  return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6, 9)}-${cpf.slice(9)}`;
+}
+
+function isValidCpfDigits(cpfValue) {
+  const cpf = digitsOnly(cpfValue).slice(0, 11);
+  if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+
+  let sum = 0;
+  for (let i = 0; i < 9; i += 1) sum += Number(cpf[i]) * (10 - i);
+  let first = (sum * 10) % 11;
+  if (first === 10) first = 0;
+  if (first !== Number(cpf[9])) return false;
+
+  sum = 0;
+  for (let i = 0; i < 10; i += 1) sum += Number(cpf[i]) * (11 - i);
+  let second = (sum * 10) % 11;
+  if (second === 10) second = 0;
+  return second === Number(cpf[10]);
+}
+
+function normalizeApiBase(raw) {
+  const value = String(raw || "").trim().replace(/\/+$/, "");
+  if (!value) return "";
+  if (/^https?:\/\//i.test(value)) return value;
+  if (value.startsWith("/")) return value;
+  return "";
+}
+
+function buildApiUrl(endpoint) {
+  const base = normalizeApiBase(localStorage.getItem(API_BASE_KEY) || localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
+  const path = `/${String(endpoint || "").replace(/^\/+/, "")}`;
+  return base ? `${base}${path}` : path;
+}
+
+function setAccountMessage(text, isError) {
+  if (!accMsg) return;
+  accMsg.textContent = String(text || "");
+  accMsg.classList.toggle("err", !!isError);
+}
+
+async function lookupCpfNameByBackend(cpfDigits) {
+  const token = String(localStorage.getItem(AUTH_TOKEN_KEY) || "").trim();
+  const response = await fetch(buildApiUrl("/api/auth/cpf/lookup"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    },
+    body: JSON.stringify({ cpf: String(cpfDigits || "") })
+  });
+
+  const text = await response.text();
+  let data = null;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = null;
+  }
+
+  if (!response.ok) {
+    const err = new Error(String(data?.message || data?.error || text || `HTTP ${response.status}`));
+    err.code = String(data?.error || "");
+    err.status = response.status;
+    throw err;
+  }
+  return data || {};
+}
+
+async function lookupCpfAndFillName(forceFeedback) {
+  const cpfDigits = digitsOnly(accCpf?.value || "").slice(0, 11);
+  if (!cpfDigits) {
+    setAccountMessage("", false);
+    return;
+  }
+  if (cpfDigits.length !== 11) {
+    if (forceFeedback) setAccountMessage("CPF incompleto.", true);
+    return;
+  }
+  if (!isValidCpfDigits(cpfDigits)) {
+    setAccountMessage("CPF invalido.", true);
+    return;
+  }
+
+  if (accCpfLookupBtn) {
+    accCpfLookupBtn.disabled = true;
+    accCpfLookupBtn.textContent = "Consultando...";
+  }
+  setAccountMessage("Validando CPF...", false);
+
+  try {
+    const data = await lookupCpfNameByBackend(cpfDigits);
+    const fullName = String(data?.name || "").trim();
+    if (!fullName) {
+      setAccountMessage("CPF valido, mas nome nao retornado pelo provedor.", true);
+      return;
+    }
+
+    if (accFullName) accFullName.value = fullName;
+    if (accPreferredName && !String(accPreferredName.value || "").trim()) {
+      accPreferredName.value = fullName;
+    }
+    setAccountMessage("CPF confirmado. Nome preenchido automaticamente.", false);
+  } catch (error) {
+    const code = String(error?.code || "");
+    if (code === "cpf_lookup_not_configured") {
+      setAccountMessage("Consulta externa de CPF nao configurada no backend.", true);
+      return;
+    }
+    if (code === "cpf_name_not_found") {
+      setAccountMessage("CPF consultado, mas sem nome retornado.", true);
+      return;
+    }
+    setAccountMessage(`Falha na consulta CPF: ${String(error?.message || "tente novamente.")}`, true);
+  } finally {
+    if (accCpfLookupBtn) {
+      accCpfLookupBtn.disabled = false;
+      accCpfLookupBtn.textContent = "Validar CPF";
+    }
+  }
+}
+
 function saveProfile(p) {
   localStorage.setItem(PROFILE_KEY, JSON.stringify(p));
 }
@@ -162,7 +298,9 @@ function loadProfile() {
 
 function clearAuthSession() {
   localStorage.removeItem(PROFILE_KEY);
+  localStorage.removeItem(PROFILE_EXTRA_KEY);
   localStorage.removeItem(AUTH_LAST_SEEN_KEY);
+  localStorage.removeItem(AUTH_TOKEN_KEY);
 }
 
 function touchAuthSession(force) {
@@ -592,7 +730,7 @@ function renderAccount(activeProfile) {
   const username = deriveUsername(p, extra);
 
   if (accFullName) accFullName.value = fullName;
-  if (accCpf) accCpf.value = String(extra.cpf || "");
+  if (accCpf) accCpf.value = formatCpf(String(extra.cpf || ""));
   if (accPreferredName) accPreferredName.value = preferredName;
   if (accTaxAddress) accTaxAddress.value = String(extra.taxAddress || "");
   if (accEmail) accEmail.value = String(p?.email || "");
@@ -672,16 +810,42 @@ accSave?.addEventListener("click", () => {
   const extra = loadExtra();
   const fullName = String(accFullName?.value || "").trim();
   const preferredName = String(accPreferredName?.value || "").trim();
+  const cpfDigits = digitsOnly(accCpf?.value || "").slice(0, 11);
+
+  if (cpfDigits && !isValidCpfDigits(cpfDigits)) {
+    setAccountMessage("CPF invalido. Corrija antes de salvar.", true);
+    return;
+  }
+
   extra.fullName = fullName;
   extra.displayName = preferredName || fullName || String(p?.name || "Cliente Stop mod");
   extra.preferredName = preferredName;
-  extra.cpf = String(accCpf?.value || "").trim();
+  extra.cpf = cpfDigits;
   extra.taxAddress = String(accTaxAddress?.value || "").trim();
   extra.phone = String(accPhone?.value || "").trim();
   extra.username = String(accUsername?.value || "").trim();
   saveExtra(extra);
-  accMsg.textContent = "Conta atualizada.";
+  setAccountMessage("Conta atualizada.", false);
   renderAccount();
+});
+
+accCpf?.addEventListener("input", () => {
+  const cpfDigits = digitsOnly(accCpf.value).slice(0, 11);
+  accCpf.value = formatCpf(cpfDigits);
+  if (cpfLookupTimer) clearTimeout(cpfLookupTimer);
+  if (cpfDigits.length !== 11) return;
+  cpfLookupTimer = setTimeout(() => {
+    void lookupCpfAndFillName(false);
+  }, 650);
+});
+
+accCpf?.addEventListener("blur", () => {
+  const cpfDigits = digitsOnly(accCpf.value).slice(0, 11);
+  if (cpfDigits.length === 11) void lookupCpfAndFillName(true);
+});
+
+accCpfLookupBtn?.addEventListener("click", () => {
+  void lookupCpfAndFillName(true);
 });
 
 if (clientInput) {

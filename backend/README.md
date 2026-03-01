@@ -42,6 +42,7 @@ API local:
 - `POST /api/auth/login`
 - `GET /api/auth/me`
 - `POST /api/auth/address`
+- `POST /api/auth/cpf/lookup`
 
 Validacao rapida:
 
@@ -131,3 +132,22 @@ Sem provedor externo configurado, o backend valida apenas:
 
 - formato/algoritmo do CPF
 - consistencia dos campos obrigatorios
+
+### Auto preenchimento de nome por CPF (perfil/cadastro)
+
+Para habilitar preenchimento automatico do nome ao digitar CPF:
+
+- `CPF_CIVIL_LOOKUP_URL=https://seu-provedor/consulta-cpf`
+- `CPF_CIVIL_LOOKUP_TOKEN=...` (se necessitar)
+
+Importante:
+- Nao existe endpoint publico aberto da Receita Federal para retornar nome por CPF.
+- Para dados civis reais, use provedor autorizado/KYC (ex.: parceiro oficial com contrato/LGPD).
+
+Payload enviado:
+
+```json
+{ "cpf": "12345678909" }
+```
+
+O backend tenta ler nome nos campos comuns da resposta (`name`, `nome`, `fullName`, etc).

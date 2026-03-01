@@ -376,6 +376,7 @@
     input:focus { outline: 3px solid #ffb08055; outline-offset: 2px; }
 
     .ok { color:#18663f; font-weight:900; min-height:1rem; margin-top:.6rem; }
+    .ok.err { color:#a13c25; }
     .warn { color:#8c3c26; font-weight:900; }
 
     .order, .track { border:1px solid var(--line); border-radius: 14px; padding: .85rem; background:#fff; }
@@ -539,6 +540,27 @@
       font-family: inherit;
     }
     .line-field input[readonly] { background:#f8f4ef; color:#6e6761; }
+    .cpf-inline {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.52rem;
+      align-items: center;
+    }
+    .cpf-inline .btn.ghost.slim {
+      padding: 0.52rem 0.72rem;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #fff9f5;
+      color: #5a4234;
+      font-weight: 900;
+      font-size: 0.84rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .cpf-inline .btn.ghost.slim:hover {
+      background: #fff0e3;
+      color: #a64d2f;
+    }
 
     @media (max-width: 980px) {
       .repo-grid {
@@ -572,6 +594,7 @@
       .hero-userchip strong { max-width: 22ch; }
       .hero-tabs-text { margin-left: 0; }
       .line-field { grid-template-columns: 1fr; }
+      .cpf-inline { grid-template-columns: 1fr; }
       .account-head {
         flex-direction: column;
         align-items: flex-start;
@@ -748,9 +771,12 @@
                   <label class="line-field">
                     <span class="line-meta">
                       <strong>Numero do CPF</strong>
-                      <small>Documento do titular.</small>
+                      <small>Documento do titular. Ao digitar, tentamos validar e preencher nome automaticamente.</small>
                     </span>
-                    <input id="acc-cpf" type="text" placeholder="00000000000" />
+                    <div class="cpf-inline">
+                      <input id="acc-cpf" type="text" placeholder="000.000.000-00" />
+                      <button id="acc-cpf-lookup" class="btn ghost slim" type="button">Validar CPF</button>
+                    </div>
                   </label>
                   <label class="line-field">
                     <span class="line-meta">
@@ -812,7 +838,7 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=63"></script>
+  <script src="script.js?v=64"></script>
   <script src="../assets/menu-dropdown.js?v=20"></script>
 </body>
 </html>

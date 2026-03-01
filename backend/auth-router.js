@@ -10,6 +10,7 @@ const DEFAULT_CPF_CHECK_TIMEOUT_MS = 6000;
 const AUTH_RATE_WINDOW_MS = 10 * 60 * 1000;
 const AUTH_RATE_LIMIT_LOGIN = 20;
 const AUTH_RATE_LIMIT_REGISTER = 10;
+const AUTH_RATE_LIMIT_CPF_LOOKUP = 30;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
 const PASSWORD_RE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,72}$/;
 
@@ -23,8 +24,12 @@ export function createAuthRouter(options = {}) {
   const cpfCheckUrl = String(options.cpfCheckUrl || "").trim();
   const cpfCheckToken = String(options.cpfCheckToken || "").trim();
   const cpfCheckTimeoutMs = toInt(options.cpfCheckTimeoutMs, DEFAULT_CPF_CHECK_TIMEOUT_MS);
+  const cpfLookupUrl = String(options.cpfLookupUrl || cpfCheckUrl || "").trim();
+  const cpfLookupToken = String(options.cpfLookupToken || cpfCheckToken || "").trim();
+  const cpfLookupTimeoutMs = toInt(options.cpfLookupTimeoutMs, cpfCheckTimeoutMs || DEFAULT_CPF_CHECK_TIMEOUT_MS);
   const limiterLogin = createMemoryRateLimiter(AUTH_RATE_LIMIT_LOGIN, AUTH_RATE_WINDOW_MS);
   const limiterRegister = createMemoryRateLimiter(AUTH_RATE_LIMIT_REGISTER, AUTH_RATE_WINDOW_MS);
+  const limiterCpfLookup = createMemoryRateLimiter(AUTH_RATE_LIMIT_CPF_LOOKUP, AUTH_RATE_WINDOW_MS);
 
   let writeQueue = Promise.resolve();
 
@@ -156,6 +161,61 @@ export function createAuthRouter(options = {}) {
     return res.json({ ok: true, token, ...serializeSessionUser(user) });
   });
 
+  router.post("/cpf/lookup", limiterCpfLookup, async (req, res) => {
+    const cpf = normalizeCpf(req.body?.cpf || "");
+    if (!cpf || !isValidCpf(cpf)) {
+      return res.status(400).json({
+        ok: false,
+        error: "invalid_cpf",
+        message: "CPF invalido."
+      });
+    }
+
+    const lookup = await lookupCpfIdentity({
+      url: cpfLookupUrl,
+      token: cpfLookupToken,
+      timeoutMs: cpfLookupTimeoutMs,
+      cpf
+    });
+
+    if (!lookup.providerConfigured) {
+      return res.status(503).json({
+        ok: false,
+        error: "cpf_lookup_not_configured",
+        message: "Consulta CPF externa nao configurada no backend.",
+        validCpf: true
+      });
+    }
+
+    if (!lookup.checked) {
+      return res.status(502).json({
+        ok: false,
+        error: "cpf_lookup_failed",
+        message: "Falha ao consultar CPF no provedor externo.",
+        validCpf: true
+      });
+    }
+
+    if (!lookup.name) {
+      return res.status(404).json({
+        ok: false,
+        error: "cpf_name_not_found",
+        message: "CPF consultado, mas nome nao retornado pelo provedor.",
+        validCpf: true,
+        providerStatus: lookup.providerStatus
+      });
+    }
+
+    return res.json({
+      ok: true,
+      validCpf: true,
+      cpf,
+      name: lookup.name,
+      birthDate: lookup.birthDate,
+      providerStatus: lookup.providerStatus
+    });
+  });
+
   router.get("/me", requireAuth(tokenSecret), async (req, res) => {
     const store = await readStore(storePath);
     const user = store.users.find((item) => String(item.id) === String(req.auth?.sub || ""));
@@ -224,11 +284,13 @@ export function authHealth(config = {}) {
   const tokenSecret = String(config.tokenSecret || "").trim();
   const cpfCheckMode = normalizeCpfCheckMode(config.cpfCheckMode);
   const cpfCheckUrl = String(config.cpfCheckUrl || "").trim();
+  const cpfLookupUrl = String(config.cpfLookupUrl || "").trim();
   return {
     enabled: tokenSecret.length >= 32,
     tokenSecretConfigured: tokenSecret.length >= 32,
     cpfCivilCheckMode: cpfCheckMode,
-    cpfCivilCheckConfigured: !!cpfCheckUrl
+    cpfCivilCheckConfigured: !!cpfCheckUrl,
+    cpfLookupConfigured: !!cpfLookupUrl
   };
 }
 
@@ -502,6 +564,102 @@ async function verifyCpfCivilMatch(input) {
     };
   } finally {
     clearTimeout(timeout);
+  }
+}
+
+async function lookupCpfIdentity(input) {
+  const url = String(input?.url || "").trim();
+  if (!url || !/^https?:\/\//i.test(url)) {
+    return { providerConfigured: false, checked: false, name: "", birthDate: "" };
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), toInt(input?.timeoutMs, DEFAULT_CPF_CHECK_TIMEOUT_MS));
+  try {
+    const headers = { "Content-Type": "application/json", Accept: "application/json" };
+    if (String(input?.token || "").trim()) {
+      headers.Authorization = `Bearer ${String(input.token).trim()}`;
+    }
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ cpf: String(input?.cpf || "") }),
+      signal: controller.signal
+    });
+
+    const text = await response.text();
+    const data = safeParseJson(text) || {};
+
+    const name = extractCpfName(data);
+    const birthDate = extractCpfBirthDate(data);
+    return {
+      providerConfigured: true,
+      checked: response.ok,
+      providerStatus: Number(response.status) || 0,
+      name: normalizeFullName(name),
+      birthDate: normalizeBirthDate(birthDate)
+    };
+  } catch {
+    return { providerConfigured: true, checked: false, name: "", birthDate: "" };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function extractCpfName(payload) {
+  if (!payload || typeof payload !== "object") return "";
+  const keys = [
+    "fullName",
+    "name",
+    "nome",
+    "razaoSocial",
+    "nomeCompleto",
+    "titular",
+    "nome_titular"
+  ];
+
+  for (const key of keys) {
+    const value = payload?.[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+
+  const nested = ["data", "result", "cliente", "person", "cpf", "documento"];
+  for (const key of nested) {
+    const obj = payload?.[key];
+    if (obj && typeof obj === "object") {
+      const found = extractCpfName(obj);
+      if (found) return found;
+    }
+  }
+
+  return "";
+}
+
+function extractCpfBirthDate(payload) {
+  if (!payload || typeof payload !== "object") return "";
+  const keys = ["birthDate", "dataNascimento", "nascimento", "dateOfBirth", "dtNascimento"];
+  for (const key of keys) {
+    const value = payload?.[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+
+  const nested = ["data", "result", "cliente", "person", "cpf", "documento"];
+  for (const key of nested) {
+    const obj = payload?.[key];
+    if (obj && typeof obj === "object") {
+      const found = extractCpfBirthDate(obj);
+      if (found) return found;
+    }
+  }
+  return "";
+}
+
+function safeParseJson(value) {
+  try {
+    return JSON.parse(String(value || ""));
+  } catch {
+    return null;
   }
 }
 

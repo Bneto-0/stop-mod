@@ -37,10 +37,14 @@ const cpfCivilCheckMode = normalizeCpfCheckMode(process.env.CPF_CIVIL_CHECK_MODE
 const cpfCivilCheckUrl = String(process.env.CPF_CIVIL_CHECK_URL || "").trim();
 const cpfCivilCheckToken = String(process.env.CPF_CIVIL_CHECK_TOKEN || "").trim();
 const cpfCivilCheckTimeoutMs = clampInt(process.env.CPF_CIVIL_CHECK_TIMEOUT_MS, 1000, 15000);
+const cpfCivilLookupUrl = String(process.env.CPF_CIVIL_LOOKUP_URL || cpfCivilCheckUrl || "").trim();
+const cpfCivilLookupToken = String(process.env.CPF_CIVIL_LOOKUP_TOKEN || cpfCivilCheckToken || "").trim();
+const cpfCivilLookupTimeoutMs = clampInt(process.env.CPF_CIVIL_LOOKUP_TIMEOUT_MS, 1000, 15000);
 const authStatus = authHealth({
   tokenSecret: authJwtSecret,
   cpfCheckMode: cpfCivilCheckMode,
-  cpfCheckUrl: cpfCivilCheckUrl
+  cpfCheckUrl: cpfCivilCheckUrl,
+  cpfLookupUrl: cpfCivilLookupUrl
 });
 
 const paymentMethodMap = Object.freeze({
@@ -74,7 +78,10 @@ app.use(
     cpfCheckMode: cpfCivilCheckMode,
     cpfCheckUrl: cpfCivilCheckUrl,
     cpfCheckToken: cpfCivilCheckToken,
-    cpfCheckTimeoutMs: cpfCivilCheckTimeoutMs
+    cpfCheckTimeoutMs: cpfCivilCheckTimeoutMs,
+    cpfLookupUrl: cpfCivilLookupUrl,
+    cpfLookupToken: cpfCivilLookupToken,
+    cpfLookupTimeoutMs: cpfCivilLookupTimeoutMs
   })
 );
 
