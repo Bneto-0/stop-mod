@@ -585,8 +585,14 @@ function renderColorSwatches() {
   const selected = String(colorEl.value || "");
   colorSwatchesEl.innerHTML = options
     .map(
-      (option) =>
-        `<button class="color-swatch${selected === option ? " active" : ""}" type="button" data-color="${escapeHtml(option)}" aria-label="${escapeHtml(option)}"><i style="background:${colorToHex(option)}"></i></button>`
+      (option) => {
+        const image = getColorVariantImage(activeProduct, option);
+        return `<button class="color-swatch${selected === option ? " active" : ""}" type="button" data-color="${escapeHtml(option)}" aria-label="${escapeHtml(option)}">${
+          image
+            ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(option)}" loading="lazy" />`
+            : `<i style="background:${colorToHex(option)}"></i>`
+        }</button>`;
+      }
     )
     .join("");
 }
