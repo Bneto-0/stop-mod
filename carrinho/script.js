@@ -82,12 +82,18 @@ const checkoutAddressLine = document.getElementById("checkout-address-line");
 const checkoutAddressShip = document.getElementById("checkout-address-ship");
 const checkoutFeedback = document.getElementById("checkout-feedback");
 const confirmAddress = document.getElementById("confirm-address");
+const inlinePayModal = document.getElementById("inline-pay-modal");
+const inlinePayFrame = document.getElementById("inline-pay-frame");
+const inlinePayStatus = document.getElementById("inline-pay-status");
+const inlinePayOpenLink = document.getElementById("inline-pay-open-link");
+const inlinePayDoneBtn = document.getElementById("inline-pay-done");
 const addressInlineText = document.getElementById("address-inline-text");
 const addressInlineState = document.getElementById("address-inline-state");
 const addressInlineConfirm = document.getElementById("address-inline-confirm");
 const confirmPaymentDefaultLabel = String(confirmPaymentBtn?.textContent || "Continuar");
 
 let lastAuthTouchAt = 0;
+let activeInlineCheckoutUrl = "";
 
 function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -832,6 +838,45 @@ function closeModal() {
   checkoutModal.hidden = true;
 }
 
+function setInlinePayStatus(text, isError) {
+  if (!inlinePayStatus) return;
+  inlinePayStatus.textContent = String(text || "");
+  inlinePayStatus.classList.toggle("error", !!isError);
+}
+
+function openInlinePayModal(checkoutUrl, method) {
+  const targetUrl = String(checkoutUrl || "").trim();
+  if (!targetUrl) return;
+
+  if (!inlinePayModal || !inlinePayFrame || !inlinePayOpenLink) {
+    window.location.href = targetUrl;
+    return;
+  }
+
+  activeInlineCheckoutUrl = targetUrl;
+  inlinePayOpenLink.href = targetUrl;
+  inlinePayFrame.src = "about:blank";
+  setInlinePayStatus(
+    `Finalize o pagamento com ${paymentLabel(method) || "PagBank"} no quadro abaixo. Se nao carregar, use "Abrir em nova guia".`,
+    false
+  );
+
+  inlinePayModal.hidden = false;
+  requestAnimationFrame(() => {
+    if (!inlinePayFrame) return;
+    inlinePayFrame.src = targetUrl;
+  });
+}
+
+function closeInlinePayModal() {
+  if (!inlinePayModal) return;
+  inlinePayModal.hidden = true;
+  activeInlineCheckoutUrl = "";
+  if (inlinePayFrame) {
+    inlinePayFrame.src = "about:blank";
+  }
+}
+
 function syncPaymentRadios() {
   if (!paymentForm) return;
   const cur = loadPayment();
@@ -1027,6 +1072,20 @@ checkoutModal?.querySelectorAll("[data-close]").forEach((el) => {
   el.addEventListener("click", closeModal);
 });
 
+inlinePayModal?.querySelectorAll("[data-inline-close]").forEach((el) => {
+  el.addEventListener("click", closeInlinePayModal);
+});
+
+inlinePayFrame?.addEventListener("load", () => {
+  if (!activeInlineCheckoutUrl) return;
+  setInlinePayStatus("Se o pagamento nao aparecer, use o botao Abrir em nova guia.", false);
+});
+
+inlinePayDoneBtn?.addEventListener("click", () => {
+  closeInlinePayModal();
+  feedback.textContent = "Pedido em processamento. A confirmacao entrara em Pedidos quando o PagBank aprovar.";
+});
+
 toggleMorePaymentsBtn?.addEventListener("click", () => {
   const isOpen = String(toggleMorePaymentsBtn.getAttribute("aria-expanded") || "false") === "true";
   setMorePaymentsOpen(!isOpen);
@@ -1145,8 +1204,8 @@ paymentForm?.addEventListener("submit", async (e) => {
     );
 
     closeModal();
-    feedback.textContent = "Redirecionando para o PagBank...";
-    window.location.href = checkoutUrl;
+    feedback.textContent = "Pagamento iniciado. Finalize no quadro seguro abaixo.";
+    openInlinePayModal(checkoutUrl, method);
   } catch (error) {
     feedback.textContent = `Falha ao iniciar pagamento real: ${normalizeCheckoutErrorMessage(error)}`;
   } finally {
@@ -1158,7 +1217,12 @@ paymentForm?.addEventListener("submit", async (e) => {
 });
 
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && checkoutModal && !checkoutModal.hidden) {
+  if (e.key !== "Escape") return;
+  if (inlinePayModal && !inlinePayModal.hidden) {
+    closeInlinePayModal();
+    return;
+  }
+  if (checkoutModal && !checkoutModal.hidden) {
     closeModal();
   }
 });
