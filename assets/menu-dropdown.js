@@ -6,6 +6,9 @@
   const COUPON_KEY = "stopmod_coupons";
   const ORDERS_KEY = "stopmod_orders";
   const PROFILE_KEY = "stopmod_profile";
+  const PROFILE_EXTRA_KEY = "stopmod_profile_extra";
+  const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
+  const AUTH_TOKEN_KEY = "stopmod_auth_token";
   const FAVORITES_KEY = "stopmod_favorites";
 
   const loadJson = (key, fallback) => {
@@ -282,6 +285,124 @@
 
   syncNotifications();
 
+  const injectProfileMenuStyles = () => {
+    if (document.getElementById("stopmod-profile-menu-style")) return;
+    const style = document.createElement("style");
+    style.id = "stopmod-profile-menu-style";
+    style.textContent = `
+      .hero-profile-dropdown {
+        position: relative;
+      }
+      .hero-profile-btn {
+        border: 0;
+        background: transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.28rem;
+        text-decoration: none;
+      }
+      .hero-profile-btn .hero-menu-cat-caret {
+        opacity: 0.12;
+        font-size: 0.64rem;
+        transform: translateY(1px);
+        transition: opacity 120ms ease, transform 120ms ease;
+      }
+      .hero-profile-dropdown.open .hero-menu-cat-caret,
+      .hero-profile-dropdown:hover .hero-menu-cat-caret,
+      .hero-profile-dropdown:focus-within .hero-menu-cat-caret {
+        opacity: 0.55;
+        transform: translateY(1px) rotate(180deg);
+      }
+      .hero-profile-panel {
+        left: auto;
+        right: 0;
+        min-width: 180px;
+      }
+      .hero-profile-panel .profile-menu-logout {
+        width: 100%;
+        text-align: left;
+        border: 0;
+        background: transparent;
+        color: #2f2824;
+        font: inherit;
+        font-size: 0.92rem;
+        font-weight: 700;
+        line-height: 1.15;
+        padding: 0.48rem 0.6rem;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      .hero-profile-panel .profile-menu-logout:hover,
+      .hero-profile-panel .profile-menu-logout:focus-visible {
+        background: #fff2e8;
+        color: #a64d2f;
+        outline: none;
+      }
+    `;
+    document.head.appendChild(style);
+  };
+
+  const clearAuthAndGoLogin = () => {
+    try {
+      localStorage.removeItem(PROFILE_KEY);
+      localStorage.removeItem(PROFILE_EXTRA_KEY);
+      localStorage.removeItem(AUTH_LAST_SEEN_KEY);
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+    } catch {
+      // ignore
+    }
+    window.location.assign("/login/");
+  };
+
+  const ensureProfileDropdown = () => {
+    injectProfileMenuStyles();
+    document.querySelectorAll("a.profile-top[href]").forEach((profileLink) => {
+      if (profileLink.closest(".hero-menu-dropdown")) return;
+      const originalParent = profileLink.parentElement;
+      if (!originalParent) return;
+
+      const dropdown = document.createElement("div");
+      dropdown.className = "hero-menu-dropdown hero-profile-dropdown";
+
+      profileLink.classList.add("hero-menu-cat-btn", "hero-profile-btn");
+      profileLink.setAttribute("aria-haspopup", "true");
+      profileLink.setAttribute("aria-expanded", "false");
+      profileLink.setAttribute("role", "button");
+
+      if (!profileLink.querySelector(".hero-menu-cat-caret")) {
+        const caret = document.createElement("span");
+        caret.className = "hero-menu-cat-caret";
+        caret.setAttribute("aria-hidden", "true");
+        caret.innerHTML = "&#9662;";
+        profileLink.appendChild(caret);
+      }
+
+      const panel = document.createElement("div");
+      panel.className = "hero-menu-cat-panel hero-profile-panel";
+      panel.setAttribute("role", "menu");
+      panel.setAttribute("aria-label", "Perfil");
+      panel.hidden = true;
+      panel.innerHTML = `
+        <a href="/perfil/" role="menuitem">Minha conta</a>
+        <a href="/perfil/pedidos/" role="menuitem">Meus pedidos</a>
+        <a href="/perfil/enderecos/" role="menuitem">Enderecos</a>
+        <button type="button" class="profile-menu-logout" role="menuitem">Sair</button>
+      `;
+
+      originalParent.replaceChild(dropdown, profileLink);
+      dropdown.append(profileLink, panel);
+
+      const logoutBtn = panel.querySelector(".profile-menu-logout");
+      logoutBtn?.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        clearAuthAndGoLogin();
+      });
+    });
+  };
+
+  ensureProfileDropdown();
+
   const ensureFavoritesDropdown = () => {
     document.querySelectorAll(".hero-menu").forEach((menu) => {
       const favoriteLink = Array.from(menu.querySelectorAll('a[href="/perfil/favoritos/"], a[href="/perfil/favoritos"]')).find(
@@ -520,6 +641,7 @@
     const panel = dropdown.querySelector(".hero-menu-cat-panel");
     if (!button || !panel) return;
     const isNotifyDropdown = dropdown.classList.contains("hero-notify-dropdown");
+    const isProfileDropdown = dropdown.classList.contains("hero-profile-dropdown");
 
     closeDropdown(dropdown);
 
@@ -536,7 +658,7 @@
       if (!isOpen) openDropdown(dropdown);
     });
 
-    if (!isNotifyDropdown) {
+    if (!isNotifyDropdown && !isProfileDropdown) {
       dropdown.addEventListener("mouseenter", () => openDropdown(dropdown));
       dropdown.addEventListener("mouseleave", () => closeDropdown(dropdown));
     }
