@@ -585,28 +585,10 @@ function renderNotFound() {
   setFeedback("Produto nao encontrado. Volte para a loja e escolha novamente.", true);
 }
 
-function getModelImageOptions(product) {
-  const list = [];
-  const addImage = (url) => {
-    const value = String(url || "").trim();
-    if (!value || list.includes(value)) return;
-    list.push(value);
-  };
-
-  addImage(product?.image);
-
-  const sameCategory = products.filter(
-    (item) => Number(item?.id) !== Number(product?.id) && normalizeText(item?.category) === normalizeText(product?.category)
-  );
-  sameCategory.forEach((item) => addImage(item?.image));
-
-  if (list.length < 4) {
-    products.forEach((item) => addImage(item?.image));
-  }
-
-  return list.slice(0, 4).map((image, index) => ({
-    image,
-    label: `Modelo ${index + 1}`
+function getModelColorOptions(product) {
+  return getColorOptions(product).map((color, index) => ({
+    color: String(color || "").trim(),
+    label: `Cor ${index + 1}: ${String(color || "").trim()}`
   }));
 }
 
@@ -621,7 +603,7 @@ function renderModelOptions() {
     .map(
       (option, index) => `
         <button class="model-option${index === activeModelIndex ? " active" : ""}" type="button" data-model-index="${index}" aria-label="${escapeHtml(option.label)}">
-          <img src="${escapeHtml(option.image)}" alt="${escapeHtml(option.label)}" loading="lazy" />
+          <i style="background:${colorToHex(option.color)}"></i>
         </button>
       `
     )
@@ -629,16 +611,29 @@ function renderModelOptions() {
 }
 
 function setActiveModel(index) {
-  if (!activeProduct || !activeModelOptions.length) return;
+  if (!activeProduct || !colorEl || !activeModelOptions.length) return;
   const safeIndex = Math.max(0, Math.min(activeModelOptions.length - 1, Number(index) || 0));
   activeModelIndex = safeIndex;
   const selected = activeModelOptions[safeIndex];
 
-  if (imageEl && selected) {
-    imageEl.src = String(selected.image || activeProduct.image || "");
-    imageEl.alt = `${String(activeProduct.name || "Produto")} - ${String(selected.label || "Modelo")}`;
+  if (selected) {
+    const normalized = normalizeText(selected.color);
+    const matchingOption = Array.from(colorEl.options).find((option) => normalizeText(option.value) === normalized);
+    if (matchingOption) {
+      colorEl.value = String(matchingOption.value || "");
+    }
   }
 
+  renderColorSwatches();
+  renderModelOptions();
+}
+
+function syncModelFromCurrentColor() {
+  if (!colorEl || !activeModelOptions.length) return;
+  const selectedColor = normalizeText(colorEl.value);
+  const index = activeModelOptions.findIndex((item) => normalizeText(item.color) === selectedColor);
+  if (index < 0 || index === activeModelIndex) return;
+  activeModelIndex = index;
   renderModelOptions();
 }
 
@@ -664,16 +659,22 @@ function renderProduct(product) {
   renderSoldCount();
   renderProductRating();
   renderArrivalPreview();
-  activeModelOptions = getModelImageOptions(product);
-  activeModelIndex = 0;
-  setActiveModel(0);
+  if (imageEl) {
+    imageEl.src = String(product.image || "");
+    imageEl.alt = String(product.name || "Produto");
+  }
 
   fillSelect(sizeEl, getSizeOptions(product.size));
   fillSelect(colorEl, getColorOptions(product));
   if (sizeEl && sizeEl.options.length) sizeEl.value = String(sizeEl.options[0].value || "");
   if (colorEl && colorEl.options.length) colorEl.value = String(colorEl.options[0].value || "");
+
+  activeModelOptions = getModelColorOptions(product);
+  activeModelIndex = 0;
+  setActiveModel(0);
+
   renderSizePills();
-  renderColorSwatches();
+  syncModelFromCurrentColor();
   if (qtyEl) qtyEl.value = "1";
   renderPricePreview();
 
@@ -785,6 +786,7 @@ colorSwatchesEl?.addEventListener("click", (event) => {
   if (!value) return;
   colorEl.value = value;
   renderColorSwatches();
+  syncModelFromCurrentColor();
 });
 
 modelsEl?.addEventListener("click", (event) => {
