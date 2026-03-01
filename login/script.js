@@ -165,6 +165,30 @@ function buildApiUrl(base, endpoint) {
   return `${root}${path}`;
 }
 
+function isCannotPostAuthRoute(message) {
+  const text = String(message || "").toLowerCase();
+  if (!text) return false;
+  return text.includes("cannot post /api/auth/") || (text.includes("cannot post") && text.includes("/api/auth"));
+}
+
+function normalizeAuthErrorMessage(rawMessage) {
+  const message = String(rawMessage || "").trim();
+  const low = message.toLowerCase();
+
+  if (isCannotPostAuthRoute(message)) {
+    return "Backend de cadastro/login nao esta ativo neste dominio. Inicie o backend na porta 8787 ou configure stopmod_api_base.";
+  }
+  if (
+    low.includes("failed to fetch") ||
+    low.includes("connection refused") ||
+    low.includes("load failed") ||
+    low.includes("networkerror")
+  ) {
+    return "Nao foi possivel conectar ao backend de cadastro/login.";
+  }
+  return message || "Falha ao comunicar com backend.";
+}
+
 async function isHealthy(base, timeoutMs = 3500) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), Number(timeoutMs) || 3500);
@@ -212,40 +236,70 @@ async function resolveApiBase() {
 }
 
 async function postJson(endpoint, payload, timeoutMs = 12000) {
+  const configuredBase = normalizeApiBase(localStorage.getItem(API_BASE_KEY) || localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
   const base = await resolveApiBase();
-  const url = buildApiUrl(base, endpoint);
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), Number(timeoutMs) || 12000);
-  try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json"
-      },
-      body: JSON.stringify(payload || {}),
-      signal: controller.signal
-    });
+  const timeout = Number(timeoutMs) || 12000;
 
-    const text = await response.text();
-    let data = null;
+  const tryPost = async (url) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeout);
     try {
-      data = text ? JSON.parse(text) : null;
-    } catch {
-      data = null;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        },
+        body: JSON.stringify(payload || {}),
+        signal: controller.signal
+      });
+
+      const text = await response.text();
+      let data = null;
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch {
+        data = null;
+      }
+      return { response, text, data };
+    } finally {
+      clearTimeout(timer);
     }
+  };
+
+  try {
+    let currentBase = base;
+    let url = buildApiUrl(currentBase, endpoint);
+    let { response, text, data } = await tryPost(url);
 
     if (!response.ok) {
-      const message = String(data?.message || data?.error || text || `HTTP ${response.status}`);
-      throw new Error(message);
+      const rawMessage = String(data?.message || data?.error || text || `HTTP ${response.status}`);
+      const shouldTryLocalFallback =
+        !configuredBase &&
+        /^\/?api\/auth\//i.test(String(endpoint || "").replace(/^\/+/, "")) &&
+        isCannotPostAuthRoute(rawMessage);
+
+      if (shouldTryLocalFallback) {
+        const local = "http://localhost:8787";
+        if (await isHealthy(local, 2600)) {
+          currentBase = local;
+          resolvedApiBase = local;
+          localStorage.setItem(API_BASE_KEY, local);
+          localStorage.setItem(PAGBANK_API_BASE_KEY, local);
+          url = buildApiUrl(currentBase, endpoint);
+          ({ response, text, data } = await tryPost(url));
+          if (response.ok) return data || {};
+        }
+      }
+
+      const finalMessage = String(data?.message || data?.error || text || rawMessage || `HTTP ${response.status}`);
+      throw new Error(normalizeAuthErrorMessage(finalMessage));
     }
 
     return data || {};
   } catch (error) {
     if (error?.name === "AbortError") throw new Error("Tempo esgotado para conectar ao backend.");
-    throw error;
-  } finally {
-    clearTimeout(timeout);
+    throw new Error(normalizeAuthErrorMessage(error?.message || error));
   }
 }
 
