@@ -76,6 +76,10 @@ function formatBRL(value) {
   return Number(value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function roundMoney(value) {
+  return Number((Number(value || 0)).toFixed(2));
+}
+
 function normalizeText(value) {
   return String(value || "")
     .normalize("NFD")
@@ -465,14 +469,25 @@ function renderNotFound() {
   setFeedback("Produto nao encontrado. Volte para a loja e escolha novamente.", true);
 }
 
+function renderPricePreview() {
+  if (!activeProduct) return;
+
+  const qty = getSelectedQty();
+  const unitPix = roundMoney(activeProduct.price);
+  const unitFull = roundMoney(unitPix * FULL_PRICE_MULTIPLIER);
+
+  const totalPix = roundMoney(unitPix * qty);
+  const totalFull = roundMoney(unitFull * qty);
+
+  if (priceEl) priceEl.textContent = `R$ ${formatBRL(totalPix)}`;
+  if (oldPriceEl) oldPriceEl.textContent = `R$ ${formatBRL(totalFull)}`;
+  if (installmentEl) installmentEl.textContent = `ou ${formatBRL(totalFull)}`;
+}
+
 function renderProduct(product) {
   activeProduct = product;
   if (categoryEl) categoryEl.textContent = String(product.category || "Produto");
   if (nameEl) nameEl.textContent = String(product.name || "Produto");
-  if (priceEl) priceEl.textContent = `R$ ${formatBRL(product.price)}`;
-  const oldPrice = Number((Number(product.price || 0) * FULL_PRICE_MULTIPLIER).toFixed(2));
-  if (oldPriceEl) oldPriceEl.textContent = `R$ ${formatBRL(oldPrice)}`;
-  if (installmentEl) installmentEl.textContent = `ou ${formatBRL(oldPrice)}`;
   renderSoldCount();
   if (ratingEl) ratingEl.innerHTML = `${estimateRating(product.id).toFixed(1)} <span>${starsByRating(estimateRating(product.id))}</span>`;
   if (arrivalEl) arrivalEl.textContent = formatArrivalRange();
@@ -488,6 +503,7 @@ function renderProduct(product) {
   renderSizePills();
   renderColorSwatches();
   if (qtyEl) qtyEl.value = "1";
+  renderPricePreview();
 
   if (addCartBtn) addCartBtn.disabled = false;
   if (buyNowBtn) buyNowBtn.disabled = false;
@@ -560,18 +576,21 @@ favBtnEl?.addEventListener("click", () => {
 qtyEl?.addEventListener("input", () => {
   const qty = getSelectedQty();
   qtyEl.value = String(qty);
+  renderPricePreview();
   renderShippingPreview();
 });
 
 qtyDecBtn?.addEventListener("click", () => {
   const next = Math.max(1, getSelectedQty() - 1);
   if (qtyEl) qtyEl.value = String(next);
+  renderPricePreview();
   renderShippingPreview();
 });
 
 qtyIncBtn?.addEventListener("click", () => {
   const next = Math.min(10, getSelectedQty() + 1);
   if (qtyEl) qtyEl.value = String(next);
+  renderPricePreview();
   renderShippingPreview();
 });
 
