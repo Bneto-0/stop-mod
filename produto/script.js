@@ -121,17 +121,82 @@ function estimateRating(productId) {
   return Math.min(5, Number(raw.toFixed(1)));
 }
 
+function addBusinessDays(baseDate, days) {
+  const result = new Date(baseDate);
+  let remaining = Math.max(0, Math.floor(Number(days) || 0));
+  while (remaining > 0) {
+    result.setDate(result.getDate() + 1);
+    const day = result.getDay();
+    if (day !== 0 && day !== 6) remaining -= 1;
+  }
+  return result;
+}
+
+function getArrivalLeadDays() {
+  const shipTo = loadShipTo();
+  const cepDigits = String(shipTo?.cep || "").replace(/\D/g, "");
+  const qty = getSelectedQty();
+
+  let minDays = 2;
+  let maxDays = 15;
+
+  const now = new Date();
+  if (now.getHours() >= 17) {
+    minDays += 1;
+    maxDays += 1;
+  }
+
+  if (qty >= 3) {
+    minDays += 1;
+    maxDays += 1;
+  }
+  if (qty >= 6) {
+    minDays += 1;
+    maxDays += 2;
+  }
+
+  if (cepDigits.length === 8) {
+    const first = Number(cepDigits.charAt(0));
+    if (first >= 4 && first <= 6) {
+      minDays += 1;
+      maxDays += 2;
+    } else if (first >= 7) {
+      minDays += 2;
+      maxDays += 4;
+    }
+  } else {
+    minDays += 1;
+    maxDays += 2;
+  }
+
+  return { minDays, maxDays };
+}
+
 function formatArrivalRange() {
   const now = new Date();
-  const min = new Date(now);
-  const max = new Date(now);
-  min.setDate(min.getDate() + 2);
-  max.setDate(max.getDate() + 15);
+  const lead = getArrivalLeadDays();
+  const minDate = addBusinessDays(now, lead.minDays);
+  const maxDate = addBusinessDays(now, lead.maxDays);
 
-  const month = max.toLocaleDateString("pt-BR", { month: "long" });
-  const minDay = String(min.getDate()).padStart(2, "0");
-  const maxDay = String(max.getDate()).padStart(2, "0");
-  return `Chegara entre ${minDay} e ${maxDay} de ${month}`;
+  const minDay = String(minDate.getDate()).padStart(2, "0");
+  const maxDay = String(maxDate.getDate()).padStart(2, "0");
+  const minMonth = minDate.toLocaleDateString("pt-BR", { month: "long" });
+  const maxMonth = maxDate.toLocaleDateString("pt-BR", { month: "long" });
+
+  if (minMonth === maxMonth) {
+    return `Chegara entre ${minDay} e ${maxDay} de ${maxMonth}`;
+  }
+
+  return `Chegara entre ${minDay} de ${minMonth} e ${maxDay} de ${maxMonth}`;
+}
+
+function renderArrivalPreview() {
+  if (!arrivalEl) return;
+  if (!activeProduct) {
+    arrivalEl.textContent = "Chegara entre -- e --";
+    return;
+  }
+  arrivalEl.textContent = formatArrivalRange();
 }
 
 function loadCartIds() {
@@ -528,7 +593,7 @@ function renderProduct(product) {
   if (nameEl) nameEl.textContent = String(product.name || "Produto");
   renderSoldCount();
   renderProductRating();
-  if (arrivalEl) arrivalEl.textContent = formatArrivalRange();
+  renderArrivalPreview();
   if (imageEl) {
     imageEl.src = String(product.image || "");
     imageEl.alt = String(product.name || "Produto");
@@ -616,6 +681,7 @@ qtyEl?.addEventListener("input", () => {
   qtyEl.value = String(qty);
   renderPricePreview();
   renderShippingPreview();
+  renderArrivalPreview();
 });
 
 qtyDecBtn?.addEventListener("click", () => {
@@ -623,6 +689,7 @@ qtyDecBtn?.addEventListener("click", () => {
   if (qtyEl) qtyEl.value = String(next);
   renderPricePreview();
   renderShippingPreview();
+  renderArrivalPreview();
 });
 
 qtyIncBtn?.addEventListener("click", () => {
@@ -630,6 +697,7 @@ qtyIncBtn?.addEventListener("click", () => {
   if (qtyEl) qtyEl.value = String(next);
   renderPricePreview();
   renderShippingPreview();
+  renderArrivalPreview();
 });
 
 sizePillsEl?.addEventListener("click", (event) => {
@@ -666,7 +734,10 @@ renderTopProfile();
 
 window.addEventListener("storage", (event) => {
   const key = normalizeText(event?.key || "");
-  if (key === normalizeText(SHIP_KEY)) renderMenuLocation();
+  if (key === normalizeText(SHIP_KEY)) {
+    renderMenuLocation();
+    renderArrivalPreview();
+  }
   if (key === normalizeText(PROFILE_KEY) || key === normalizeText(AUTH_LAST_SEEN_KEY)) renderTopProfile();
   if (key === normalizeText(FAVORITES_KEY)) renderFavoriteButton();
   if (key === normalizeText(RATINGS_KEY)) renderProductRating();
