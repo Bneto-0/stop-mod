@@ -79,17 +79,13 @@ h1 {
   display: grid;
   grid-template-columns: 1.3fr 1fr;
   grid-template-areas:
-    "current help"
+    "current current"
     "list form";
   gap: 1rem;
 }
 
 .card-current {
   grid-area: current;
-}
-
-.card-help {
-  grid-area: help;
 }
 
 .card-list {
@@ -175,31 +171,6 @@ h1 {
   color: #2aa56a;
 }
 
-.delivery-tips {
-  list-style: none;
-  display: grid;
-  gap: 0.45rem;
-  margin-bottom: 0.8rem;
-}
-
-.delivery-tips li {
-  position: relative;
-  padding-left: 1.08rem;
-  color: #554d46;
-  font-size: 0.93rem;
-}
-
-.delivery-tips li::before {
-  content: "";
-  position: absolute;
-  top: 0.55em;
-  left: 0;
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: #ce5e35;
-}
-
 .addr-list {
   display: grid;
   gap: 0.64rem;
@@ -264,18 +235,6 @@ h1 {
 .btn:hover {
   transform: translateY(-1px);
   background: linear-gradient(180deg, #ca552f 0%, #a84425 100%);
-}
-
-.btn.ghost {
-  width: 100%;
-  background: #fff2e8;
-  color: #8c3c26;
-  border: 1px solid #efccb7;
-  box-shadow: none;
-}
-
-.btn.ghost:hover {
-  background: #ffe7d7;
 }
 
 .btn2 {
@@ -397,7 +356,6 @@ footer {
     grid-template-columns: 1fr;
     grid-template-areas:
       "current"
-      "help"
       "list"
       "form";
   }
