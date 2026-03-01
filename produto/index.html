@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../style.css?v=20" />
-  <link rel="stylesheet" href="style.css?v=12" />
+  <link rel="stylesheet" href="style.css?v=13" />
 </head>
 <body id="top">
   <header class="hero product-hero">
@@ -253,21 +253,12 @@
         <button class="inline-pay-close" type="button" data-inline-close="1" aria-label="Fechar pagamento">x</button>
       </header>
       <p id="inline-pay-status" class="inline-pay-status">
-        Finalize o pagamento no quadro abaixo. Se nao carregar, abra em nova guia.
+        Finalize o pagamento diretamente na loja.
       </p>
-      <div class="inline-pay-frame-wrap">
-        <iframe
-          id="inline-pay-frame"
-          title="Pagamento PagBank"
-          loading="lazy"
-          referrerpolicy="no-referrer"
-          allow="payment"
-        ></iframe>
+      <div id="inline-pay-content" class="inline-pay-content" aria-live="polite">
       </div>
       <div class="inline-pay-actions">
-        <a id="inline-pay-open-link" class="btn secondary" href="#" target="_blank" rel="noopener noreferrer">
-          Abrir em nova guia
-        </a>
+        <a id="inline-pay-open-link" class="btn secondary" href="#" target="_blank" rel="noopener noreferrer" hidden></a>
         <button id="inline-pay-done" class="btn primary" type="button">Ja conclui o pagamento</button>
       </div>
     </section>
@@ -281,7 +272,7 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=18"></script>
+  <script src="script.js?v=19"></script>
   <script src="../assets/menu-dropdown.js?v=20"></script>
 </body>
 </html>

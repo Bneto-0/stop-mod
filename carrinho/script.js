@@ -83,7 +83,7 @@ const checkoutAddressShip = document.getElementById("checkout-address-ship");
 const checkoutFeedback = document.getElementById("checkout-feedback");
 const confirmAddress = document.getElementById("confirm-address");
 const inlinePayModal = document.getElementById("inline-pay-modal");
-const inlinePayFrame = document.getElementById("inline-pay-frame");
+const inlinePayContent = document.getElementById("inline-pay-content");
 const inlinePayStatus = document.getElementById("inline-pay-status");
 const inlinePayOpenLink = document.getElementById("inline-pay-open-link");
 const inlinePayDoneBtn = document.getElementById("inline-pay-done");
@@ -93,7 +93,6 @@ const addressInlineConfirm = document.getElementById("address-inline-confirm");
 const confirmPaymentDefaultLabel = String(confirmPaymentBtn?.textContent || "Continuar");
 
 let lastAuthTouchAt = 0;
-let activeInlineCheckoutUrl = "";
 
 function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -105,6 +104,15 @@ function normalizeText(value) {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
+}
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function paymentLabel(method) {
@@ -122,27 +130,31 @@ function moneyToCents(value) {
   return Math.round((Number(value) || 0) * 100);
 }
 
+function digitsOnly(value) {
+  return String(value || "").replace(/\D/g, "");
+}
+
 function optionalHttpUrlFromStorage(key) {
   const value = String(localStorage.getItem(key) || "").trim();
   if (!value) return "";
   return /^https?:\/\//i.test(value) ? value : "";
 }
 
-function buildPagBankCheckoutEndpointFromBase(raw) {
+function buildPagBankInlineEndpointFromBase(raw) {
   const base = String(raw || "").trim().replace(/\/+$/, "");
-  if (!base) return "/api/pagbank/checkout";
-  if (/\/api\/pagbank\/checkout$/i.test(base)) return base;
-  if (/\/api$/i.test(base)) return `${base}/pagbank/checkout`;
-  return `${base}/api/pagbank/checkout`;
+  if (!base) return "/api/pagbank/inline-payment";
+  if (/\/api\/pagbank\/inline-payment$/i.test(base)) return base;
+  if (/\/api$/i.test(base)) return `${base}/pagbank/inline-payment`;
+  return `${base}/api/pagbank/inline-payment`;
 }
 
 function hasConfiguredPagBankApiBase() {
   return !!String(localStorage.getItem(PAGBANK_API_BASE_KEY) || "").trim();
 }
 
-function resolvePagBankCheckoutEndpoint() {
+function resolvePagBankInlineEndpoint() {
   const raw = String(localStorage.getItem(PAGBANK_API_BASE_KEY) || "").trim();
-  return buildPagBankCheckoutEndpointFromBase(raw);
+  return buildPagBankInlineEndpointFromBase(raw);
 }
 
 async function isBackendHealthy(url, timeoutMs) {
@@ -164,20 +176,20 @@ async function isBackendHealthy(url, timeoutMs) {
   }
 }
 
-async function resolveWorkingPagBankCheckoutEndpoint() {
-  const configuredEndpoint = resolvePagBankCheckoutEndpoint();
+async function resolveWorkingPagBankInlineEndpoint() {
+  const configuredEndpoint = resolvePagBankInlineEndpoint();
   if (hasConfiguredPagBankApiBase()) {
     return configuredEndpoint;
   }
 
   const sameOriginHealthy = await isBackendHealthy("/api/health", 2600);
-  if (sameOriginHealthy) return "/api/pagbank/checkout";
+  if (sameOriginHealthy) return "/api/pagbank/inline-payment";
 
   const localBase = "http://localhost:8787";
   const localHealthy = await isBackendHealthy(`${localBase}/api/health`, 3200);
   if (localHealthy) {
     localStorage.setItem(PAGBANK_API_BASE_KEY, localBase);
-    return `${localBase}/api/pagbank/checkout`;
+    return `${localBase}/api/pagbank/inline-payment`;
   }
 
   return configuredEndpoint;
@@ -346,8 +358,11 @@ function loadShipTo() {
         return {
           street: String(obj.street || "").trim(),
           number: String(obj.number || "").trim(),
+          district: String(obj.district || "").trim(),
           city: String(obj.city || "").trim(),
+          state: normalizeState(String(obj.state || "")),
           cep: normalizeCep(String(obj.cep || "")),
+          complement: String(obj.complement || "").trim()
         };
       }
     }
@@ -358,7 +373,7 @@ function loadShipTo() {
   // Legacy: stored CEP string
   const legacy = String(localStorage.getItem(LEGACY_SHIP_KEY) || "").trim();
   if (legacy) {
-    const to = { street: "", number: "", city: "", cep: normalizeCep(legacy) };
+    const to = { street: "", number: "", district: "", city: "", state: "", cep: normalizeCep(legacy), complement: "" };
     try {
       localStorage.setItem(SHIP_KEY, JSON.stringify(to));
     } catch {
@@ -366,7 +381,7 @@ function loadShipTo() {
     }
     return to;
   }
-  return { street: "", number: "", city: "", cep: "" };
+  return { street: "", number: "", district: "", city: "", state: "", cep: "", complement: "" };
 }
 
 function shipSummaryText(to) {
@@ -466,6 +481,13 @@ function normalizeCep(value) {
   const digits = String(value || "").replace(/\D/g, "").slice(0, 8);
   if (digits.length <= 5) return digits;
   return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+}
+
+function normalizeState(value) {
+  return String(value || "")
+    .replace(/[^a-zA-Z]/g, "")
+    .slice(0, 2)
+    .toUpperCase();
 }
 
 function isCepValid(value) {
@@ -698,7 +720,9 @@ function buildPagBankCheckoutPayload(paymentMethod) {
     paymentMethod: String(paymentMethod || "").trim(),
     customer: {
       name: String(profile?.name || "").trim(),
-      email: String(profile?.email || "").trim().toLowerCase()
+      email: String(profile?.email || "").trim().toLowerCase(),
+      cpf: digitsOnly(profile?.cpf || ""),
+      phone: digitsOnly(profile?.phone || "")
     },
     coupon: snapshot.coupons[0] || "",
     shipTo: snapshot.shipTo,
@@ -844,37 +868,111 @@ function setInlinePayStatus(text, isError) {
   inlinePayStatus.classList.toggle("error", !!isError);
 }
 
-function openInlinePayModal(checkoutUrl, method) {
-  const targetUrl = String(checkoutUrl || "").trim();
-  if (!targetUrl) return;
+function hideInlinePayOpenLink() {
+  if (!inlinePayOpenLink) return;
+  inlinePayOpenLink.hidden = true;
+  inlinePayOpenLink.removeAttribute("href");
+  inlinePayOpenLink.textContent = "";
+}
 
-  if (!inlinePayModal || !inlinePayFrame || !inlinePayOpenLink) {
-    window.location.href = targetUrl;
+function showInlinePayOpenLink(text, href) {
+  if (!inlinePayOpenLink) return;
+  const targetHref = String(href || "").trim();
+  if (!targetHref || !/^https?:\/\//i.test(targetHref)) {
+    hideInlinePayOpenLink();
+    return;
+  }
+  inlinePayOpenLink.hidden = false;
+  inlinePayOpenLink.href = targetHref;
+  inlinePayOpenLink.textContent = String(text || "Abrir");
+}
+
+function renderInlinePaymentContent(data) {
+  if (!inlinePayContent) return;
+  const mode = String(data?.mode || "").trim().toLowerCase();
+  const referenceId = escapeHtml(String(data?.referenceId || ""));
+
+  if (mode === "pix") {
+    const qrText = String(data?.pix?.qrText || "").trim();
+    const qrImage = String(data?.pix?.qrImageBase64 || data?.pix?.qrImageDataUrl || "").trim();
+    const expiresAt = String(data?.pix?.expiresAt || data?.expiresAt || "").trim();
+    const expiryText = expiresAt ? new Date(expiresAt).toLocaleString("pt-BR") : "";
+    inlinePayContent.innerHTML = `
+      <h3 class="inline-pay-title">Pix gerado com sucesso</h3>
+      <p class="inline-pay-text">Escaneie o QR Code ou copie o codigo Pix.</p>
+      ${qrImage ? `<img src="${escapeHtml(qrImage)}" alt="QR Code Pix" />` : ""}
+      ${qrText ? `<textarea readonly id="inline-pay-copy-source">${escapeHtml(qrText)}</textarea>` : "<p class=\"inline-pay-line\">Codigo Pix indisponivel.</p>"}
+      ${referenceId ? `<p class="inline-pay-line"><strong>Pedido:</strong> ${referenceId}</p>` : ""}
+      ${expiryText ? `<p class="inline-pay-line"><strong>Validade:</strong> ${escapeHtml(expiryText)}</p>` : ""}
+      ${qrText ? "<button id=\"inline-pay-copy\" class=\"inline-pay-copy\" type=\"button\">Copiar codigo Pix</button>" : ""}
+    `;
+    const copyBtn = document.getElementById("inline-pay-copy");
+    const copySource = document.getElementById("inline-pay-copy-source");
+    copyBtn?.addEventListener("click", async () => {
+      const value = String(copySource?.value || qrText || "");
+      if (!value) return;
+      try {
+        await navigator.clipboard.writeText(value);
+        setInlinePayStatus("Codigo Pix copiado com sucesso.", false);
+      } catch {
+        setInlinePayStatus("Nao foi possivel copiar automaticamente. Copie manualmente o codigo.", true);
+      }
+    });
+    showInlinePayOpenLink("Abrir QR em nova guia", data?.pix?.qrImageUrl || data?.pix?.qrLink || "");
     return;
   }
 
-  activeInlineCheckoutUrl = targetUrl;
-  inlinePayOpenLink.href = targetUrl;
-  inlinePayFrame.src = "about:blank";
+  if (mode === "boleto") {
+    const barcode = String(data?.boleto?.formattedBarcode || data?.boleto?.barcode || "").trim();
+    const dueDate = String(data?.boleto?.dueDate || "").trim();
+    const dueText = dueDate ? new Date(dueDate).toLocaleDateString("pt-BR") : "";
+    inlinePayContent.innerHTML = `
+      <h3 class="inline-pay-title">Boleto gerado com sucesso</h3>
+      <p class="inline-pay-text">Use o codigo de barras abaixo para pagar no banco/app.</p>
+      ${barcode ? `<textarea readonly id="inline-pay-copy-source">${escapeHtml(barcode)}</textarea>` : "<p class=\"inline-pay-line\">Codigo de barras indisponivel.</p>"}
+      ${referenceId ? `<p class="inline-pay-line"><strong>Pedido:</strong> ${referenceId}</p>` : ""}
+      ${dueText ? `<p class="inline-pay-line"><strong>Vencimento:</strong> ${escapeHtml(dueText)}</p>` : ""}
+      ${barcode ? "<button id=\"inline-pay-copy\" class=\"inline-pay-copy\" type=\"button\">Copiar codigo de barras</button>" : ""}
+    `;
+    const copyBtn = document.getElementById("inline-pay-copy");
+    const copySource = document.getElementById("inline-pay-copy-source");
+    copyBtn?.addEventListener("click", async () => {
+      const value = String(copySource?.value || barcode || "");
+      if (!value) return;
+      try {
+        await navigator.clipboard.writeText(value);
+        setInlinePayStatus("Codigo de barras copiado com sucesso.", false);
+      } catch {
+        setInlinePayStatus("Nao foi possivel copiar automaticamente. Copie manualmente o codigo.", true);
+      }
+    });
+    showInlinePayOpenLink("Abrir boleto (PDF)", data?.boleto?.pdfUrl || "");
+    return;
+  }
+
+  inlinePayContent.innerHTML = `
+    <h3 class="inline-pay-title">Pagamento iniciado</h3>
+    <p class="inline-pay-text">Seu pedido foi criado. Acompanhe o status em Meus pedidos.</p>
+    ${referenceId ? `<p class="inline-pay-line"><strong>Pedido:</strong> ${referenceId}</p>` : ""}
+  `;
+  hideInlinePayOpenLink();
+}
+
+function openInlinePayModal(data, method) {
+  if (!inlinePayModal || !inlinePayContent) return;
   setInlinePayStatus(
-    `Finalize o pagamento com ${paymentLabel(method) || "PagBank"} no quadro abaixo. Se nao carregar, use "Abrir em nova guia".`,
+    `Pagamento com ${paymentLabel(method) || "PagBank"} iniciado sem redirecionamento.`,
     false
   );
-
+  renderInlinePaymentContent(data || {});
   inlinePayModal.hidden = false;
-  requestAnimationFrame(() => {
-    if (!inlinePayFrame) return;
-    inlinePayFrame.src = targetUrl;
-  });
 }
 
 function closeInlinePayModal() {
   if (!inlinePayModal) return;
   inlinePayModal.hidden = true;
-  activeInlineCheckoutUrl = "";
-  if (inlinePayFrame) {
-    inlinePayFrame.src = "about:blank";
-  }
+  if (inlinePayContent) inlinePayContent.innerHTML = "";
+  hideInlinePayOpenLink();
 }
 
 function syncPaymentRadios() {
@@ -1076,11 +1174,6 @@ inlinePayModal?.querySelectorAll("[data-inline-close]").forEach((el) => {
   el.addEventListener("click", closeInlinePayModal);
 });
 
-inlinePayFrame?.addEventListener("load", () => {
-  if (!activeInlineCheckoutUrl) return;
-  setInlinePayStatus("Se o pagamento nao aparecer, use o botao Abrir em nova guia.", false);
-});
-
 inlinePayDoneBtn?.addEventListener("click", () => {
   closeInlinePayModal();
   feedback.textContent = "Pedido em processamento. A confirmacao entrara em Pedidos quando o PagBank aprovar.";
@@ -1166,7 +1259,7 @@ paymentForm?.addEventListener("submit", async (e) => {
   updatePaymentUI(method);
 
   try {
-    const endpoint = await resolveWorkingPagBankCheckoutEndpoint();
+    const endpoint = await resolveWorkingPagBankInlineEndpoint();
     let data;
 
     try {
@@ -1175,20 +1268,18 @@ paymentForm?.addEventListener("submit", async (e) => {
       const shouldTryLocalFallback =
         !hasConfiguredPagBankApiBase() &&
         isNotAllowedHtmlError(firstError?.message) &&
-        !/^https?:\/\/localhost:8787\/api\/pagbank\/checkout$/i.test(String(endpoint || ""));
+        !/^https?:\/\/localhost:8787\/api\/pagbank\/inline-payment$/i.test(String(endpoint || ""));
 
       if (!shouldTryLocalFallback) throw firstError;
 
       const localBase = "http://localhost:8787";
-      const localEndpoint = `${localBase}/api/pagbank/checkout`;
+      const localEndpoint = `${localBase}/api/pagbank/inline-payment`;
       data = await postJson(localEndpoint, payload, 22000);
       localStorage.setItem(PAGBANK_API_BASE_KEY, localBase);
     }
 
-    const checkoutUrl = String(data?.checkoutUrl || "").trim();
-
-    if (!checkoutUrl) {
-      throw new Error("PagBank nao retornou URL de pagamento.");
+    if (!data || typeof data !== "object") {
+      throw new Error("PagBank nao retornou dados de pagamento.");
     }
 
     registerSoldItemsFromCheckout(payload.items);
@@ -1205,7 +1296,7 @@ paymentForm?.addEventListener("submit", async (e) => {
 
     closeModal();
     feedback.textContent = "Pagamento iniciado. Finalize no quadro seguro abaixo.";
-    openInlinePayModal(checkoutUrl, method);
+    openInlinePayModal(data, method);
   } catch (error) {
     feedback.textContent = `Falha ao iniciar pagamento real: ${normalizeCheckoutErrorMessage(error)}`;
   } finally {

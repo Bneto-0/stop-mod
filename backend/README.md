@@ -36,6 +36,7 @@ npm run dev
 API local:
 - `GET /api/health`
 - `POST /api/pagbank/checkout`
+- `POST /api/pagbank/inline-payment`
 - `POST /api/pagbank/webhook`
 - `GET /api/pagbank/webhook/logs`
 - `POST /api/auth/register`
@@ -64,10 +65,10 @@ Se o backend estiver no mesmo dominio com proxy `/api`, nao precisa desse passo.
 
 ## 5) Fluxo esperado
 
-1. Cliente escolhe forma de pagamento no carrinho.
-2. Front chama `POST /api/pagbank/checkout`.
-3. Backend cria checkout no PagBank e retorna `checkoutUrl`.
-4. Front redireciona para o link do PagBank.
+1. Cliente escolhe forma de pagamento no carrinho/produto.
+2. Front chama `POST /api/pagbank/inline-payment`.
+3. Para `pix` e `boleto`, backend cria pedido via API de Orders e retorna dados para pagar na propria loja (sem redirecionamento).
+4. Para `credito/debito`, e necessario tokenizacao segura + 3DS (checkout transparente de cartao).
 5. PagBank envia atualizacao para webhook.
 
 ## 6) Cadastro/Login seguro de cliente

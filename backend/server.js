@@ -203,6 +203,120 @@ app.post("/api/pagbank/checkout", async (req, res) => {
   }
 });
 
+app.post("/api/pagbank/inline-payment", async (req, res) => {
+  if (!hasValidPagBankToken) {
+    return res.status(500).json({
+      error: "missing_pagbank_token",
+      message: "Configure PAGBANK_TOKEN com o token real do PagBank (nao use SEU_TOKEN_AQUI)."
+    });
+  }
+
+  const parsed = parseInlinePaymentRequest(req.body || {});
+  if (!parsed.ok) {
+    return res.status(400).json({
+      error: "invalid_inline_payment_payload",
+      message: parsed.message
+    });
+  }
+
+  const input = parsed.value;
+
+  if (input.paymentMethod === "credito" || input.paymentMethod === "debito") {
+    return res.status(400).json({
+      error: "card_inline_not_configured",
+      message:
+        "Cartao sem redirecionamento exige tokenizacao segura no frontend (SDK PagBank + 3DS). Use Pix ou Boleto por enquanto."
+    });
+  }
+
+  try {
+    if (input.paymentMethod === "pix") {
+      const payload = buildPixInlineOrderPayload(input, {
+        notificationUrl: input.notificationUrl || defaultNotificationUrl
+      });
+
+      const result = await requestPagBankJson("/orders", payload, {
+        pagBankApiBase,
+        pagBankToken,
+        pagBankEmail
+      });
+
+      if (!result.ok) {
+        return res.status(result.status || 500).json({
+          error: "pagbank_inline_pix_error",
+          message: extractErrorMessage(result.data, result.text),
+          details: result.data
+        });
+      }
+
+      const pix = extractPixInlineData(result.data);
+      if (!pix.qrText && !pix.qrImageDataUrl && !pix.qrImageUrl) {
+        return res.status(502).json({
+          error: "pagbank_inline_pix_missing_data",
+          message: "PagBank nao retornou dados do Pix.",
+          details: result.data
+        });
+      }
+
+      return res.status(201).json({
+        mode: "pix",
+        orderId: String(result.data?.id || ""),
+        referenceId: String(result.data?.reference_id || input.referenceId),
+        status: String(result.data?.status || ""),
+        expiresAt: String(pix.expiresAt || result.data?.expires_at || ""),
+        pix
+      });
+    }
+
+    if (input.paymentMethod === "boleto") {
+      const payload = buildBoletoInlineOrderPayload(input, {
+        notificationUrl: input.paymentNotificationUrl || input.notificationUrl || defaultPaymentNotificationUrl || defaultNotificationUrl
+      });
+
+      const result = await requestPagBankJson("/orders", payload, {
+        pagBankApiBase,
+        pagBankToken,
+        pagBankEmail
+      });
+
+      if (!result.ok) {
+        return res.status(result.status || 500).json({
+          error: "pagbank_inline_boleto_error",
+          message: extractErrorMessage(result.data, result.text),
+          details: result.data
+        });
+      }
+
+      const boleto = extractBoletoInlineData(result.data);
+      if (!boleto.barcode && !boleto.formattedBarcode && !boleto.pdfUrl) {
+        return res.status(502).json({
+          error: "pagbank_inline_boleto_missing_data",
+          message: "PagBank nao retornou dados do Boleto.",
+          details: result.data
+        });
+      }
+
+      return res.status(201).json({
+        mode: "boleto",
+        orderId: String(result.data?.id || ""),
+        referenceId: String(result.data?.reference_id || input.referenceId),
+        status: String(result.data?.status || ""),
+        boleto
+      });
+    }
+
+    return res.status(400).json({
+      error: "unsupported_inline_method",
+      message: "Metodo sem redirecionamento nao suportado. Use Pix ou Boleto."
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: "pagbank_inline_payment_failed",
+      message: String(error?.message || error || "Falha ao iniciar pagamento inline.")
+    });
+  }
+});
+
 app.post("/api/pagbank/webhook", async (req, res) => {
   try {
     await fs.mkdir(path.dirname(webhookLogPath), { recursive: true });
@@ -321,6 +435,302 @@ function findPayUrl(links) {
   return first?.href ? String(first.href) : "";
 }
 
+async function requestPagBankJson(pathname, payload, options) {
+  const apiBase = String(options?.pagBankApiBase || "").trim().replace(/\/+$/, "");
+  const token = String(options?.pagBankToken || "").trim();
+  const email = String(options?.pagBankEmail || "").trim();
+  const endpoint = `${apiBase}${pathname.startsWith("/") ? pathname : `/${pathname}`}`;
+  const authCandidates = buildAuthorizationCandidates(token, email);
+
+  let response = null;
+  let text = "";
+  let data = null;
+
+  for (const authHeader of authCandidates) {
+    response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        Authorization: authHeader,
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    text = await response.text();
+    data = safeParseJson(text);
+
+    if (response.ok) break;
+    if (!isInvalidAuthorizationError(response.status, data, text)) break;
+  }
+
+  return {
+    ok: !!response?.ok,
+    status: Number(response?.status || 500),
+    data,
+    text
+  };
+}
+
+function parseInlinePaymentRequest(raw) {
+  const parsedCheckout = parseCheckoutRequest(raw);
+  if (!parsedCheckout.ok) return parsedCheckout;
+
+  const input = parsedCheckout.value;
+  const customer = normalizeInlineCustomer(raw?.customer || {});
+  if (!customer) {
+    return { ok: false, message: "Informe nome, email, CPF e celular do cliente para pagamento sem redirecionamento." };
+  }
+
+  const shipTo = normalizeInlineAddress(raw?.shipTo || {});
+  if (input.paymentMethod === "boleto") {
+    const shipValid = validateInlineAddress(shipTo);
+    if (!shipValid.ok) {
+      return { ok: false, message: shipValid.message };
+    }
+  }
+
+  return {
+    ok: true,
+    value: {
+      ...input,
+      customer,
+      shipTo
+    }
+  };
+}
+
+function normalizeInlineCustomer(raw) {
+  const name = String(raw?.name || raw?.fullName || "").trim().slice(0, 120);
+  const email = String(raw?.email || "").trim().slice(0, 120).toLowerCase();
+  const cpf = digitsOnly(raw?.cpf || "").slice(0, 11);
+  const phone = normalizeBrazilPhone(raw?.phone || "");
+  if (!name || !email || !email.includes("@")) return null;
+  if (cpf.length !== 11) return null;
+  if (phone.length < 10) return null;
+  return { name, email, cpf, phone };
+}
+
+function normalizeInlineAddress(raw) {
+  const street = String(raw?.street || "").trim().slice(0, 120);
+  const number = String(raw?.number || "").trim().slice(0, 30);
+  const district = String(raw?.district || raw?.locality || "").trim().slice(0, 90);
+  const city = String(raw?.city || "").trim().slice(0, 90);
+  const state = String(raw?.state || "")
+    .replace(/[^a-zA-Z]/g, "")
+    .slice(0, 2)
+    .toUpperCase();
+  const cep = digitsOnly(raw?.cep || "").slice(0, 8);
+  const complement = String(raw?.complement || "").trim().slice(0, 120);
+  return { street, number, district, city, state, cep, complement };
+}
+
+function validateInlineAddress(address) {
+  if (!address.street) return { ok: false, message: "Endereco invalido: informe a rua." };
+  if (!address.number) return { ok: false, message: "Endereco invalido: informe o numero." };
+  if (!address.district) return { ok: false, message: "Endereco invalido: informe o bairro." };
+  if (!address.city) return { ok: false, message: "Endereco invalido: informe a cidade." };
+  if (!/^[A-Z]{2}$/.test(String(address.state || ""))) return { ok: false, message: "Endereco invalido: informe UF com 2 letras." };
+  if (String(address.cep || "").length !== 8) return { ok: false, message: "Endereco invalido: informe CEP com 8 digitos." };
+  return { ok: true };
+}
+
+function normalizeBrazilPhone(value) {
+  const raw = digitsOnly(value);
+  if (!raw) return "";
+  if (raw.startsWith("55") && (raw.length === 12 || raw.length === 13)) return raw.slice(2);
+  if (raw.length === 10 || raw.length === 11) return raw;
+  return "";
+}
+
+function toPagBankPhoneList(phoneDigits) {
+  const local = normalizeBrazilPhone(phoneDigits);
+  if (!local || local.length < 10) return [];
+  const area = local.slice(0, 2);
+  const number = local.slice(2);
+  return [
+    {
+      country: "55",
+      area,
+      number,
+      type: local.length === 11 ? "MOBILE" : "HOME"
+    }
+  ];
+}
+
+function computeInlineTotalCents(input) {
+  const itemsTotal = Array.isArray(input?.items)
+    ? input.items.reduce((sum, item) => sum + toCentsInt(item?.unitAmount || 0) * clampInt(item?.quantity, 1, 999), 0)
+    : 0;
+  const discount = toCentsInt(input?.discountAmount || 0);
+  const shipping = toCentsInt(input?.shippingAmount || 0);
+  const total = Math.max(1, itemsTotal - discount + shipping);
+  return total;
+}
+
+function buildPixInlineOrderPayload(input, options) {
+  const total = computeInlineTotalCents(input);
+  const payload = {
+    reference_id: input.referenceId,
+    customer: {
+      name: input.customer.name,
+      email: input.customer.email,
+      tax_id: input.customer.cpf,
+      phones: toPagBankPhoneList(input.customer.phone)
+    },
+    items: input.items.map((item) => ({
+      reference_id: item.referenceId,
+      name: item.name,
+      quantity: item.quantity,
+      unit_amount: item.unitAmount
+    })),
+    qr_codes: [
+      {
+        amount: { value: total },
+        expiration_date: new Date(Date.now() + 30 * 60 * 1000).toISOString()
+      }
+    ]
+  };
+
+  const notification = String(options?.notificationUrl || "").trim();
+  if (notification) {
+    payload.notification_urls = [notification];
+  }
+
+  return payload;
+}
+
+function buildBoletoInlineOrderPayload(input, options) {
+  const total = computeInlineTotalCents(input);
+  const payload = {
+    reference_id: input.referenceId,
+    customer: {
+      name: input.customer.name,
+      email: input.customer.email,
+      tax_id: input.customer.cpf,
+      phones: toPagBankPhoneList(input.customer.phone)
+    },
+    items: input.items.map((item) => ({
+      reference_id: item.referenceId,
+      name: item.name,
+      quantity: item.quantity,
+      unit_amount: item.unitAmount
+    })),
+    charges: [
+      {
+        reference_id: `${input.referenceId}-B1`,
+        description: `Pedido ${input.referenceId}`,
+        amount: { value: total, currency: "BRL" },
+        payment_method: {
+          type: "BOLETO",
+          boleto: {
+            due_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+            instruction_lines: {
+              line_1: "Nao receber apos vencimento.",
+              line_2: "Pagamento referente ao pedido da loja Stop mod."
+            },
+            holder: {
+              name: input.customer.name,
+              tax_id: input.customer.cpf,
+              email: input.customer.email,
+              address: {
+                street: input.shipTo.street,
+                number: input.shipTo.number,
+                locality: input.shipTo.district,
+                city: input.shipTo.city,
+                region: input.shipTo.state,
+                region_code: input.shipTo.state,
+                country: "BRA",
+                postal_code: input.shipTo.cep
+              }
+            }
+          }
+        }
+      }
+    ]
+  };
+
+  const notification = String(options?.notificationUrl || "").trim();
+  if (notification && Array.isArray(payload.charges) && payload.charges[0]) {
+    payload.charges[0].notification_urls = [notification];
+  }
+
+  return payload;
+}
+
+function extractPixInlineData(orderData) {
+  const qrCode = Array.isArray(orderData?.qr_codes) ? orderData.qr_codes[0] : null;
+  const qrText = String(qrCode?.text || qrCode?.emv || "").trim();
+  const expiresAt = String(qrCode?.expiration_date || "").trim();
+  const qrBase64Raw = findLinkByRel(qrCode?.links, "QRCODE.BASE64");
+  const qrImageUrl = findLinkByRel(qrCode?.links, "QRCODE.PNG") || findLinkByRel(qrCode?.links, "QRCODE.IMAGE");
+  const qrImageDataUrl = toDataImageUrlIfBase64(qrBase64Raw);
+
+  return {
+    qrText,
+    expiresAt,
+    qrImageDataUrl,
+    qrImageUrl,
+    qrLink: qrImageUrl
+  };
+}
+
+function extractBoletoInlineData(orderData) {
+  const charge = Array.isArray(orderData?.charges) ? orderData.charges[0] : null;
+  const boleto =
+    charge?.payment_method?.boleto ||
+    charge?.payment_response?.boleto ||
+    {};
+  const barcode = String(
+    boleto?.barcode ||
+      boleto?.number ||
+      charge?.payment_response?.bar_code ||
+      ""
+  ).trim();
+  const formattedBarcode = String(
+    boleto?.formatted_barcode ||
+      boleto?.formatted ||
+      charge?.payment_response?.formatted_bar_code ||
+      ""
+  ).trim();
+  const dueDate = String(boleto?.due_date || "").trim();
+  const pdfUrl =
+    findLinkByRel(boleto?.links, "PDF") ||
+    findLinkByRel(charge?.links, "PAY") ||
+    findAnyHref(boleto?.links) ||
+    "";
+
+  return {
+    barcode,
+    formattedBarcode,
+    dueDate,
+    pdfUrl
+  };
+}
+
+function findLinkByRel(links, relFragment) {
+  if (!Array.isArray(links)) return "";
+  const relNeedle = String(relFragment || "").trim().toUpperCase();
+  if (!relNeedle) return "";
+  const found = links.find((item) => String(item?.rel || "").toUpperCase().includes(relNeedle));
+  return found?.href ? String(found.href) : "";
+}
+
+function findAnyHref(links) {
+  if (!Array.isArray(links)) return "";
+  const first = links.find((item) => typeof item?.href === "string" && /^https?:\/\//i.test(item.href));
+  return first?.href ? String(first.href) : "";
+}
+
+function toDataImageUrlIfBase64(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  if (/^https?:\/\//i.test(text)) return "";
+  if (/^data:image\//i.test(text)) return text;
+  if (!/^[a-z0-9+/=]+$/i.test(text)) return "";
+  return `data:image/png;base64,${text}`;
+}
+
 function parseCheckoutRequest(raw) {
   const paymentMethod = normalizePaymentMethod(raw?.paymentMethod);
   if (!paymentMethod) {
@@ -425,4 +835,8 @@ function toCentsInt(value) {
   // Aceita valor em reais (ex: 19.9) ou centavos inteiro (ex: 1990).
   if (Number.isInteger(n) && n > 999) return n;
   return Math.round(n * 100);
+}
+
+function digitsOnly(value) {
+  return String(value || "").replace(/\D/g, "");
 }
