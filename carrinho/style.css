@@ -912,6 +912,10 @@ body {
   cursor: pointer;
 }
 
+.pay-row--card {
+  grid-template-columns: 22px 62px 1fr;
+}
+
 .pay-row:last-child {
   border-bottom: none;
 }
@@ -949,6 +953,24 @@ body {
 
 .pay-row-icon--barcode svg {
   fill: #222;
+}
+
+.pay-row-icon--card-banner {
+  width: 58px;
+  height: 46px;
+  border-radius: 10px;
+  border: 1px solid #e5dbd0;
+  background: #f7f7f7;
+  overflow: hidden;
+  padding: 1px;
+}
+
+.pay-row-icon--card-banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 8px;
 }
 
 .pay-row-body {
