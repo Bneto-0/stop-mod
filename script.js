@@ -1508,6 +1508,12 @@ function stopProductSlidesAuto() {
   productSlidesAutoTimer = null;
 }
 
+function productDetailHref(productId) {
+  const id = Number(productId);
+  if (!Number.isFinite(id) || id <= 0) return "produto/";
+  return `produto/?id=${id}`;
+}
+
 function renderProductSlides() {
   if (!productSlidesTrack) return;
 
@@ -1516,25 +1522,18 @@ function renderProductSlides() {
   productSlidesTrack.innerHTML = slideProducts
     .map(
       (product) => `
-      <article class="slide-product-card">
-        <img src="${product.image}" alt="${product.name}" loading="lazy" />
+      <a class="slide-product-card product-card-link" href="${productDetailHref(product.id)}" aria-label="Abrir produto ${escapeHtml(product.name)}">
+        <img src="${product.image}" alt="${escapeHtml(product.name)}" loading="lazy" />
         <div class="product-info">
-          <h4>${product.name}</h4>
-          <p class="meta">${product.category} | Tam: ${product.size}</p>
+          <h4>${escapeHtml(product.name)}</h4>
+          <p class="meta">${escapeHtml(product.category)} | Tam: ${escapeHtml(product.size)}</p>
           <p class="price">R$ ${formatBRL(product.price)}</p>
-          <button class="btn" data-product-slide="${product.id}">Adicionar</button>
+          <p class="product-card-action">Ver opcoes do produto</p>
         </div>
-      </article>
+      </a>
     `
     )
     .join("");
-
-  productSlidesTrack.querySelectorAll("button[data-product-slide]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const id = Number(btn.getAttribute("data-product-slide"));
-      addToCart(id);
-    });
-  });
 
   if (productSlidesPrev) productSlidesPrev.hidden = true;
   if (productSlidesNext) productSlidesNext.hidden = true;
@@ -1565,25 +1564,18 @@ function renderProducts() {
   productGrid.innerHTML = filtered
     .map(
       (product) => `
-      <article class="product-card">
-        <img src="${product.image}" alt="${product.name}" loading="lazy" />
+      <a class="product-card product-card-link" href="${productDetailHref(product.id)}" aria-label="Abrir produto ${escapeHtml(product.name)}">
+        <img src="${product.image}" alt="${escapeHtml(product.name)}" loading="lazy" />
         <div class="product-info">
-          <h4>${product.name}</h4>
-          <p class="meta">${product.category} | Tam: ${product.size}</p>
+          <h4>${escapeHtml(product.name)}</h4>
+          <p class="meta">${escapeHtml(product.category)} | Tam: ${escapeHtml(product.size)}</p>
           <p class="price">R$ ${formatBRL(product.price)}</p>
-          <button class="btn" data-product="${product.id}">Adicionar</button>
+          <p class="product-card-action">Ver opcoes do produto</p>
         </div>
-      </article>
+      </a>
     `
     )
     .join("");
-
-  productGrid.querySelectorAll("button[data-product]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const id = Number(btn.getAttribute("data-product"));
-      addToCart(id);
-    });
-  });
 }
 
 function addToCart(productId) {

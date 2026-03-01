@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stop mod | Produto</title>
+  <link rel="canonical" href="https://stopmod.com.br/produto/" />
+  <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
+  <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../style.css?v=17" />
+  <link rel="stylesheet" href="style.css?v=1" />
+</head>
+<body>
+  <header class="product-top container">
+    <a class="back-link" href="../index.html#produtos">&lt;- Voltar para loja</a>
+    <a class="brand-wordmark" href="../index.html#top" aria-label="Stop mod">
+      <span>Stop</span><em>mod</em>
+    </a>
+    <a class="cart-link" href="../carrinho/" aria-label="Ir para o carrinho">
+      <svg class="cart-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M8 19a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm9 0a2 2 0 1 0 .001 4A2 2 0 0 0 17 19zM6.2 5l.6 3h11.6l-1.2 6H8.1L6.2 5zM3 2h2l2.2 11.2A2 2 0 0 0 9.2 15H18v-2H9.2l-.2-1h9.1A2 2 0 0 0 20 10.4l1-5A2 2 0 0 0 19 3H6.4l-.3-1.6A2 2 0 0 0 4.1 0H3v2z"></path>
+      </svg>
+      <span>Carrinho</span>
+      <strong id="cart-count">0</strong>
+    </a>
+  </header>
+
+  <main class="container product-layout">
+    <section class="product-gallery">
+      <img id="product-image" src="" alt="Produto" />
+    </section>
+
+    <section class="product-panel">
+      <p id="product-category" class="product-category">Categoria</p>
+      <h1 id="product-name">Produto</h1>
+      <p id="product-size-text" class="product-size-text">Tam: --</p>
+      <p id="product-price" class="product-price">R$ 0,00</p>
+
+      <div class="product-options">
+        <label>
+          Tamanho
+          <select id="product-size"></select>
+        </label>
+
+        <label>
+          Cor
+          <select id="product-color"></select>
+        </label>
+
+        <label>
+          Quantidade
+          <input id="product-qty" type="number" min="1" max="10" value="1" inputmode="numeric" />
+        </label>
+      </div>
+
+      <p id="product-feedback" class="product-feedback" aria-live="polite"></p>
+
+      <div class="product-actions">
+        <button id="add-cart-btn" class="btn secondary" type="button">Adicionar ao carrinho</button>
+        <button id="buy-now-btn" class="btn" type="button">Comprar agora</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-links">
+      <a href="../privacidade/">Politica de privacidade</a>
+      <a href="../termos/">Termos de servico</a>
+    </div>
+    <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
+  </footer>
+
+  <script src="script.js?v=1"></script>
+</body>
+</html>
