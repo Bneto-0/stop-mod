@@ -316,21 +316,60 @@
       .hero-profile-panel {
         left: auto;
         right: 0;
-        min-width: 180px;
+        min-width: 210px;
+        padding: 0.36rem;
+        border: 1px solid #e5d8cd;
+        border-radius: 12px;
+        background: linear-gradient(180deg, #fffdfa 0%, #fff8f3 100%);
+        box-shadow: 0 14px 28px #1d130d2b;
+      }
+      .hero-profile-panel a {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        width: 100%;
+        text-decoration: none;
+        color: #2f2824;
+        font-size: 0.93rem;
+        font-weight: 800;
+        line-height: 1.15;
+        padding: 0.56rem 0.62rem;
+        border-radius: 9px;
+        transition: background 120ms ease, color 120ms ease, transform 120ms ease;
+      }
+      .hero-profile-panel a::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: #cb5b35;
+        opacity: 0.52;
+        flex: 0 0 auto;
+      }
+      .hero-profile-panel a:hover,
+      .hero-profile-panel a:focus-visible {
+        background: #fff0e4;
+        color: #a64d2f;
+        outline: none;
+        transform: translateX(1px);
       }
       .hero-profile-panel .profile-menu-logout {
         width: 100%;
         text-align: left;
         border: 0;
+        border-top: 1px solid #ecd9cb;
+        margin-top: 0.2rem;
+        padding-top: 0.66rem;
         background: transparent;
         color: #2f2824;
         font: inherit;
         font-size: 0.92rem;
-        font-weight: 700;
+        font-weight: 900;
         line-height: 1.15;
-        padding: 0.48rem 0.6rem;
+        padding: 0.54rem 0.62rem;
         border-radius: 8px;
         cursor: pointer;
+        transition: background 120ms ease, color 120ms ease;
       }
       .hero-profile-panel .profile-menu-logout:hover,
       .hero-profile-panel .profile-menu-logout:focus-visible {
