@@ -129,6 +129,13 @@ body {
   letter-spacing: 0.05em;
 }
 
+.product-rating em {
+  font-style: normal;
+  color: #80776f;
+  font-size: 0.79rem;
+  margin-left: 0.3rem;
+}
+
 .product-category {
   margin: 0;
   color: #292423;

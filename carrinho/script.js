@@ -7,6 +7,7 @@ const PAY_KEY = "stopmod_payment";
 const ORDERS_KEY = "stopmod_orders";
 const NOTES_KEY = "stopmod_notifications";
 const SOLD_COUNTS_KEY = "stopmod_sold_counts";
+const RATINGS_KEY = "stopmod_product_ratings";
 const PROFILE_KEY = "stopmod_profile";
 const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
 const ADDRESS_CONFIRM_FINGERPRINT_KEY = "stopmod_address_confirmed_fp";
@@ -489,6 +490,26 @@ function saveSoldCounters(counters) {
   localStorage.setItem(SOLD_COUNTS_KEY, JSON.stringify(counters || {}));
 }
 
+function loadRatingStatsMap() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(RATINGS_KEY) || "{}");
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+    return raw;
+  } catch {
+    return {};
+  }
+}
+
+function saveRatingStatsMap(stats) {
+  localStorage.setItem(RATINGS_KEY, JSON.stringify(stats || {}));
+}
+
+function estimateAutoRatingByProduct(id) {
+  const base = Number(id) || 0;
+  const raw = 4.6 + (base % 5) * 0.08;
+  return Math.max(1, Math.min(5, Number(raw.toFixed(2))));
+}
+
 function registerSoldItemsFromCheckout(items) {
   if (!Array.isArray(items) || !items.length) return;
   const counters = loadSoldCounters();
@@ -503,6 +524,30 @@ function registerSoldItemsFromCheckout(items) {
   });
 
   saveSoldCounters(counters);
+}
+
+function registerRatingFromCheckout(items) {
+  if (!Array.isArray(items) || !items.length) return;
+  const stats = loadRatingStatsMap();
+
+  items.forEach((item) => {
+    const id = Number(item?.id);
+    const qty = Number(item?.quantity);
+    if (!Number.isInteger(id) || id <= 0) return;
+    if (!Number.isFinite(qty) || qty <= 0) return;
+
+    const key = String(id);
+    const prevSum = Number(stats[key]?.sum || 0);
+    const prevCount = Number(stats[key]?.count || 0);
+    const score = estimateAutoRatingByProduct(id);
+
+    stats[key] = {
+      sum: Math.max(0, prevSum + score * qty),
+      count: Math.max(0, Math.floor(prevCount + qty))
+    };
+  });
+
+  saveRatingStatsMap(stats);
 }
 
 function loadNotes() {
@@ -1074,6 +1119,7 @@ paymentForm?.addEventListener("submit", async (e) => {
     }
 
     registerSoldItemsFromCheckout(payload.items);
+    registerRatingFromCheckout(payload.items);
 
     localStorage.setItem(
       "stopmod_pending_checkout",

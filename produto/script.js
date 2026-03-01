@@ -3,6 +3,7 @@ const MAX_CART_ITEMS = 2000;
 const LAST_PRODUCT_CHOICE_KEY = "stopmod_last_product_choice";
 const FAVORITES_KEY = "stopmod_favorites";
 const SOLD_COUNTS_KEY = "stopmod_sold_counts";
+const RATINGS_KEY = "stopmod_product_ratings";
 const SHIP_KEY = "stopmod_ship_to";
 const PROFILE_KEY = "stopmod_profile";
 const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
@@ -162,6 +163,16 @@ function saveFavoriteIds(ids) {
   localStorage.setItem(FAVORITES_KEY, JSON.stringify(Array.from(new Set(ids))));
 }
 
+function loadRatingStatsMap() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(RATINGS_KEY) || "{}");
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+    return raw;
+  } catch {
+    return {};
+  }
+}
+
 function loadSoldCounters() {
   try {
     const raw = JSON.parse(localStorage.getItem(SOLD_COUNTS_KEY) || "{}");
@@ -184,6 +195,33 @@ function getSoldCount(productId) {
 function renderSoldCount() {
   if (!soldEl || !activeProduct) return;
   soldEl.textContent = `+ ${getSoldCount(activeProduct.id)} quantidade vendida`;
+}
+
+function getProductRatingStats(productId) {
+  const id = Number(productId);
+  const fallbackAvg = estimateRating(id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return { avg: fallbackAvg, count: 0 };
+  }
+
+  const map = loadRatingStatsMap();
+  const entry = map[String(id)];
+  const sum = Number(entry?.sum || 0);
+  const count = Number(entry?.count || 0);
+
+  if (!Number.isFinite(sum) || !Number.isFinite(count) || count <= 0) {
+    return { avg: fallbackAvg, count: 0 };
+  }
+
+  const avg = Math.max(0, Math.min(5, sum / count));
+  return { avg, count: Math.max(0, Math.floor(count)) };
+}
+
+function renderProductRating() {
+  if (!ratingEl || !activeProduct) return;
+  const stats = getProductRatingStats(activeProduct.id);
+  const countText = stats.count > 0 ? `(${stats.count} avaliacoes)` : "(0 avaliacoes)";
+  ratingEl.innerHTML = `${stats.avg.toFixed(1)} <span>${starsByRating(stats.avg)}</span> <em>${countText}</em>`;
 }
 
 function isProductFavorite(productId) {
@@ -451,7 +489,7 @@ function renderNotFound() {
   if (oldPriceEl) oldPriceEl.textContent = "R$ 0,00";
   if (installmentEl) installmentEl.textContent = "ou 0,00";
   if (soldEl) soldEl.textContent = "+ 0 quantidade vendida";
-  if (ratingEl) ratingEl.innerHTML = `0.0 <span>${starsByRating(0)}</span>`;
+  if (ratingEl) ratingEl.innerHTML = `0.0 <span>${starsByRating(0)}</span> <em>(0 avaliacoes)</em>`;
   if (arrivalEl) arrivalEl.textContent = "Chegara entre -- e --";
   if (imageEl) {
     imageEl.src = "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=900&q=80";
@@ -489,7 +527,7 @@ function renderProduct(product) {
   if (categoryEl) categoryEl.textContent = String(product.category || "Produto");
   if (nameEl) nameEl.textContent = String(product.name || "Produto");
   renderSoldCount();
-  if (ratingEl) ratingEl.innerHTML = `${estimateRating(product.id).toFixed(1)} <span>${starsByRating(estimateRating(product.id))}</span>`;
+  renderProductRating();
   if (arrivalEl) arrivalEl.textContent = formatArrivalRange();
   if (imageEl) {
     imageEl.src = String(product.image || "");
@@ -631,6 +669,7 @@ window.addEventListener("storage", (event) => {
   if (key === normalizeText(SHIP_KEY)) renderMenuLocation();
   if (key === normalizeText(PROFILE_KEY) || key === normalizeText(AUTH_LAST_SEEN_KEY)) renderTopProfile();
   if (key === normalizeText(FAVORITES_KEY)) renderFavoriteButton();
+  if (key === normalizeText(RATINGS_KEY)) renderProductRating();
   if (key === normalizeText(SOLD_COUNTS_KEY)) renderSoldCount();
   if (key === normalizeText(CART_KEY)) {
     updateCartCount();
