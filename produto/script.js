@@ -7,6 +7,11 @@ const RATINGS_KEY = "stopmod_product_ratings";
 const SHIP_KEY = "stopmod_ship_to";
 const PROFILE_KEY = "stopmod_profile";
 const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
+const PAGBANK_API_BASE_KEY = "stopmod_pagbank_api_base";
+const PAGBANK_RETURN_URL_KEY = "stopmod_pagbank_return_url";
+const PAGBANK_REDIRECT_URL_KEY = "stopmod_pagbank_redirect_url";
+const PAGBANK_NOTIFICATION_URL_KEY = "stopmod_pagbank_notification_url";
+const PAGBANK_PAYMENT_NOTIFICATION_URL_KEY = "stopmod_pagbank_payment_notification_url";
 const AUTH_TIMEOUT_MS = 2 * 60 * 60 * 1000;
 const SHIPPING_PROMO_SUBTOTAL = 249.9;
 const SHIPPING_PROMO_ITEM_COUNT = 5;
@@ -85,6 +90,17 @@ const menuLocationEl = document.getElementById("menu-location");
 const profileTopLink = document.getElementById("profile-top-link");
 const profileTopName = document.getElementById("profile-top-name");
 const profileTopPhoto = document.getElementById("profile-top-photo");
+const checkoutModal = document.getElementById("checkout-modal");
+const paymentForm = document.getElementById("payment-form");
+const confirmPaymentBtn = document.getElementById("confirm-payment");
+const cardKindSelect = document.getElementById("card-kind-select");
+const morePaymentOptions = document.getElementById("more-payment-options");
+const toggleMorePaymentsBtn = document.getElementById("toggle-more-payments");
+const checkoutAddressLine = document.getElementById("checkout-address-line");
+const checkoutFeedback = document.getElementById("checkout-feedback");
+const confirmAddress = document.getElementById("confirm-address");
+const confirmPaymentDefaultLabel = String(confirmPaymentBtn?.textContent || "Continuar");
+const checkoutCloseEls = document.querySelectorAll("[data-close=\"1\"]");
 
 let activeProduct = null;
 let activeModelOptions = [];
@@ -96,6 +112,10 @@ function formatBRL(value) {
 
 function roundMoney(value) {
   return Number((Number(value || 0)).toFixed(2));
+}
+
+function moneyToCents(value) {
+  return Math.round((Number(value) || 0) * 100);
 }
 
 function normalizeText(value) {
@@ -266,6 +286,10 @@ function loadRatingStatsMap() {
   }
 }
 
+function saveRatingStatsMap(stats) {
+  localStorage.setItem(RATINGS_KEY, JSON.stringify(stats || {}));
+}
+
 function loadSoldCounters() {
   try {
     const raw = JSON.parse(localStorage.getItem(SOLD_COUNTS_KEY) || "{}");
@@ -274,6 +298,10 @@ function loadSoldCounters() {
   } catch {
     return {};
   }
+}
+
+function saveSoldCounters(counters) {
+  localStorage.setItem(SOLD_COUNTS_KEY, JSON.stringify(counters || {}));
 }
 
 function getSoldCount(productId) {
@@ -438,6 +466,124 @@ function loadActiveProfile() {
     return null;
   }
   return profile;
+}
+
+function isCepValid(value) {
+  return String(value || "").replace(/\D/g, "").length === 8;
+}
+
+function optionalHttpUrlFromStorage(key) {
+  const value = String(localStorage.getItem(key) || "").trim();
+  if (!value) return "";
+  return /^https?:\/\//i.test(value) ? value : "";
+}
+
+function buildPagBankCheckoutEndpointFromBase(raw) {
+  const base = String(raw || "").trim().replace(/\/+$/, "");
+  if (!base) return "/api/pagbank/checkout";
+  if (/\/api\/pagbank\/checkout$/i.test(base)) return base;
+  if (/\/api$/i.test(base)) return `${base}/pagbank/checkout`;
+  return `${base}/api/pagbank/checkout`;
+}
+
+function hasConfiguredPagBankApiBase() {
+  return !!String(localStorage.getItem(PAGBANK_API_BASE_KEY) || "").trim();
+}
+
+function resolvePagBankCheckoutEndpoint() {
+  const raw = String(localStorage.getItem(PAGBANK_API_BASE_KEY) || "").trim();
+  return buildPagBankCheckoutEndpointFromBase(raw);
+}
+
+async function isBackendHealthy(url, timeoutMs) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), Number(timeoutMs) || 4500);
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      signal: controller.signal
+    });
+    if (!response.ok) return false;
+    const data = await response.json().catch(() => null);
+    return !!data?.ok;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function resolveWorkingPagBankCheckoutEndpoint() {
+  const configuredEndpoint = resolvePagBankCheckoutEndpoint();
+  if (hasConfiguredPagBankApiBase()) return configuredEndpoint;
+
+  const sameOriginHealthy = await isBackendHealthy("/api/health", 2600);
+  if (sameOriginHealthy) return "/api/pagbank/checkout";
+
+  const localBase = "http://localhost:8787";
+  const localHealthy = await isBackendHealthy(`${localBase}/api/health`, 3200);
+  if (localHealthy) {
+    localStorage.setItem(PAGBANK_API_BASE_KEY, localBase);
+    return `${localBase}/api/pagbank/checkout`;
+  }
+
+  return configuredEndpoint;
+}
+
+function isNotAllowedHtmlError(message) {
+  const text = String(message || "").toLowerCase();
+  return text.includes("405") && text.includes("not allowed");
+}
+
+function normalizeCheckoutErrorMessage(error) {
+  const raw = String(error?.message || "").trim();
+  const lower = raw.toLowerCase();
+  if (isNotAllowedHtmlError(raw)) {
+    return "Backend de pagamento nao esta ativo neste dominio. Inicie o backend local (porta 8787) ou configure stopmod_pagbank_api_base.";
+  }
+  if (lower.includes("failed to fetch") || lower.includes("connection refused")) {
+    return "Nao foi possivel conectar ao backend de pagamento. Verifique se ele esta ligado.";
+  }
+  return raw || "tente novamente.";
+}
+
+async function postJson(url, payload, timeoutMs) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), Number(timeoutMs) || 15000);
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+
+    const text = await response.text();
+    let data = null;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      data = null;
+    }
+
+    if (!response.ok) {
+      const message = String(data?.message || data?.error || text || `HTTP ${response.status}`);
+      throw new Error(message);
+    }
+
+    return data || {};
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error("Tempo esgotado ao iniciar pagamento no PagBank.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function renderTopProfile() {
@@ -744,6 +890,168 @@ function getSelectedQty() {
   return Math.min(10, Math.max(1, Math.round(value)));
 }
 
+function calcShippingForDirect(subtotal, itemCount) {
+  const free = Number(subtotal || 0) >= SHIPPING_PROMO_SUBTOTAL || Number(itemCount || 0) >= SHIPPING_PROMO_ITEM_COUNT;
+  return free ? 0 : SHIPPING_DEFAULT_PRICE;
+}
+
+function genOrderId() {
+  const rnd = Math.random().toString(16).slice(2, 6).toUpperCase();
+  return `SM-${Date.now().toString(36).toUpperCase()}-${rnd}`;
+}
+
+function registerSoldItemsFromCheckout(items) {
+  if (!Array.isArray(items) || !items.length) return;
+  const counters = loadSoldCounters();
+  items.forEach((item) => {
+    const id = Number(item?.id);
+    const qty = Number(item?.quantity);
+    if (!Number.isInteger(id) || id <= 0) return;
+    if (!Number.isFinite(qty) || qty <= 0) return;
+    const prev = Number(counters[String(id)] || 0);
+    counters[String(id)] = Math.max(0, Math.floor(prev + qty));
+  });
+  saveSoldCounters(counters);
+}
+
+function registerRatingFromCheckout(items) {
+  if (!Array.isArray(items) || !items.length) return;
+  const stats = loadRatingStatsMap();
+  items.forEach((item) => {
+    const id = Number(item?.id);
+    const qty = Number(item?.quantity);
+    if (!Number.isInteger(id) || id <= 0) return;
+    if (!Number.isFinite(qty) || qty <= 0) return;
+    const key = String(id);
+    const prevSum = Number(stats[key]?.sum || 0);
+    const prevCount = Number(stats[key]?.count || 0);
+    const score = estimateRating(id);
+    stats[key] = {
+      sum: Math.max(0, prevSum + score * qty),
+      count: Math.max(0, Math.floor(prevCount + qty))
+    };
+  });
+  saveRatingStatsMap(stats);
+}
+
+function buildDirectCheckoutPayload(paymentMethod) {
+  if (!activeProduct) return null;
+  const qty = getSelectedQty();
+  const subtotal = roundMoney(Number(activeProduct.price || 0) * qty);
+  const shipping = calcShippingForDirect(subtotal, qty);
+  const total = roundMoney(subtotal + shipping);
+  const shipTo = loadShipTo();
+  const profile = loadProfile() || {};
+
+  const returnUrl = optionalHttpUrlFromStorage(PAGBANK_RETURN_URL_KEY);
+  const redirectUrl = optionalHttpUrlFromStorage(PAGBANK_REDIRECT_URL_KEY);
+  const notificationUrl = optionalHttpUrlFromStorage(PAGBANK_NOTIFICATION_URL_KEY);
+  const paymentNotificationUrl = optionalHttpUrlFromStorage(PAGBANK_PAYMENT_NOTIFICATION_URL_KEY);
+
+  return {
+    referenceId: genOrderId(),
+    paymentMethod: String(paymentMethod || "").trim(),
+    customer: {
+      name: String(profile?.name || "").trim(),
+      email: String(profile?.email || "").trim().toLowerCase()
+    },
+    coupon: "",
+    shipTo,
+    discountAmount: 0,
+    shippingAmount: moneyToCents(shipping),
+    items: [
+      {
+        id: String(activeProduct.id),
+        referenceId: `SKU-${activeProduct.id}`,
+        name: String(activeProduct.name || "").trim(),
+        description: [activeProduct.category, activeProduct.size].filter(Boolean).join(" | ").slice(0, 240),
+        quantity: qty,
+        unitAmount: moneyToCents(activeProduct.price)
+      }
+    ],
+    totals: {
+      subtotal: moneyToCents(subtotal),
+      discount: 0,
+      shipping: moneyToCents(shipping),
+      total: moneyToCents(total)
+    },
+    returnUrl,
+    redirectUrl,
+    notificationUrl,
+    paymentNotificationUrl
+  };
+}
+
+function setCheckoutFeedback(text, isError) {
+  if (!checkoutFeedback) return;
+  checkoutFeedback.textContent = String(text || "");
+  checkoutFeedback.classList.toggle("error", !!isError);
+}
+
+function clearCheckoutFeedback() {
+  setCheckoutFeedback("", false);
+}
+
+function renderCheckoutAddress() {
+  if (!checkoutAddressLine) return;
+  const shipTo = loadShipTo();
+  const street = String(shipTo?.street || "").trim();
+  const number = String(shipTo?.number || "").trim();
+  const city = String(shipTo?.city || "").trim();
+  const cep = String(shipTo?.cep || "").trim();
+  const lineA = [street, number].filter(Boolean).join(", ");
+  const lineB = [city, cep].filter(Boolean).join(" - ");
+  checkoutAddressLine.textContent = [lineA, lineB].filter(Boolean).join(" | ") || "Nenhum endereco selecionado.";
+}
+
+function shouldExpandMorePayments(method) {
+  return String(method || "").trim() === "boleto";
+}
+
+function setMorePaymentsOpen(open) {
+  if (!morePaymentOptions || !toggleMorePaymentsBtn) return;
+  const expanded = !!open;
+  morePaymentOptions.hidden = !expanded;
+  toggleMorePaymentsBtn.setAttribute("aria-expanded", expanded ? "true" : "false");
+  toggleMorePaymentsBtn.textContent = expanded
+    ? "Mostrar menos meios de pagamento"
+    : "Mostrar mais meios de pagamento";
+}
+
+function selectedPaymentFromModal() {
+  if (!paymentForm) return "";
+  const checked = paymentForm.querySelector("input[name=\"pay\"]:checked");
+  if (!checked) return "";
+  const selected = String(checked.value);
+  if (selected !== "credito") return selected;
+  const mode = String(cardKindSelect?.value || "credito").trim().toLowerCase();
+  return mode === "debito" ? "debito" : "credito";
+}
+
+function syncPaymentRadios() {
+  if (!paymentForm) return;
+  paymentForm.querySelectorAll("input[name=\"pay\"]").forEach((radio) => {
+    radio.checked = String(radio.value) === "pix";
+  });
+  if (cardKindSelect) cardKindSelect.value = "credito";
+  setMorePaymentsOpen(false);
+}
+
+function openCheckoutModal() {
+  if (!checkoutModal) return;
+  renderCheckoutAddress();
+  clearCheckoutFeedback();
+  if (confirmAddress) confirmAddress.checked = false;
+  syncPaymentRadios();
+  checkoutModal.hidden = false;
+}
+
+function closeCheckoutModal() {
+  if (!checkoutModal) return;
+  clearCheckoutFeedback();
+  checkoutModal.hidden = true;
+}
+
 function addCurrentProductToCart(quantity) {
   if (!activeProduct) return { ok: false, message: "Produto invalido." };
 
@@ -785,14 +1093,7 @@ addCartBtn?.addEventListener("click", () => {
 });
 
 buyNowBtn?.addEventListener("click", () => {
-  const qty = getSelectedQty();
-  const result = addCurrentProductToCart(qty);
-  if (!result.ok) {
-    setFeedback(result.message, true);
-    return;
-  }
-  renderShippingPreview();
-  window.location.href = "/carrinho/";
+  openCheckoutModal();
 });
 
 favBtnEl?.addEventListener("click", () => {
@@ -850,10 +1151,112 @@ modelsEl?.addEventListener("click", (event) => {
   setActiveModel(index);
 });
 
+checkoutCloseEls.forEach((el) => {
+  el.addEventListener("click", closeCheckoutModal);
+});
+
+toggleMorePaymentsBtn?.addEventListener("click", () => {
+  const isOpen = String(toggleMorePaymentsBtn.getAttribute("aria-expanded") || "false") === "true";
+  setMorePaymentsOpen(!isOpen);
+});
+
+cardKindSelect?.addEventListener("change", () => {
+  if (!paymentForm) return;
+  const cardRadio = paymentForm.querySelector('input[name="pay"][value="credito"]');
+  if (cardRadio) cardRadio.checked = true;
+});
+
+paymentForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!activeProduct) return;
+
+  const method = selectedPaymentFromModal();
+  if (!method) {
+    setCheckoutFeedback("Escolha a forma de pagamento para continuar.", true);
+    return;
+  }
+
+  const shipTo = loadShipTo();
+  if (!isCepValid(shipTo?.cep)) {
+    setCheckoutFeedback("Selecione um endereco valido para entrega.", true);
+    return;
+  }
+  if (!confirmAddress?.checked) {
+    setCheckoutFeedback("Confirme o endereco para continuar.", true);
+    return;
+  }
+
+  const payload = buildDirectCheckoutPayload(method);
+  if (!payload) {
+    setCheckoutFeedback("Produto invalido para pagamento.", true);
+    return;
+  }
+
+  if (confirmPaymentBtn) {
+    confirmPaymentBtn.disabled = true;
+    confirmPaymentBtn.textContent = "Gerando pagamento...";
+  }
+
+  try {
+    const endpoint = await resolveWorkingPagBankCheckoutEndpoint();
+    let data;
+
+    try {
+      data = await postJson(endpoint, payload, 22000);
+    } catch (firstError) {
+      const shouldTryLocalFallback =
+        !hasConfiguredPagBankApiBase() &&
+        isNotAllowedHtmlError(firstError?.message) &&
+        !/^https?:\/\/localhost:8787\/api\/pagbank\/checkout$/i.test(String(endpoint || ""));
+
+      if (!shouldTryLocalFallback) throw firstError;
+
+      const localBase = "http://localhost:8787";
+      const localEndpoint = `${localBase}/api/pagbank/checkout`;
+      data = await postJson(localEndpoint, payload, 22000);
+      localStorage.setItem(PAGBANK_API_BASE_KEY, localBase);
+    }
+
+    const checkoutUrl = String(data?.checkoutUrl || "").trim();
+    if (!checkoutUrl) throw new Error("PagBank nao retornou URL de pagamento.");
+
+    registerSoldItemsFromCheckout(payload.items);
+    registerRatingFromCheckout(payload.items);
+    renderSoldCount();
+    renderProductRating();
+
+    localStorage.setItem(
+      "stopmod_pending_checkout",
+      JSON.stringify({
+        referenceId: String(data?.referenceId || payload.referenceId),
+        method,
+        createdAt: new Date().toISOString()
+      })
+    );
+
+    closeCheckoutModal();
+    setFeedback("Redirecionando para o PagBank...", false);
+    window.location.href = checkoutUrl;
+  } catch (error) {
+    setCheckoutFeedback(`Falha ao iniciar pagamento real: ${normalizeCheckoutErrorMessage(error)}`, true);
+  } finally {
+    if (confirmPaymentBtn) {
+      confirmPaymentBtn.disabled = false;
+      confirmPaymentBtn.textContent = confirmPaymentDefaultLabel;
+    }
+  }
+});
+
 searchInputEl?.addEventListener("keydown", (event) => {
   if (event.key !== "Enter") return;
   event.preventDefault();
   openStoreSearch();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
+  if (!checkoutModal || checkoutModal.hidden) return;
+  closeCheckoutModal();
 });
 
 const requestedId = readProductIdFromUrl();
@@ -869,6 +1272,7 @@ window.addEventListener("storage", (event) => {
   if (key === normalizeText(SHIP_KEY)) {
     renderMenuLocation();
     renderArrivalPreview();
+    renderCheckoutAddress();
   }
   if (key === normalizeText(PROFILE_KEY) || key === normalizeText(AUTH_LAST_SEEN_KEY)) renderTopProfile();
   if (key === normalizeText(FAVORITES_KEY)) renderFavoriteButton();

@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../style.css?v=20" />
-  <link rel="stylesheet" href="style.css?v=10" />
+  <link rel="stylesheet" href="style.css?v=11" />
 </head>
 <body id="top">
   <header class="hero product-hero">
@@ -159,6 +159,95 @@
     </div>
   </main>
 
+  <div id="checkout-modal" class="modal" hidden>
+    <div class="modal-backdrop" data-close="1"></div>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <h2 id="modal-title">Escolha a forma de pagamento</h2>
+      <form id="payment-form" class="modal-form">
+        <section class="checkout-address-box" aria-label="Endereco para entrega">
+          <div class="checkout-address-head">
+            <strong>Endereco de entrega</strong>
+            <a id="edit-address-link" class="edit-address-link" href="/entrega/">Alterar endereco</a>
+          </div>
+          <p id="checkout-address-line" class="checkout-address-line">Nenhum endereco selecionado.</p>
+          <label class="confirm-address-check">
+            <input id="confirm-address" type="checkbox" />
+            <span>Confirmo que o endereco esta correto.</span>
+          </label>
+        </section>
+
+        <section class="payment-list" aria-label="Meios de pagamento">
+          <label class="pay-row">
+            <input type="radio" name="pay" value="pix" checked />
+            <span class="pay-row-icon pay-row-icon--pix" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <rect x="9.9" y="2.4" width="4.2" height="4.2" rx="1.1" transform="rotate(45 12 4.5)"></rect>
+                <rect x="17.4" y="9.9" width="4.2" height="4.2" rx="1.1" transform="rotate(45 19.5 12)"></rect>
+                <rect x="9.9" y="17.4" width="4.2" height="4.2" rx="1.1" transform="rotate(45 12 19.5)"></rect>
+                <rect x="2.4" y="9.9" width="4.2" height="4.2" rx="1.1" transform="rotate(45 4.5 12)"></rect>
+              </svg>
+            </span>
+            <span class="pay-row-body">
+              <strong>Pix</strong>
+              <small>Aprovacao imediata</small>
+            </span>
+          </label>
+
+          <p class="pay-group-title">Cartoes</p>
+
+          <label class="pay-row pay-row--card">
+            <input type="radio" name="pay" value="credito" />
+            <span class="pay-row-icon pay-row-icon--card-banner" aria-hidden="true">
+              <img src="/assets/icons/card-banner.svg" alt="" />
+            </span>
+            <span class="pay-row-body">
+              <strong>Cartao credito / debito</strong>
+              <small>Em ate 12x</small>
+              <span class="pay-card-kind">
+                <span>Tipo:</span>
+                <select id="card-kind-select" aria-label="Tipo do cartao">
+                  <option value="credito">Credito</option>
+                  <option value="debito">Debito</option>
+                </select>
+              </span>
+            </span>
+          </label>
+
+          <div id="more-payment-options" class="payment-more" hidden>
+            <p class="pay-group-title">Outros meios de pagamento</p>
+            <label class="pay-row">
+              <input type="radio" name="pay" value="boleto" />
+              <span class="pay-row-icon pay-row-icon--barcode" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <rect x="3" y="4.3" width="2" height="15.4" rx="0.4"></rect>
+                  <rect x="6.2" y="4.3" width="1.2" height="15.4" rx="0.4"></rect>
+                  <rect x="8.4" y="4.3" width="2.4" height="15.4" rx="0.4"></rect>
+                  <rect x="12.2" y="4.3" width="1.2" height="15.4" rx="0.4"></rect>
+                  <rect x="14.5" y="4.3" width="2.6" height="15.4" rx="0.4"></rect>
+                  <rect x="18.3" y="4.3" width="1.4" height="15.4" rx="0.4"></rect>
+                </svg>
+              </span>
+              <span class="pay-row-body">
+                <strong>Boleto</strong>
+                <small>Aprovacao em 1 a 2 dias uteis</small>
+              </span>
+            </label>
+          </div>
+
+          <button id="toggle-more-payments" class="more-payments-btn" type="button" aria-expanded="false">
+            Mostrar mais meios de pagamento
+          </button>
+        </section>
+        <p id="checkout-feedback" class="feedback" aria-live="polite"></p>
+
+        <div class="modal-actions">
+          <button class="btn secondary" type="button" data-close="1">Cancelar</button>
+          <button id="confirm-payment" class="btn primary" type="submit">Continuar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <footer>
     <div class="footer-links">
       <a href="/privacidade/">Politica de privacidade</a>
@@ -167,7 +256,7 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=14"></script>
+  <script src="script.js?v=15"></script>
   <script src="../assets/menu-dropdown.js?v=18"></script>
 </body>
 </html>
