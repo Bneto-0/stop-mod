@@ -605,8 +605,8 @@ function openStoreProductSearch() {
 }
 
 function redirectToLoginForCheckout() {
-  const next = encodeURIComponent("../carrinho/");
-  window.location.href = `../login/?next=${next}`;
+  const nextPath = `${window.location.pathname || "/carrinho/"}${window.location.search || ""}${window.location.hash || ""}` || "/carrinho/";
+  window.location.href = `/login/?next=${encodeURIComponent(nextPath)}`;
 }
 
 function groupedCart(ids) {

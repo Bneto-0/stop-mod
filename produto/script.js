@@ -560,6 +560,27 @@ function loadActiveProfile() {
   return profile;
 }
 
+function currentPathWithQueryAndHash() {
+  return `${window.location.pathname || "/"}${window.location.search || ""}${window.location.hash || ""}`;
+}
+
+function redirectToLogin(nextPath) {
+  const next = String(nextPath || currentPathWithQueryAndHash() || "/").trim();
+  window.location.href = `/login/?next=${encodeURIComponent(next)}`;
+}
+
+function requireAuthOrRedirect(feedbackMessage) {
+  const profile = loadActiveProfile();
+  if (profile) {
+    localStorage.setItem(AUTH_LAST_SEEN_KEY, String(Date.now()));
+    return true;
+  }
+
+  if (feedbackMessage) setFeedback(feedbackMessage, true);
+  redirectToLogin(currentPathWithQueryAndHash());
+  return false;
+}
+
 function isCepValid(value) {
   return String(value || "").replace(/\D/g, "").length === 8;
 }
@@ -1193,6 +1214,7 @@ function addCurrentProductToCart(quantity) {
 }
 
 addCartBtn?.addEventListener("click", () => {
+  if (!requireAuthOrRedirect("Faca login para adicionar ao carrinho.")) return;
   const qty = getSelectedQty();
   const result = addCurrentProductToCart(qty);
   if (!result.ok) {
@@ -1204,6 +1226,7 @@ addCartBtn?.addEventListener("click", () => {
 });
 
 buyNowBtn?.addEventListener("click", () => {
+  if (!requireAuthOrRedirect("Faca login para continuar com a compra.")) return;
   openCheckoutModal();
 });
 
@@ -1279,6 +1302,7 @@ cardKindSelect?.addEventListener("change", () => {
 
 paymentForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
+  if (!requireAuthOrRedirect("Faca login para finalizar a compra.")) return;
   if (!activeProduct) return;
 
   const method = selectedPaymentFromModal();

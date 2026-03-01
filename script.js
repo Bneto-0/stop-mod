@@ -1195,6 +1195,25 @@ function loadActiveProfile() {
   return profile;
 }
 
+function currentPathWithQueryAndHash() {
+  return `${window.location.pathname || "/"}${window.location.search || ""}${window.location.hash || ""}`;
+}
+
+function redirectToLogin(nextPath) {
+  const next = String(nextPath || currentPathWithQueryAndHash() || "/").trim();
+  window.location.href = `/login/?next=${encodeURIComponent(next)}`;
+}
+
+function requireAuthOrRedirect(nextPath) {
+  const profile = loadActiveProfile();
+  if (profile) {
+    localStorage.setItem(AUTH_LAST_SEEN_KEY, String(Date.now()));
+    return true;
+  }
+  redirectToLogin(nextPath);
+  return false;
+}
+
 function renderTopProfile() {
   if (!profileTopName || !profileTopLink) return;
   const profile = loadActiveProfile();
@@ -1730,6 +1749,31 @@ function addToCart(productId) {
   updateCartCount();
 }
 
+function bindProductAuthLinks() {
+  const handleClick = (event) => {
+    const trigger = event.target instanceof Element ? event.target.closest("a[data-product-open]") : null;
+    if (!trigger) return;
+
+    const href = String(trigger.getAttribute("href") || "").trim();
+    const next = href
+      ? (() => {
+          try {
+            const url = new URL(href, window.location.href);
+            return `${url.pathname}${url.search}${url.hash}`;
+          } catch {
+            return currentPathWithQueryAndHash();
+          }
+        })()
+      : currentPathWithQueryAndHash();
+
+    if (requireAuthOrRedirect(next)) return;
+    event.preventDefault();
+  };
+
+  productGrid?.addEventListener("click", handleClick);
+  productSlidesTrack?.addEventListener("click", handleClick);
+}
+
 searchInput?.addEventListener("input", renderProducts);
 searchInput?.addEventListener("input", syncSearchQueryInUrl);
 searchInput?.addEventListener("keydown", (event) => {
@@ -1747,6 +1791,7 @@ productModalQty?.addEventListener("input", () => {
 });
 
 productModalAddBtn?.addEventListener("click", () => {
+  if (!requireAuthOrRedirect(currentPathWithQueryAndHash())) return;
   const result = addManyToCart(activeModalProductId, readModalQty());
   if (!result.ok) {
     setProductModalFeedback(result.message, true);
@@ -1756,6 +1801,7 @@ productModalAddBtn?.addEventListener("click", () => {
 });
 
 productModalBuyBtn?.addEventListener("click", () => {
+  if (!requireAuthOrRedirect(currentPathWithQueryAndHash())) return;
   const result = addManyToCart(activeModalProductId, readModalQty());
   if (!result.ok) {
     setProductModalFeedback(result.message, true);
@@ -1785,6 +1831,7 @@ const sequenceAds = uniqueUrls([
 ]).slice(0, MAX_AD_SLIDES);
 startAdSlider(promoSeqLink, promoSeqImage, promoSeqDots, sequenceAds, loadHomeTarget());
 initProductSlides();
+bindProductAuthLinks();
 syncSearchQueryInUrl();
 
 window.addEventListener("storage", (event) => {
