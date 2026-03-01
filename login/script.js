@@ -2,6 +2,8 @@ const PROFILE_KEY = "stopmod_profile";
 const PROFILE_EXTRA_KEY = "stopmod_profile_extra";
 const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
 const AUTH_TOKEN_KEY = "stopmod_auth_token";
+const GOOGLE_CLIENT_KEY = "stopmod_google_client_id";
+const DEFAULT_GOOGLE_CLIENT_ID = "887504211072-0elgoi3dbg80bb9640vvlqfl7cp8guq5.apps.googleusercontent.com";
 const SHIP_KEY = "stopmod_ship_to";
 const SHIP_LIST_KEY = "stopmod_ship_list";
 const API_BASE_KEY = "stopmod_api_base";
@@ -489,6 +491,114 @@ function closeModal() {
   if (modalBody) modalBody.innerHTML = "";
 }
 
+function finishSocialLogin(user) {
+  const name = String(user?.name || "Cliente Stop mod").trim() || "Cliente Stop mod";
+  const email = String(user?.email || "").trim().toLowerCase();
+  const picture = String(user?.picture || "").trim();
+
+  // Social login does not return backend JWT; avoid stale token reuse.
+  localStorage.removeItem(AUTH_TOKEN_KEY);
+  localStorage.setItem(
+    PROFILE_KEY,
+    JSON.stringify({
+      name,
+      email,
+      picture
+    })
+  );
+  localStorage.setItem(
+    PROFILE_EXTRA_KEY,
+    JSON.stringify({
+      displayName: name,
+      fullName: name,
+      birthDate: "",
+      cpf: "",
+      cpfMasked: "",
+      email,
+      phone: "",
+      username: (email.split("@")[0] || "cliente"),
+      picture
+    })
+  );
+  localStorage.setItem(AUTH_LAST_SEEN_KEY, String(Date.now()));
+  window.location.href = resolvePostLoginUrl();
+}
+
+function ensureGoogleScript(callback) {
+  if (window.google?.accounts?.oauth2) {
+    callback();
+    return;
+  }
+
+  const script = document.createElement("script");
+  script.src = "https://accounts.google.com/gsi/client";
+  script.async = true;
+  script.defer = true;
+  script.onload = callback;
+  script.onerror = () => setMsg(msg, "Nao foi possivel carregar o Google.", true);
+  document.head.appendChild(script);
+}
+
+function googleSignIn() {
+  const clientId = String(localStorage.getItem(GOOGLE_CLIENT_KEY) || DEFAULT_GOOGLE_CLIENT_ID || "").trim();
+  if (!clientId) {
+    setMsg(msg, "Login Google indisponivel: Client ID nao configurado.", true);
+    return;
+  }
+
+  if (!String(localStorage.getItem(GOOGLE_CLIENT_KEY) || "").trim()) {
+    localStorage.setItem(GOOGLE_CLIENT_KEY, clientId);
+  }
+
+  ensureGoogleScript(() => {
+    if (!window.google?.accounts?.oauth2) {
+      setMsg(msg, "Google indisponivel no momento.", true);
+      return;
+    }
+
+    try {
+      const tokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: "openid email profile",
+        callback: async (tokenResponse) => {
+          const accessToken = String(tokenResponse?.access_token || "").trim();
+          if (!accessToken) {
+            setMsg(msg, "Falha no login Google.", true);
+            return;
+          }
+
+          setMsg(msg, "Finalizando login Google...", false);
+          try {
+            const profile = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+              headers: { Authorization: `Bearer ${accessToken}` },
+              cache: "no-store"
+            }).then((response) => {
+              if (!response.ok) throw new Error("google_profile_error");
+              return response.json();
+            });
+
+            finishSocialLogin({
+              name: String(profile?.name || "Cliente Stop mod"),
+              email: String(profile?.email || ""),
+              picture: String(profile?.picture || "")
+            });
+          } catch {
+            setMsg(msg, "Falha ao carregar dados da conta Google.", true);
+          }
+        },
+        error_callback: () => {
+          setMsg(msg, "Nao foi possivel abrir o login Google. Verifique bloqueio de pop-up.", true);
+        }
+      });
+
+      setMsg(msg, "Abrindo login Google...", false);
+      tokenClient.requestAccessToken({ prompt: "select_account" });
+    } catch {
+      setMsg(msg, "Erro ao iniciar login Google.", true);
+    }
+  });
+}
+
 async function handleRegisterSubmit(event) {
   event.preventDefault();
   const payload = {
@@ -626,7 +736,7 @@ forgotBtn?.addEventListener("click", () => {
 });
 
 googleBtn?.addEventListener("click", () => {
-  setMsg(msg, "");
+  googleSignIn();
 });
 
 modal?.querySelectorAll("[data-close]").forEach((el) => el.addEventListener("click", closeModal));
