@@ -12,6 +12,20 @@ const SHIPPING_PROMO_SUBTOTAL = 249.9;
 const SHIPPING_PROMO_ITEM_COUNT = 5;
 const SHIPPING_DEFAULT_PRICE = 19.9;
 const FULL_PRICE_MULTIPLIER = 1.07;
+const DRESS_COLOR_VARIANTS = Object.freeze({
+  5: {
+    "Floral Claro": "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80",
+    "Floral Azul": "https://images.unsplash.com/photo-1464863979621-258859e62245?auto=format&fit=crop&w=900&q=80",
+    "Floral Terracota": "https://images.unsplash.com/photo-1463100099107-aa0980c362e6?auto=format&fit=crop&w=900&q=80",
+    "Floral Dourado": "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=900&q=80"
+  },
+  17: {
+    "Floral Claro": "https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=900&q=80",
+    "Floral Azul": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80",
+    "Floral Terracota": "https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93?auto=format&fit=crop&w=900&q=80",
+    "Floral Dourado": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80"
+  }
+});
 
 const SIZE_ORDER = ["PP", "P", "M", "G", "GG", "XG", "XXG"];
 
@@ -103,6 +117,10 @@ function escapeHtml(value) {
 
 function colorToHex(colorName) {
   const key = normalizeText(colorName);
+  if (key.includes("floral claro")) return "#ece2d3";
+  if (key.includes("floral azul")) return "#3c7cb5";
+  if (key.includes("floral terracota")) return "#ba6a53";
+  if (key.includes("floral dourado")) return "#c59c53";
   if (key.includes("preto")) return "#101112";
   if (key.includes("branco")) return "#f5f5f5";
   if (key.includes("off")) return "#efe8dc";
@@ -517,11 +535,28 @@ function getSizeOptions(sizeText) {
 }
 
 function getColorOptions(product) {
+  const productId = Number(product?.id);
+  if (DRESS_COLOR_VARIANTS[productId]) {
+    return Object.keys(DRESS_COLOR_VARIANTS[productId]);
+  }
+
   const name = String(product?.name || "").toLowerCase();
   if (name.includes("preto")) return ["Preto", "Marrom", "Cinza"];
   if (name.includes("branco")) return ["Branco", "Off White", "Preto"];
   if (name.includes("jeans")) return ["Azul Jeans", "Preto", "Cinza"];
   return ["Bege", "Preto", "Branco"];
+}
+
+function getColorVariantImage(product, colorName) {
+  const productId = Number(product?.id);
+  if (!Number.isInteger(productId) || productId <= 0) return "";
+  const variants = DRESS_COLOR_VARIANTS[productId];
+  if (!variants || typeof variants !== "object") return "";
+
+  const wanted = normalizeText(colorName);
+  const key = Object.keys(variants).find((item) => normalizeText(item) === wanted);
+  if (!key) return "";
+  return String(variants[key] || "").trim();
 }
 
 function fillSelect(selectEl, options) {
@@ -586,10 +621,14 @@ function renderNotFound() {
 }
 
 function getModelColorOptions(product) {
-  return getColorOptions(product).map((color, index) => ({
-    color: String(color || "").trim(),
-    label: `Cor ${index + 1}: ${String(color || "").trim()}`
-  }));
+  return getColorOptions(product).map((color, index) => {
+    const normalizedColor = String(color || "").trim();
+    return {
+      color: normalizedColor,
+      label: `Cor ${index + 1}: ${normalizedColor}`,
+      image: getColorVariantImage(product, normalizedColor)
+    };
+  });
 }
 
 function renderModelOptions() {
@@ -603,11 +642,22 @@ function renderModelOptions() {
     .map(
       (option, index) => `
         <button class="model-option${index === activeModelIndex ? " active" : ""}" type="button" data-model-index="${index}" aria-label="${escapeHtml(option.label)}">
-          <i style="background:${colorToHex(option.color)}"></i>
+          ${option.image ? `<img src="${escapeHtml(option.image)}" alt="${escapeHtml(option.label)}" loading="lazy" />` : `<i style="background:${colorToHex(option.color)}"></i>`}
         </button>
       `
     )
     .join("");
+}
+
+function renderMainImageByColor() {
+  if (!imageEl || !activeProduct) return;
+  const selectedColor = String(colorEl?.value || "").trim();
+  const variantImage = getColorVariantImage(activeProduct, selectedColor);
+  const imageUrl = variantImage || String(activeProduct.image || "");
+  imageEl.src = imageUrl;
+  imageEl.alt = selectedColor
+    ? `${String(activeProduct.name || "Produto")} - ${selectedColor}`
+    : String(activeProduct.name || "Produto");
 }
 
 function setActiveModel(index) {
@@ -625,6 +675,7 @@ function setActiveModel(index) {
   }
 
   renderColorSwatches();
+  renderMainImageByColor();
   renderModelOptions();
 }
 
@@ -632,8 +683,8 @@ function syncModelFromCurrentColor() {
   if (!colorEl || !activeModelOptions.length) return;
   const selectedColor = normalizeText(colorEl.value);
   const index = activeModelOptions.findIndex((item) => normalizeText(item.color) === selectedColor);
-  if (index < 0 || index === activeModelIndex) return;
-  activeModelIndex = index;
+  if (index >= 0 && index !== activeModelIndex) activeModelIndex = index;
+  renderMainImageByColor();
   renderModelOptions();
 }
 
@@ -659,10 +710,6 @@ function renderProduct(product) {
   renderSoldCount();
   renderProductRating();
   renderArrivalPreview();
-  if (imageEl) {
-    imageEl.src = String(product.image || "");
-    imageEl.alt = String(product.name || "Produto");
-  }
 
   fillSelect(sizeEl, getSizeOptions(product.size));
   fillSelect(colorEl, getColorOptions(product));
