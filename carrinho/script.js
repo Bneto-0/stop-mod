@@ -64,6 +64,7 @@ const paymentSelected = document.getElementById("payment-selected");
 const checkoutModal = document.getElementById("checkout-modal");
 const paymentForm = document.getElementById("payment-form");
 const confirmPaymentBtn = document.getElementById("confirm-payment");
+const cardKindSelect = document.getElementById("card-kind-select");
 const morePaymentOptions = document.getElementById("more-payment-options");
 const toggleMorePaymentsBtn = document.getElementById("toggle-more-payments");
 const checkoutAddressLine = document.getElementById("checkout-address-line");
@@ -740,22 +741,31 @@ function closeModal() {
 function syncPaymentRadios() {
   if (!paymentForm) return;
   const cur = loadPayment();
+  const radioValue = cur === "debito" ? "credito" : cur;
   const radios = paymentForm.querySelectorAll("input[name=\"pay\"]");
   radios.forEach((r) => {
-    r.checked = String(r.value) === cur;
+    r.checked = String(r.value) === radioValue;
   });
+  if (cardKindSelect) {
+    cardKindSelect.value = cur === "debito" ? "debito" : "credito";
+  }
   setMorePaymentsOpen(shouldExpandMorePayments(cur));
 }
 
 function selectedPaymentFromModal() {
   if (!paymentForm) return "";
   const checked = paymentForm.querySelector("input[name=\"pay\"]:checked");
-  return checked ? String(checked.value) : "";
+  if (!checked) return "";
+  const selected = String(checked.value);
+  if (selected !== "credito") return selected;
+  if (!cardKindSelect) return "credito";
+  const mode = String(cardKindSelect.value || "").trim().toLowerCase();
+  return mode === "debito" ? "debito" : "credito";
 }
 
 function shouldExpandMorePayments(method) {
   const value = String(method || "").trim();
-  return value === "debito" || value === "boleto";
+  return value === "boleto";
 }
 
 function setMorePaymentsOpen(open) {
@@ -930,6 +940,12 @@ checkoutModal?.querySelectorAll("[data-close]").forEach((el) => {
 toggleMorePaymentsBtn?.addEventListener("click", () => {
   const isOpen = String(toggleMorePaymentsBtn.getAttribute("aria-expanded") || "false") === "true";
   setMorePaymentsOpen(!isOpen);
+});
+
+cardKindSelect?.addEventListener("change", () => {
+  if (!paymentForm) return;
+  const cardRadio = paymentForm.querySelector('input[name="pay"][value="credito"]');
+  if (cardRadio) cardRadio.checked = true;
 });
 
 addressInlineConfirm?.addEventListener("click", () => {

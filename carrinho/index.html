@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=25" />
+  <link rel="stylesheet" href="style.css?v=27" />
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6485539380158983" crossorigin="anonymous"></script>
 </head>
 <body id="top">
@@ -200,21 +200,17 @@
             <span class="pay-row-body">
               <strong>Cartao credito / debito</strong>
               <small>Em ate 12x</small>
+              <span class="pay-card-kind">
+                <span>Tipo:</span>
+                <select id="card-kind-select" aria-label="Tipo do cartao">
+                  <option value="credito">Credito</option>
+                  <option value="debito">Debito</option>
+                </select>
+              </span>
             </span>
           </label>
 
           <div id="more-payment-options" class="payment-more" hidden>
-            <label class="pay-row pay-row--card">
-              <input type="radio" name="pay" value="debito" />
-              <span class="pay-row-icon pay-row-icon--card-banner" aria-hidden="true">
-                <img src="../assets/icons/card-banner.svg" alt="" />
-              </span>
-              <span class="pay-row-body">
-                <strong>Cartao de debito</strong>
-                <small>Confirmacao com 3DS</small>
-              </span>
-            </label>
-
             <p class="pay-group-title">Outros meios de pagamento</p>
 
             <label class="pay-row">
@@ -258,7 +254,7 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=25"></script>
+  <script src="script.js?v=27"></script>
   <script src="../assets/menu-dropdown.js?v=18"></script>
 </body>
 </html>

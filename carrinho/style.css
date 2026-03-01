@@ -990,6 +990,33 @@ body {
   font-weight: 600;
 }
 
+.pay-card-kind {
+  margin-top: 0.2rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.36rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #6f655d;
+}
+
+.pay-card-kind select {
+  border: 1px solid #dccfc3;
+  border-radius: 8px;
+  padding: 0.18rem 0.42rem;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #2f2824;
+  background: #fff;
+}
+
+.pay-card-kind select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px #f7cfb599;
+  border-color: #d8b49c;
+}
+
 .pay-row input[type="radio"]:checked ~ .pay-row-body strong {
   color: #000;
 }
