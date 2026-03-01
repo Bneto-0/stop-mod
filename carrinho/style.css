@@ -892,6 +892,16 @@ body {
   display: none !important;
 }
 
+.pay-group-title {
+  margin: 0;
+  padding: 0.56rem 0.85rem 0.36rem;
+  border-top: 1px solid #ece3da;
+  background: #faf8f6;
+  color: #494038;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
 .pay-row {
   display: grid;
   grid-template-columns: 22px 34px 1fr;
@@ -917,8 +927,8 @@ body {
 }
 
 .pay-row-icon {
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   border-radius: 999px;
   border: 1px solid #e8ddd2;
   background: #fff;
@@ -928,9 +938,17 @@ body {
 }
 
 .pay-row-icon svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   fill: #1f1f1f;
+}
+
+.pay-row-icon--pix svg {
+  fill: #18c5a4;
+}
+
+.pay-row-icon--barcode svg {
+  fill: #222;
 }
 
 .pay-row-body {
@@ -950,13 +968,25 @@ body {
   font-weight: 600;
 }
 
+.pay-badge {
+  justify-self: start;
+  margin-top: 0.16rem;
+  border-radius: 999px;
+  padding: 0.08rem 0.42rem;
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: #0a8a61;
+  background: #dff7ea;
+  border: 1px solid #b9ebd4;
+}
+
 .pay-row input[type="radio"]:checked ~ .pay-row-body strong {
   color: #000;
 }
 
 .pay-row input[type="radio"]:checked ~ .pay-row-icon {
-  border-color: #d8c4b5;
-  background: #fff3ea;
+  border-color: #cbb6a8;
+  background: #fff6ee;
 }
 
 .more-payments-btn {
