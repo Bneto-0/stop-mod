@@ -8,6 +8,7 @@ const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
 const AUTH_TIMEOUT_MS = 2 * 60 * 60 * 1000;
 const INVALID_CEP_MSG = "CEP invalido, digite outro CEP.";
 const GOOGLE_MAPS_API_KEY = "stopmod_google_maps_api_key";
+const SIZE_ORDER = ["PP", "P", "M", "G", "GG", "XG", "XXG"];
 const STATE_NAME_TO_UF = Object.freeze({
   acre: "AC",
   alagoas: "AL",
@@ -85,6 +86,7 @@ const products = [
   { id: 20, name: "Regata Canelada Soft", category: "Blusas", size: "PP ao GG", price: 89.9, image: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=700&q=80" },
   { id: 21, name: "Conjunto Tricot Elegance", category: "Conjuntos", size: "P ao G", price: 219.9, image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=700&q=80" }
 ];
+const productById = new Map(products.map((product) => [Number(product.id), product]));
 
 const productGrid = document.getElementById("product-grid");
 const searchInput = document.getElementById("search-input");
@@ -128,6 +130,19 @@ const addressFeedback = document.getElementById("address-feedback");
 const googleMapsApiKeyInput = document.getElementById("google-maps-api-key");
 const saveGoogleKeyBtn = document.getElementById("save-google-key");
 const addressCompleteBlock = document.getElementById("address-complete-block");
+const productModal = document.getElementById("product-modal");
+const productModalCloseEls = document.querySelectorAll("[data-product-close=\"1\"]");
+const productModalCategory = document.getElementById("product-modal-category");
+const productModalTitle = document.getElementById("product-modal-title");
+const productModalImage = document.getElementById("product-modal-image");
+const productModalSizeText = document.getElementById("product-modal-size-text");
+const productModalPrice = document.getElementById("product-modal-price");
+const productModalSize = document.getElementById("product-modal-size");
+const productModalColor = document.getElementById("product-modal-color");
+const productModalQty = document.getElementById("product-modal-qty");
+const productModalFeedback = document.getElementById("product-modal-feedback");
+const productModalAddBtn = document.getElementById("product-modal-add");
+const productModalBuyBtn = document.getElementById("product-modal-buy");
 
 let selectedAddressId = "";
 let validatedAddressSignature = "";
@@ -140,6 +155,7 @@ let productSlidesPage = 0;
 let productSlidesTotalPages = 1;
 let productSlidesStep = 1;
 let productSlidesAutoTimer = null;
+let activeModalProductId = 0;
 
 function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -1514,6 +1530,131 @@ function productDetailHref(productId) {
   return `produto/?id=${id}`;
 }
 
+function optionsFromLetterRange(from, to) {
+  const start = SIZE_ORDER.indexOf(String(from || "").toUpperCase());
+  const end = SIZE_ORDER.indexOf(String(to || "").toUpperCase());
+  if (start < 0 || end < 0) return [];
+  const low = Math.min(start, end);
+  const high = Math.max(start, end);
+  return SIZE_ORDER.slice(low, high + 1);
+}
+
+function optionsFromNumericRange(from, to) {
+  const start = Number(from);
+  const end = Number(to);
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return [];
+  const low = Math.min(start, end);
+  const high = Math.max(start, end);
+  const options = [];
+  const step = low % 2 === high % 2 ? 2 : 1;
+  for (let value = low; value <= high; value += step) {
+    options.push(String(value));
+  }
+  return options;
+}
+
+function getSizeOptions(sizeText) {
+  const raw = String(sizeText || "").trim();
+  if (!raw) return ["Unico"];
+  if (/unico/i.test(raw)) return ["Unico"];
+
+  const letterMatch = raw.match(/(PP|P|M|G|GG|XG|XXG)\s*ao\s*(PP|P|M|G|GG|XG|XXG)/i);
+  if (letterMatch) {
+    const options = optionsFromLetterRange(letterMatch[1], letterMatch[2]);
+    if (options.length) return options;
+  }
+
+  const numberMatch = raw.match(/(\d+)\s*ao\s*(\d+)/i);
+  if (numberMatch) {
+    const options = optionsFromNumericRange(numberMatch[1], numberMatch[2]);
+    if (options.length) return options;
+  }
+
+  const split = raw
+    .split(/[|,/;-]+/)
+    .map((item) => String(item || "").trim())
+    .filter(Boolean);
+  return split.length ? split : ["Unico"];
+}
+
+function getColorOptions(product) {
+  const name = String(product?.name || "").toLowerCase();
+  if (name.includes("preto")) return ["Preto", "Marrom", "Cinza"];
+  if (name.includes("branco")) return ["Branco", "Off white", "Preto"];
+  if (name.includes("jeans")) return ["Azul jeans", "Preto", "Cinza"];
+  return ["Bege", "Preto", "Branco"];
+}
+
+function fillSelectOptions(selectEl, options) {
+  if (!selectEl) return;
+  const list = Array.isArray(options) && options.length ? options : ["Unico"];
+  selectEl.innerHTML = list
+    .map((item) => `<option value="${escapeHtml(String(item))}">${escapeHtml(String(item))}</option>`)
+    .join("");
+}
+
+function setProductModalFeedback(text, isError) {
+  if (!productModalFeedback) return;
+  productModalFeedback.textContent = String(text || "");
+  productModalFeedback.classList.toggle("error", !!isError);
+}
+
+function openProductModal(productId) {
+  if (!productModal) return;
+  const id = Number(productId);
+  const product = productById.get(id);
+  if (!product) return;
+
+  activeModalProductId = id;
+  if (productModalCategory) productModalCategory.textContent = String(product.category || "Produto");
+  if (productModalTitle) productModalTitle.textContent = String(product.name || "Produto");
+  if (productModalImage) {
+    productModalImage.src = String(product.image || "");
+    productModalImage.alt = String(product.name || "Produto");
+  }
+  if (productModalSizeText) productModalSizeText.textContent = `Tam: ${String(product.size || "--")}`;
+  if (productModalPrice) productModalPrice.textContent = `R$ ${formatBRL(product.price)}`;
+
+  fillSelectOptions(productModalSize, getSizeOptions(product.size));
+  fillSelectOptions(productModalColor, getColorOptions(product));
+  if (productModalQty) productModalQty.value = "1";
+  setProductModalFeedback("", false);
+
+  productModal.hidden = false;
+  document.body.classList.add("product-modal-open");
+}
+
+function closeProductModal() {
+  if (!productModal) return;
+  productModal.hidden = true;
+  document.body.classList.remove("product-modal-open");
+  setProductModalFeedback("", false);
+}
+
+function readModalQty() {
+  const raw = Number(productModalQty?.value || "1");
+  if (!Number.isFinite(raw)) return 1;
+  return Math.min(10, Math.max(1, Math.round(raw)));
+}
+
+function addManyToCart(productId, quantity) {
+  const id = Number(productId);
+  const qty = Math.min(10, Math.max(1, Number(quantity) || 1));
+  if (!Number.isInteger(id) || id <= 0) {
+    return { ok: false, message: "Produto invalido." };
+  }
+  const ids = loadCartIds();
+  if (ids.length + qty > MAX_CART_ITEMS) {
+    return { ok: false, message: "Limite de 2000 itens no carrinho atingido." };
+  }
+  for (let i = 0; i < qty; i += 1) {
+    ids.push(id);
+  }
+  saveCartIds(ids);
+  updateCartCount();
+  return { ok: true };
+}
+
 function renderProductSlides() {
   if (!productSlidesTrack) return;
 
@@ -1522,7 +1663,7 @@ function renderProductSlides() {
   productSlidesTrack.innerHTML = slideProducts
     .map(
       (product) => `
-      <a class="slide-product-card product-card-link" href="${productDetailHref(product.id)}" aria-label="Abrir produto ${escapeHtml(product.name)}">
+      <a class="slide-product-card product-card-link" data-product-open="${product.id}" href="${productDetailHref(product.id)}" aria-label="Abrir produto ${escapeHtml(product.name)}">
         <img src="${product.image}" alt="${escapeHtml(product.name)}" loading="lazy" />
         <div class="product-info">
           <h4>${escapeHtml(product.name)}</h4>
@@ -1564,7 +1705,7 @@ function renderProducts() {
   productGrid.innerHTML = filtered
     .map(
       (product) => `
-      <a class="product-card product-card-link" href="${productDetailHref(product.id)}" aria-label="Abrir produto ${escapeHtml(product.name)}">
+      <a class="product-card product-card-link" data-product-open="${product.id}" href="${productDetailHref(product.id)}" aria-label="Abrir produto ${escapeHtml(product.name)}">
         <img src="${product.image}" alt="${escapeHtml(product.name)}" loading="lazy" />
         <div class="product-info">
           <h4>${escapeHtml(product.name)}</h4>
@@ -1597,6 +1738,45 @@ searchInput?.addEventListener("keydown", (event) => {
   syncSearchQueryInUrl();
 });
 
+function onOpenProductClick(event) {
+  const trigger = event.target.closest("[data-product-open]");
+  if (!trigger) return;
+  event.preventDefault();
+  const id = Number(trigger.getAttribute("data-product-open"));
+  if (!Number.isInteger(id) || id <= 0) return;
+  openProductModal(id);
+}
+
+productGrid?.addEventListener("click", onOpenProductClick);
+productSlidesTrack?.addEventListener("click", onOpenProductClick);
+
+productModalCloseEls.forEach((el) => {
+  el.addEventListener("click", closeProductModal);
+});
+
+productModalQty?.addEventListener("input", () => {
+  productModalQty.value = String(readModalQty());
+});
+
+productModalAddBtn?.addEventListener("click", () => {
+  const result = addManyToCart(activeModalProductId, readModalQty());
+  if (!result.ok) {
+    setProductModalFeedback(result.message, true);
+    return;
+  }
+  setProductModalFeedback(`Produto adicionado ao carrinho (${readModalQty()}x).`, false);
+});
+
+productModalBuyBtn?.addEventListener("click", () => {
+  const result = addManyToCart(activeModalProductId, readModalQty());
+  if (!result.ok) {
+    setProductModalFeedback(result.message, true);
+    return;
+  }
+  closeProductModal();
+  window.location.href = "carrinho/";
+});
+
 normalizeHomeHashToTop();
 ensureHeroVisibleOnLoad();
 applySearchFromUrl();
@@ -1623,4 +1803,10 @@ window.addEventListener("storage", (event) => {
   const key = String(event?.key || "");
   if (key === SHIP_KEY) renderMenuLocation();
   if (key === PROFILE_KEY || key === AUTH_LAST_SEEN_KEY) renderTopProfile();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
+  if (!productModal || productModal.hidden) return;
+  closeProductModal();
 });

@@ -47,7 +47,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=17" />
+  <link rel="stylesheet" href="style.css?v=18" />
   <style>
     .container { width: min(1320px, 96%); }
     .hero {
@@ -969,6 +969,50 @@
     </section>
   </div>
 
+  <div id="product-modal" class="product-modal" hidden>
+    <button class="product-modal-backdrop" type="button" data-product-close="1" aria-label="Fechar detalhes do produto"></button>
+    <section class="product-modal-card" role="dialog" aria-modal="true" aria-labelledby="product-modal-title">
+      <header class="product-modal-head">
+        <p id="product-modal-category" class="product-modal-category">Categoria</p>
+        <h3 id="product-modal-title">Produto</h3>
+        <button class="product-close" type="button" data-product-close="1">X</button>
+      </header>
+
+      <div class="product-modal-content">
+        <div class="product-modal-image-wrap">
+          <img id="product-modal-image" src="" alt="Produto" loading="lazy" />
+        </div>
+
+        <div class="product-modal-info">
+          <p id="product-modal-size-text" class="product-modal-size">Tam: --</p>
+          <p id="product-modal-price" class="product-modal-price">R$ 0,00</p>
+
+          <div class="product-modal-options">
+            <label>
+              Tamanho
+              <select id="product-modal-size"></select>
+            </label>
+            <label>
+              Cor
+              <select id="product-modal-color"></select>
+            </label>
+            <label>
+              Quantidade
+              <input id="product-modal-qty" type="number" min="1" max="10" value="1" inputmode="numeric" />
+            </label>
+          </div>
+
+          <p id="product-modal-feedback" class="product-modal-feedback" aria-live="polite"></p>
+
+          <div class="product-modal-actions">
+            <button id="product-modal-add" class="btn secondary" type="button">Adicionar ao carrinho</button>
+            <button id="product-modal-buy" class="btn" type="button">Comprar agora</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
   <footer>
     <div class="footer-links">
       <a href="privacidade/">Politica de privacidade</a>
@@ -977,7 +1021,7 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=30"></script>
+  <script src="script.js?v=31"></script>
   <script src="assets/menu-dropdown.js?v=18"></script>
 </body>
 </html>
