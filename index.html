@@ -47,7 +47,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=18" />
+  <link rel="stylesheet" href="style.css?v=19" />
   <style>
     .container { width: min(1320px, 96%); }
     .hero {
@@ -1010,6 +1010,48 @@
           </div>
         </div>
       </div>
+
+      <div class="product-modal-bottom">
+        <section class="product-desc-card" aria-label="Descricao do produto">
+          <h4>Descricao</h4>
+          <p id="product-modal-description"></p>
+        </section>
+
+        <section class="product-review-card" aria-label="Avaliacoes e comentarios">
+          <div class="product-review-head">
+            <h4>Avaliacao dos clientes</h4>
+            <p id="product-review-summary" class="product-review-summary">Sem avaliacoes ainda.</p>
+          </div>
+
+          <div id="product-review-list" class="product-review-list"></div>
+
+          <form id="product-review-form" class="product-review-form">
+            <label>
+              Sua avaliacao
+              <div id="product-review-stars" class="review-stars" role="radiogroup" aria-label="Avaliacao">
+                <button type="button" data-star="1" aria-label="1 estrela">&#9733;</button>
+                <button type="button" data-star="2" aria-label="2 estrelas">&#9733;</button>
+                <button type="button" data-star="3" aria-label="3 estrelas">&#9733;</button>
+                <button type="button" data-star="4" aria-label="4 estrelas">&#9733;</button>
+                <button type="button" data-star="5" aria-label="5 estrelas">&#9733;</button>
+              </div>
+            </label>
+
+            <label for="product-review-comment">
+              Comentario
+            </label>
+            <textarea
+              id="product-review-comment"
+              maxlength="280"
+              rows="3"
+              placeholder="Escreva aqui sua experiencia com este produto."
+            ></textarea>
+
+            <button class="btn" type="submit">Enviar comentario</button>
+            <p id="product-review-feedback" class="product-review-feedback" aria-live="polite"></p>
+          </form>
+        </section>
+      </div>
     </section>
   </div>
 
@@ -1021,7 +1063,7 @@
     <p>(c) 2026 Stop mod. Todos os direitos reservados.</p>
   </footer>
 
-  <script src="script.js?v=31"></script>
+  <script src="script.js?v=32"></script>
   <script src="assets/menu-dropdown.js?v=18"></script>
 </body>
 </html>

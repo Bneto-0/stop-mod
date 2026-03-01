@@ -4,6 +4,7 @@ const MAX_AD_SLIDES = 10;
 const SHIP_KEY = "stopmod_ship_to";
 const SHIP_LIST_KEY = "stopmod_ship_list";
 const PROFILE_KEY = "stopmod_profile";
+const PRODUCT_REVIEWS_KEY = "stopmod_product_reviews";
 const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
 const AUTH_TIMEOUT_MS = 2 * 60 * 60 * 1000;
 const INVALID_CEP_MSG = "CEP invalido, digite outro CEP.";
@@ -143,6 +144,13 @@ const productModalQty = document.getElementById("product-modal-qty");
 const productModalFeedback = document.getElementById("product-modal-feedback");
 const productModalAddBtn = document.getElementById("product-modal-add");
 const productModalBuyBtn = document.getElementById("product-modal-buy");
+const productModalDescription = document.getElementById("product-modal-description");
+const productReviewSummary = document.getElementById("product-review-summary");
+const productReviewList = document.getElementById("product-review-list");
+const productReviewForm = document.getElementById("product-review-form");
+const productReviewStars = document.getElementById("product-review-stars");
+const productReviewComment = document.getElementById("product-review-comment");
+const productReviewFeedback = document.getElementById("product-review-feedback");
 
 let selectedAddressId = "";
 let validatedAddressSignature = "";
@@ -156,6 +164,7 @@ let productSlidesTotalPages = 1;
 let productSlidesStep = 1;
 let productSlidesAutoTimer = null;
 let activeModalProductId = 0;
+let selectedReviewStars = 5;
 
 function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -1599,6 +1608,112 @@ function setProductModalFeedback(text, isError) {
   productModalFeedback.classList.toggle("error", !!isError);
 }
 
+function setProductReviewFeedback(text, isError) {
+  if (!productReviewFeedback) return;
+  productReviewFeedback.textContent = String(text || "");
+  productReviewFeedback.classList.toggle("error", !!isError);
+}
+
+function buildProductDescription(product) {
+  const category = String(product?.category || "Produto");
+  const name = String(product?.name || "Item");
+  const size = String(product?.size || "--");
+  return `${name} da linha ${category} com caimento moderno, tecido confortavel e acabamento premium. Ideal para uso diario, combina com diferentes estilos e ocasioes. Tamanhos disponiveis: ${size}.`;
+}
+
+function loadProductReviewsStore() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PRODUCT_REVIEWS_KEY) || "{}");
+    return raw && typeof raw === "object" ? raw : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveProductReviewsStore(store) {
+  const safe = store && typeof store === "object" ? store : {};
+  localStorage.setItem(PRODUCT_REVIEWS_KEY, JSON.stringify(safe));
+}
+
+function getProductReviews(productId) {
+  const store = loadProductReviewsStore();
+  const list = store[String(productId)];
+  if (!Array.isArray(list)) return [];
+  return list
+    .map((item) => ({
+      name: String(item?.name || "Cliente").trim() || "Cliente",
+      rating: Math.min(5, Math.max(1, Number(item?.rating) || 0)),
+      comment: String(item?.comment || "").trim(),
+      createdAt: String(item?.createdAt || "")
+    }))
+    .filter((item) => item.rating >= 1 && item.comment);
+}
+
+function setProductReviews(productId, reviews) {
+  const store = loadProductReviewsStore();
+  store[String(productId)] = Array.isArray(reviews) ? reviews.slice(0, 120) : [];
+  saveProductReviewsStore(store);
+}
+
+function formatReviewDate(value) {
+  const date = new Date(String(value || ""));
+  if (Number.isNaN(date.getTime())) return "Agora";
+  return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+function ratingStarsText(rating) {
+  const value = Math.min(5, Math.max(1, Number(rating) || 0));
+  return `${"*".repeat(value)}${"-".repeat(5 - value)}`;
+}
+
+function setSelectedReviewStars(value) {
+  const next = Math.min(5, Math.max(1, Number(value) || 1));
+  selectedReviewStars = next;
+  if (!productReviewStars) return;
+  productReviewStars.querySelectorAll("button[data-star]").forEach((buttonEl) => {
+    const star = Number(buttonEl.getAttribute("data-star"));
+    const active = star <= next;
+    buttonEl.classList.toggle("active", active);
+    buttonEl.setAttribute("aria-checked", star === next ? "true" : "false");
+  });
+}
+
+function renderProductReviews(productId) {
+  const reviews = getProductReviews(productId);
+
+  if (productReviewSummary) {
+    if (!reviews.length) {
+      productReviewSummary.textContent = "Sem avaliacoes ainda.";
+    } else {
+      const total = reviews.length;
+      const avg = reviews.reduce((sum, item) => sum + Number(item.rating || 0), 0) / total;
+      productReviewSummary.textContent = `${avg.toFixed(1).replace(".", ",")} / 5 (${total} avaliacoes)`;
+    }
+  }
+
+  if (productReviewList) {
+    if (!reviews.length) {
+      productReviewList.innerHTML = `<p class="meta">Ainda nao ha comentarios para este produto.</p>`;
+    } else {
+      productReviewList.innerHTML = reviews
+        .slice(0, 8)
+        .map(
+          (item) => `
+        <article class="review-item">
+          <div class="review-item-head">
+            <strong class="review-item-author">${escapeHtml(item.name)}</strong>
+            <span class="review-item-date">${escapeHtml(formatReviewDate(item.createdAt))}</span>
+          </div>
+          <div class="review-item-rating">${escapeHtml(ratingStarsText(item.rating))}</div>
+          <p class="review-item-text">${escapeHtml(item.comment)}</p>
+        </article>
+      `
+        )
+        .join("");
+    }
+  }
+}
+
 function openProductModal(productId) {
   if (!productModal) return;
   const id = Number(productId);
@@ -1614,11 +1729,16 @@ function openProductModal(productId) {
   }
   if (productModalSizeText) productModalSizeText.textContent = `Tam: ${String(product.size || "--")}`;
   if (productModalPrice) productModalPrice.textContent = `R$ ${formatBRL(product.price)}`;
+  if (productModalDescription) productModalDescription.textContent = buildProductDescription(product);
 
   fillSelectOptions(productModalSize, getSizeOptions(product.size));
   fillSelectOptions(productModalColor, getColorOptions(product));
   if (productModalQty) productModalQty.value = "1";
   setProductModalFeedback("", false);
+  setProductReviewFeedback("", false);
+  if (productReviewComment) productReviewComment.value = "";
+  setSelectedReviewStars(5);
+  renderProductReviews(id);
 
   productModal.hidden = false;
   document.body.classList.add("product-modal-open");
@@ -1629,6 +1749,7 @@ function closeProductModal() {
   productModal.hidden = true;
   document.body.classList.remove("product-modal-open");
   setProductModalFeedback("", false);
+  setProductReviewFeedback("", false);
 }
 
 function readModalQty() {
@@ -1775,6 +1896,46 @@ productModalBuyBtn?.addEventListener("click", () => {
   }
   closeProductModal();
   window.location.href = "carrinho/";
+});
+
+productReviewStars?.querySelectorAll("button[data-star]").forEach((buttonEl) => {
+  buttonEl.addEventListener("click", () => {
+    const value = Number(buttonEl.getAttribute("data-star"));
+    setSelectedReviewStars(value);
+    setProductReviewFeedback("", false);
+  });
+});
+
+productReviewForm?.addEventListener("submit", (event) => {
+  event.preventDefault();
+  if (!Number.isInteger(activeModalProductId) || activeModalProductId <= 0) {
+    setProductReviewFeedback("Produto invalido para avaliacao.", true);
+    return;
+  }
+
+  const comment = String(productReviewComment?.value || "").trim();
+  if (comment.length < 3) {
+    setProductReviewFeedback("Digite um comentario com pelo menos 3 caracteres.", true);
+    return;
+  }
+
+  const profile = loadProfile();
+  const customerName = String(profile?.name || "Cliente").trim() || "Cliente";
+  const review = {
+    name: customerName,
+    rating: selectedReviewStars,
+    comment,
+    createdAt: new Date().toISOString()
+  };
+
+  const current = getProductReviews(activeModalProductId);
+  current.unshift(review);
+  setProductReviews(activeModalProductId, current);
+  renderProductReviews(activeModalProductId);
+
+  if (productReviewComment) productReviewComment.value = "";
+  setSelectedReviewStars(5);
+  setProductReviewFeedback("Comentario enviado com sucesso.", false);
 });
 
 normalizeHomeHashToTop();
