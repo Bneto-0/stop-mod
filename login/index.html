@@ -14,12 +14,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=5" />
+  <link rel="stylesheet" href="style.css?v=6" />
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6485539380158983" crossorigin="anonymous"></script>
 </head>
 <body>
   <main class="page">
-    <section class="card" aria-label="Login">
+    <section class="card login-card" aria-label="Login">
       <header class="head">
         <a class="brand" href="../index.html#top" aria-label="Voltar para a loja">
           <span class="b1">Stop</span> <span class="b2">mod</span>
@@ -28,8 +28,8 @@
       </header>
 
       <form id="login-form" class="form">
-        <label class="sr-only" for="login-id">Usuario</label>
-        <input id="login-id" type="text" placeholder="Numero de telefone/Nome do usuario/Email" autocomplete="username" />
+        <label class="sr-only" for="login-id">Email ou CPF</label>
+        <input id="login-id" type="text" placeholder="Email ou CPF" autocomplete="username" />
 
         <div class="pw-wrap">
           <label class="sr-only" for="login-pass">Senha</label>
@@ -41,13 +41,14 @@
       </form>
 
       <div class="help-row">
+        <button id="go-register" class="link strong" type="button">Criar conta</button>
         <button id="forgot" class="link" type="button">Esqueci minha senha</button>
       </div>
 
       <div class="social">
         <button id="google" class="btn ghost" type="button">
           <span class="soc-ic g">G</span>
-          Google
+          Google (opcional)
         </button>
       </div>
 
@@ -60,19 +61,32 @@
       </div>
     </section>
 
-    <section class="card" id="register-card" aria-label="Cadastro" hidden>
+    <section class="card register-card" id="register-card" aria-label="Cadastro" hidden>
       <header class="head">
         <h2>Cadastrar</h2>
-        <p class="muted">Crie uma conta simples (demo) para acessar seu perfil.</p>
+        <p class="muted">Cadastro seguro com dados completos e endereco salvo.</p>
       </header>
 
       <form id="register-form" class="form">
         <input id="reg-name" type="text" placeholder="Nome completo" autocomplete="name" />
+        <input id="reg-birth" type="date" placeholder="Data de nascimento" autocomplete="bday" />
+        <input id="reg-cpf" type="text" placeholder="CPF (000.000.000-00)" autocomplete="off" />
         <input id="reg-email" type="email" placeholder="Email" autocomplete="email" />
-        <input id="reg-phone" type="text" placeholder="Telefone" autocomplete="tel" />
+        <input id="reg-phone" type="text" placeholder="Telefone (opcional)" autocomplete="tel" />
         <div class="pw-wrap">
           <input id="reg-pass" type="password" placeholder="Senha" autocomplete="new-password" />
           <button id="reg-pw-toggle" class="pw-toggle" type="button" aria-label="Mostrar senha">ver</button>
+        </div>
+
+        <p class="register-block-title">Endereco completo</p>
+        <div class="form-grid">
+          <input id="reg-cep" type="text" placeholder="CEP" autocomplete="postal-code" />
+          <input id="reg-state" type="text" placeholder="UF (SP)" autocomplete="address-level1" />
+          <input id="reg-city" type="text" placeholder="Cidade" autocomplete="address-level2" />
+          <input id="reg-district" type="text" placeholder="Bairro" autocomplete="address-level3" />
+          <input id="reg-street" class="span-2" type="text" placeholder="Rua" autocomplete="address-line1" />
+          <input id="reg-number" type="text" placeholder="Numero" autocomplete="address-line2" />
+          <input id="reg-complement" type="text" placeholder="Complemento (opcional)" autocomplete="address-line2" />
         </div>
         <button class="btn primary" type="submit">CRIAR CONTA</button>
       </form>
@@ -103,7 +117,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=17"></script>
+  <script src="script.js?v=18"></script>
 </body>
 </html>
 

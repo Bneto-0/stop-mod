@@ -1,9 +1,11 @@
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
+import helmet from "helmet";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { authHealth, createAuthRouter } from "./auth-router.js";
 
 dotenv.config();
 
@@ -29,6 +31,17 @@ const defaultRedirectUrl = String(process.env.PAGBANK_REDIRECT_URL || defaultRet
 const defaultNotificationUrl = String(process.env.PAGBANK_NOTIFICATION_URL || "").trim();
 const defaultPaymentNotificationUrl = String(process.env.PAGBANK_PAYMENT_NOTIFICATION_URL || "").trim();
 const webhookLogPath = path.join(__dirname, "data", "pagbank-webhook.log");
+const authJwtSecret = String(process.env.AUTH_JWT_SECRET || "").trim();
+const authTokenTtlSec = clampInt(process.env.AUTH_TOKEN_TTL_SEC, 120, 60 * 60 * 24 * 7);
+const cpfCivilCheckMode = normalizeCpfCheckMode(process.env.CPF_CIVIL_CHECK_MODE || "off");
+const cpfCivilCheckUrl = String(process.env.CPF_CIVIL_CHECK_URL || "").trim();
+const cpfCivilCheckToken = String(process.env.CPF_CIVIL_CHECK_TOKEN || "").trim();
+const cpfCivilCheckTimeoutMs = clampInt(process.env.CPF_CIVIL_CHECK_TIMEOUT_MS, 1000, 15000);
+const authStatus = authHealth({
+  tokenSecret: authJwtSecret,
+  cpfCheckMode: cpfCivilCheckMode,
+  cpfCheckUrl: cpfCivilCheckUrl
+});
 
 const paymentMethodMap = Object.freeze({
   pix: "PIX",
@@ -46,14 +59,32 @@ app.use(
     }
   })
 );
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false
+  })
+);
 app.use(express.json({ limit: "1mb" }));
+app.use(
+  "/api/auth",
+  createAuthRouter({
+    dataDir: path.join(__dirname, "data"),
+    tokenSecret: authJwtSecret,
+    tokenTtlSec: authTokenTtlSec,
+    cpfCheckMode: cpfCivilCheckMode,
+    cpfCheckUrl: cpfCivilCheckUrl,
+    cpfCheckToken: cpfCivilCheckToken,
+    cpfCheckTimeoutMs: cpfCivilCheckTimeoutMs
+  })
+);
 
 app.get("/api/health", (_req, res) => {
   res.json({
     ok: true,
     service: "stopmod-pagbank-backend",
     environment: pagBankEnv,
-    pagbankTokenConfigured: hasValidPagBankToken
+    pagbankTokenConfigured: hasValidPagBankToken,
+    auth: authStatus
   });
 });
 
@@ -197,6 +228,7 @@ app.get("/api/pagbank/webhook/logs", async (_req, res) => {
 app.listen(port, () => {
   console.log(`[stopmod] PagBank backend online na porta ${port}`);
   console.log(`[stopmod] Ambiente PagBank: ${pagBankEnv}`);
+  console.log(`[stopmod] Auth seguro: ${authStatus.enabled ? "habilitado" : "desabilitado"}`);
 });
 
 function parseCsvList(value) {
@@ -372,6 +404,12 @@ function clampInt(value, min, max) {
   const n = Number(value);
   if (!Number.isFinite(n)) return min;
   return Math.max(min, Math.min(max, Math.round(n)));
+}
+
+function normalizeCpfCheckMode(value) {
+  const mode = String(value || "").trim().toLowerCase();
+  if (mode === "off" || mode === "warn" || mode === "strict") return mode;
+  return "off";
 }
 
 function toCentsInt(value) {

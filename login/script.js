@@ -1,14 +1,11 @@
-const GOOGLE_CLIENT_KEY = "stopmod_google_client_id";
-const DEFAULT_GOOGLE_CLIENT_ID = "887504211072-0elgoi3dbg80bb9640vvlqfl7cp8guq5.apps.googleusercontent.com";
 const PROFILE_KEY = "stopmod_profile";
 const PROFILE_EXTRA_KEY = "stopmod_profile_extra";
 const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
-const USERS_KEY = "stopmod_users";
-const OTP_KEY = "stopmod_otp";
-const FACEBOOK_APP_ID_KEY = "stopmod_facebook_app_id";
-const DEFAULT_FACEBOOK_APP_ID = "484889158765114";
-const FACEBOOK_OAUTH_STATE_KEY = "stopmod_facebook_oauth_state";
-const FACEBOOK_PENDING_NEXT_KEY = "stopmod_facebook_pending_next";
+const AUTH_TOKEN_KEY = "stopmod_auth_token";
+const SHIP_KEY = "stopmod_ship_to";
+const SHIP_LIST_KEY = "stopmod_ship_list";
+const API_BASE_KEY = "stopmod_api_base";
+const PAGBANK_API_BASE_KEY = "stopmod_pagbank_api_base";
 
 const loginForm = document.getElementById("login-form");
 const loginId = document.getElementById("login-id");
@@ -23,73 +20,61 @@ const goRegister = document.getElementById("go-register");
 const goLogin = document.getElementById("go-login");
 const registerForm = document.getElementById("register-form");
 const regName = document.getElementById("reg-name");
+const regBirth = document.getElementById("reg-birth");
+const regCpf = document.getElementById("reg-cpf");
 const regEmail = document.getElementById("reg-email");
 const regPhone = document.getElementById("reg-phone");
 const regPass = document.getElementById("reg-pass");
 const regPwToggle = document.getElementById("reg-pw-toggle");
+const regCep = document.getElementById("reg-cep");
+const regStreet = document.getElementById("reg-street");
+const regNumber = document.getElementById("reg-number");
+const regComplement = document.getElementById("reg-complement");
+const regDistrict = document.getElementById("reg-district");
+const regCity = document.getElementById("reg-city");
+const regState = document.getElementById("reg-state");
 const regMsg = document.getElementById("reg-msg");
 
 const modal = document.getElementById("modal");
 const modalTitle = document.getElementById("modal-title");
 const modalBody = document.getElementById("modal-body");
 
+let resolvedApiBase = "";
+
 function setMsg(el, text, isErr = false) {
   if (!el) return;
-  el.textContent = text || "";
+  el.textContent = String(text || "");
   el.classList.toggle("err", !!isErr);
 }
 
-function escapeHtml(s) {
-  return String(s || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-function loadUsers() {
-  try {
-    const raw = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
-    return Array.isArray(raw) ? raw : [];
-  } catch {
-    return [];
+function setLoading(formEl, loading, buttonText) {
+  if (!formEl) return;
+  const submit = formEl.querySelector("button[type='submit']");
+  if (!(submit instanceof HTMLButtonElement)) return;
+  submit.disabled = !!loading;
+  if (loading) {
+    submit.dataset.label = submit.textContent || "";
+    submit.textContent = String(buttonText || "Aguarde...");
+  } else if (submit.dataset.label) {
+    submit.textContent = submit.dataset.label;
   }
 }
 
-function saveUsers(users) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+function togglePw(input, btn) {
+  if (!input || !btn) return;
+  const isPw = input.type === "password";
+  input.type = isPw ? "text" : "password";
+  btn.textContent = isPw ? "ocultar" : "ver";
+  btn.setAttribute("aria-label", isPw ? "Ocultar senha" : "Mostrar senha");
 }
 
-function norm(s) {
-  return String(s || "").trim().toLowerCase();
-}
-
-function phoneDigits(s) {
-  return String(s || "").replace(/\D/g, "");
-}
-
-function saveProfile(name, email, picture = "") {
-  localStorage.setItem(PROFILE_KEY, JSON.stringify({ name, email, picture }));
-}
-
-function saveExtra(displayName, phone) {
-  localStorage.setItem(PROFILE_EXTRA_KEY, JSON.stringify({ displayName, phone }));
-}
-
-function setAuthSessionActive() {
-  localStorage.setItem(AUTH_LAST_SEEN_KEY, String(Date.now()));
-}
-
-function loadFacebookAppId() {
-  const raw = String(localStorage.getItem(FACEBOOK_APP_ID_KEY) || "").trim();
-  if (/^\d+$/.test(raw)) return raw;
-  if (/^\d+$/.test(DEFAULT_FACEBOOK_APP_ID)) return DEFAULT_FACEBOOK_APP_ID;
-  return "";
-}
-
-function saveFacebookAppId(appId) {
-  localStorage.setItem(FACEBOOK_APP_ID_KEY, String(appId || "").trim());
+function showRegister(show) {
+  if (!registerCard) return;
+  registerCard.hidden = !show;
+  const loginCard = document.querySelector(".card[aria-label='Login']");
+  if (loginCard) loginCard.hidden = !!show;
+  setMsg(msg, "");
+  setMsg(regMsg, "");
 }
 
 function normalizeNextPath(raw) {
@@ -100,7 +85,7 @@ function normalizeNextPath(raw) {
   return "";
 }
 
-function resolveRequestedPostLoginUrl() {
+function resolvePostLoginUrl() {
   try {
     const raw = String(new URLSearchParams(window.location.search).get("next") || "").trim();
     return normalizeNextPath(raw) || "../perfil/";
@@ -109,108 +94,184 @@ function resolveRequestedPostLoginUrl() {
   }
 }
 
-function resolvePostLoginUrl() {
-  const pending = normalizeNextPath(localStorage.getItem(FACEBOOK_PENDING_NEXT_KEY) || "");
-  if (pending) {
-    localStorage.removeItem(FACEBOOK_PENDING_NEXT_KEY);
-    return pending;
-  }
-  return resolveRequestedPostLoginUrl();
+function digitsOnly(value) {
+  return String(value || "").replace(/\D/g, "");
 }
 
-function randomStateToken() {
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+function formatCpf(value) {
+  const cpf = digitsOnly(value).slice(0, 11);
+  if (cpf.length <= 3) return cpf;
+  if (cpf.length <= 6) return `${cpf.slice(0, 3)}.${cpf.slice(3)}`;
+  if (cpf.length <= 9) return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6)}`;
+  return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6, 9)}-${cpf.slice(9)}`;
 }
 
-function clearOAuthHashFromUrl() {
-  if (!window.location.hash) return;
-  const clean = `${window.location.pathname}${window.location.search}`;
-  window.history.replaceState(null, "", clean);
+function formatCep(value) {
+  const cep = digitsOnly(value).slice(0, 8);
+  if (cep.length <= 5) return cep;
+  return `${cep.slice(0, 5)}-${cep.slice(5)}`;
 }
 
-function startFacebookOAuthFallback(appId) {
-  window.location.href = buildFacebookLoginUrl(appId);
+function normalizeState(value) {
+  return String(value || "")
+    .replace(/[^A-Za-z]/g, "")
+    .toUpperCase()
+    .slice(0, 2);
 }
 
-function getFacebookRedirectUri() {
-  return `${window.location.origin}${window.location.pathname}`;
+function normalizeApiBase(raw) {
+  const text = String(raw || "").trim().replace(/\/+$/, "");
+  if (!text) return "";
+  if (/^https?:\/\//i.test(text)) return text;
+  if (text.startsWith("/")) return text;
+  return "";
 }
 
-function buildFacebookLoginUrl(appId) {
-  localStorage.setItem(FACEBOOK_PENDING_NEXT_KEY, resolveRequestedPostLoginUrl());
-  const redirectUri = getFacebookRedirectUri();
-  const state = randomStateToken();
-  localStorage.setItem(FACEBOOK_OAUTH_STATE_KEY, state);
-
-  const oauthUrl = new URL("https://www.facebook.com/v20.0/dialog/oauth");
-  oauthUrl.searchParams.set("client_id", appId);
-  oauthUrl.searchParams.set("redirect_uri", redirectUri);
-  oauthUrl.searchParams.set("response_type", "token");
-  oauthUrl.searchParams.set("scope", "public_profile,email");
-  oauthUrl.searchParams.set("state", state);
-  oauthUrl.searchParams.set("display", "popup");
-  oauthUrl.searchParams.set("locale", "pt_BR");
-
-  const loginUrl = new URL("https://www.facebook.com/login.php");
-  loginUrl.searchParams.set("skip_api_login", "1");
-  loginUrl.searchParams.set("api_key", appId);
-  loginUrl.searchParams.set("kid_directed_site", "0");
-  loginUrl.searchParams.set("app_id", appId);
-  loginUrl.searchParams.set("signed_next", "1");
-  loginUrl.searchParams.set("locale", "pt_BR");
-  loginUrl.searchParams.set("next", oauthUrl.toString());
-  return loginUrl.toString();
+function buildApiUrl(base, endpoint) {
+  const root = normalizeApiBase(base);
+  const path = `/${String(endpoint || "").replace(/^\/+/, "")}`;
+  if (!root) return path;
+  return `${root}${path}`;
 }
 
-async function consumeFacebookOAuthCallback() {
-  const hash = String(window.location.hash || "");
-  if (!hash.startsWith("#")) return false;
-
-  const params = new URLSearchParams(hash.slice(1));
-  const accessToken = String(params.get("access_token") || "").trim();
-  const error = String(params.get("error") || params.get("error_reason") || "").trim();
-  const state = String(params.get("state") || "").trim();
-  if (!accessToken && !error) return false;
-
-  const expectedState = String(localStorage.getItem(FACEBOOK_OAUTH_STATE_KEY) || "").trim();
-  localStorage.removeItem(FACEBOOK_OAUTH_STATE_KEY);
-  clearOAuthHashFromUrl();
-
-  if (error) {
-    setMsg(msg, "Login Facebook cancelado ou nao autorizado.", true);
-    return true;
-  }
-  if (expectedState && state !== expectedState) {
-    setMsg(msg, "Falha de seguranca no retorno do Facebook. Tente novamente.", true);
-    return true;
-  }
-
-  setMsg(msg, "Finalizando login Facebook...", false);
+async function isHealthy(base, timeoutMs = 3500) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), Number(timeoutMs) || 3500);
   try {
-    const profileUrl =
-      "https://graph.facebook.com/me?fields=id,name,email,picture.width(256).height(256)" +
-      `&access_token=${encodeURIComponent(accessToken)}`;
-    const profileResp = await fetch(profileUrl, { cache: "no-store" }).then((resp) => {
-      if (!resp.ok) throw new Error("facebook_graph_error");
-      return resp.json();
+    const healthUrl = buildApiUrl(base, "/api/health");
+    const resp = await fetch(healthUrl, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      signal: controller.signal
     });
-    if (!profileResp || profileResp.error) throw new Error("facebook_profile_error");
-
-    const name = String(profileResp.name || "Cliente Stop mod");
-    const email = String(profileResp.email || "");
-    const picture = String(profileResp?.picture?.data?.url || "");
-    const accountKey = email ? norm(email) : `fb:${String(profileResp.id || "").trim()}`;
-    const user = upsertUser({ key: accountKey, name, email, phone: "", pass: "", picture });
-    finishLogin({ ...user, name, email, picture });
-    return true;
+    if (!resp.ok) return false;
+    const data = await resp.json().catch(() => null);
+    return !!data?.ok;
   } catch {
-    setMsg(msg, "Falha ao carregar dados da conta Facebook.", true);
-    return true;
+    return false;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function resolveApiBase() {
+  if (resolvedApiBase) return resolvedApiBase;
+
+  const configured = normalizeApiBase(localStorage.getItem(API_BASE_KEY) || localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
+  if (configured) {
+    resolvedApiBase = configured;
+    return resolvedApiBase;
+  }
+
+  if (await isHealthy("")) {
+    resolvedApiBase = "";
+    return resolvedApiBase;
+  }
+
+  const local = "http://localhost:8787";
+  if (await isHealthy(local)) {
+    resolvedApiBase = local;
+    localStorage.setItem(API_BASE_KEY, local);
+    localStorage.setItem(PAGBANK_API_BASE_KEY, local);
+    return resolvedApiBase;
+  }
+
+  resolvedApiBase = "";
+  return resolvedApiBase;
+}
+
+async function postJson(endpoint, payload, timeoutMs = 12000) {
+  const base = await resolveApiBase();
+  const url = buildApiUrl(base, endpoint);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), Number(timeoutMs) || 12000);
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+      body: JSON.stringify(payload || {}),
+      signal: controller.signal
+    });
+
+    const text = await response.text();
+    let data = null;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      data = null;
+    }
+
+    if (!response.ok) {
+      const message = String(data?.message || data?.error || text || `HTTP ${response.status}`);
+      throw new Error(message);
+    }
+
+    return data || {};
+  } catch (error) {
+    if (error?.name === "AbortError") throw new Error("Tempo esgotado para conectar ao backend.");
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function normalizeAddressForLocalStorage(raw) {
+  return {
+    street: String(raw?.street || "").trim(),
+    number: String(raw?.number || "").trim(),
+    district: String(raw?.district || "").trim(),
+    city: String(raw?.city || "").trim(),
+    state: normalizeState(raw?.state || ""),
+    cep: formatCep(raw?.cep || ""),
+    complement: String(raw?.complement || "").trim()
+  };
+}
+
+function applySession(session) {
+  const token = String(session?.token || "").trim();
+  const profile = session?.profile || {};
+  const extra = session?.extra || {};
+  const addresses = Array.isArray(session?.addresses) ? session.addresses : [];
+  const defaultAddress = session?.defaultAddress || addresses[0] || null;
+
+  if (token) localStorage.setItem(AUTH_TOKEN_KEY, token);
+  localStorage.setItem(
+    PROFILE_KEY,
+    JSON.stringify({
+      name: String(profile?.name || profile?.fullName || "Cliente Stop mod"),
+      email: String(profile?.email || ""),
+      picture: String(profile?.picture || "")
+    })
+  );
+
+  localStorage.setItem(
+    PROFILE_EXTRA_KEY,
+    JSON.stringify({
+      displayName: String(extra?.displayName || profile?.fullName || profile?.name || ""),
+      fullName: String(extra?.fullName || profile?.fullName || profile?.name || ""),
+      birthDate: String(extra?.birthDate || profile?.birthDate || ""),
+      cpf: String(extra?.cpf || profile?.cpf || ""),
+      cpfMasked: String(extra?.cpfMasked || profile?.cpfMasked || ""),
+      email: String(extra?.email || profile?.email || ""),
+      phone: String(extra?.phone || profile?.phone || ""),
+      username: String(extra?.username || profile?.email || "").split("@")[0] || "cliente"
+    })
+  );
+  localStorage.setItem(AUTH_LAST_SEEN_KEY, String(Date.now()));
+
+  if (defaultAddress) {
+    localStorage.setItem(SHIP_KEY, JSON.stringify(normalizeAddressForLocalStorage(defaultAddress)));
+  }
+  if (addresses.length) {
+    localStorage.setItem(SHIP_LIST_KEY, JSON.stringify(addresses.map(normalizeAddressForLocalStorage)));
   }
 }
 
 function openModal(title, html) {
-  if (!modal || !modalBody || !modalTitle) return;
+  if (!modal || !modalTitle || !modalBody) return;
   modalTitle.textContent = title;
   modalBody.innerHTML = html;
   modal.hidden = false;
@@ -222,363 +283,128 @@ function closeModal() {
   if (modalBody) modalBody.innerHTML = "";
 }
 
-modal?.querySelectorAll("[data-close]").forEach((el) => el.addEventListener("click", closeModal));
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && modal && !modal.hidden) closeModal();
-});
+async function handleRegisterSubmit(event) {
+  event.preventDefault();
+  const payload = {
+    fullName: String(regName?.value || "").trim(),
+    birthDate: String(regBirth?.value || "").trim(),
+    cpf: digitsOnly(regCpf?.value || ""),
+    email: String(regEmail?.value || "").trim().toLowerCase(),
+    phone: digitsOnly(regPhone?.value || ""),
+    password: String(regPass?.value || ""),
+    address: {
+      cep: digitsOnly(regCep?.value || ""),
+      street: String(regStreet?.value || "").trim(),
+      number: String(regNumber?.value || "").trim(),
+      complement: String(regComplement?.value || "").trim(),
+      district: String(regDistrict?.value || "").trim(),
+      city: String(regCity?.value || "").trim(),
+      state: normalizeState(regState?.value || "")
+    }
+  };
 
-window.addEventListener("message", (event) => {
-  if (event.origin !== window.location.origin) return;
-  const data = event.data || {};
-  if (data.source !== "stopmod-login-success") return;
-  const target = String(data.target || resolvePostLoginUrl());
-  window.location.href = target;
-});
-
-window.addEventListener("storage", (event) => {
-  if (event.key === PROFILE_KEY && event.newValue) {
-    window.location.href = resolvePostLoginUrl();
+  if (!payload.fullName || !payload.birthDate || !payload.cpf || !payload.email || !payload.password) {
+    setMsg(regMsg, "Preencha nome, nascimento, CPF, email e senha.", true);
+    return;
   }
-});
 
-function showRegister(show) {
-  registerCard.hidden = !show;
-  document.querySelector(".card[aria-label=\"Login\"]").hidden = !!show;
+  if (
+    !payload.address.cep ||
+    !payload.address.street ||
+    !payload.address.number ||
+    !payload.address.district ||
+    !payload.address.city ||
+    !payload.address.state
+  ) {
+    setMsg(regMsg, "Preencha o endereco completo.", true);
+    return;
+  }
+
+  setLoading(registerForm, true, "Criando conta...");
+  setMsg(regMsg, "");
+
+  try {
+    const data = await postJson("/api/auth/register", payload, 18000);
+    applySession(data);
+
+    const civil = data?.civilCheck;
+    if (civil?.checked && civil?.accepted === false) {
+      setMsg(regMsg, "Conta criada, mas verificacao civil CPF ficou pendente.", false);
+    } else {
+      setMsg(regMsg, "Conta criada com sucesso.", false);
+    }
+    window.location.href = resolvePostLoginUrl();
+  } catch (error) {
+    setMsg(regMsg, `Falha no cadastro: ${String(error?.message || "tente novamente.")}`, true);
+  } finally {
+    setLoading(registerForm, false);
+  }
 }
 
-function togglePw(input, btn) {
-  const isPw = input.type === "password";
-  input.type = isPw ? "text" : "password";
-  btn.textContent = isPw ? "ocultar" : "ver";
-  btn.setAttribute("aria-label", isPw ? "Ocultar senha" : "Mostrar senha");
+async function handleLoginSubmit(event) {
+  event.preventDefault();
+  const identifier = String(loginId?.value || "").trim();
+  const password = String(loginPass?.value || "");
+  if (!identifier || !password) {
+    setMsg(msg, "Informe email/CPF e senha.", true);
+    return;
+  }
+
+  setLoading(loginForm, true, "Entrando...");
+  setMsg(msg, "");
+  try {
+    const data = await postJson("/api/auth/login", { identifier, password }, 14000);
+    applySession(data);
+    setMsg(msg, "Login realizado com sucesso.", false);
+    window.location.href = resolvePostLoginUrl();
+  } catch (error) {
+    setMsg(msg, `Falha no login: ${String(error?.message || "tente novamente.")}`, true);
+  } finally {
+    setLoading(loginForm, false);
+  }
 }
 
 pwToggle?.addEventListener("click", () => togglePw(loginPass, pwToggle));
 regPwToggle?.addEventListener("click", () => togglePw(regPass, regPwToggle));
+goRegister?.addEventListener("click", () => showRegister(true));
+goLogin?.addEventListener("click", () => showRegister(false));
+loginForm?.addEventListener("submit", handleLoginSubmit);
+registerForm?.addEventListener("submit", handleRegisterSubmit);
 
-goRegister?.addEventListener("click", () => {
-  showRegister(true);
-  setMsg(msg, "");
+regCpf?.addEventListener("input", () => {
+  regCpf.value = formatCpf(regCpf.value);
 });
-
-goLogin?.addEventListener("click", () => {
-  showRegister(false);
-  setMsg(regMsg, "");
+regCep?.addEventListener("input", () => {
+  regCep.value = formatCep(regCep.value);
 });
-
-function saveOtp(purpose, to, code) {
-  const payload = { purpose, to, code, createdAt: Date.now() };
-  localStorage.setItem(OTP_KEY, JSON.stringify(payload));
-  return payload;
-}
-
-function loadOtp() {
-  try {
-    return JSON.parse(localStorage.getItem(OTP_KEY) || "null");
-  } catch {
-    return null;
-  }
-}
-
-function clearOtp() {
-  localStorage.removeItem(OTP_KEY);
-}
-
-function genCode() {
-  return String(Math.floor(100000 + Math.random() * 900000));
-}
-
-function otpStillValid(otp) {
-  if (!otp || !otp.createdAt) return false;
-  return Date.now() - Number(otp.createdAt) < 10 * 60 * 1000;
-}
-
-function findUserByAny(id) {
-  const users = loadUsers();
-  const key = norm(id);
-  const digits = phoneDigits(id);
-  return users.find((u) =>
-    norm(u.key) === key ||
-    norm(u.email) === key ||
-    norm(u.name) === key ||
-    (digits && phoneDigits(u.phone) === digits)
-  );
-}
-
-function upsertUser(user) {
-  const users = loadUsers();
-  const key = norm(user.key || user.email || user.phone || user.name);
-  const digits = phoneDigits(user.phone);
-  const idx = users.findIndex((u) =>
-    norm(u.key) === key ||
-    (digits && phoneDigits(u.phone) === digits) ||
-    (user.email && norm(u.email) === norm(user.email))
-  );
-  if (idx >= 0) {
-    // Keep stable key, but move updated user to the top (so return value is correct).
-    const merged = { ...users[idx], ...user, key: users[idx].key || key };
-    users.splice(idx, 1);
-    users.unshift(merged);
-  } else {
-    users.unshift({ ...user, key });
-  }
-  saveUsers(users.slice(0, 200));
-  return users[0];
-}
-
-function finishLogin(user) {
-  saveProfile(String(user.name || "Cliente Stop mod"), String(user.email || ""), String(user.picture || ""));
-  saveExtra(String(user.name || ""), String(user.phone || ""));
-  setAuthSessionActive();
-  const target = resolvePostLoginUrl();
-  if (window.opener && window.opener !== window) {
-    try {
-      window.opener.postMessage({ source: "stopmod-login-success", target }, window.location.origin);
-    } catch {}
-    window.close();
-    return;
-  }
-  window.location.href = target;
-}
+regState?.addEventListener("input", () => {
+  regState.value = normalizeState(regState.value);
+});
 
 forgotBtn?.addEventListener("click", () => {
   openModal(
     "Recuperar senha",
     `
-    <div class="modal-body">
-      <p class="hint">Digite seu email, telefone ou usuario. Vamos gerar um codigo (demo) para trocar sua senha.</p>
-      <input id="fp-id" type="text" placeholder="Email/Telefone/Usuario" autocomplete="username" />
-      <button id="fp-send" class="btn primary" type="button">Enviar codigo</button>
-      <div id="fp-step2" hidden>
-        <div class="codebox" id="fp-codebox"></div>
-        <input id="fp-code" type="text" inputmode="numeric" placeholder="Codigo (6 digitos)" />
-        <input id="fp-new" type="password" placeholder="Nova senha" autocomplete="new-password" />
-        <div class="actions">
-          <button id="fp-confirm" class="btn primary" type="button">Salvar senha</button>
-          <button class="btn ghost" type="button" data-close="1">Cancelar</button>
-        </div>
+      <p class="hint">Para seguranca, a recuperacao deve ser feita no backend com envio de email/SMS.</p>
+      <p class="hint">Se quiser, eu implemento esse fluxo completo no proximo passo.</p>
+      <div class="actions">
+        <button class="btn ghost" type="button" data-close="1">Fechar</button>
       </div>
-      <p id="fp-msg" class="msg"></p>
-    </div>
     `
   );
-
-  const fpId = document.getElementById("fp-id");
-  const fpSend = document.getElementById("fp-send");
-  const fpStep2 = document.getElementById("fp-step2");
-  const fpCodeBox = document.getElementById("fp-codebox");
-  const fpCode = document.getElementById("fp-code");
-  const fpNew = document.getElementById("fp-new");
-  const fpConfirm = document.getElementById("fp-confirm");
-  const fpMsg = document.getElementById("fp-msg");
-
-  fpSend?.addEventListener("click", () => {
-    const id = String(fpId?.value || "").trim();
-    const user = findUserByAny(id);
-    if (!user) {
-      setMsg(fpMsg, "Conta nao encontrada.", true);
-      return;
-    }
-    const code = genCode();
-    // Store either phone digits or normalized id, so it can be found again.
-    const digits = phoneDigits(id);
-    const to = digits.length >= 10 ? digits : norm(id);
-    saveOtp("forgot", to, code);
-    fpStep2.hidden = false;
-    fpCodeBox.textContent = `Codigo enviado (demo): ${code}`;
-    setMsg(fpMsg, "Codigo gerado. Digite acima para trocar a senha.", false);
-  });
-
-  fpConfirm?.addEventListener("click", () => {
-    const otp = loadOtp();
-    if (!otpStillValid(otp) || otp.purpose !== "forgot") {
-      setMsg(fpMsg, "Codigo expirou. Gere um novo.", true);
-      return;
-    }
-    const code = String(fpCode?.value || "").trim();
-    if (code !== String(otp.code)) {
-      setMsg(fpMsg, "Codigo incorreto.", true);
-      return;
-    }
-    const newPass = String(fpNew?.value || "");
-    if (!newPass || newPass.length < 4) {
-      setMsg(fpMsg, "Senha muito curta (min 4).", true);
-      return;
-    }
-    const user = findUserByAny(otp.to);
-    if (!user) {
-      setMsg(fpMsg, "Conta nao encontrada.", true);
-      return;
-    }
-    upsertUser({ ...user, pass: newPass });
-    clearOtp();
-    setMsg(fpMsg, "Senha atualizada. Voce ja pode entrar.", false);
-  });
 });
 
-function ensureGoogleScript(cb) {
-  if (window.google && window.google.accounts) {
-    cb();
-    return;
-  }
-  const s = document.createElement("script");
-  s.src = "https://accounts.google.com/gsi/client";
-  s.async = true;
-  s.defer = true;
-  s.onload = cb;
-  document.head.appendChild(s);
-}
-
-function googleSignIn() {
-  const clientId = String(localStorage.getItem(GOOGLE_CLIENT_KEY) || DEFAULT_GOOGLE_CLIENT_ID || "").trim();
-  if (!clientId) {
-    openModal(
-      "Configurar Google",
-      `
-      <div class="modal-body">
-        <p class="hint">Para login Google funcionar em site estatico, voce precisa do Client ID.</p>
-        <input id="gcid" type="text" placeholder="ex: 123.apps.googleusercontent.com" />
-        <div class="actions">
-          <button id="gcid-save" class="btn primary" type="button">Salvar</button>
-          <button class="btn ghost" type="button" data-close="1">Cancelar</button>
-        </div>
-        <p class="hint">Voce tambem pode configurar em Perfil.</p>
-        <p id="gcid-msg" class="msg"></p>
-      </div>
-      `
-    );
-    const gcid = document.getElementById("gcid");
-    const gcidSave = document.getElementById("gcid-save");
-    const gcidMsg = document.getElementById("gcid-msg");
-    gcidSave?.addEventListener("click", () => {
-      const v = String(gcid?.value || "").trim();
-      if (!v) {
-        setMsg(gcidMsg, "Informe o Client ID.", true);
-        return;
-      }
-      localStorage.setItem(GOOGLE_CLIENT_KEY, v);
-      setMsg(gcidMsg, "Salvo. Abrindo login Google...", false);
-      setTimeout(() => {
-        closeModal();
-        googleSignIn();
-      }, 450);
-    });
-    return;
-  }
-
-  // Persist default so Perfil page can render the Google button without extra steps.
-  if (!String(localStorage.getItem(GOOGLE_CLIENT_KEY) || "").trim() && DEFAULT_GOOGLE_CLIENT_ID) {
-    localStorage.setItem(GOOGLE_CLIENT_KEY, DEFAULT_GOOGLE_CLIENT_ID);
-  }
-
-  ensureGoogleScript(async () => {
-    if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
-      setMsg(msg, "Nao foi possivel carregar o Google. Tente novamente.", true);
-      return;
-    }
-
-    try {
-      const tokenClient = window.google.accounts.oauth2.initTokenClient({
-        client_id: clientId,
-        scope: "openid email profile",
-        ux_mode: "popup",
-        callback: async (tokenResponse) => {
-          const accessToken = String(tokenResponse?.access_token || "").trim();
-          if (!accessToken) {
-            setMsg(msg, "Falha no login Google.", true);
-            return;
-          }
-
-          setMsg(msg, "Finalizando login Google...", false);
-          try {
-            const profile = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-              headers: { Authorization: `Bearer ${accessToken}` },
-              cache: "no-store"
-            }).then((resp) => {
-              if (!resp.ok) throw new Error("google_profile_error");
-              return resp.json();
-            });
-
-            const name = String(profile?.name || "Cliente Stop mod");
-            const email = String(profile?.email || "");
-            const picture = String(profile?.picture || "");
-            finishLogin({ name, email, picture, phone: "" });
-          } catch {
-            setMsg(msg, "Falha ao carregar dados da conta Google.", true);
-          }
-        },
-        error_callback: () => {
-          setMsg(msg, "Nao foi possivel abrir o login Google. Verifique pop-up do navegador.", true);
-        }
-      });
-
-      setMsg(msg, "Abrindo login Google...", false);
-      tokenClient.requestAccessToken({ prompt: "select_account" });
-    } catch {
-      setMsg(msg, "Erro ao iniciar Google. Verifique o Client ID.", true);
-    }
-  });
-}
-
-googleBtn?.addEventListener("click", googleSignIn);
-
-registerForm?.addEventListener("submit", (e) => {
-  e.preventDefault();
-  const name = String(regName?.value || "").trim();
-  const email = String(regEmail?.value || "").trim();
-  const phone = String(regPhone?.value || "").trim();
-  const pass = String(regPass?.value || "");
-
-  if (!name || !pass) {
-    setMsg(regMsg, "Preencha nome e senha.", true);
-    return;
-  }
-
-  const users = loadUsers();
-  const key = norm(email || phone || name);
-  if (!key) {
-    setMsg(regMsg, "Informe email, telefone ou nome.", true);
-    return;
-  }
-  if (users.some((u) => norm(u.key) === key)) {
-    setMsg(regMsg, "Conta ja existe. Clique em Entrar.", true);
-    return;
-  }
-
-  users.unshift({ key, name, email, phone, pass });
-  saveUsers(users.slice(0, 200));
-  finishLogin({ name, email, phone, picture: "" });
+googleBtn?.addEventListener("click", () => {
+  setMsg(msg, "Login Google permanece opcional. O cadastro seguro principal e por email/CPF.", false);
 });
 
-loginForm?.addEventListener("submit", (e) => {
-  e.preventDefault();
-  const id = String(loginId?.value || "").trim();
-  const pass = String(loginPass?.value || "");
-
-  if (!id || !pass) {
-    setMsg(msg, "Preencha usuario e senha.", true);
-    return;
-  }
-
-  const user = findUserByAny(id);
-
-  if (!user || String(user.pass) !== pass) {
-    if (user && !String(user.pass || "")) {
-      setMsg(msg, "Essa conta foi criada por login social (Google). Use o botao Google.", true);
-      return;
-    }
-    setMsg(msg, "Login invalido. Verifique usuario e senha.", true);
-    return;
-  }
-
-  finishLogin({
-    name: String(user.name || "Cliente Stop mod"),
-    email: String(user.email || ""),
-    phone: String(user.phone || ""),
-    picture: ""
-  });
+modal?.querySelectorAll("[data-close]").forEach((el) => el.addEventListener("click", closeModal));
+document.addEventListener("click", (event) => {
+  const target = event.target instanceof Element ? event.target.closest("[data-close='1']") : null;
+  if (target) closeModal();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && modal && !modal.hidden) closeModal();
 });
 
-// Default state
-void consumeFacebookOAuthCallback();
 showRegister(false);

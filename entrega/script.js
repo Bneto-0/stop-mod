@@ -2,6 +2,9 @@ const CART_KEY = "stopmod_cart";
 const SHIP_KEY = "stopmod_ship_to";
 const LIST_KEY = "stopmod_ship_list";
 const PROFILE_KEY = "stopmod_profile";
+const AUTH_TOKEN_KEY = "stopmod_auth_token";
+const API_BASE_KEY = "stopmod_api_base";
+const PAGBANK_API_BASE_KEY = "stopmod_pagbank_api_base";
 
 const products = [
   { id: 1, price: 89.9 },
@@ -47,6 +50,38 @@ function loadJson(key, fallback) {
     return parsed ?? fallback;
   } catch {
     return fallback;
+  }
+}
+
+function normalizeApiBase(raw) {
+  return String(raw || "").trim().replace(/\/+$/, "");
+}
+
+function buildApiUrl(base, endpoint) {
+  const path = `/${String(endpoint || "").replace(/^\/+/, "")}`;
+  const root = normalizeApiBase(base);
+  return root ? `${root}${path}` : path;
+}
+
+async function syncAddressToBackend(address) {
+  const token = String(localStorage.getItem(AUTH_TOKEN_KEY) || "").trim();
+  if (!token) return;
+
+  const base = normalizeApiBase(localStorage.getItem(API_BASE_KEY) || localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
+  const url = buildApiUrl(base, "/api/auth/address");
+
+  try {
+    await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ address })
+    });
+  } catch {
+    // Mantem fluxo local mesmo se backend estiver indisponivel.
   }
 }
 
@@ -271,6 +306,7 @@ function renderList() {
       const selected = loadList()[idx];
       if (!selected) return;
       saveShipTo(selected);
+      void syncAddressToBackend(selected);
       renderCurrent();
       renderMenuLocation();
       window.location.href = "../carrinho/";
@@ -353,6 +389,7 @@ form?.addEventListener("submit", (e) => {
     uniq.push(x);
   });
   saveList(uniq.slice(0, 20));
+  void syncAddressToBackend(to);
 
   setFeedback("Endereco completo salvo e selecionado.", false);
   renderCurrent();

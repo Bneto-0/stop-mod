@@ -38,6 +38,10 @@ API local:
 - `POST /api/pagbank/checkout`
 - `POST /api/pagbank/webhook`
 - `GET /api/pagbank/webhook/logs`
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/auth/me`
+- `POST /api/auth/address`
 
 Validacao rapida:
 
@@ -64,3 +68,66 @@ Se o backend estiver no mesmo dominio com proxy `/api`, nao precisa desse passo.
 3. Backend cria checkout no PagBank e retorna `checkoutUrl`.
 4. Front redireciona para o link do PagBank.
 5. PagBank envia atualizacao para webhook.
+
+## 6) Cadastro/Login seguro de cliente
+
+No `.env`, configure:
+
+- `AUTH_JWT_SECRET` (obrigatorio, minimo 32 chars)
+- `AUTH_TOKEN_TTL_SEC` (padrao 7200 = 2h)
+
+Cadastro:
+
+`POST /api/auth/register`
+
+```json
+{
+  "fullName": "Nome Completo",
+  "birthDate": "1990-05-20",
+  "cpf": "12345678909",
+  "email": "cliente@email.com",
+  "password": "Senha@123",
+  "phone": "11999999999",
+  "address": {
+    "street": "Rua Exemplo",
+    "number": "123",
+    "district": "Centro",
+    "city": "Sao Paulo",
+    "state": "SP",
+    "cep": "05786090",
+    "complement": "Apto 12"
+  }
+}
+```
+
+Login:
+
+`POST /api/auth/login`
+
+```json
+{
+  "identifier": "cliente@email.com ou CPF",
+  "password": "Senha@123"
+}
+```
+
+Resposta de login/cadastro traz:
+
+- `token` JWT
+- `profile` (dados do cliente)
+- `addresses` e `defaultAddress`
+
+### Verificacao civil CPF (opcional)
+
+Para integrar com provedor oficial/KYC:
+
+- `CPF_CIVIL_CHECK_MODE=warn` ou `strict`
+- `CPF_CIVIL_CHECK_URL=https://seu-provedor/validar-cpf`
+- `CPF_CIVIL_CHECK_TOKEN=...`
+
+Em `strict`, o cadastro e bloqueado se o provedor nao confirmar CPF + nome + data.
+
+Sem provedor externo configurado, o backend valida apenas:
+
+- formato/algoritmo do CPF
+- consistencia dos campos obrigatorios
