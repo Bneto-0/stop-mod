@@ -192,11 +192,7 @@ function formatArrivalRange() {
 
 function renderArrivalPreview() {
   if (!arrivalEl) return;
-  if (!activeProduct) {
-    arrivalEl.textContent = "Chegara entre -- e --";
-    return;
-  }
-  arrivalEl.textContent = formatArrivalRange();
+  arrivalEl.textContent = "Chegara entre:";
 }
 
 function loadCartIds() {
@@ -555,7 +551,7 @@ function renderNotFound() {
   if (installmentEl) installmentEl.textContent = "ou 0,00";
   if (soldEl) soldEl.textContent = "+ 0 quantidade vendida";
   if (ratingEl) ratingEl.innerHTML = `0.0 <span>${starsByRating(0)}</span> <em>(0 avaliacoes)</em>`;
-  if (arrivalEl) arrivalEl.textContent = "Chegara entre -- e --";
+  renderArrivalPreview();
   if (imageEl) {
     imageEl.src = "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=900&q=80";
     imageEl.alt = "Produto indisponivel";
