@@ -37,11 +37,19 @@ const productById = new Map(products.map((product) => [Number(product.id), produ
 const imageEl = document.getElementById("product-image");
 const categoryEl = document.getElementById("product-category");
 const nameEl = document.getElementById("product-name");
-const sizeTextEl = document.getElementById("product-size-text");
 const priceEl = document.getElementById("product-price");
+const oldPriceEl = document.getElementById("product-old-price");
+const installmentEl = document.getElementById("product-installment");
+const soldEl = document.getElementById("product-sold");
+const ratingEl = document.getElementById("product-rating");
+const arrivalEl = document.getElementById("product-arrival");
+const sizePillsEl = document.getElementById("product-size-pills");
+const colorSwatchesEl = document.getElementById("product-color-swatches");
 const sizeEl = document.getElementById("product-size");
 const colorEl = document.getElementById("product-color");
 const qtyEl = document.getElementById("product-qty");
+const qtyDecBtn = document.getElementById("qty-dec");
+const qtyIncBtn = document.getElementById("qty-inc");
 const feedbackEl = document.getElementById("product-feedback");
 const addCartBtn = document.getElementById("add-cart-btn");
 const buyNowBtn = document.getElementById("buy-now-btn");
@@ -64,6 +72,56 @@ function normalizeText(value) {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
+}
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function colorToHex(colorName) {
+  const key = normalizeText(colorName);
+  if (key.includes("preto")) return "#101112";
+  if (key.includes("branco")) return "#f5f5f5";
+  if (key.includes("off")) return "#efe8dc";
+  if (key.includes("marrom")) return "#7a4a30";
+  if (key.includes("cinza")) return "#9aa0a6";
+  if (key.includes("azul")) return "#183f8f";
+  if (key.includes("bege")) return "#d8c6ad";
+  return "#d5d0c9";
+}
+
+function starsByRating(rating) {
+  const full = Math.max(1, Math.min(5, Math.round(Number(rating) || 0)));
+  return `${"*".repeat(full)}${"-".repeat(5 - full)}`;
+}
+
+function estimateSoldCount(productId) {
+  const base = Number(productId) || 0;
+  return 120 + base * 17;
+}
+
+function estimateRating(productId) {
+  const base = Number(productId) || 0;
+  const raw = 4.6 + (base % 5) * 0.08;
+  return Math.min(5, Number(raw.toFixed(1)));
+}
+
+function formatArrivalRange() {
+  const now = new Date();
+  const min = new Date(now);
+  const max = new Date(now);
+  min.setDate(min.getDate() + 2);
+  max.setDate(max.getDate() + 15);
+
+  const month = max.toLocaleDateString("pt-BR", { month: "long" });
+  const minDay = String(min.getDate()).padStart(2, "0");
+  const maxDay = String(max.getDate()).padStart(2, "0");
+  return `Chegara entre ${minDay} e ${maxDay} de ${month}`;
 }
 
 function loadCartIds() {
@@ -236,17 +294,47 @@ function fillSelect(selectEl, options) {
     .join("");
 }
 
+function renderSizePills() {
+  if (!sizePillsEl || !sizeEl) return;
+  const options = Array.from(sizeEl.options).map((opt) => String(opt.value || ""));
+  const selected = String(sizeEl.value || "");
+  sizePillsEl.innerHTML = options
+    .map(
+      (option) =>
+        `<button class="size-pill${selected === option ? " active" : ""}" type="button" data-size="${escapeHtml(option)}">${escapeHtml(option)}</button>`
+    )
+    .join("");
+}
+
+function renderColorSwatches() {
+  if (!colorSwatchesEl || !colorEl) return;
+  const options = Array.from(colorEl.options).map((opt) => String(opt.value || ""));
+  const selected = String(colorEl.value || "");
+  colorSwatchesEl.innerHTML = options
+    .map(
+      (option) =>
+        `<button class="color-swatch${selected === option ? " active" : ""}" type="button" data-color="${escapeHtml(option)}" aria-label="${escapeHtml(option)}"><i style="background:${colorToHex(option)}"></i></button>`
+    )
+    .join("");
+}
+
 function renderNotFound() {
   if (categoryEl) categoryEl.textContent = "Produto";
   if (nameEl) nameEl.textContent = "Produto nao encontrado";
-  if (sizeTextEl) sizeTextEl.textContent = "Verifique o link e tente novamente.";
   if (priceEl) priceEl.textContent = "R$ 0,00";
+  if (oldPriceEl) oldPriceEl.textContent = "R$ 0,00";
+  if (installmentEl) installmentEl.textContent = "ou 0,00";
+  if (soldEl) soldEl.textContent = "+ 0 quantidade vendida";
+  if (ratingEl) ratingEl.innerHTML = `0.0 <span>${starsByRating(0)}</span>`;
+  if (arrivalEl) arrivalEl.textContent = "Chegara entre -- e --";
   if (imageEl) {
     imageEl.src = "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=900&q=80";
     imageEl.alt = "Produto indisponivel";
   }
   fillSelect(sizeEl, ["--"]);
   fillSelect(colorEl, ["--"]);
+  renderSizePills();
+  renderColorSwatches();
   if (qtyEl) qtyEl.value = "1";
   if (addCartBtn) addCartBtn.disabled = true;
   if (buyNowBtn) buyNowBtn.disabled = true;
@@ -257,8 +345,13 @@ function renderProduct(product) {
   activeProduct = product;
   if (categoryEl) categoryEl.textContent = String(product.category || "Produto");
   if (nameEl) nameEl.textContent = String(product.name || "Produto");
-  if (sizeTextEl) sizeTextEl.textContent = `Tam: ${String(product.size || "--")}`;
   if (priceEl) priceEl.textContent = `R$ ${formatBRL(product.price)}`;
+  const oldPrice = Number((Number(product.price || 0) * 1.07).toFixed(2));
+  if (oldPriceEl) oldPriceEl.textContent = `R$ ${formatBRL(oldPrice)}`;
+  if (installmentEl) installmentEl.textContent = `ou ${formatBRL(product.price)}`;
+  if (soldEl) soldEl.textContent = `+ ${estimateSoldCount(product.id)} quantidade vendida`;
+  if (ratingEl) ratingEl.innerHTML = `${estimateRating(product.id).toFixed(1)} <span>${starsByRating(estimateRating(product.id))}</span>`;
+  if (arrivalEl) arrivalEl.textContent = formatArrivalRange();
   if (imageEl) {
     imageEl.src = String(product.image || "");
     imageEl.alt = String(product.name || "Produto");
@@ -266,6 +359,10 @@ function renderProduct(product) {
 
   fillSelect(sizeEl, getSizeOptions(product.size));
   fillSelect(colorEl, getColorOptions(product));
+  if (sizeEl && sizeEl.options.length) sizeEl.value = String(sizeEl.options[0].value || "");
+  if (colorEl && colorEl.options.length) colorEl.value = String(colorEl.options[0].value || "");
+  renderSizePills();
+  renderColorSwatches();
   if (qtyEl) qtyEl.value = "1";
 
   if (addCartBtn) addCartBtn.disabled = false;
@@ -331,6 +428,34 @@ buyNowBtn?.addEventListener("click", () => {
 qtyEl?.addEventListener("input", () => {
   const qty = getSelectedQty();
   qtyEl.value = String(qty);
+});
+
+qtyDecBtn?.addEventListener("click", () => {
+  const next = Math.max(1, getSelectedQty() - 1);
+  if (qtyEl) qtyEl.value = String(next);
+});
+
+qtyIncBtn?.addEventListener("click", () => {
+  const next = Math.min(10, getSelectedQty() + 1);
+  if (qtyEl) qtyEl.value = String(next);
+});
+
+sizePillsEl?.addEventListener("click", (event) => {
+  const trigger = event.target instanceof Element ? event.target.closest("[data-size]") : null;
+  if (!trigger || !sizeEl) return;
+  const value = String(trigger.getAttribute("data-size") || "").trim();
+  if (!value) return;
+  sizeEl.value = value;
+  renderSizePills();
+});
+
+colorSwatchesEl?.addEventListener("click", (event) => {
+  const trigger = event.target instanceof Element ? event.target.closest("[data-color]") : null;
+  if (!trigger || !colorEl) return;
+  const value = String(trigger.getAttribute("data-color") || "").trim();
+  if (!value) return;
+  colorEl.value = value;
+  renderColorSwatches();
 });
 
 searchInputEl?.addEventListener("keydown", (event) => {
