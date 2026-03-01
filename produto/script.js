@@ -668,6 +668,9 @@ async function resolveWorkingPagBankInlineEndpoint() {
 
 function isNotAllowedHtmlError(message) {
   const text = String(message || "").toLowerCase();
+  if (!text) return false;
+  if (text.includes("cannot post")) return true;
+  if (text.includes("404") && text.includes("not found")) return true;
   return text.includes("405") && text.includes("not allowed");
 }
 
@@ -1486,7 +1489,6 @@ paymentForm?.addEventListener("submit", async (event) => {
       data = await postJson(endpoint, payload, 22000);
     } catch (firstError) {
       const shouldTryLocalFallback =
-        !hasConfiguredPagBankApiBase() &&
         isNotAllowedHtmlError(firstError?.message) &&
         !/^https?:\/\/localhost:8787\/api\/pagbank\/inline-payment$/i.test(String(endpoint || ""));
 
