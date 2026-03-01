@@ -51,6 +51,7 @@ const soldEl = document.getElementById("product-sold");
 const ratingEl = document.getElementById("product-rating");
 const arrivalEl = document.getElementById("product-arrival");
 const favBtnEl = document.getElementById("product-fav-btn");
+const modelsEl = document.getElementById("product-models");
 const shipChipEl = document.getElementById("product-ship-chip");
 const shipCostEl = document.getElementById("product-ship-cost");
 const shipCostValueEl = document.getElementById("product-ship-cost-value");
@@ -72,6 +73,8 @@ const profileTopName = document.getElementById("profile-top-name");
 const profileTopPhoto = document.getElementById("profile-top-photo");
 
 let activeProduct = null;
+let activeModelOptions = [];
+let activeModelIndex = 0;
 
 function formatBRL(value) {
   return Number(value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -555,6 +558,8 @@ function renderColorSwatches() {
 
 function renderNotFound() {
   activeProduct = null;
+  activeModelOptions = [];
+  activeModelIndex = 0;
   if (categoryEl) categoryEl.textContent = "Produto";
   if (nameEl) nameEl.textContent = "Produto nao encontrado";
   if (priceEl) priceEl.textContent = "R$ 0,00";
@@ -569,6 +574,7 @@ function renderNotFound() {
   }
   fillSelect(sizeEl, ["--"]);
   fillSelect(colorEl, ["--"]);
+  if (modelsEl) modelsEl.innerHTML = "";
   renderSizePills();
   renderColorSwatches();
   if (qtyEl) qtyEl.value = "1";
@@ -577,6 +583,63 @@ function renderNotFound() {
   renderFavoriteButton();
   renderShippingPreview();
   setFeedback("Produto nao encontrado. Volte para a loja e escolha novamente.", true);
+}
+
+function getModelImageOptions(product) {
+  const list = [];
+  const addImage = (url) => {
+    const value = String(url || "").trim();
+    if (!value || list.includes(value)) return;
+    list.push(value);
+  };
+
+  addImage(product?.image);
+
+  const sameCategory = products.filter(
+    (item) => Number(item?.id) !== Number(product?.id) && normalizeText(item?.category) === normalizeText(product?.category)
+  );
+  sameCategory.forEach((item) => addImage(item?.image));
+
+  if (list.length < 4) {
+    products.forEach((item) => addImage(item?.image));
+  }
+
+  return list.slice(0, 4).map((image, index) => ({
+    image,
+    label: `Modelo ${index + 1}`
+  }));
+}
+
+function renderModelOptions() {
+  if (!modelsEl) return;
+  if (!activeModelOptions.length) {
+    modelsEl.innerHTML = "";
+    return;
+  }
+
+  modelsEl.innerHTML = activeModelOptions
+    .map(
+      (option, index) => `
+        <button class="model-option${index === activeModelIndex ? " active" : ""}" type="button" data-model-index="${index}" aria-label="${escapeHtml(option.label)}">
+          <img src="${escapeHtml(option.image)}" alt="${escapeHtml(option.label)}" loading="lazy" />
+        </button>
+      `
+    )
+    .join("");
+}
+
+function setActiveModel(index) {
+  if (!activeProduct || !activeModelOptions.length) return;
+  const safeIndex = Math.max(0, Math.min(activeModelOptions.length - 1, Number(index) || 0));
+  activeModelIndex = safeIndex;
+  const selected = activeModelOptions[safeIndex];
+
+  if (imageEl && selected) {
+    imageEl.src = String(selected.image || activeProduct.image || "");
+    imageEl.alt = `${String(activeProduct.name || "Produto")} - ${String(selected.label || "Modelo")}`;
+  }
+
+  renderModelOptions();
 }
 
 function renderPricePreview() {
@@ -601,10 +664,9 @@ function renderProduct(product) {
   renderSoldCount();
   renderProductRating();
   renderArrivalPreview();
-  if (imageEl) {
-    imageEl.src = String(product.image || "");
-    imageEl.alt = String(product.name || "Produto");
-  }
+  activeModelOptions = getModelImageOptions(product);
+  activeModelIndex = 0;
+  setActiveModel(0);
 
   fillSelect(sizeEl, getSizeOptions(product.size));
   fillSelect(colorEl, getColorOptions(product));
@@ -723,6 +785,14 @@ colorSwatchesEl?.addEventListener("click", (event) => {
   if (!value) return;
   colorEl.value = value;
   renderColorSwatches();
+});
+
+modelsEl?.addEventListener("click", (event) => {
+  const trigger = event.target instanceof Element ? event.target.closest("[data-model-index]") : null;
+  if (!trigger) return;
+  const index = Number(trigger.getAttribute("data-model-index"));
+  if (!Number.isInteger(index)) return;
+  setActiveModel(index);
 });
 
 searchInputEl?.addEventListener("keydown", (event) => {
