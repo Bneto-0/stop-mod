@@ -31,6 +31,98 @@ const DRESS_COLOR_VARIANTS = Object.freeze({
     "Floral Dourado": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80"
   }
 });
+const CATEGORY_COLOR_VARIANT_IMAGES = Object.freeze({
+  default: [
+    "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1475180098004-ca77a66827be?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80"
+  ],
+  camisetas: [
+    "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1583743814966-8936f37f4678?auto=format&fit=crop&w=900&q=80"
+  ],
+  camisas: [
+    "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1527719327859-c6ce80353573?auto=format&fit=crop&w=900&q=80"
+  ],
+  calcas: [
+    "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1548883354-94bcfe321cbb?auto=format&fit=crop&w=900&q=80"
+  ],
+  jaquetas: [
+    "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1521223890158-f9f7c3d5d504?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1516826957135-700dedea698c?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1544966503-7cc5ac882d5f?auto=format&fit=crop&w=900&q=80"
+  ],
+  moletons: [
+    "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1614975058789-41316d0e2c87?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1618517351616-38fb9c5210c6?auto=format&fit=crop&w=900&q=80"
+  ],
+  vestidos: [
+    "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1464863979621-258859e62245?auto=format&fit=crop&w=900&q=80"
+  ],
+  blazers: [
+    "https://images.unsplash.com/photo-1484515991647-c5760fcecfc7?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1542293787938-4d273c37c18d?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1503341338985-c0477be52513?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80"
+  ],
+  saias: [
+    "https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1502716119720-b23a93e5fe1b?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=900&q=80"
+  ],
+  shorts: [
+    "https://images.unsplash.com/photo-1562157873-818bc0726f68?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80"
+  ],
+  casacos: [
+    "https://images.unsplash.com/photo-1503341338985-c0477be52513?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1479064555552-3ef4979f8908?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=900&q=80"
+  ],
+  calcados: [
+    "https://images.unsplash.com/photo-1549298916-f52d724204b4?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1600269452121-4f2416e55c28?auto=format&fit=crop&w=900&q=80"
+  ],
+  acessorios: [
+    "https://images.unsplash.com/photo-1495107334309-fcf20504a5ab?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1543294001-f7cd5d7fb516?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=900&q=80"
+  ],
+  blusas: [
+    "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=900&q=80"
+  ],
+  conjuntos: [
+    "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1542293787938-4d273c37c18d?auto=format&fit=crop&w=900&q=80"
+  ]
+});
 
 const SIZE_ORDER = ["PP", "P", "M", "G", "GG", "XG", "XXG"];
 
@@ -693,16 +785,35 @@ function getColorOptions(product) {
   return ["Bege", "Preto", "Branco"];
 }
 
+function getCategoryVariantImages(product) {
+  const categoryKey = normalizeText(product?.category || "");
+  const byCategory = CATEGORY_COLOR_VARIANT_IMAGES[categoryKey];
+  const fallback = CATEGORY_COLOR_VARIANT_IMAGES.default || [];
+  const merged = [String(product?.image || "").trim(), ...(Array.isArray(byCategory) ? byCategory : []), ...fallback]
+    .filter(Boolean);
+  return Array.from(new Set(merged));
+}
+
 function getColorVariantImage(product, colorName) {
   const productId = Number(product?.id);
   if (!Number.isInteger(productId) || productId <= 0) return "";
   const variants = DRESS_COLOR_VARIANTS[productId];
-  if (!variants || typeof variants !== "object") return "";
-
   const wanted = normalizeText(colorName);
-  const key = Object.keys(variants).find((item) => normalizeText(item) === wanted);
-  if (!key) return "";
-  return String(variants[key] || "").trim();
+
+  if (variants && typeof variants === "object") {
+    const key = Object.keys(variants).find((item) => normalizeText(item) === wanted);
+    if (key) return String(variants[key] || "").trim();
+  }
+
+  const colorOptions = getColorOptions(product);
+  const colorIndex = colorOptions.findIndex((item) => normalizeText(item) === wanted);
+  if (colorIndex < 0) return String(product?.image || "").trim();
+
+  const gallery = getCategoryVariantImages(product);
+  if (!gallery.length) return "";
+
+  const idx = colorIndex % gallery.length;
+  return String(gallery[idx] || gallery[0] || "").trim();
 }
 
 function fillSelect(selectEl, options) {
