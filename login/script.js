@@ -2,6 +2,7 @@ const PROFILE_KEY = "stopmod_profile";
 const PROFILE_EXTRA_KEY = "stopmod_profile_extra";
 const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
 const AUTH_TOKEN_KEY = "stopmod_auth_token";
+const NOTES_KEY = "stopmod_notifications";
 const GOOGLE_CLIENT_KEY = "stopmod_google_client_id";
 const DEFAULT_GOOGLE_CLIENT_ID = "887504211072-0elgoi3dbg80bb9640vvlqfl7cp8guq5.apps.googleusercontent.com";
 const SHIP_KEY = "stopmod_ship_to";
@@ -50,6 +51,85 @@ let regCpfLookupTimer = null;
 let regCpfLookupSeq = 0;
 let regCepLookupTimer = null;
 let regCepLookupSeq = 0;
+
+function nowIso() {
+  return new Date().toISOString();
+}
+
+function loadJson(key, fallback) {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(String(key || "")) || "null");
+    return parsed == null ? fallback : parsed;
+  } catch {
+    return fallback;
+  }
+}
+
+function saveJson(key, value) {
+  try {
+    localStorage.setItem(String(key || ""), JSON.stringify(value));
+  } catch {
+    // ignore storage errors
+  }
+}
+
+function normalizeUserKey(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function addLoginSuccessNotification(profileLike) {
+  const profile = profileLike && typeof profileLike === "object" ? profileLike : {};
+  const email = normalizeUserKey(profile.email || "");
+  const name = String(profile.name || "Cliente Stop mod").trim() || "Cliente Stop mod";
+  const list = loadJson(NOTES_KEY, []);
+  const notes = Array.isArray(list) ? list : [];
+
+  notes.push({
+    id: `login-success-${email || "guest"}-${Date.now()}`,
+    scope: email ? "individual" : "general",
+    type: "aviso",
+    userKey: email,
+    title: "Login realizado com sucesso",
+    text: `Acesso confirmado para ${name}.`,
+    href: "/perfil/",
+    date: "Agora",
+    createdAt: nowIso()
+  });
+
+  notes.sort((a, b) => Date.parse(String(b?.createdAt || "")) - Date.parse(String(a?.createdAt || "")));
+  saveJson(NOTES_KEY, notes.slice(0, 500));
+}
+
+function showLoginToast(message) {
+  const body = document.body;
+  if (!body) return;
+
+  const existing = document.getElementById("login-success-toast");
+  if (existing) existing.remove();
+
+  const toast = document.createElement("div");
+  toast.id = "login-success-toast";
+  toast.className = "login-success-toast";
+  toast.setAttribute("role", "status");
+  toast.setAttribute("aria-live", "polite");
+  toast.textContent = String(message || "Login realizado com sucesso.");
+  body.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    toast.classList.add("show");
+  });
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 260);
+  }, 2400);
+}
+
+function wait(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, Math.max(0, Number(ms) || 0));
+  });
+}
 
 function setMsg(el, text, isErr = false) {
   if (!el) return;
@@ -630,7 +710,12 @@ function finishSocialLogin(user) {
     })
   );
   localStorage.setItem(AUTH_LAST_SEEN_KEY, String(Date.now()));
-  window.location.href = resolvePostLoginUrl();
+  addLoginSuccessNotification({ name, email });
+  setMsg(msg, "Login Google realizado com sucesso.", false);
+  showLoginToast("Login realizado com sucesso.");
+  setTimeout(() => {
+    window.location.href = resolvePostLoginUrl();
+  }, 900);
 }
 
 function ensureGoogleScript(callback) {
@@ -756,6 +841,7 @@ async function handleRegisterSubmit(event) {
   try {
     const data = await postJson("/api/auth/register", payload, 18000);
     applySession(data);
+    addLoginSuccessNotification(data?.profile || { name: payload.fullName, email: payload.email });
 
     const civil = data?.civilCheck;
     if (civil?.checked && civil?.accepted === false) {
@@ -763,6 +849,8 @@ async function handleRegisterSubmit(event) {
     } else {
       setMsg(regMsg, "Conta criada com sucesso.", false);
     }
+    showLoginToast("Conta criada e login realizado com sucesso.");
+    await wait(900);
     window.location.href = resolvePostLoginUrl();
   } catch (error) {
     setMsg(regMsg, `Falha no cadastro: ${String(error?.message || "tente novamente.")}`, true);
@@ -785,7 +873,10 @@ async function handleLoginSubmit(event) {
   try {
     const data = await postJson("/api/auth/login", { identifier, password }, 14000);
     applySession(data);
+    addLoginSuccessNotification(data?.profile || null);
     setMsg(msg, "Login realizado com sucesso.", false);
+    showLoginToast("Login realizado com sucesso.");
+    await wait(900);
     window.location.href = resolvePostLoginUrl();
   } catch (error) {
     setMsg(msg, `Falha no login: ${String(error?.message || "tente novamente.")}`, true);

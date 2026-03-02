@@ -374,6 +374,30 @@ input:focus {
   margin-top: 0.2rem;
 }
 
+.login-success-toast {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  transform: translate(-50%, -12px);
+  z-index: 9999;
+  background: #18663f;
+  color: #fff;
+  border: 1px solid #0f472b;
+  border-radius: 12px;
+  padding: 0.78rem 1rem;
+  font-weight: 900;
+  font-size: 0.94rem;
+  box-shadow: 0 12px 28px #16371f40;
+  opacity: 0;
+  transition: opacity 180ms ease, transform 180ms ease;
+  pointer-events: none;
+}
+
+.login-success-toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
 @media (max-width: 360px) {
   .help-row {
     flex-direction: column;
