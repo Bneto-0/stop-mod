@@ -346,8 +346,12 @@ async function resolveApiBase() {
 
   const configured = normalizeApiBase(localStorage.getItem(API_BASE_KEY) || localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
   if (configured) {
-    resolvedApiBase = configured;
-    return resolvedApiBase;
+    if (await isHealthy(configured, 6000)) {
+      resolvedApiBase = configured;
+      return resolvedApiBase;
+    }
+    localStorage.removeItem(API_BASE_KEY);
+    localStorage.removeItem(PAGBANK_API_BASE_KEY);
   }
 
   if (await isHealthy("")) {
@@ -410,7 +414,34 @@ async function postJson(endpoint, payload, timeoutMs = 12000) {
   try {
     let currentBase = base;
     let url = buildApiUrl(currentBase, endpoint);
-    let { response, text, data } = await tryPost(url);
+    let response = null;
+    let text = "";
+    let data = null;
+
+    try {
+      ({ response, text, data } = await tryPost(url));
+    } catch (networkError) {
+      const endpointIsAuth = /^\/?api\/auth\//i.test(String(endpoint || "").replace(/^\/+/, ""));
+      if (endpointIsAuth) {
+        const fallbackCandidates = authFallbackBases(currentBase);
+        for (const fallbackBase of fallbackCandidates) {
+          try {
+            currentBase = fallbackBase;
+            url = buildApiUrl(currentBase, endpoint);
+            ({ response, text, data } = await tryPost(url));
+            if (response.ok) {
+              resolvedApiBase = fallbackBase;
+              localStorage.setItem(API_BASE_KEY, fallbackBase);
+              localStorage.setItem(PAGBANK_API_BASE_KEY, fallbackBase);
+              return data || {};
+            }
+          } catch {
+            // continua para a proxima base candidata
+          }
+        }
+      }
+      throw networkError;
+    }
 
     if (!response.ok) {
       const rawMessage = String(data?.message || data?.error || text || `HTTP ${response.status}`);
