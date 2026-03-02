@@ -416,7 +416,15 @@ function extractErrorMessage(data, fallback) {
       const first = data.error_messages[0];
       if (typeof first === "string" && first.trim()) return first.trim();
       if (first && typeof first === "object") {
-        if (typeof first.description === "string" && first.description.trim()) return first.description.trim();
+        const parameterName = String(first.parameter_name || first.parameter || "").trim();
+        const description = typeof first.description === "string" ? first.description.trim() : "";
+        if (description) {
+          if (description.toLowerCase() === "invalid_parameter" && parameterName) {
+            return `Parametro invalido: ${parameterName}`;
+          }
+          return description;
+        }
+        if (parameterName) return `Parametro invalido: ${parameterName}`;
         if (typeof first.error === "string" && first.error.trim()) return first.error.trim();
       }
     }
@@ -663,7 +671,6 @@ function buildBoletoInlineOrderPayload(input, options) {
             holder: {
               name: input.customer.name,
               tax_id: input.customer.cpf,
-              email: input.customer.email,
               address: {
                 street: input.shipTo.street,
                 number: input.shipTo.number,
