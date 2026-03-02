@@ -30,8 +30,16 @@ export function createAuthRouter(options = {}) {
   const limiterLogin = createMemoryRateLimiter(AUTH_RATE_LIMIT_LOGIN, AUTH_RATE_WINDOW_MS);
   const limiterRegister = createMemoryRateLimiter(AUTH_RATE_LIMIT_REGISTER, AUTH_RATE_WINDOW_MS);
   const limiterCpfLookup = createMemoryRateLimiter(AUTH_RATE_LIMIT_CPF_LOOKUP, AUTH_RATE_WINDOW_MS);
+  const sendAlert = typeof options.sendAlert === "function" ? options.sendAlert : null;
 
   let writeQueue = Promise.resolve();
+
+  function emitAlert(payload) {
+    if (!sendAlert) return;
+    Promise.resolve(sendAlert(payload)).catch(() => {
+      // alerta de email nao pode quebrar login/cadastro
+    });
+  }
 
   router.post("/register", limiterRegister, async (req, res) => {
     if (!authEnabled) {
@@ -107,6 +115,18 @@ export function createAuthRouter(options = {}) {
       });
 
       const token = signAuthToken(tokenSecret, tokenTtlSec, user);
+      emitAlert({
+        event: "user_register",
+        occurredAt: now,
+        user: {
+          id: String(user.id || ""),
+          name: String(user.fullName || ""),
+          email: String(user.email || ""),
+          cpfMasked: maskCpf(user.cpf || "")
+        },
+        ip: getClientIp(req),
+        userAgent: getUserAgent(req)
+      });
       return res.status(201).json({
         ok: true,
         token,
@@ -158,6 +178,18 @@ export function createAuthRouter(options = {}) {
     });
 
     const token = signAuthToken(tokenSecret, tokenTtlSec, user);
+    emitAlert({
+      event: "user_login",
+      occurredAt: now,
+      user: {
+        id: String(user.id || ""),
+        name: String(user.fullName || ""),
+        email: String(user.email || ""),
+        cpfMasked: maskCpf(user.cpf || "")
+      },
+      ip: getClientIp(req),
+      userAgent: getUserAgent(req)
+    });
     return res.json({ ok: true, token, ...serializeSessionUser(user) });
   });
 
@@ -819,4 +851,15 @@ function createMemoryRateLimiter(limit, windowMs) {
     hits.set(key, current);
     return next();
   };
+}
+
+function getClientIp(req) {
+  return String(req?.headers?.["x-forwarded-for"] || req?.socket?.remoteAddress || "")
+    .split(",")[0]
+    .trim()
+    .slice(0, 100);
+}
+
+function getUserAgent(req) {
+  return String(req?.headers?.["user-agent"] || "").trim().slice(0, 300);
 }

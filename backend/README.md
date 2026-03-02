@@ -21,6 +21,9 @@ Preencha:
 - `PAGBANK_EMAIL=...` (opcional)
 - `PAGBANK_RETURN_URL` e `PAGBANK_REDIRECT_URL`
 - `PAGBANK_NOTIFICATION_URL` e `PAGBANK_PAYMENT_NOTIFICATION_URL` (recomendado)
+- `AUTH_JWT_SECRET` (obrigatorio para login/cadastro)
+- `ALERT_RECIPIENT_EMAIL=loja@stopmod.com.br` (alertas da loja)
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` (envio real de email)
 
 Importante:
 - Use apenas o valor do token (sem aspas, sem quebrar linha).
@@ -52,6 +55,11 @@ node -e "import('dotenv/config').then(()=>console.log('ENV=',process.env.PAGBANK
 ```
 
 Se aparecer `INI=SEU_TOKE`, o token ainda nao foi configurado.
+
+Para alertas de login/cadastro por email funcionar:
+- configure `ALERT_EMAIL_ENABLED=true`
+- configure SMTP valido da sua caixa `loja@stopmod.com.br`
+- teste em `GET /api/health` (campo `alerts.emailConfigured` deve ficar `true`)
 
 ## 4) Conectar com o frontend
 

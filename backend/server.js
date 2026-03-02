@@ -2,6 +2,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import helmet from "helmet";
+import nodemailer from "nodemailer";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -40,11 +41,29 @@ const cpfCivilCheckTimeoutMs = clampInt(process.env.CPF_CIVIL_CHECK_TIMEOUT_MS, 
 const cpfCivilLookupUrl = String(process.env.CPF_CIVIL_LOOKUP_URL || cpfCivilCheckUrl || "").trim();
 const cpfCivilLookupToken = String(process.env.CPF_CIVIL_LOOKUP_TOKEN || cpfCivilCheckToken || "").trim();
 const cpfCivilLookupTimeoutMs = clampInt(process.env.CPF_CIVIL_LOOKUP_TIMEOUT_MS, 1000, 15000);
+const alertEmailEnabled = parseBool(process.env.ALERT_EMAIL_ENABLED, true);
+const alertRecipientEmail = normalizeEmailAddress(process.env.ALERT_RECIPIENT_EMAIL || "loja@stopmod.com.br");
+const alertFromEmail = normalizeEmailAddress(process.env.ALERT_EMAIL_FROM || "");
+const smtpHost = String(process.env.SMTP_HOST || "").trim();
+const smtpPort = clampInt(process.env.SMTP_PORT, 1, 65535);
+const smtpSecure = parseBool(process.env.SMTP_SECURE, smtpPort === 465);
+const smtpUser = String(process.env.SMTP_USER || "").trim();
+const smtpPass = String(process.env.SMTP_PASS || "").trim();
 const authStatus = authHealth({
   tokenSecret: authJwtSecret,
   cpfCheckMode: cpfCivilCheckMode,
   cpfCheckUrl: cpfCivilCheckUrl,
   cpfLookupUrl: cpfCivilLookupUrl
+});
+const emailAlerts = createEmailAlertSender({
+  enabled: alertEmailEnabled,
+  recipient: alertRecipientEmail,
+  from: alertFromEmail,
+  smtpHost,
+  smtpPort,
+  smtpSecure,
+  smtpUser,
+  smtpPass
 });
 
 const paymentMethodMap = Object.freeze({
@@ -81,7 +100,8 @@ app.use(
     cpfCheckTimeoutMs: cpfCivilCheckTimeoutMs,
     cpfLookupUrl: cpfCivilLookupUrl,
     cpfLookupToken: cpfCivilLookupToken,
-    cpfLookupTimeoutMs: cpfCivilLookupTimeoutMs
+    cpfLookupTimeoutMs: cpfCivilLookupTimeoutMs,
+    sendAlert: (payload) => emailAlerts.send(payload)
   })
 );
 
@@ -91,7 +111,12 @@ app.get("/api/health", (_req, res) => {
     service: "stopmod-pagbank-backend",
     environment: pagBankEnv,
     pagbankTokenConfigured: hasValidPagBankToken,
-    auth: authStatus
+    auth: authStatus,
+    alerts: {
+      emailEnabled: emailAlerts.enabled,
+      emailConfigured: emailAlerts.configured,
+      recipient: emailAlerts.recipient
+    }
   });
 });
 
@@ -350,6 +375,7 @@ app.listen(port, () => {
   console.log(`[stopmod] PagBank backend online na porta ${port}`);
   console.log(`[stopmod] Ambiente PagBank: ${pagBankEnv}`);
   console.log(`[stopmod] Auth seguro: ${authStatus.enabled ? "habilitado" : "desabilitado"}`);
+  console.log(`[stopmod] Alertas email: ${emailAlerts.configured ? "habilitado" : "desabilitado"}${emailAlerts.recipient ? ` (${emailAlerts.recipient})` : ""}`);
 });
 
 function parseCsvList(value) {
@@ -821,6 +847,125 @@ function clampInt(value, min, max) {
   const n = Number(value);
   if (!Number.isFinite(n)) return min;
   return Math.max(min, Math.min(max, Math.round(n)));
+}
+
+function parseBool(value, fallback = false) {
+  const text = String(value == null ? "" : value).trim().toLowerCase();
+  if (!text) return !!fallback;
+  if (["1", "true", "yes", "y", "on", "sim", "s"].includes(text)) return true;
+  if (["0", "false", "no", "n", "off", "nao", "não"].includes(text)) return false;
+  return !!fallback;
+}
+
+function normalizeEmailAddress(value) {
+  const email = String(value || "").trim().toLowerCase();
+  return email.includes("@") ? email.slice(0, 160) : "";
+}
+
+function createEmailAlertSender(options = {}) {
+  const enabled = !!options.enabled;
+  const recipient = normalizeEmailAddress(options.recipient || "");
+  const from = normalizeEmailAddress(options.from || options.smtpUser || recipient || "");
+  const host = String(options.smtpHost || "").trim();
+  const port = clampInt(options.smtpPort, 1, 65535);
+  const secure = !!options.smtpSecure;
+  const user = String(options.smtpUser || "").trim();
+  const pass = String(options.smtpPass || "").trim();
+
+  const configured = !!(enabled && recipient && from && host && port > 0 && user && pass);
+  const transport = configured
+    ? nodemailer.createTransport({
+        host,
+        port,
+        secure,
+        auth: { user, pass }
+      })
+    : null;
+
+  return {
+    enabled,
+    configured,
+    recipient,
+    async send(payload = {}) {
+      if (!configured || !transport) return { ok: false, reason: "not_configured" };
+
+      const built = buildAlertEmail(payload, { recipient, from });
+      try {
+        await transport.sendMail({
+          from,
+          to: recipient,
+          subject: built.subject,
+          text: built.text,
+          html: built.html
+        });
+        return { ok: true };
+      } catch (error) {
+        console.warn("[stopmod] Falha ao enviar alerta de email:", String(error?.message || error || "erro"));
+        return { ok: false, reason: "send_failed" };
+      }
+    }
+  };
+}
+
+function buildAlertEmail(payload = {}, config = {}) {
+  const recipient = String(config.recipient || "").trim();
+  const event = String(payload.event || "").trim().toLowerCase();
+  const user = payload.user && typeof payload.user === "object" ? payload.user : {};
+  const name = String(user.name || "Cliente").trim() || "Cliente";
+  const email = normalizeEmailAddress(user.email || "");
+  const cpfMasked = String(user.cpfMasked || "").trim();
+  const ip = String(payload.ip || "").trim();
+  const userAgent = String(payload.userAgent || "").trim();
+  const occurredAtIso = String(payload.occurredAt || new Date().toISOString()).trim();
+  const occurredAt = toBrazilDateTime(occurredAtIso);
+
+  let subject = "[Stop mod] Novo alerta";
+  if (event === "user_login") subject = `[Stop mod] Login realizado - ${name}`;
+  if (event === "user_register") subject = `[Stop mod] Novo cadastro - ${name}`;
+
+  const lines = [
+    `Evento: ${event || "geral"}`,
+    `Data/Hora: ${occurredAt}`,
+    `Nome: ${name}`,
+    email ? `Email: ${email}` : "",
+    cpfMasked ? `CPF: ${cpfMasked}` : "",
+    ip ? `IP: ${ip}` : "",
+    userAgent ? `Navegador: ${userAgent}` : "",
+    recipient ? `Destino do alerta: ${recipient}` : ""
+  ].filter(Boolean);
+
+  const text = lines.join("\n");
+  const html = `
+    <div style="font-family:Arial,sans-serif;background:#fff;padding:14px;color:#231f1b">
+      <h2 style="margin:0 0 10px 0;color:#c7512f;">${escapeHtml(subject)}</h2>
+      <p style="margin:0 0 6px 0;"><strong>Evento:</strong> ${escapeHtml(event || "geral")}</p>
+      <p style="margin:0 0 6px 0;"><strong>Data/Hora:</strong> ${escapeHtml(occurredAt)}</p>
+      <p style="margin:0 0 6px 0;"><strong>Nome:</strong> ${escapeHtml(name)}</p>
+      ${email ? `<p style="margin:0 0 6px 0;"><strong>Email:</strong> ${escapeHtml(email)}</p>` : ""}
+      ${cpfMasked ? `<p style="margin:0 0 6px 0;"><strong>CPF:</strong> ${escapeHtml(cpfMasked)}</p>` : ""}
+      ${ip ? `<p style="margin:0 0 6px 0;"><strong>IP:</strong> ${escapeHtml(ip)}</p>` : ""}
+      ${userAgent ? `<p style="margin:0 0 6px 0;"><strong>Navegador:</strong> ${escapeHtml(userAgent)}</p>` : ""}
+      <hr style="border:none;border-top:1px solid #eadfd7;margin:12px 0;" />
+      <p style="margin:0;color:#6f635c;font-size:12px;">Alerta automatico da loja Stop mod.</p>
+    </div>
+  `;
+
+  return { subject, text, html };
+}
+
+function toBrazilDateTime(value) {
+  const date = new Date(String(value || "").trim());
+  if (!Number.isFinite(date.getTime())) return new Date().toLocaleString("pt-BR");
+  return date.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+}
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 function normalizeCpfCheckMode(value) {
