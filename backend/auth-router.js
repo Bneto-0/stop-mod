@@ -193,6 +193,80 @@ export function createAuthRouter(options = {}) {
     return res.json({ ok: true, token, ...serializeSessionUser(user) });
   });
 
+  router.post("/google-login", limiterLogin, async (req, res) => {
+    if (!authEnabled) {
+      return res.status(500).json({
+        error: "auth_not_configured",
+        message: "Configure AUTH_JWT_SECRET com no minimo 32 caracteres."
+      });
+    }
+
+    const accessToken = String(req.body?.accessToken || req.body?.token || "").trim();
+    if (!accessToken) {
+      return res.status(400).json({
+        error: "invalid_google_login_payload",
+        message: "Informe accessToken do Google."
+      });
+    }
+
+    const googleIdentity = await fetchGoogleUserProfile(accessToken);
+    if (!googleIdentity.ok) {
+      return res.status(401).json({
+        error: "invalid_google_token",
+        message: "Token Google invalido ou expirado."
+      });
+    }
+
+    const email = normalizeEmail(googleIdentity.profile?.email || "");
+    if (!email) {
+      return res.status(422).json({
+        error: "google_email_missing",
+        message: "Conta Google sem email valido."
+      });
+    }
+
+    const store = await readStore(storePath);
+    const user = store.users.find((item) => normalizeEmail(item?.email || "") === email);
+    if (!user) {
+      return res.status(404).json({
+        error: "google_account_not_linked",
+        message: "Nao existe cadastro com esse email. Crie conta primeiro e depois entre com Google."
+      });
+    }
+
+    const now = new Date().toISOString();
+    await enqueueWrite(async () => {
+      const latest = await readStore(storePath);
+      const index = latest.users.findIndex((item) => String(item.id) === String(user.id));
+      if (index >= 0) {
+        latest.users[index].lastLoginAt = now;
+        latest.users[index].updatedAt = now;
+        await writeStore(storePath, latest);
+      }
+    });
+
+    const token = signAuthToken(tokenSecret, tokenTtlSec, user);
+    emitAlert({
+      event: "user_login_google",
+      occurredAt: now,
+      user: {
+        id: String(user.id || ""),
+        name: String(user.fullName || ""),
+        email: String(user.email || ""),
+        cpfMasked: maskCpf(user.cpf || "")
+      },
+      ip: getClientIp(req),
+      userAgent: getUserAgent(req)
+    });
+
+    return res.json({
+      ok: true,
+      token,
+      ...serializeSessionUser(user),
+      provider: "google"
+    });
+  });
+
   router.post("/cpf/lookup", limiterCpfLookup, async (req, res) => {
     const cpf = normalizeCpf(req.body?.cpf || "");
     if (!cpf || !isValidCpf(cpf)) {
@@ -634,6 +708,44 @@ async function lookupCpfIdentity(input) {
     };
   } catch {
     return { providerConfigured: true, checked: false, name: "", birthDate: "" };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function fetchGoogleUserProfile(accessToken) {
+  const token = String(accessToken || "").trim();
+  if (!token) return { ok: false };
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+  try {
+    const response = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      signal: controller.signal
+    });
+    if (!response.ok) return { ok: false };
+
+    const text = await response.text();
+    const data = safeParseJson(text) || {};
+    const email = normalizeEmail(data?.email || "");
+    if (!email) return { ok: false };
+
+    return {
+      ok: true,
+      profile: {
+        email,
+        emailVerified: data?.email_verified === true,
+        name: normalizeFullName(data?.name || data?.given_name || ""),
+        picture: String(data?.picture || "").trim().slice(0, 500)
+      }
+    };
+  } catch {
+    return { ok: false };
   } finally {
     clearTimeout(timeout);
   }

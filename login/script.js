@@ -787,23 +787,17 @@ function googleSignIn() {
             return;
           }
 
-          setMsg(msg, "Finalizando login Google...", false);
+          setMsg(msg, "Validando conta Google...", false);
           try {
-            const profile = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-              headers: { Authorization: `Bearer ${accessToken}` },
-              cache: "no-store"
-            }).then((response) => {
-              if (!response.ok) throw new Error("google_profile_error");
-              return response.json();
-            });
-
-            finishSocialLogin({
-              name: String(profile?.name || "Cliente Stop mod"),
-              email: String(profile?.email || ""),
-              picture: String(profile?.picture || "")
-            });
-          } catch {
-            setMsg(msg, "Falha ao carregar dados da conta Google.", true);
+            const data = await postJson("/api/auth/google-login", { accessToken }, 16000);
+            applySession(data);
+            addLoginSuccessNotification(data?.profile || null);
+            setMsg(msg, "Login Google realizado com sucesso.", false);
+            showLoginToast("Login realizado com sucesso.");
+            await wait(900);
+            window.location.href = resolvePostLoginUrl();
+          } catch (error) {
+            setMsg(msg, `Falha no login Google: ${String(error?.message || "tente novamente.")}`, true);
           }
         },
         error_callback: () => {
