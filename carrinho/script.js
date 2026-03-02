@@ -943,16 +943,16 @@ function renderInlinePaymentContent(data) {
     inlinePayContent.innerHTML = `
       <h3 class="inline-pay-title">Pix gerado com sucesso</h3>
       <p class="inline-pay-text">Escaneie o QR Code ou copie o codigo Pix.</p>
+      <p class="inline-pay-line"><strong>Recebedor:</strong> Stop mod</p>
       ${qrImage ? `<img src="${escapeHtml(qrImage)}" alt="QR Code Pix" />` : ""}
-      ${qrText ? `<textarea readonly id="inline-pay-copy-source">${escapeHtml(qrText)}</textarea>` : "<p class=\"inline-pay-line\">Codigo Pix indisponivel.</p>"}
       ${referenceId ? `<p class="inline-pay-line"><strong>Pedido:</strong> ${referenceId}</p>` : ""}
       ${expiryText ? `<p class="inline-pay-line"><strong>Validade:</strong> ${escapeHtml(expiryText)}</p>` : ""}
       ${qrText ? "<button id=\"inline-pay-copy\" class=\"inline-pay-copy\" type=\"button\">Copiar codigo Pix</button>" : ""}
+      ${!qrText ? "<p class=\"inline-pay-line\">Codigo Pix indisponivel.</p>" : ""}
     `;
     const copyBtn = document.getElementById("inline-pay-copy");
-    const copySource = document.getElementById("inline-pay-copy-source");
     copyBtn?.addEventListener("click", async () => {
-      const value = String(copySource?.value || qrText || "");
+      const value = String(qrText || "");
       if (!value) return;
       try {
         await navigator.clipboard.writeText(value);
