@@ -52,6 +52,9 @@ let regCpfLookupTimer = null;
 let regCpfLookupSeq = 0;
 let regCepLookupTimer = null;
 let regCepLookupSeq = 0;
+let pendingGoogleOnboarding = null;
+const registerMuted = document.querySelector("#register-card .muted");
+const registerMutedDefaultText = String(registerMuted?.textContent || "").trim() || "Cadastro seguro com dados completos e endereco salvo.";
 
 function isLocalHost() {
   const host = String(window.location.hostname || "").toLowerCase();
@@ -169,6 +172,36 @@ function setLoading(formEl, loading, buttonText) {
   }
 }
 
+function setGoogleOnboardingState(enabled, profile = null) {
+  if (!enabled) {
+    pendingGoogleOnboarding = null;
+    if (regEmail) {
+      regEmail.readOnly = false;
+      regEmail.removeAttribute("aria-readonly");
+      regEmail.removeAttribute("title");
+    }
+    if (registerMuted) registerMuted.textContent = registerMutedDefaultText;
+    return;
+  }
+
+  const safeProfile = profile && typeof profile === "object" ? profile : {};
+  const email = String(safeProfile.email || "").trim().toLowerCase();
+  const name = String(safeProfile.name || "Cliente Stop mod").trim() || "Cliente Stop mod";
+  const picture = String(safeProfile.picture || "").trim();
+
+  pendingGoogleOnboarding = { email, name, picture };
+  if (regName && !String(regName.value || "").trim()) regName.value = name;
+  if (regEmail) {
+    regEmail.value = email;
+    regEmail.readOnly = true;
+    regEmail.setAttribute("aria-readonly", "true");
+    regEmail.title = "Email vindo do Google";
+  }
+  if (registerMuted) {
+    registerMuted.textContent = "Google confirmado. Complete CPF, nascimento, senha e endereco para finalizar.";
+  }
+}
+
 function togglePw(input, btn) {
   if (!input || !btn) return;
   const isPw = input.type === "password";
@@ -182,6 +215,7 @@ function showRegister(show) {
   registerCard.hidden = !show;
   const loginCard = document.querySelector(".card[aria-label='Login']");
   if (loginCard) loginCard.hidden = !!show;
+  if (!show) setGoogleOnboardingState(false);
   setMsg(msg, "");
   setMsg(regMsg, "");
 }
@@ -485,11 +519,19 @@ async function postJson(endpoint, payload, timeoutMs = 12000) {
       }
 
       const finalMessage = String(data?.message || data?.error || text || rawMessage || `HTTP ${response.status}`);
-      throw new Error(normalizeAuthErrorMessage(finalMessage));
+      const normalizedMessage = normalizeAuthErrorMessage(finalMessage);
+      const enrichedError = new Error(normalizedMessage);
+      enrichedError.code = String(data?.error || "").trim();
+      enrichedError.status = Number(response.status) || 0;
+      enrichedError.rawMessage = finalMessage;
+      throw enrichedError;
     }
 
     return data || {};
   } catch (error) {
+    if (error && (Object.prototype.hasOwnProperty.call(error, "code") || Object.prototype.hasOwnProperty.call(error, "status"))) {
+      throw error;
+    }
     if (error?.name === "AbortError") throw new Error("Tempo esgotado para conectar ao backend.");
     throw new Error(normalizeAuthErrorMessage(error?.message || error));
   }
@@ -775,6 +817,26 @@ function finishSocialLogin(user) {
   }, 900);
 }
 
+async function fetchGoogleProfileWithAccessToken(accessToken) {
+  const token = String(accessToken || "").trim();
+  if (!token) throw new Error("google_token_missing");
+
+  const response = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store"
+  });
+  if (!response.ok) throw new Error("google_profile_error");
+
+  const profile = await response.json();
+  const email = String(profile?.email || "").trim().toLowerCase();
+  if (!email) throw new Error("google_email_missing");
+  return {
+    name: String(profile?.name || profile?.given_name || "Cliente Stop mod").trim() || "Cliente Stop mod",
+    email,
+    picture: String(profile?.picture || "").trim()
+  };
+}
+
 function ensureGoogleScript(callback) {
   if (window.google?.accounts?.oauth2) {
     callback();
@@ -828,6 +890,20 @@ function googleSignIn() {
             await wait(900);
             window.location.href = resolvePostLoginUrl();
           } catch (error) {
+            const errorCode = String(error?.code || "").trim().toLowerCase();
+            if (errorCode === "google_account_not_linked") {
+              try {
+                const googleProfile = await fetchGoogleProfileWithAccessToken(accessToken);
+                showRegister(true);
+                setGoogleOnboardingState(true, googleProfile);
+                setMsg(regMsg, "Google confirmado. Complete CPF e endereco para concluir o cadastro.", false);
+                regBirth?.focus();
+                return;
+              } catch {
+                setMsg(msg, "Falha ao obter dados da conta Google para completar cadastro.", true);
+                return;
+              }
+            }
             setMsg(msg, `Falha no login Google: ${String(error?.message || "tente novamente.")}`, true);
           }
         },
@@ -869,6 +945,11 @@ async function handleRegisterSubmit(event) {
     return;
   }
 
+  if (pendingGoogleOnboarding?.email && normalizeUserKey(payload.email) !== normalizeUserKey(pendingGoogleOnboarding.email)) {
+    setMsg(regMsg, "Para concluir com Google, use o mesmo email da conta Google.", true);
+    return;
+  }
+
   if (!isValidCepDigits(payload.address.cep)) {
     setMsg(regMsg, "Informe CEP valido com 8 digitos.", true);
     return;
@@ -892,6 +973,14 @@ async function handleRegisterSubmit(event) {
   try {
     const data = await postJson("/api/auth/register", payload, 18000);
     applySession(data);
+    if (pendingGoogleOnboarding?.picture) {
+      const profileLocal = loadJson(PROFILE_KEY, {});
+      saveJson(PROFILE_KEY, {
+        ...(profileLocal && typeof profileLocal === "object" ? profileLocal : {}),
+        picture: pendingGoogleOnboarding.picture
+      });
+    }
+    setGoogleOnboardingState(false);
     addLoginSuccessNotification(data?.profile || { name: payload.fullName, email: payload.email });
 
     const civil = data?.civilCheck;
@@ -938,7 +1027,10 @@ async function handleLoginSubmit(event) {
 
 pwToggle?.addEventListener("click", () => togglePw(loginPass, pwToggle));
 regPwToggle?.addEventListener("click", () => togglePw(regPass, regPwToggle));
-goRegister?.addEventListener("click", () => showRegister(true));
+goRegister?.addEventListener("click", () => {
+  setGoogleOnboardingState(false);
+  showRegister(true);
+});
 goLogin?.addEventListener("click", () => showRegister(false));
 loginForm?.addEventListener("submit", handleLoginSubmit);
 registerForm?.addEventListener("submit", handleRegisterSubmit);
