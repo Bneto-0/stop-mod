@@ -115,7 +115,12 @@ app.get("/api/health", (_req, res) => {
     alerts: {
       emailEnabled: emailAlerts.enabled,
       emailConfigured: emailAlerts.configured,
-      recipient: emailAlerts.recipient
+      recipient: emailAlerts.recipient,
+      host: emailAlerts.host,
+      port: emailAlerts.port,
+      secure: emailAlerts.secure,
+      from: emailAlerts.from,
+      missing: emailAlerts.missing
     }
   });
 });
@@ -886,6 +891,19 @@ function createEmailAlertSender(options = {}) {
     enabled,
     configured,
     recipient,
+    from,
+    host,
+    port,
+    secure,
+    missing: [
+      enabled ? "" : "ALERT_EMAIL_ENABLED",
+      recipient ? "" : "ALERT_RECIPIENT_EMAIL",
+      from ? "" : "ALERT_EMAIL_FROM",
+      host ? "" : "SMTP_HOST",
+      port > 0 ? "" : "SMTP_PORT",
+      user ? "" : "SMTP_USER",
+      pass ? "" : "SMTP_PASS"
+    ].filter(Boolean),
     async send(payload = {}) {
       if (!configured || !transport) return { ok: false, reason: "not_configured" };
 
