@@ -93,12 +93,15 @@ export function createAuthRouter(options = {}) {
           throw err;
         }
 
+        const username = allocateUsername(input.username, store.users);
+
         const user = {
           id: randomUUID(),
           fullName: input.fullName,
           birthDate: input.birthDate,
           cpf: input.cpf,
           email: input.email,
+          username,
           phone: input.phone,
           passwordHash,
           addresses: [input.address],
@@ -149,21 +152,28 @@ export function createAuthRouter(options = {}) {
       });
     }
 
-    const identifier = normalizeIdentifier(req.body?.identifier || req.body?.email || req.body?.cpf || "");
+    const identifier = normalizeIdentifier(req.body?.identifier || req.body?.email || req.body?.cpf || req.body?.username || "");
     const password = String(req.body?.password || "");
     if (!identifier || !password) {
-      return res.status(400).json({ error: "invalid_login_payload", message: "Informe identificador (email/cpf) e senha." });
+      return res.status(400).json({ error: "invalid_login_payload", message: "Informe identificador (email/cpf/usuario) e senha." });
     }
 
     const store = await readStore(storePath);
-    const user = store.users.find((item) => matchIdentifier(item, identifier));
-    if (!user || !String(user.passwordHash || "")) {
-      return res.status(401).json({ error: "invalid_credentials", message: "Email/CPF ou senha invalidos." });
+    const candidates = store.users.filter((item) => matchIdentifier(item, identifier) && String(item.passwordHash || ""));
+    if (!candidates.length) {
+      return res.status(401).json({ error: "invalid_credentials", message: "Email/CPF/usuario ou senha invalidos." });
     }
 
-    const valid = await bcrypt.compare(password, user.passwordHash);
-    if (!valid) {
-      return res.status(401).json({ error: "invalid_credentials", message: "Email/CPF ou senha invalidos." });
+    let user = null;
+    for (const candidate of candidates) {
+      const valid = await bcrypt.compare(password, candidate.passwordHash);
+      if (valid) {
+        user = candidate;
+        break;
+      }
+    }
+    if (!user) {
+      return res.status(401).json({ error: "invalid_credentials", message: "Email/CPF/usuario ou senha invalidos." });
     }
 
     const now = new Date().toISOString();
@@ -431,6 +441,7 @@ function normalizeStoredUser(raw) {
   const birthDate = normalizeBirthDate(raw.birthDate || "");
   const cpf = normalizeCpf(raw.cpf || "");
   const email = normalizeEmail(raw.email || "");
+  const username = normalizeUsername(raw.username || raw.userName || raw.usuario || "", buildDefaultUsername(fullName, email));
   const passwordHash = String(raw.passwordHash || "").trim();
   if (!id || !fullName || !birthDate || !cpf || !email || !passwordHash) return null;
 
@@ -445,6 +456,7 @@ function normalizeStoredUser(raw) {
     birthDate,
     cpf,
     email,
+    username,
     phone: normalizePhone(raw.phone || ""),
     passwordHash,
     addresses,
@@ -479,7 +491,7 @@ function serializeSessionUser(user) {
       cpfMasked: maskCpf(user?.cpf || ""),
       email: String(user?.email || ""),
       phone: String(user?.phone || ""),
-      username: String(user?.email || "").split("@")[0] || "cliente"
+      username: normalizeUsername(user?.username || "", buildDefaultUsername(user?.fullName || "", user?.email || ""))
     },
     addresses,
     defaultAddress
@@ -545,6 +557,7 @@ function parseRegisterBody(raw) {
   if (!email || !EMAIL_RE.test(email)) {
     return { ok: false, message: "Email invalido." };
   }
+  const username = normalizeUsername(raw.username || raw.userName || raw.usuario || "", buildDefaultUsername(fullName, email));
 
   const password = String(raw.password || "");
   if (!PASSWORD_RE.test(password)) {
@@ -568,6 +581,7 @@ function parseRegisterBody(raw) {
       birthDate,
       cpf,
       email,
+      username,
       password,
       phone,
       address
@@ -830,18 +844,61 @@ function normalizeIdentifier(value) {
   if (!text) return "";
   const asCpf = normalizeCpf(text);
   if (asCpf) return asCpf;
-  return normalizeEmail(text);
+  const asEmail = normalizeEmail(text);
+  if (asEmail.includes("@")) return asEmail;
+  return normalizeUsername(text);
 }
 
 function matchIdentifier(user, identifier) {
   const id = String(identifier || "").trim();
   if (!id) return false;
   if (id.includes("@")) return normalizeEmail(user?.email || "") === id;
-  return normalizeCpf(user?.cpf || "") === id;
+  if (/^\d{11}$/.test(id)) return normalizeCpf(user?.cpf || "") === id;
+  return resolveStoredUsername(user) === normalizeUsername(id);
 }
 
 function normalizeEmail(value) {
   return String(value || "").trim().toLowerCase().slice(0, 120);
+}
+
+function normalizeUsername(value, fallback = "") {
+  const raw = String(value || fallback || "").trim();
+  if (!raw) return "";
+  const base = raw
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, ".")
+    .replace(/[._-]{2,}/g, ".")
+    .replace(/^[._-]+|[._-]+$/g, "");
+  return base.slice(0, 40);
+}
+
+function buildDefaultUsername(fullName, email) {
+  const firstName = String(fullName || "").trim().split(/\s+/).filter(Boolean)[0] || "";
+  return normalizeUsername(firstName, String(email || "").split("@")[0] || "cliente");
+}
+
+function resolveStoredUsername(user) {
+  return normalizeUsername(user?.username || "", buildDefaultUsername(user?.fullName || "", user?.email || ""));
+}
+
+function allocateUsername(preferred, users) {
+  const normalizedPreferred = normalizeUsername(preferred || "", "cliente");
+  const base = normalizedPreferred || "cliente";
+  const taken = new Set(
+    (Array.isArray(users) ? users : [])
+      .map((item) => resolveStoredUsername(item))
+      .filter(Boolean)
+  );
+  if (!taken.has(base)) return base;
+  let suffix = 2;
+  while (suffix < 10000) {
+    const candidate = normalizeUsername(`${base}${suffix}`);
+    if (candidate && !taken.has(candidate)) return candidate;
+    suffix += 1;
+  }
+  return normalizeUsername(`${base}.${randomUUID().slice(0, 6)}`);
 }
 
 function normalizePhone(value) {

@@ -1004,7 +1004,7 @@ async function handleLoginSubmit(event) {
   const identifier = String(loginId?.value || "").trim();
   const password = String(loginPass?.value || "");
   if (!identifier || !password) {
-    setMsg(msg, "Informe email/CPF e senha.", true);
+    setMsg(msg, "Informe email, CPF ou usuario e senha.", true);
     return;
   }
 
