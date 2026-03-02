@@ -1230,7 +1230,7 @@ function renderTopProfile() {
     return;
   }
 
-  const displayName = String(profile.name || "").trim() || "Perfil";
+  const displayName = String(profile.name || "").trim().split(/\s+/)[0] || "Perfil";
   const picture = String(profile.picture || "").trim();
   profileTopName.textContent = displayName;
   profileTopLink.setAttribute("aria-label", `Perfil de ${displayName}`);

@@ -709,7 +709,7 @@ function renderComunicacoesPage() {
 }
 
 function renderHeader(profile) {
-  const displayName = String(profile?.name || "Cliente Stop mod");
+  const displayName = String(profile?.name || "Cliente Stop mod").trim().split(/\s+/)[0] || "Cliente";
   const email = String(profile?.email || "Conta conectada");
   const picture = String(profile?.picture || "").trim();
   const avatar = picture || "../../assets/icons/user-solid.svg";

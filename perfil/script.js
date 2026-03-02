@@ -122,7 +122,7 @@ function renderTopProfile(profile, nameOverride) {
     return;
   }
 
-  const displayName = String(nameOverride || profile?.name || "").trim() || "Perfil";
+  const displayName = String(nameOverride || profile?.name || "").trim().split(/\s+/)[0] || "Perfil";
   const picture = String(profile?.picture || "").trim();
   profileTopName.textContent = displayName;
   profileTopLink.classList.add("logged");
