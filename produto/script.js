@@ -6,6 +6,7 @@ const SOLD_COUNTS_KEY = "stopmod_sold_counts";
 const RATINGS_KEY = "stopmod_product_ratings";
 const SHIP_KEY = "stopmod_ship_to";
 const PROFILE_KEY = "stopmod_profile";
+const PROFILE_EXTRA_KEY = "stopmod_profile_extra";
 const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
 const PAGBANK_API_BASE_KEY = "stopmod_pagbank_api_base";
 const PAGBANK_RETURN_URL_KEY = "stopmod_pagbank_return_url";
@@ -571,6 +572,26 @@ function loadProfile() {
   }
 }
 
+function loadProfileExtra() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PROFILE_EXTRA_KEY) || "null");
+    return raw && typeof raw === "object" ? raw : null;
+  } catch {
+    return null;
+  }
+}
+
+function loadCheckoutCustomer() {
+  const profile = loadProfile() || {};
+  const extra = loadProfileExtra() || {};
+  return {
+    name: String(profile?.name || extra?.fullName || extra?.displayName || "").trim(),
+    email: String(profile?.email || extra?.email || "").trim().toLowerCase(),
+    cpf: digitsOnly(extra?.cpf || profile?.cpf || ""),
+    phone: digitsOnly(extra?.phone || profile?.phone || "")
+  };
+}
+
 function loadActiveProfile() {
   const profile = loadProfile();
   if (!profile) return null;
@@ -1098,7 +1119,7 @@ function buildDirectCheckoutPayload(paymentMethod) {
   const shipping = calcShippingForDirect(subtotal, qty);
   const total = roundMoney(subtotal + shipping);
   const shipTo = loadShipTo();
-  const profile = loadProfile() || {};
+  const customer = loadCheckoutCustomer();
 
   const returnUrl = optionalHttpUrlFromStorage(PAGBANK_RETURN_URL_KEY);
   const redirectUrl = optionalHttpUrlFromStorage(PAGBANK_REDIRECT_URL_KEY);
@@ -1108,12 +1129,7 @@ function buildDirectCheckoutPayload(paymentMethod) {
   return {
     referenceId: genOrderId(),
     paymentMethod: String(paymentMethod || "").trim(),
-    customer: {
-      name: String(profile?.name || "").trim(),
-      email: String(profile?.email || "").trim().toLowerCase(),
-      cpf: digitsOnly(profile?.cpf || ""),
-      phone: digitsOnly(profile?.phone || "")
-    },
+    customer,
     coupon: "",
     shipTo,
     discountAmount: 0,
