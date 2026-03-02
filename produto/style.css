@@ -766,6 +766,18 @@ body {
   background: #fff;
 }
 
+.inline-pay-content .inline-pay-boleto-barcode {
+  max-width: 100%;
+  width: 100%;
+  max-height: 130px;
+  object-fit: contain;
+  margin: 0 0 0.7rem;
+  border: 1px solid #e8ddd2;
+  border-radius: 10px;
+  background: #fff;
+  padding: 0.35rem;
+}
+
 .inline-pay-content textarea {
   width: 100%;
   min-height: 86px;
@@ -796,6 +808,20 @@ body {
   font-size: 0.9rem;
   color: #2f2824;
   word-break: break-word;
+}
+
+.inline-pay-content .inline-pay-barcode-number {
+  margin: 0 0 0.7rem;
+  border: 1px solid #ddcfc2;
+  border-radius: 10px;
+  background: #fff;
+  padding: 0.58rem 0.62rem;
+  color: #2f2824;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  word-break: break-all;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 }
 
 .inline-pay-copy {

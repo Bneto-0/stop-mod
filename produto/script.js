@@ -220,6 +220,25 @@ function digitsOnly(value) {
   return String(value || "").replace(/\D/g, "");
 }
 
+function normalizeBarcodeDigits(value) {
+  return digitsOnly(value).slice(0, 80);
+}
+
+function buildBarcodeImageUrl(value) {
+  const digits = normalizeBarcodeDigits(value);
+  if (digits.length < 20) return "";
+  const params = new URLSearchParams({
+    bcid: "code128",
+    text: digits,
+    includetext: "false",
+    scale: "2",
+    height: "14",
+    paddingwidth: "8",
+    paddingheight: "4"
+  });
+  return `https://bwipjs-api.metafloor.com/?${params.toString()}`;
+}
+
 function normalizeText(value) {
   return String(value || "")
     .normalize("NFD")
@@ -1294,21 +1313,23 @@ function renderInlinePaymentContent(data) {
   }
 
   if (mode === "boleto") {
-    const barcode = String(data?.boleto?.formattedBarcode || data?.boleto?.barcode || "").trim();
+    const barcodeFormatted = String(data?.boleto?.formattedBarcode || data?.boleto?.barcode || "").trim();
+    const barcodeDigits = normalizeBarcodeDigits(data?.boleto?.barcode || barcodeFormatted);
+    const barcodeImage = buildBarcodeImageUrl(barcodeDigits || barcodeFormatted);
     const dueDate = String(data?.boleto?.dueDate || "").trim();
     const dueText = dueDate ? new Date(dueDate).toLocaleDateString("pt-BR") : "";
     inlinePayContent.innerHTML = `
       <h3 class="inline-pay-title">Boleto gerado com sucesso</h3>
       <p class="inline-pay-text">Use o codigo de barras abaixo para pagar no banco/app.</p>
-      ${barcode ? `<textarea readonly id="inline-pay-copy-source">${escapeHtml(barcode)}</textarea>` : "<p class=\"inline-pay-line\">Codigo de barras indisponivel.</p>"}
+      ${barcodeImage ? `<img class="inline-pay-boleto-barcode" src="${escapeHtml(barcodeImage)}" alt="Codigo de barras do boleto" loading="lazy" referrerpolicy="no-referrer" />` : ""}
+      ${barcodeFormatted ? `<p class="inline-pay-barcode-number">${escapeHtml(barcodeFormatted)}</p>` : "<p class=\"inline-pay-line\">Codigo de barras indisponivel.</p>"}
       ${referenceId ? `<p class="inline-pay-line"><strong>Pedido:</strong> ${referenceId}</p>` : ""}
       ${dueText ? `<p class="inline-pay-line"><strong>Vencimento:</strong> ${escapeHtml(dueText)}</p>` : ""}
-      ${barcode ? "<button id=\"inline-pay-copy\" class=\"inline-pay-copy\" type=\"button\">Copiar codigo de barras</button>" : ""}
+      ${barcodeFormatted ? "<button id=\"inline-pay-copy\" class=\"inline-pay-copy\" type=\"button\">Copiar codigo de barras</button>" : ""}
     `;
     const copyBtn = document.getElementById("inline-pay-copy");
-    const copySource = document.getElementById("inline-pay-copy-source");
     copyBtn?.addEventListener("click", async () => {
-      const value = String(copySource?.value || barcode || "");
+      const value = String(barcodeDigits || barcodeFormatted || "");
       if (!value) return;
       try {
         await navigator.clipboard.writeText(value);
