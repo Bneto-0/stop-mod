@@ -1259,7 +1259,13 @@ function renderInlinePaymentContent(data) {
 
   if (mode === "pix") {
     const qrText = String(data?.pix?.qrText || "").trim();
-    const qrImage = String(data?.pix?.qrImageBase64 || data?.pix?.qrImageDataUrl || "").trim();
+    const qrImage = String(
+      data?.pix?.qrImageBase64 ||
+        data?.pix?.qrImageDataUrl ||
+        data?.pix?.qrImageUrl ||
+        data?.pix?.qrLink ||
+        ""
+    ).trim();
     const expiresAt = String(data?.pix?.expiresAt || data?.expiresAt || "").trim();
     const expiryText = expiresAt ? new Date(expiresAt).toLocaleString("pt-BR") : "";
     inlinePayContent.innerHTML = `
@@ -1283,7 +1289,7 @@ function renderInlinePaymentContent(data) {
         setInlinePayStatus("Nao foi possivel copiar automaticamente. Copie manualmente o codigo.", true);
       }
     });
-    showInlinePayOpenLink("Abrir QR em nova guia", data?.pix?.qrImageUrl || data?.pix?.qrLink || "");
+    hideInlinePayOpenLink();
     return;
   }
 
