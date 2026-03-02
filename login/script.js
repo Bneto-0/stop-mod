@@ -8,6 +8,10 @@ const SHIP_KEY = "stopmod_ship_to";
 const SHIP_LIST_KEY = "stopmod_ship_list";
 const API_BASE_KEY = "stopmod_api_base";
 const PAGBANK_API_BASE_KEY = "stopmod_pagbank_api_base";
+const DEFAULT_REMOTE_API_BASES = Object.freeze([
+  "https://stop-mod-api.onrender.com",
+  "https://parar-mod-api.onrender.com"
+]);
 
 const loginForm = document.getElementById("login-form");
 const loginId = document.getElementById("login-id");
@@ -171,12 +175,41 @@ function isCannotPostAuthRoute(message) {
   return text.includes("cannot post /api/auth/") || (text.includes("cannot post") && text.includes("/api/auth"));
 }
 
+function is405NotAllowedHtml(message) {
+  const text = String(message || "").toLowerCase();
+  if (!text) return false;
+  return text.includes("405 not allowed") || (text.includes("<html") && text.includes("405") && text.includes("not allowed"));
+}
+
+function uniqueApiBases(list) {
+  const seen = new Set();
+  const output = [];
+  for (const item of list || []) {
+    const normalized = normalizeApiBase(item);
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    output.push(normalized);
+  }
+  return output;
+}
+
+function authFallbackBases(currentBase) {
+  const current = normalizeApiBase(currentBase);
+  const local = "http://localhost:8787";
+  const configuredApiBase = normalizeApiBase(localStorage.getItem(API_BASE_KEY) || "");
+  const configuredPagbankBase = normalizeApiBase(localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
+  return uniqueApiBases([local, configuredApiBase, configuredPagbankBase, ...DEFAULT_REMOTE_API_BASES]).filter((base) => base !== current);
+}
+
 function normalizeAuthErrorMessage(rawMessage) {
   const message = String(rawMessage || "").trim();
   const low = message.toLowerCase();
 
   if (isCannotPostAuthRoute(message)) {
     return "Backend de cadastro/login nao esta ativo neste dominio. Inicie o backend na porta 8787 ou configure stopmod_api_base.";
+  }
+  if (is405NotAllowedHtml(message)) {
+    return "Backend de cadastro/login nao respondeu esse metodo. Ajuste stopmod_api_base para o backend publicado.";
   }
   if (
     low.includes("failed to fetch") ||
@@ -231,12 +264,20 @@ async function resolveApiBase() {
     return resolvedApiBase;
   }
 
+  for (const remoteBase of DEFAULT_REMOTE_API_BASES) {
+    if (await isHealthy(remoteBase)) {
+      resolvedApiBase = remoteBase;
+      localStorage.setItem(API_BASE_KEY, remoteBase);
+      localStorage.setItem(PAGBANK_API_BASE_KEY, remoteBase);
+      return resolvedApiBase;
+    }
+  }
+
   resolvedApiBase = "";
   return resolvedApiBase;
 }
 
 async function postJson(endpoint, payload, timeoutMs = 12000) {
-  const configuredBase = normalizeApiBase(localStorage.getItem(API_BASE_KEY) || localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
   const base = await resolveApiBase();
   const timeout = Number(timeoutMs) || 12000;
 
@@ -274,21 +315,35 @@ async function postJson(endpoint, payload, timeoutMs = 12000) {
 
     if (!response.ok) {
       const rawMessage = String(data?.message || data?.error || text || `HTTP ${response.status}`);
-      const shouldTryLocalFallback =
-        !configuredBase &&
-        /^\/?api\/auth\//i.test(String(endpoint || "").replace(/^\/+/, "")) &&
-        isCannotPostAuthRoute(rawMessage);
+      const endpointIsAuth = /^\/?api\/auth\//i.test(String(endpoint || "").replace(/^\/+/, ""));
+      const hasHtmlPayload = /<html/i.test(String(rawMessage || ""));
+      const shouldTryAuthFallback =
+        endpointIsAuth &&
+        (
+          isCannotPostAuthRoute(rawMessage) ||
+          is405NotAllowedHtml(rawMessage) ||
+          hasHtmlPayload ||
+          Number(response.status) === 404 ||
+          Number(response.status) === 405 ||
+          Number(response.status) >= 500
+        );
 
-      if (shouldTryLocalFallback) {
-        const local = "http://localhost:8787";
-        if (await isHealthy(local, 2600)) {
-          currentBase = local;
-          resolvedApiBase = local;
-          localStorage.setItem(API_BASE_KEY, local);
-          localStorage.setItem(PAGBANK_API_BASE_KEY, local);
-          url = buildApiUrl(currentBase, endpoint);
-          ({ response, text, data } = await tryPost(url));
-          if (response.ok) return data || {};
+      if (shouldTryAuthFallback) {
+        const fallbackCandidates = authFallbackBases(currentBase);
+        for (const fallbackBase of fallbackCandidates) {
+          try {
+            currentBase = fallbackBase;
+            url = buildApiUrl(currentBase, endpoint);
+            ({ response, text, data } = await tryPost(url));
+            if (response.ok) {
+              resolvedApiBase = fallbackBase;
+              localStorage.setItem(API_BASE_KEY, fallbackBase);
+              localStorage.setItem(PAGBANK_API_BASE_KEY, fallbackBase);
+              return data || {};
+            }
+          } catch {
+            // continua para a proxima base candidata
+          }
         }
       }
 
