@@ -13,6 +13,7 @@ const DEFAULT_REMOTE_API_BASES = Object.freeze([
   "https://stop-mod-api.onrender.com",
   "https://parar-mod-api.onrender.com"
 ]);
+const DEFAULT_LOCAL_API_BASE = "http://localhost:8787";
 
 const loginForm = document.getElementById("login-form");
 const loginId = document.getElementById("login-id");
@@ -51,6 +52,24 @@ let regCpfLookupTimer = null;
 let regCpfLookupSeq = 0;
 let regCepLookupTimer = null;
 let regCepLookupSeq = 0;
+
+function isLocalHost() {
+  const host = String(window.location.hostname || "").toLowerCase();
+  return host === "localhost" || host === "127.0.0.1";
+}
+
+function unifiedDefaultApiBase() {
+  return isLocalHost() ? DEFAULT_LOCAL_API_BASE : DEFAULT_REMOTE_API_BASES[0];
+}
+
+function ensureUnifiedApiConfig() {
+  const currentApiBase = normalizeApiBase(localStorage.getItem(API_BASE_KEY) || "");
+  const currentPagbankBase = normalizeApiBase(localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
+  const chosen = currentApiBase || currentPagbankBase || normalizeApiBase(unifiedDefaultApiBase());
+  if (!chosen) return;
+  if (currentApiBase !== chosen) localStorage.setItem(API_BASE_KEY, chosen);
+  if (currentPagbankBase !== chosen) localStorage.setItem(PAGBANK_API_BASE_KEY, chosen);
+}
 
 function nowIso() {
   return new Date().toISOString();
@@ -949,3 +968,4 @@ document.addEventListener("keydown", (event) => {
 });
 
 showRegister(false);
+ensureUnifiedApiConfig();

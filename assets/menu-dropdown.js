@@ -10,6 +10,10 @@
   const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
   const AUTH_TOKEN_KEY = "stopmod_auth_token";
   const FAVORITES_KEY = "stopmod_favorites";
+  const API_BASE_KEY = "stopmod_api_base";
+  const PAGBANK_API_BASE_KEY = "stopmod_pagbank_api_base";
+  const REMOTE_DEFAULT_API_BASE = "https://stop-mod-api.onrender.com";
+  const LOCAL_DEFAULT_API_BASE = "http://localhost:8787";
 
   const loadJson = (key, fallback) => {
     try {
@@ -27,6 +31,32 @@
       // ignore storage errors
     }
   };
+
+  const normalizeApiBaseUrl = (value) => {
+    const text = String(value || "").trim().replace(/\/+$/, "");
+    if (!text) return "";
+    if (/^https?:\/\//i.test(text)) return text;
+    if (text.startsWith("/")) return text;
+    return "";
+  };
+
+  const isLocalHost = () => {
+    const host = String(window.location.hostname || "").toLowerCase();
+    return host === "localhost" || host === "127.0.0.1";
+  };
+
+  const unifiedDefaultApiBase = () => (isLocalHost() ? LOCAL_DEFAULT_API_BASE : REMOTE_DEFAULT_API_BASE);
+
+  const ensureUnifiedApiConfig = () => {
+    const currentApiBase = normalizeApiBaseUrl(localStorage.getItem(API_BASE_KEY) || "");
+    const currentPagbankBase = normalizeApiBaseUrl(localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
+    const chosen = currentApiBase || currentPagbankBase || unifiedDefaultApiBase();
+    if (!chosen) return;
+    if (currentApiBase !== chosen) localStorage.setItem(API_BASE_KEY, chosen);
+    if (currentPagbankBase !== chosen) localStorage.setItem(PAGBANK_API_BASE_KEY, chosen);
+  };
+
+  ensureUnifiedApiConfig();
 
   const normalizeText = (value) =>
     String(value || "")
