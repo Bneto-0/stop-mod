@@ -416,6 +416,12 @@ async function postJson(endpoint, payload, timeoutMs = 12000) {
       const rawMessage = String(data?.message || data?.error || text || `HTTP ${response.status}`);
       const endpointIsAuth = /^\/?api\/auth\//i.test(String(endpoint || "").replace(/^\/+/, ""));
       const hasHtmlPayload = /<html/i.test(String(rawMessage || ""));
+      const endpointIsLogin = /^\/?api\/auth\/login$/i.test(String(endpoint || "").replace(/^\/+/, ""));
+      const shouldTryAuthFallbackOnInvalidCredentials =
+        endpointIsLogin &&
+        Number(response.status) === 401 &&
+        String(data?.error || "").trim().toLowerCase() === "invalid_credentials";
+
       const shouldTryAuthFallback =
         endpointIsAuth &&
         (
@@ -424,7 +430,8 @@ async function postJson(endpoint, payload, timeoutMs = 12000) {
           hasHtmlPayload ||
           Number(response.status) === 404 ||
           Number(response.status) === 405 ||
-          Number(response.status) >= 500
+          Number(response.status) >= 500 ||
+          shouldTryAuthFallbackOnInvalidCredentials
         );
 
       if (shouldTryAuthFallback) {
