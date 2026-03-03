@@ -831,17 +831,20 @@ function buildBoletoInlineOrderPayload(input, options) {
     }
   };
   if (includeHolder) {
+    const holderName = String(input.customer.name || "").trim().slice(0, 30) || "Cliente";
     boleto.holder = {
-      name: input.customer.name,
+      name: holderName,
       tax_id: input.customer.cpf,
+      email: String(input.customer.email || "").trim().toLowerCase().slice(0, 255),
       address: {
         street: input.shipTo.street,
         number: input.shipTo.number,
+        complement,
         locality: input.shipTo.district,
         city: input.shipTo.city,
         region: stateName || stateCode,
         region_code: stateCode,
-        country: "Brasil",
+        country: "BRA",
         postal_code: postalCode
       }
     };
