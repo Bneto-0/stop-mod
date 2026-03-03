@@ -691,40 +691,6 @@ function shouldRetryWithBuyerAlias(data, rawText) {
   return false;
 }
 
-function stateNameFromUf(uf) {
-  const key = String(uf || "").trim().toUpperCase();
-  const map = {
-    AC: "Acre",
-    AL: "Alagoas",
-    AP: "Amapa",
-    AM: "Amazonas",
-    BA: "Bahia",
-    CE: "Ceara",
-    DF: "Distrito Federal",
-    ES: "Espirito Santo",
-    GO: "Goias",
-    MA: "Maranhao",
-    MT: "Mato Grosso",
-    MS: "Mato Grosso do Sul",
-    MG: "Minas Gerais",
-    PA: "Para",
-    PB: "Paraiba",
-    PR: "Parana",
-    PE: "Pernambuco",
-    PI: "Piaui",
-    RJ: "Rio de Janeiro",
-    RN: "Rio Grande do Norte",
-    RS: "Rio Grande do Sul",
-    RO: "Rondonia",
-    RR: "Roraima",
-    SC: "Santa Catarina",
-    SP: "Sao Paulo",
-    SE: "Sergipe",
-    TO: "Tocantins"
-  };
-  return map[key] || "";
-}
-
 function normalizeInlineAddress(raw) {
   const street = String(raw?.street || "").trim().slice(0, 120);
   const number = String(raw?.number || "").trim().slice(0, 30);
@@ -818,7 +784,6 @@ function buildBoletoInlineOrderPayload(input, options) {
   const total = computeInlineTotalCents(input);
   const includeHolder = options?.includeHolder !== false;
   const stateCode = String(input.shipTo?.state || "").trim().toUpperCase().slice(0, 2);
-  const stateName = stateNameFromUf(stateCode);
   const postalCode = digitsOnly(input.shipTo?.cep || "").slice(0, 8);
   const complement = String(input.shipTo?.complement || "").trim() || "Sem complemento";
   const boleto = {
@@ -831,7 +796,7 @@ function buildBoletoInlineOrderPayload(input, options) {
     }
   };
   if (includeHolder) {
-    const holderName = String(input.customer.name || "").trim().slice(0, 30) || "Cliente";
+    const holderName = String(input.customer.name || "").trim().slice(0, 120) || "Cliente";
     boleto.holder = {
       name: holderName,
       tax_id: input.customer.cpf,
@@ -842,9 +807,9 @@ function buildBoletoInlineOrderPayload(input, options) {
         complement,
         locality: input.shipTo.district,
         city: input.shipTo.city,
-        region: stateName || stateCode,
+        region: stateCode,
         region_code: stateCode,
-        country: "BRA",
+        country: "Brasil",
         postal_code: postalCode
       }
     };
