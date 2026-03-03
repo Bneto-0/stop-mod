@@ -104,6 +104,27 @@ function normalizeUserKey(value) {
   return String(value || "").trim().toLowerCase();
 }
 
+function normalizeLoginIdentifierInput(raw) {
+  const text = String(raw || "").trim();
+  if (!text) return "";
+
+  if (text.includes("@")) {
+    return text.toLowerCase();
+  }
+
+  const cpfDigits = digitsOnly(text).slice(0, 11);
+  if (cpfDigits.length === 11) {
+    return formatCpf(cpfDigits);
+  }
+
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length >= 2) {
+    return extractNameAndSurname(text);
+  }
+
+  return text;
+}
+
 function normalizeUsernameValue(value, fallback = "") {
   const raw = String(value || fallback || "").trim();
   if (!raw) return "";
@@ -1243,12 +1264,13 @@ async function handleRegisterSubmit(event) {
 
 async function handleLoginSubmit(event) {
   event.preventDefault();
-  const identifier = String(loginId?.value || "").trim();
+  const identifier = normalizeLoginIdentifierInput(loginId?.value || "");
   const password = String(loginPass?.value || "");
   if (!identifier || !password) {
     setMsg(msg, "Informe email, CPF ou usuario e senha.", true);
     return;
   }
+  if (loginId) loginId.value = identifier;
 
   setLoading(loginForm, true, "Entrando...");
   setMsg(msg, "");
@@ -1275,6 +1297,10 @@ goRegister?.addEventListener("click", () => {
 });
 goLogin?.addEventListener("click", () => showRegister(false));
 loginForm?.addEventListener("submit", handleLoginSubmit);
+loginId?.addEventListener("blur", () => {
+  if (!loginId) return;
+  loginId.value = normalizeLoginIdentifierInput(loginId.value || "");
+});
 registerForm?.addEventListener("submit", handleRegisterSubmit);
 
 regCpf?.addEventListener("input", () => {
