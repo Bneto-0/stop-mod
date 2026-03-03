@@ -679,10 +679,47 @@ function shouldRetryWithBuyerAlias(data, rawText) {
       const description = String(item.description || item.error || "").toLowerCase();
       const parameterName = String(item.parameter_name || item.parameter || "").toLowerCase();
       if (description.includes("buyer email must not be equals to merchant email")) return true;
-      return description.includes("invalid_parameter") && parameterName.includes("payment_method.boleto.holder.email");
+      return (
+        description.includes("invalid_parameter") &&
+        (parameterName.includes("payment_method.boleto.holder.email") || parameterName.includes("payment_method.boleto.holder"))
+      );
     });
   }
   return false;
+}
+
+function stateNameFromUf(uf) {
+  const key = String(uf || "").trim().toUpperCase();
+  const map = {
+    AC: "Acre",
+    AL: "Alagoas",
+    AP: "Amapa",
+    AM: "Amazonas",
+    BA: "Bahia",
+    CE: "Ceara",
+    DF: "Distrito Federal",
+    ES: "Espirito Santo",
+    GO: "Goias",
+    MA: "Maranhao",
+    MT: "Mato Grosso",
+    MS: "Mato Grosso do Sul",
+    MG: "Minas Gerais",
+    PA: "Para",
+    PB: "Paraiba",
+    PR: "Parana",
+    PE: "Pernambuco",
+    PI: "Piaui",
+    RJ: "Rio de Janeiro",
+    RN: "Rio Grande do Norte",
+    RS: "Rio Grande do Sul",
+    RO: "Rondonia",
+    RR: "Roraima",
+    SC: "Santa Catarina",
+    SP: "Sao Paulo",
+    SE: "Sergipe",
+    TO: "Tocantins"
+  };
+  return map[key] || "";
 }
 
 function normalizeInlineAddress(raw) {
@@ -777,8 +814,13 @@ function buildPixInlineOrderPayload(input, options) {
 function buildBoletoInlineOrderPayload(input, options) {
   const total = computeInlineTotalCents(input);
   const includeHolder = options?.includeHolder !== false;
+  const stateCode = String(input.shipTo?.state || "").trim().toUpperCase().slice(0, 2);
+  const stateName = stateNameFromUf(stateCode);
+  const postalCode = digitsOnly(input.shipTo?.cep || "").slice(0, 8);
   const boleto = {
+    template: "COBRANCA",
     due_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    days_until_expiration: "5",
     instruction_lines: {
       line_1: "Nao receber apos vencimento.",
       line_2: "Pagamento referente ao pedido da loja Stop mod."
@@ -793,10 +835,10 @@ function buildBoletoInlineOrderPayload(input, options) {
         number: input.shipTo.number,
         locality: input.shipTo.district,
         city: input.shipTo.city,
-        region: input.shipTo.state,
-        region_code: input.shipTo.state,
-        country: "BRA",
-        postal_code: input.shipTo.cep
+        region: stateName || stateCode,
+        region_code: stateCode,
+        country: "Brasil",
+        postal_code: postalCode
       }
     };
   }
@@ -808,6 +850,18 @@ function buildBoletoInlineOrderPayload(input, options) {
       email: input.customer.email,
       tax_id: input.customer.cpf,
       phones: toPagBankPhoneList(input.customer.phone)
+    },
+    shipping: {
+      address: {
+        street: input.shipTo.street,
+        number: input.shipTo.number,
+        complement: input.shipTo.complement || "",
+        locality: input.shipTo.district,
+        city: input.shipTo.city,
+        region_code: stateCode,
+        country: "BRA",
+        postal_code: postalCode
+      }
     },
     items: input.items.map((item) => ({
       reference_id: item.referenceId,
