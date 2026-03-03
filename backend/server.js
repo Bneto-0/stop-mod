@@ -501,6 +501,9 @@ function extractErrorMessage(data, fallback) {
           if (description.toLowerCase() === "invalid_parameter" && parameterName) {
             return `Parametro invalido: ${parameterName}`;
           }
+          if (description.toLowerCase() === "must not be blank" && parameterName) {
+            return `Campo obrigatorio ausente: ${parameterName}`;
+          }
           return description;
         }
         if (parameterName) return `Parametro invalido: ${parameterName}`;
@@ -817,6 +820,7 @@ function buildBoletoInlineOrderPayload(input, options) {
   const stateCode = String(input.shipTo?.state || "").trim().toUpperCase().slice(0, 2);
   const stateName = stateNameFromUf(stateCode);
   const postalCode = digitsOnly(input.shipTo?.cep || "").slice(0, 8);
+  const complement = String(input.shipTo?.complement || "").trim() || "Sem complemento";
   const boleto = {
     template: "COBRANCA",
     due_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
@@ -855,7 +859,7 @@ function buildBoletoInlineOrderPayload(input, options) {
       address: {
         street: input.shipTo.street,
         number: input.shipTo.number,
-        complement: input.shipTo.complement || "",
+        complement,
         locality: input.shipTo.district,
         city: input.shipTo.city,
         region_code: stateCode,
