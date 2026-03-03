@@ -318,7 +318,8 @@ app.post("/api/pagbank/inline-payment", async (req, res) => {
           gatewayInput.paymentNotificationUrl ||
           gatewayInput.notificationUrl ||
           defaultPaymentNotificationUrl ||
-          defaultNotificationUrl
+          defaultNotificationUrl,
+        includeHolder: true
       });
 
       let result = await requestPagBankJson("/orders", payload, {
@@ -326,8 +327,11 @@ app.post("/api/pagbank/inline-payment", async (req, res) => {
         pagBankToken,
         pagBankEmail
       });
+      let aliasRetryTried = false;
+      let withoutHolderRetryTried = false;
 
       if (!result.ok && shouldRetryWithBuyerAlias(result.data, result.text)) {
+        aliasRetryTried = true;
         const retryCustomer = {
           ...gatewayInput.customer,
           email: makeBuyerAliasEmail(gatewayInput.customer?.email || "")
@@ -342,7 +346,8 @@ app.post("/api/pagbank/inline-payment", async (req, res) => {
               gatewayInput.paymentNotificationUrl ||
               gatewayInput.notificationUrl ||
               defaultPaymentNotificationUrl ||
-              defaultNotificationUrl
+              defaultNotificationUrl,
+            includeHolder: true
           }
         );
         result = await requestPagBankJson("/orders", retryPayload, {
@@ -352,10 +357,41 @@ app.post("/api/pagbank/inline-payment", async (req, res) => {
         });
       }
 
+      if (!result.ok && shouldRetryWithBuyerAlias(result.data, result.text)) {
+        withoutHolderRetryTried = true;
+        const retryPayloadWithoutHolder = buildBoletoInlineOrderPayload(
+          {
+            ...gatewayInput,
+            customer: {
+              ...gatewayInput.customer,
+              email: makeBuyerAliasEmail(gatewayInput.customer?.email || "")
+            }
+          },
+          {
+            notificationUrl:
+              gatewayInput.paymentNotificationUrl ||
+              gatewayInput.notificationUrl ||
+              defaultPaymentNotificationUrl ||
+              defaultNotificationUrl,
+            includeHolder: false
+          }
+        );
+        result = await requestPagBankJson("/orders", retryPayloadWithoutHolder, {
+          pagBankApiBase,
+          pagBankToken,
+          pagBankEmail
+        });
+      }
+
       if (!result.ok) {
+        const retryHint = withoutHolderRetryTried
+          ? " (apos tentativa sem holder)"
+          : aliasRetryTried
+            ? " (apos tentativa com email alias)"
+            : "";
         return res.status(result.status || 500).json({
           error: "pagbank_inline_boleto_error",
-          message: extractErrorMessage(result.data, result.text),
+          message: `${extractErrorMessage(result.data, result.text)}${retryHint}`,
           details: result.data
         });
       }
@@ -740,6 +776,31 @@ function buildPixInlineOrderPayload(input, options) {
 
 function buildBoletoInlineOrderPayload(input, options) {
   const total = computeInlineTotalCents(input);
+  const includeHolder = options?.includeHolder !== false;
+  const boleto = {
+    due_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    instruction_lines: {
+      line_1: "Nao receber apos vencimento.",
+      line_2: "Pagamento referente ao pedido da loja Stop mod."
+    }
+  };
+  if (includeHolder) {
+    boleto.holder = {
+      name: input.customer.name,
+      tax_id: input.customer.cpf,
+      address: {
+        street: input.shipTo.street,
+        number: input.shipTo.number,
+        locality: input.shipTo.district,
+        city: input.shipTo.city,
+        region: input.shipTo.state,
+        region_code: input.shipTo.state,
+        country: "BRA",
+        postal_code: input.shipTo.cep
+      }
+    };
+  }
+
   const payload = {
     reference_id: input.referenceId,
     customer: {
@@ -761,27 +822,7 @@ function buildBoletoInlineOrderPayload(input, options) {
         amount: { value: total, currency: "BRL" },
         payment_method: {
           type: "BOLETO",
-          boleto: {
-            due_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-            instruction_lines: {
-              line_1: "Nao receber apos vencimento.",
-              line_2: "Pagamento referente ao pedido da loja Stop mod."
-            },
-            holder: {
-              name: input.customer.name,
-              tax_id: input.customer.cpf,
-              address: {
-                street: input.shipTo.street,
-                number: input.shipTo.number,
-                locality: input.shipTo.district,
-                city: input.shipTo.city,
-                region: input.shipTo.state,
-                region_code: input.shipTo.state,
-                country: "BRA",
-                postal_code: input.shipTo.cep
-              }
-            }
-          }
+          boleto
         }
       }
     ]
