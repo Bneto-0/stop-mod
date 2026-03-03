@@ -61,6 +61,11 @@ function isLocalHost() {
   return host === "localhost" || host === "127.0.0.1";
 }
 
+function isProdStoreHost() {
+  const host = String(window.location.hostname || "").toLowerCase();
+  return !isLocalHost() && !host.endsWith(".onrender.com");
+}
+
 function shouldUseSameOriginApi() {
   const host = String(window.location.hostname || "").toLowerCase();
   return host === "localhost" || host === "127.0.0.1" || host.endsWith(".onrender.com");
@@ -393,7 +398,10 @@ function authFallbackBases(currentBase) {
   const local = "http://localhost:8787";
   const configuredApiBase = normalizeApiBase(localStorage.getItem(API_BASE_KEY) || "");
   const configuredPagbankBase = normalizeApiBase(localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
-  return uniqueApiBases([local, configuredApiBase, configuredPagbankBase, ...DEFAULT_REMOTE_API_BASES]).filter((base) => base !== current);
+  const prioritized = isLocalHost()
+    ? [local, configuredApiBase, configuredPagbankBase, ...DEFAULT_REMOTE_API_BASES]
+    : [configuredApiBase, configuredPagbankBase, ...DEFAULT_REMOTE_API_BASES, local];
+  return uniqueApiBases(prioritized).filter((base) => base !== current);
 }
 
 function normalizeAuthErrorMessage(rawMessage) {
@@ -475,8 +483,20 @@ async function resolveApiBase() {
   if (resolvedApiBase) return resolvedApiBase;
 
   const configured = normalizeApiBase(localStorage.getItem(API_BASE_KEY) || localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
+
+  // Em producao, evita "pre-flight" lento: usa a base configurada direto.
+  if (isProdStoreHost()) {
+    const chosen = configured || normalizeApiBase(DEFAULT_REMOTE_API_BASES[0]);
+    if (chosen) {
+      resolvedApiBase = chosen;
+      localStorage.setItem(API_BASE_KEY, chosen);
+      localStorage.setItem(PAGBANK_API_BASE_KEY, chosen);
+      return resolvedApiBase;
+    }
+  }
+
   if (configured) {
-    if (await isHealthy(configured, 6000)) {
+    if (await isHealthy(configured, 2800)) {
       resolvedApiBase = configured;
       return resolvedApiBase;
     }
@@ -512,7 +532,11 @@ async function resolveApiBase() {
 
 async function postJson(endpoint, payload, timeoutMs = 12000) {
   const base = await resolveApiBase();
-  const timeout = Number(timeoutMs) || 12000;
+  const endpointNormalized = String(endpoint || "").replace(/^\/+/, "");
+  const endpointIsAuth = /^api\/auth\//i.test(endpointNormalized);
+  const timeout = endpointIsAuth
+    ? Math.max(6500, Math.min(10000, Number(timeoutMs) || 12000))
+    : (Number(timeoutMs) || 12000);
 
     const tryPost = async (url) => {
     const controller = new AbortController();
@@ -551,7 +575,6 @@ async function postJson(endpoint, payload, timeoutMs = 12000) {
     try {
       ({ response, text, data } = await tryPost(url));
     } catch (networkError) {
-      const endpointIsAuth = /^\/?api\/auth\//i.test(String(endpoint || "").replace(/^\/+/, ""));
       if (endpointIsAuth) {
         const fallbackCandidates = authFallbackBases(currentBase);
         for (const fallbackBase of fallbackCandidates) {
@@ -588,7 +611,6 @@ async function postJson(endpoint, payload, timeoutMs = 12000) {
 
     if (!response.ok) {
       const rawMessage = String(data?.message || data?.error || text || `HTTP ${response.status}`);
-      const endpointIsAuth = /^\/?api\/auth\//i.test(String(endpoint || "").replace(/^\/+/, ""));
       const hasHtmlPayload = /<html/i.test(String(rawMessage || ""));
       const endpointIsLogin = /^\/?api\/auth\/login$/i.test(String(endpoint || "").replace(/^\/+/, ""));
       const shouldTryAuthFallbackOnInvalidCredentials =
