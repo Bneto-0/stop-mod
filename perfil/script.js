@@ -404,12 +404,43 @@ function normalizeText(value) {
 }
 
 function deriveUsername(profile, extra) {
+  const fullName = String(extra?.fullName || extra?.displayName || profile?.name || "").trim();
+  const words = fullName.split(/\s+/).filter(Boolean);
+  const particles = new Set(["da", "de", "do", "das", "dos", "e"]);
+  const shortName = (() => {
+    if (!words.length) return "";
+    if (words.length === 1) return words[0];
+    const surnameWord = words
+      .slice(1)
+      .find((part) => !particles.has(String(part || "").toLowerCase().trim())) || words[1];
+    return `${words[0]} ${surnameWord}`.trim();
+  })();
+
+  const normalized = String(shortName || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, ".")
+    .replace(/[._-]{2,}/g, ".")
+    .replace(/^[._-]+|[._-]+$/g, "")
+    .slice(0, 40);
+  if (normalized) return normalized;
+
   const custom = String(extra?.username || "").trim();
-  if (custom) return custom;
+  if (custom) {
+    return String(custom)
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9._-]+/g, ".")
+      .replace(/[._-]{2,}/g, ".")
+      .replace(/^[._-]+|[._-]+$/g, "")
+      .slice(0, 40);
+  }
+
   const email = String(profile?.email || "").trim();
   if (email.includes("@")) return email.split("@")[0];
-  const fallback = String(extra?.displayName || profile?.name || "cliente-stopmod");
-  return fallback.toLowerCase().replace(/\s+/g, "-");
+  return "cliente";
 }
 
 function jwtPayload(token) {
@@ -823,7 +854,14 @@ accSave?.addEventListener("click", () => {
   extra.cpf = cpfDigits;
   extra.taxAddress = String(accTaxAddress?.value || "").trim();
   extra.phone = String(accPhone?.value || "").trim();
-  extra.username = String(accUsername?.value || "").trim();
+  extra.username = deriveUsername(
+    p,
+    {
+      ...extra,
+      fullName: fullName || String(p?.name || ""),
+      displayName: preferredName || fullName || String(p?.name || "")
+    }
+  );
   saveExtra(extra);
   setAccountMessage("Conta atualizada.", false);
   renderAccount();

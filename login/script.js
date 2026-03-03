@@ -61,6 +61,11 @@ function isLocalHost() {
   return host === "localhost" || host === "127.0.0.1";
 }
 
+function shouldUseSameOriginApi() {
+  const host = String(window.location.hostname || "").toLowerCase();
+  return host === "localhost" || host === "127.0.0.1" || host.endsWith(".onrender.com");
+}
+
 function unifiedDefaultApiBase() {
   return isLocalHost() ? DEFAULT_LOCAL_API_BASE : DEFAULT_REMOTE_API_BASES[0];
 }
@@ -97,6 +102,39 @@ function saveJson(key, value) {
 
 function normalizeUserKey(value) {
   return String(value || "").trim().toLowerCase();
+}
+
+function normalizeUsernameValue(value, fallback = "") {
+  const raw = String(value || fallback || "").trim();
+  if (!raw) return "";
+  const normalized = raw
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, ".")
+    .replace(/[._-]{2,}/g, ".")
+    .replace(/^[._-]+|[._-]+$/g, "");
+  return normalized.slice(0, 40);
+}
+
+function extractNameAndSurname(fullName) {
+  const words = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return "";
+  if (words.length === 1) return words[0];
+  const particles = new Set(["da", "de", "do", "das", "dos", "e"]);
+  const baseName = words[0];
+  const surnameWord = words
+    .slice(1)
+    .find((part) => !particles.has(String(part || "").toLowerCase().trim())) || words[1];
+  return `${baseName} ${surnameWord}`.trim();
+}
+
+function deriveUsernameFromSession(profile, extra) {
+  const nameSource = String(extra?.fullName || profile?.fullName || profile?.name || "").trim();
+  const emailPrefix = String(extra?.email || profile?.email || "").trim().toLowerCase().split("@")[0] || "cliente";
+  const fromName = normalizeUsernameValue(extractNameAndSurname(nameSource), emailPrefix);
+  if (fromName) return fromName;
+  return normalizeUsernameValue(String(extra?.username || "").trim(), emailPrefix);
 }
 
 function addLoginSuccessNotification(profileLike) {
@@ -297,7 +335,10 @@ function normalizeApiBase(raw) {
 
 function buildApiUrl(base, endpoint) {
   const root = normalizeApiBase(base);
-  const path = `/${String(endpoint || "").replace(/^\/+/, "")}`;
+  let path = `/${String(endpoint || "").replace(/^\/+/, "")}`;
+  if (root && /\/api$/i.test(root) && /^\/api(\/|$)/i.test(path)) {
+    path = path.replace(/^\/api/i, "");
+  }
   if (!root) return path;
   return `${root}${path}`;
 }
@@ -355,6 +396,40 @@ function normalizeAuthErrorMessage(rawMessage) {
   return message || "Falha ao comunicar com backend.";
 }
 
+function buildApiRequestError(response, data, text) {
+  const status = Number(response?.status) || 0;
+  const finalMessage = String(data?.message || data?.error || text || `HTTP ${status}`);
+  const normalizedMessage = normalizeAuthErrorMessage(finalMessage);
+  const enrichedError = new Error(normalizedMessage);
+  enrichedError.code = String(data?.error || "").trim();
+  enrichedError.status = status;
+  enrichedError.rawMessage = finalMessage;
+  return enrichedError;
+}
+
+function shouldUseAuthFallbackResponse(response, data, text) {
+  const status = Number(response?.status) || 0;
+  const rawMessage = String(data?.message || data?.error || text || `HTTP ${status}`);
+  const hasHtmlPayload = /<html/i.test(rawMessage);
+  const isRouteMissingLike =
+    isCannotPostAuthRoute(rawMessage) ||
+    is405NotAllowedHtml(rawMessage) ||
+    hasHtmlPayload ||
+    status === 404 ||
+    status === 405 ||
+    status >= 500;
+
+  if (isRouteMissingLike) {
+    // Se for erro conhecido do proprio auth, mantemos.
+    const code = String(data?.error || "").trim().toLowerCase();
+    if (code === "auth_not_configured") return true;
+    return false;
+  }
+
+  // 400/401/403/409/422 etc: resposta valida do backend de auth.
+  return true;
+}
+
 async function isHealthy(base, timeoutMs = 3500) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), Number(timeoutMs) || 3500);
@@ -388,7 +463,7 @@ async function resolveApiBase() {
     localStorage.removeItem(PAGBANK_API_BASE_KEY);
   }
 
-  if (await isHealthy("")) {
+  if (shouldUseSameOriginApi() && (await isHealthy(""))) {
     resolvedApiBase = "";
     return resolvedApiBase;
   }
@@ -418,7 +493,7 @@ async function postJson(endpoint, payload, timeoutMs = 12000) {
   const base = await resolveApiBase();
   const timeout = Number(timeoutMs) || 12000;
 
-  const tryPost = async (url) => {
+    const tryPost = async (url) => {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeout);
     try {
@@ -443,7 +518,7 @@ async function postJson(endpoint, payload, timeoutMs = 12000) {
     } finally {
       clearTimeout(timer);
     }
-  };
+    };
 
   try {
     let currentBase = base;
@@ -469,7 +544,20 @@ async function postJson(endpoint, payload, timeoutMs = 12000) {
               localStorage.setItem(PAGBANK_API_BASE_KEY, fallbackBase);
               return data || {};
             }
-          } catch {
+            if (shouldUseAuthFallbackResponse(response, data, text)) {
+              resolvedApiBase = fallbackBase;
+              localStorage.setItem(API_BASE_KEY, fallbackBase);
+              localStorage.setItem(PAGBANK_API_BASE_KEY, fallbackBase);
+              throw buildApiRequestError(response, data, text);
+            }
+          } catch (fallbackError) {
+            if (
+              fallbackError &&
+              (Object.prototype.hasOwnProperty.call(fallbackError, "code") ||
+                Object.prototype.hasOwnProperty.call(fallbackError, "status"))
+            ) {
+              throw fallbackError;
+            }
             // continua para a proxima base candidata
           }
         }
@@ -512,19 +600,25 @@ async function postJson(endpoint, payload, timeoutMs = 12000) {
               localStorage.setItem(PAGBANK_API_BASE_KEY, fallbackBase);
               return data || {};
             }
-          } catch {
+            if (shouldUseAuthFallbackResponse(response, data, text)) {
+              resolvedApiBase = fallbackBase;
+              localStorage.setItem(API_BASE_KEY, fallbackBase);
+              localStorage.setItem(PAGBANK_API_BASE_KEY, fallbackBase);
+              throw buildApiRequestError(response, data, text);
+            }
+          } catch (fallbackError) {
+            if (
+              fallbackError &&
+              (Object.prototype.hasOwnProperty.call(fallbackError, "code") ||
+                Object.prototype.hasOwnProperty.call(fallbackError, "status"))
+            ) {
+              throw fallbackError;
+            }
             // continua para a proxima base candidata
           }
         }
       }
-
-      const finalMessage = String(data?.message || data?.error || text || rawMessage || `HTTP ${response.status}`);
-      const normalizedMessage = normalizeAuthErrorMessage(finalMessage);
-      const enrichedError = new Error(normalizedMessage);
-      enrichedError.code = String(data?.error || "").trim();
-      enrichedError.status = Number(response.status) || 0;
-      enrichedError.rawMessage = finalMessage;
-      throw enrichedError;
+      throw buildApiRequestError(response, data, text || rawMessage);
     }
 
     return data || {};
@@ -753,7 +847,7 @@ function applySession(session) {
       cpfMasked: String(extra?.cpfMasked || profile?.cpfMasked || ""),
       email: String(extra?.email || profile?.email || ""),
       phone: String(extra?.phone || profile?.phone || ""),
-      username: String(extra?.username || profile?.email || "").split("@")[0] || "cliente"
+      username: deriveUsernameFromSession(profile, extra) || "cliente"
     })
   );
   localStorage.setItem(AUTH_LAST_SEEN_KEY, String(Date.now()));
@@ -777,6 +871,154 @@ function closeModal() {
   if (!modal) return;
   modal.hidden = true;
   if (modalBody) modalBody.innerHTML = "";
+}
+
+function setModalMessage(elementId, text, isErr = false) {
+  const el = document.getElementById(String(elementId || ""));
+  if (!el) return;
+  el.textContent = String(text || "");
+  el.classList.toggle("err", !!isErr);
+}
+
+function setButtonBusy(buttonEl, busy, busyLabel = "Aguarde...") {
+  if (!(buttonEl instanceof HTMLButtonElement)) return;
+  if (busy) {
+    buttonEl.disabled = true;
+    buttonEl.dataset.label = buttonEl.textContent || "";
+    buttonEl.textContent = String(busyLabel || "Aguarde...");
+    return;
+  }
+  buttonEl.disabled = false;
+  if (buttonEl.dataset.label) buttonEl.textContent = buttonEl.dataset.label;
+}
+
+function renderForgotPasswordModal() {
+  openModal(
+    "Recuperar senha",
+    `
+      <form id="forgot-form" class="form">
+        <p class="hint">Informe o email da sua conta para receber o link de redefinicao.</p>
+        <input id="forgot-email" type="email" placeholder="Seu email" autocomplete="email" />
+        <p id="forgot-msg" class="msg" aria-live="polite"></p>
+        <div class="actions">
+          <button id="forgot-send-btn" class="btn primary" type="submit">Enviar link</button>
+          <button class="btn ghost" type="button" data-close="1">Cancelar</button>
+        </div>
+      </form>
+    `
+  );
+
+  const form = document.getElementById("forgot-form");
+  const emailInput = document.getElementById("forgot-email");
+  const sendBtn = document.getElementById("forgot-send-btn");
+  if (emailInput instanceof HTMLInputElement) emailInput.focus();
+  if (!(form instanceof HTMLFormElement)) return;
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const email = String(emailInput?.value || "").trim().toLowerCase();
+    if (!email) {
+      setModalMessage("forgot-msg", "Informe seu email.", true);
+      return;
+    }
+    if (!email.includes("@")) {
+      setModalMessage("forgot-msg", "Email invalido.", true);
+      return;
+    }
+
+    setButtonBusy(sendBtn, true, "Enviando...");
+    setModalMessage("forgot-msg", "");
+    try {
+      const data = await postJson("/api/auth/password/forgot", { email }, 18000);
+      setModalMessage("forgot-msg", String(data?.message || "Se o email existir, enviaremos o link."), false);
+    } catch (error) {
+      setModalMessage("forgot-msg", `Falha ao enviar link: ${String(error?.message || "tente novamente.")}`, true);
+    } finally {
+      setButtonBusy(sendBtn, false);
+    }
+  });
+}
+
+function getResetTokenFromQuery() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const token = String(params.get("reset_token") || params.get("token") || "").trim();
+    return token || "";
+  } catch {
+    return "";
+  }
+}
+
+function clearResetQueryParams() {
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("mode");
+    url.searchParams.delete("reset_token");
+    url.searchParams.delete("token");
+    const next = `${url.pathname}${url.search}${url.hash}`;
+    window.history.replaceState({}, "", next);
+  } catch {
+    // ignore
+  }
+}
+
+function renderResetPasswordModal(token) {
+  const safeToken = String(token || "").trim();
+  if (!safeToken) return;
+
+  openModal(
+    "Redefinir senha",
+    `
+      <form id="reset-form" class="form">
+        <p class="hint">Defina sua nova senha para entrar na conta.</p>
+        <input id="reset-pass" type="password" placeholder="Nova senha" autocomplete="new-password" />
+        <input id="reset-pass-confirm" type="password" placeholder="Confirmar nova senha" autocomplete="new-password" />
+        <p id="reset-msg" class="msg" aria-live="polite"></p>
+        <div class="actions">
+          <button id="reset-save-btn" class="btn primary" type="submit">Salvar nova senha</button>
+          <button class="btn ghost" type="button" data-close="1">Cancelar</button>
+        </div>
+      </form>
+    `
+  );
+
+  const form = document.getElementById("reset-form");
+  const passInput = document.getElementById("reset-pass");
+  const confirmInput = document.getElementById("reset-pass-confirm");
+  const saveBtn = document.getElementById("reset-save-btn");
+  if (passInput instanceof HTMLInputElement) passInput.focus();
+  if (!(form instanceof HTMLFormElement)) return;
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const newPassword = String(passInput?.value || "");
+    const confirmPassword = String(confirmInput?.value || "");
+
+    if (!newPassword || !confirmPassword) {
+      setModalMessage("reset-msg", "Preencha a nova senha e a confirmacao.", true);
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setModalMessage("reset-msg", "As senhas nao coincidem.", true);
+      return;
+    }
+
+    setButtonBusy(saveBtn, true, "Salvando...");
+    setModalMessage("reset-msg", "");
+    try {
+      const data = await postJson("/api/auth/password/reset", { token: safeToken, newPassword }, 20000);
+      setModalMessage("reset-msg", String(data?.message || "Senha redefinida com sucesso."), false);
+      clearResetQueryParams();
+      setMsg(msg, "Senha alterada com sucesso. Faca login com a nova senha.", false);
+      showLoginToast("Senha redefinida com sucesso.");
+      await wait(800);
+      closeModal();
+    } catch (error) {
+      setModalMessage("reset-msg", `Falha ao redefinir senha: ${String(error?.message || "tente novamente.")}`, true);
+    } finally {
+      setButtonBusy(saveBtn, false);
+    }
+  });
 }
 
 function finishSocialLogin(user) {
@@ -804,7 +1046,7 @@ function finishSocialLogin(user) {
       cpfMasked: "",
       email,
       phone: "",
-      username: (email.split("@")[0] || "cliente"),
+      username: deriveUsernameFromSession({ name, email }, {}),
       picture
     })
   );
@@ -1066,16 +1308,7 @@ regState?.addEventListener("input", () => {
 });
 
 forgotBtn?.addEventListener("click", () => {
-  openModal(
-    "Recuperar senha",
-    `
-      <p class="hint">Para seguranca, a recuperacao deve ser feita no backend com envio de email/SMS.</p>
-      <p class="hint">Se quiser, eu implemento esse fluxo completo no proximo passo.</p>
-      <div class="actions">
-        <button class="btn ghost" type="button" data-close="1">Fechar</button>
-      </div>
-    `
-  );
+  renderForgotPasswordModal();
 });
 
 googleBtn?.addEventListener("click", () => {
@@ -1093,3 +1326,8 @@ document.addEventListener("keydown", (event) => {
 
 showRegister(false);
 ensureUnifiedApiConfig();
+
+const resetTokenFromUrl = getResetTokenFromQuery();
+if (resetTokenFromUrl) {
+  renderResetPasswordModal(resetTokenFromUrl);
+}

@@ -14,6 +14,8 @@
   const PAGBANK_API_BASE_KEY = "stopmod_pagbank_api_base";
   const REMOTE_DEFAULT_API_BASE = "https://stop-mod-api.onrender.com";
   const LOCAL_DEFAULT_API_BASE = "http://localhost:8787";
+  const PENDING_PAYMENT_TTL_MS = 5 * 60 * 60 * 1000;
+  const ORDER_STATUS_TIMEOUT_CANCELLED = "Cancelado por falta de finalizacao";
 
   const loadJson = (key, fallback) => {
     try {
@@ -46,6 +48,57 @@
   };
 
   const unifiedDefaultApiBase = () => (isLocalHost() ? LOCAL_DEFAULT_API_BASE : REMOTE_DEFAULT_API_BASE);
+
+  const buildOrderAlertEndpointFromPaymentEndpoint = (paymentEndpoint) => {
+    const endpoint = String(paymentEndpoint || "").trim().replace(/\/+$/, "");
+    if (!endpoint) return "";
+    if (/\/api\/pagbank\/inline-payment$/i.test(endpoint)) {
+      return endpoint.replace(/\/api\/pagbank\/inline-payment$/i, "/api/alerts/order-event");
+    }
+    return "";
+  };
+
+  const resolveOrderAlertEndpoint = () => {
+    const raw = normalizeApiBaseUrl(localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
+    if (!raw) return "/api/alerts/order-event";
+    const fromPaymentEndpoint = buildOrderAlertEndpointFromPaymentEndpoint(raw);
+    if (fromPaymentEndpoint) return fromPaymentEndpoint;
+    if (/\/api$/i.test(raw)) return `${raw}/alerts/order-event`;
+    return `${raw}/api/alerts/order-event`;
+  };
+
+  const sendOrderLifecycleEmailAlert = (eventType, order) => {
+    const event = String(eventType || "").trim().toLowerCase();
+    if (!event || !order || typeof order !== "object") return;
+    const endpoint = resolveOrderAlertEndpoint();
+    const payload = {
+      eventType: event,
+      occurredAt: nowIso(),
+      customer: {
+        name: String(order?.ownerName || "").trim(),
+        email: String(order?.ownerEmail || "").trim().toLowerCase()
+      },
+      order: {
+        id: String(order?.referenceId || order?.id || "").trim(),
+        paymentMethod: String(order?.payment || "").trim(),
+        total: Number(order?.totals?.total || 0),
+        status: String(order?.tracking?.status || order?.status || "").trim(),
+        deadlineAt: String(order?.paymentDeadlineAt || "").trim(),
+        cancelReason: String(order?.cancelReason || "").trim()
+      }
+    };
+    fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+      body: JSON.stringify(payload),
+      keepalive: true
+    }).catch(() => {
+      // ignorar falha de alerta para nao quebrar UI
+    });
+  };
 
   const ensureUnifiedApiConfig = () => {
     const currentApiBase = normalizeApiBaseUrl(localStorage.getItem(API_BASE_KEY) || "");
@@ -94,6 +147,7 @@
     if (order?.cancelled === true || status.includes("cancel")) return "cancelled";
     if (status.includes("entreg")) return "delivered";
     if (
+      status.includes("aguard") ||
       status.includes("prepar") ||
       status.includes("process") ||
       status.includes("envi") ||
@@ -111,6 +165,59 @@
     const raw = String(order?.tracking?.status || order?.status || "").trim();
     if (raw) return raw;
     return orderBucket(order) === "delivered" ? "Entregue" : "Em andamento";
+  };
+
+  const isAwaitingPaymentOrder = (order) => {
+    const status = normalizeText(order?.tracking?.status || order?.status || "");
+    if (order?.cancelled === true) return false;
+    if (order?.awaitingPayment === true) return true;
+    return status.includes("aguard");
+  };
+
+  const resolvePendingDeadline = (order) => {
+    const explicit = parseTime(order?.paymentDeadlineAt);
+    if (explicit > 0) return explicit;
+    const base = parseTime(order?.paymentStartedAt || order?.createdAt);
+    if (base <= 0) return 0;
+    return base + PENDING_PAYMENT_TTL_MS;
+  };
+
+  const normalizePendingPaymentOrders = (orders) => {
+    const list = Array.isArray(orders) ? orders : [];
+    const now = Date.now();
+    let changed = false;
+    const cancelledNow = [];
+
+    list.forEach((order) => {
+      if (!order || typeof order !== "object") return;
+      if (!isAwaitingPaymentOrder(order)) return;
+
+      const deadline = resolvePendingDeadline(order);
+      if (deadline <= 0) return;
+      if (!order.paymentDeadlineAt) {
+        order.paymentDeadlineAt = new Date(deadline).toISOString();
+        changed = true;
+      }
+      if (now < deadline) return;
+
+      order.awaitingPayment = false;
+      order.cancelled = true;
+      order.cancelReason = "payment_timeout";
+      order.cancelledAt = new Date(now).toISOString();
+      order.status = ORDER_STATUS_TIMEOUT_CANCELLED;
+      order.tracking = {
+        ...(order.tracking || {}),
+        status: ORDER_STATUS_TIMEOUT_CANCELLED
+      };
+      const shouldSendTimeoutAlert = !order.timeoutAlertSent;
+      if (shouldSendTimeoutAlert) {
+        order.timeoutAlertSent = true;
+        cancelledNow.push(order);
+      }
+      changed = true;
+    });
+
+    return { orders: list, changed, cancelledNow };
   };
 
   const upsertNotification = (list, incoming) => {
@@ -236,7 +343,27 @@
 
     const orders = loadJson(ORDERS_KEY, []);
     if (Array.isArray(orders)) {
-      orders.forEach((order) => {
+      const lifecycle = normalizePendingPaymentOrders(orders);
+      if (lifecycle.changed) saveJson(ORDERS_KEY, lifecycle.orders.slice(0, 100));
+      lifecycle.cancelledNow.forEach((order) => {
+        const id = String(order?.id || "").trim();
+        if (!id) return;
+        const owner = normalizeText(order?.ownerEmail || "");
+        upsertNotification(list, {
+          id: `order-${id}-payment-timeout`,
+          scope: "individual",
+          type: "pedido",
+          userKey: owner || userKey || "",
+          title: `Pedido ${id} cancelado por tempo`,
+          text: "Seu pedido nao foi finalizado dentro de 5 horas e foi cancelado automaticamente.",
+          href: "/perfil/processando/",
+          date: "Agora",
+          createdAt: nowIso()
+        });
+        sendOrderLifecycleEmailAlert("payment_timeout", order);
+      });
+
+      lifecycle.orders.forEach((order) => {
         const id = String(order?.id || "").trim();
         if (!id) return;
 

@@ -1,16 +1,19 @@
 import express from "express";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 const DEFAULT_TOKEN_TTL_SEC = 2 * 60 * 60;
 const DEFAULT_CPF_CHECK_TIMEOUT_MS = 6000;
+const DEFAULT_PASSWORD_RESET_TTL_SEC = 60 * 60;
 const AUTH_RATE_WINDOW_MS = 10 * 60 * 1000;
 const AUTH_RATE_LIMIT_LOGIN = 20;
 const AUTH_RATE_LIMIT_REGISTER = 10;
 const AUTH_RATE_LIMIT_CPF_LOOKUP = 30;
+const AUTH_RATE_LIMIT_PASSWORD_FORGOT = 10;
+const AUTH_RATE_LIMIT_PASSWORD_RESET = 20;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
 const PASSWORD_RE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,72}$/;
 
@@ -27,10 +30,15 @@ export function createAuthRouter(options = {}) {
   const cpfLookupUrl = String(options.cpfLookupUrl || cpfCheckUrl || "").trim();
   const cpfLookupToken = String(options.cpfLookupToken || cpfCheckToken || "").trim();
   const cpfLookupTimeoutMs = toInt(options.cpfLookupTimeoutMs, cpfCheckTimeoutMs || DEFAULT_CPF_CHECK_TIMEOUT_MS);
+  const passwordResetBaseUrl = sanitizePasswordResetBaseUrl(options.passwordResetBaseUrl || "");
+  const passwordResetTtlSec = toInt(options.passwordResetTtlSec, DEFAULT_PASSWORD_RESET_TTL_SEC);
   const limiterLogin = createMemoryRateLimiter(AUTH_RATE_LIMIT_LOGIN, AUTH_RATE_WINDOW_MS);
   const limiterRegister = createMemoryRateLimiter(AUTH_RATE_LIMIT_REGISTER, AUTH_RATE_WINDOW_MS);
   const limiterCpfLookup = createMemoryRateLimiter(AUTH_RATE_LIMIT_CPF_LOOKUP, AUTH_RATE_WINDOW_MS);
+  const limiterPasswordForgot = createMemoryRateLimiter(AUTH_RATE_LIMIT_PASSWORD_FORGOT, AUTH_RATE_WINDOW_MS);
+  const limiterPasswordReset = createMemoryRateLimiter(AUTH_RATE_LIMIT_PASSWORD_RESET, AUTH_RATE_WINDOW_MS);
   const sendAlert = typeof options.sendAlert === "function" ? options.sendAlert : null;
+  const sendPasswordResetEmail = typeof options.sendPasswordResetEmail === "function" ? options.sendPasswordResetEmail : null;
 
   let writeQueue = Promise.resolve();
 
@@ -39,6 +47,22 @@ export function createAuthRouter(options = {}) {
     Promise.resolve(sendAlert(payload)).catch(() => {
       // alerta de email nao pode quebrar login/cadastro
     });
+  }
+
+  async function dispatchPasswordResetEmail(payload) {
+    if (!sendPasswordResetEmail) return { ok: false, reason: "not_configured" };
+    try {
+      const result = await Promise.resolve(sendPasswordResetEmail(payload));
+      if (result && typeof result === "object") {
+        return {
+          ok: result.ok !== false,
+          reason: String(result.reason || "")
+        };
+      }
+      return { ok: true, reason: "" };
+    } catch {
+      return { ok: false, reason: "send_failed" };
+    }
   }
 
   router.post("/register", limiterRegister, async (req, res) => {
@@ -79,14 +103,16 @@ export function createAuthRouter(options = {}) {
     try {
       const { user } = await enqueueWrite(async () => {
         const store = await readStore(storePath);
-        const emailExists = store.users.some((u) => normalizeEmail(u.email) === input.email);
+        const normalizedEmail = normalizeEmail(input.email);
+        const normalizedCpf = normalizeCpf(input.cpf);
+        const emailExists = store.users.some((u) => normalizeEmail(u.email) === normalizedEmail);
         if (emailExists) {
           const err = new Error("Email ja cadastrado.");
           err.code = "EMAIL_EXISTS";
           throw err;
         }
 
-        const cpfExists = store.users.some((u) => digitsOnly(u.cpf) === input.cpf);
+        const cpfExists = store.users.some((u) => normalizeCpf(u.cpf) === normalizedCpf);
         if (cpfExists) {
           const err = new Error("CPF ja cadastrado.");
           err.code = "CPF_EXISTS";
@@ -181,8 +207,20 @@ export function createAuthRouter(options = {}) {
       const latest = await readStore(storePath);
       const index = latest.users.findIndex((item) => String(item.id) === String(user.id));
       if (index >= 0) {
+        const normalizedPreferred = buildDefaultUsername(latest.users[index]?.fullName || "", latest.users[index]?.email || "");
+        const normalizedCurrent = resolveStoredUsername(latest.users[index]);
+        if (normalizedPreferred && normalizedPreferred !== normalizedCurrent) {
+          latest.users[index].username = allocateUsername(
+            normalizedPreferred,
+            latest.users,
+            String(latest.users[index].id || "")
+          );
+        } else if (!normalizedCurrent) {
+          latest.users[index].username = allocateUsername("cliente", latest.users, String(latest.users[index].id || ""));
+        }
         latest.users[index].lastLoginAt = now;
         latest.users[index].updatedAt = now;
+        user = latest.users[index];
         await writeStore(storePath, latest);
       }
     });
@@ -201,6 +239,204 @@ export function createAuthRouter(options = {}) {
       userAgent: getUserAgent(req)
     });
     return res.json({ ok: true, token, ...serializeSessionUser(user) });
+  });
+
+  router.post("/password/forgot", limiterPasswordForgot, async (req, res) => {
+    if (!authEnabled) {
+      return res.status(500).json({
+        error: "auth_not_configured",
+        message: "Configure AUTH_JWT_SECRET com no minimo 32 caracteres."
+      });
+    }
+
+    if (!sendPasswordResetEmail) {
+      return res.status(503).json({
+        error: "password_reset_email_not_configured",
+        message: "Envio de recuperacao de senha nao configurado no backend."
+      });
+    }
+
+    if (!passwordResetBaseUrl) {
+      return res.status(503).json({
+        error: "password_reset_base_url_missing",
+        message: "Configure AUTH_PASSWORD_RESET_BASE_URL no backend."
+      });
+    }
+
+    const email = normalizeEmail(req.body?.email || "");
+    if (!email || !EMAIL_RE.test(email)) {
+      return res.status(400).json({
+        error: "invalid_email",
+        message: "Informe um email valido."
+      });
+    }
+
+    const genericResponse = {
+      ok: true,
+      message: "Se o email existir, enviaremos um link para redefinir a senha."
+    };
+
+    const store = await readStore(storePath);
+    let user = store.users.find((item) => normalizeEmail(item?.email || "") === email);
+    if (!user) {
+      return res.json(genericResponse);
+    }
+
+    const rawToken = generatePasswordResetToken();
+    const tokenHash = hashPasswordResetToken(rawToken);
+    const now = new Date();
+    const nowIso = now.toISOString();
+    const expiresAt = new Date(now.getTime() + Math.max(300, passwordResetTtlSec) * 1000).toISOString();
+    const resetLink = buildPasswordResetLink(passwordResetBaseUrl, rawToken);
+
+    if (!resetLink) {
+      return res.status(500).json({
+        error: "password_reset_link_build_failed",
+        message: "Nao foi possivel gerar link de redefinicao."
+      });
+    }
+
+    await enqueueWrite(async () => {
+      const latest = await readStore(storePath);
+      const index = latest.users.findIndex((item) => String(item.id) === String(user.id));
+      if (index < 0) return;
+      latest.users[index].passwordReset = {
+        tokenHash,
+        requestedAt: nowIso,
+        expiresAt,
+        usedAt: ""
+      };
+      latest.users[index].updatedAt = nowIso;
+      await writeStore(storePath, latest);
+    });
+
+    const sendResult = await dispatchPasswordResetEmail({
+      email,
+      name: String(user.fullName || "").trim() || "Cliente",
+      resetLink,
+      requestedAt: nowIso,
+      expiresAt,
+      expiresMinutes: Math.max(1, Math.round(Math.max(300, passwordResetTtlSec) / 60)),
+      ip: getClientIp(req),
+      userAgent: getUserAgent(req)
+    });
+
+    if (!sendResult.ok) {
+      return res.status(502).json({
+        error: "password_reset_email_send_failed",
+        message: "Nao foi possivel enviar o email de redefinicao. Tente novamente.",
+        reason: sendResult.reason || ""
+      });
+    }
+
+    emitAlert({
+      event: "user_password_reset_requested",
+      occurredAt: nowIso,
+      user: {
+        id: String(user.id || ""),
+        name: String(user.fullName || ""),
+        email: String(user.email || ""),
+        cpfMasked: maskCpf(user.cpf || "")
+      },
+      ip: getClientIp(req),
+      userAgent: getUserAgent(req)
+    });
+
+    return res.json(genericResponse);
+  });
+
+  router.post("/password/reset", limiterPasswordReset, async (req, res) => {
+    if (!authEnabled) {
+      return res.status(500).json({
+        error: "auth_not_configured",
+        message: "Configure AUTH_JWT_SECRET com no minimo 32 caracteres."
+      });
+    }
+
+    const token = normalizePasswordResetToken(req.body?.token || req.body?.resetToken || "");
+    const newPassword = String(req.body?.newPassword || req.body?.password || "");
+    if (!token) {
+      return res.status(400).json({
+        error: "invalid_reset_token",
+        message: "Token de redefinicao invalido."
+      });
+    }
+    if (!PASSWORD_RE.test(newPassword)) {
+      return res.status(400).json({
+        error: "weak_password",
+        message: "Senha fraca. Use 8+ caracteres com maiuscula, minuscula, numero e simbolo."
+      });
+    }
+
+    const tokenHash = hashPasswordResetToken(token);
+    const nowIso = new Date().toISOString();
+    let updatedUser = null;
+
+    try {
+      await enqueueWrite(async () => {
+        const store = await readStore(storePath);
+        const index = store.users.findIndex((item) => {
+          const reset = normalizePasswordResetState(item?.passwordReset || {});
+          return !!reset.tokenHash && reset.tokenHash === tokenHash;
+        });
+        if (index < 0) {
+          const err = new Error("Token invalido ou expirado.");
+          err.code = "RESET_TOKEN_INVALID";
+          throw err;
+        }
+
+        const current = store.users[index];
+        const reset = normalizePasswordResetState(current?.passwordReset || {});
+        if (!reset.tokenHash || reset.tokenHash !== tokenHash || isPasswordResetExpired(reset.expiresAt) || !!reset.usedAt) {
+          const err = new Error("Token invalido ou expirado.");
+          err.code = "RESET_TOKEN_INVALID";
+          throw err;
+        }
+
+        current.passwordHash = await bcrypt.hash(newPassword, 12);
+        current.passwordReset = {
+          tokenHash: "",
+          requestedAt: reset.requestedAt || nowIso,
+          expiresAt: reset.expiresAt || nowIso,
+          usedAt: nowIso
+        };
+        current.updatedAt = nowIso;
+        store.users[index] = current;
+        updatedUser = current;
+        await writeStore(storePath, store);
+      });
+    } catch (error) {
+      if (error?.code === "RESET_TOKEN_INVALID") {
+        return res.status(400).json({
+          error: "invalid_or_expired_reset_token",
+          message: "Link de redefinicao invalido ou expirado. Solicite um novo."
+        });
+      }
+      return res.status(500).json({
+        error: "password_reset_failed",
+        message: String(error?.message || "Falha ao redefinir senha.")
+      });
+    }
+
+    if (updatedUser) {
+      emitAlert({
+        event: "user_password_reset_success",
+        occurredAt: nowIso,
+        user: {
+          id: String(updatedUser.id || ""),
+          name: String(updatedUser.fullName || ""),
+          email: String(updatedUser.email || ""),
+          cpfMasked: maskCpf(updatedUser.cpf || "")
+        },
+        ip: getClientIp(req),
+        userAgent: getUserAgent(req)
+      });
+    }
+
+    return res.json({
+      ok: true,
+      message: "Senha redefinida com sucesso."
+    });
   });
 
   router.post("/google-login", limiterLogin, async (req, res) => {
@@ -249,8 +485,20 @@ export function createAuthRouter(options = {}) {
       const latest = await readStore(storePath);
       const index = latest.users.findIndex((item) => String(item.id) === String(user.id));
       if (index >= 0) {
+        const normalizedPreferred = buildDefaultUsername(latest.users[index]?.fullName || "", latest.users[index]?.email || "");
+        const normalizedCurrent = resolveStoredUsername(latest.users[index]);
+        if (normalizedPreferred && normalizedPreferred !== normalizedCurrent) {
+          latest.users[index].username = allocateUsername(
+            normalizedPreferred,
+            latest.users,
+            String(latest.users[index].id || "")
+          );
+        } else if (!normalizedCurrent) {
+          latest.users[index].username = allocateUsername("cliente", latest.users, String(latest.users[index].id || ""));
+        }
         latest.users[index].lastLoginAt = now;
         latest.users[index].updatedAt = now;
+        user = latest.users[index];
         await writeStore(storePath, latest);
       }
     });
@@ -441,7 +689,7 @@ function normalizeStoredUser(raw) {
   const birthDate = normalizeBirthDate(raw.birthDate || "");
   const cpf = normalizeCpf(raw.cpf || "");
   const email = normalizeEmail(raw.email || "");
-  const username = normalizeUsername(raw.username || raw.userName || raw.usuario || "", buildDefaultUsername(fullName, email));
+  const username = buildDefaultUsername(fullName, email);
   const passwordHash = String(raw.passwordHash || "").trim();
   if (!id || !fullName || !birthDate || !cpf || !email || !passwordHash) return null;
 
@@ -450,6 +698,7 @@ function normalizeStoredUser(raw) {
     : [];
 
   const defaultAddressId = String(raw.defaultAddressId || addresses[0]?.id || "").trim();
+  const passwordReset = normalizePasswordResetState(raw.passwordReset || {});
   return {
     id,
     fullName,
@@ -461,6 +710,7 @@ function normalizeStoredUser(raw) {
     passwordHash,
     addresses,
     defaultAddressId,
+    passwordReset,
     civilCheck: normalizeCivilCheck(raw.civilCheck),
     createdAt: normalizeIsoDate(raw.createdAt),
     updatedAt: normalizeIsoDate(raw.updatedAt),
@@ -557,7 +807,7 @@ function parseRegisterBody(raw) {
   if (!email || !EMAIL_RE.test(email)) {
     return { ok: false, message: "Email invalido." };
   }
-  const username = normalizeUsername(raw.username || raw.userName || raw.usuario || "", buildDefaultUsername(fullName, email));
+  const username = buildDefaultUsername(fullName, email);
 
   const password = String(raw.password || "");
   if (!PASSWORD_RE.test(password)) {
@@ -839,6 +1089,73 @@ function normalizeCivilCheck(raw) {
   };
 }
 
+function sanitizePasswordResetBaseUrl(value) {
+  const text = String(value || "").trim();
+  if (!text || !/^https?:\/\//i.test(text)) return "";
+  return text.replace(/\/+$/, "");
+}
+
+function generatePasswordResetToken() {
+  return randomBytes(32).toString("hex");
+}
+
+function normalizePasswordResetToken(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-f0-9]/g, "")
+    .slice(0, 128);
+}
+
+function hashPasswordResetToken(token) {
+  return createHash("sha256")
+    .update(String(token || ""), "utf8")
+    .digest("hex");
+}
+
+function normalizePasswordResetState(raw) {
+  if (!raw || typeof raw !== "object") {
+    return {
+      tokenHash: "",
+      requestedAt: "",
+      expiresAt: "",
+      usedAt: ""
+    };
+  }
+  const tokenHash = normalizePasswordResetToken(raw.tokenHash || raw.hash || "");
+  const requestedAt = String(raw.requestedAt || "").trim() ? normalizeIsoDate(raw.requestedAt) : "";
+  const expiresAt = String(raw.expiresAt || "").trim() ? normalizeIsoDate(raw.expiresAt) : "";
+  const usedAt = String(raw.usedAt || "").trim() ? normalizeIsoDate(raw.usedAt) : "";
+  return {
+    tokenHash,
+    requestedAt,
+    expiresAt,
+    usedAt
+  };
+}
+
+function isPasswordResetExpired(expiresAtIso) {
+  const text = String(expiresAtIso || "").trim();
+  if (!text) return true;
+  const ms = Date.parse(text);
+  if (!Number.isFinite(ms)) return true;
+  return Date.now() > ms;
+}
+
+function buildPasswordResetLink(baseUrl, token) {
+  const root = sanitizePasswordResetBaseUrl(baseUrl);
+  const safeToken = normalizePasswordResetToken(token);
+  if (!root || !safeToken) return "";
+  try {
+    const url = new URL(root);
+    url.searchParams.set("mode", "reset");
+    url.searchParams.set("reset_token", safeToken);
+    return url.toString();
+  } catch {
+    return "";
+  }
+}
+
 function normalizeIdentifier(value) {
   const text = String(value || "").trim();
   if (!text) return "";
@@ -846,7 +1163,8 @@ function normalizeIdentifier(value) {
   if (asCpf) return asCpf;
   const asEmail = normalizeEmail(text);
   if (asEmail.includes("@")) return asEmail;
-  return normalizeUsername(text);
+  const preferredUsername = /\s/.test(text) ? extractNameAndSurname(text) : text;
+  return normalizeUsername(preferredUsername);
 }
 
 function matchIdentifier(user, identifier) {
@@ -854,7 +1172,10 @@ function matchIdentifier(user, identifier) {
   if (!id) return false;
   if (id.includes("@")) return normalizeEmail(user?.email || "") === id;
   if (/^\d{11}$/.test(id)) return normalizeCpf(user?.cpf || "") === id;
-  return resolveStoredUsername(user) === normalizeUsername(id);
+  const normalizedId = normalizeUsername(id);
+  if (!normalizedId) return false;
+  const aliases = collectUsernameAliases(user);
+  return aliases.has(normalizedId);
 }
 
 function normalizeEmail(value) {
@@ -875,19 +1196,53 @@ function normalizeUsername(value, fallback = "") {
 }
 
 function buildDefaultUsername(fullName, email) {
-  const firstName = String(fullName || "").trim().split(/\s+/).filter(Boolean)[0] || "";
-  return normalizeUsername(firstName, String(email || "").split("@")[0] || "cliente");
+  const preferred = extractNameAndSurname(fullName);
+  const emailPrefix = String(email || "").split("@")[0] || "cliente";
+  return normalizeUsername(preferred, emailPrefix);
 }
 
 function resolveStoredUsername(user) {
   return normalizeUsername(user?.username || "", buildDefaultUsername(user?.fullName || "", user?.email || ""));
 }
 
-function allocateUsername(preferred, users) {
+function collectUsernameAliases(user) {
+  const aliases = new Set();
+  const fullName = String(user?.fullName || user?.name || "").trim();
+
+  const persisted = normalizeUsername(user?.username || "");
+  if (persisted) aliases.add(persisted);
+
+  const defaultAlias = buildDefaultUsername(fullName, user?.email || "");
+  if (defaultAlias) aliases.add(defaultAlias);
+
+  const firstName = String(fullName).split(/\s+/).filter(Boolean)[0] || "";
+  const firstAlias = normalizeUsername(firstName);
+  if (firstAlias) aliases.add(firstAlias);
+
+  return aliases;
+}
+
+function extractNameAndSurname(fullName) {
+  const words = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return "";
+  if (words.length === 1) return words[0];
+
+  const particles = new Set(["da", "de", "do", "das", "dos", "e"]);
+  const baseName = words[0];
+  const surnameWord = words
+    .slice(1)
+    .find((part) => !particles.has(String(part || "").toLowerCase().trim())) || words[1];
+
+  return `${baseName} ${surnameWord}`.trim();
+}
+
+function allocateUsername(preferred, users, ignoreUserId = "") {
+  const ignoreId = String(ignoreUserId || "");
   const normalizedPreferred = normalizeUsername(preferred || "", "cliente");
   const base = normalizedPreferred || "cliente";
   const taken = new Set(
     (Array.isArray(users) ? users : [])
+      .filter((item) => String(item?.id || "") !== ignoreId)
       .map((item) => resolveStoredUsername(item))
       .filter(Boolean)
   );

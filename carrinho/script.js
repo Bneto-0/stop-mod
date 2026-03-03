@@ -25,6 +25,10 @@ const PAYMENT_METHOD_LABELS = Object.freeze({
   debito: "Cartao de debito",
   boleto: "Boleto"
 });
+const PENDING_PAYMENT_TTL_MS = 5 * 60 * 60 * 1000;
+const ORDER_STATUS_AWAITING_PAYMENT = "Aguardando finalizacao";
+const ORDER_STATUS_PROCESSING_PAYMENT = "Processando pagamento";
+const ORDER_STATUS_TIMEOUT_CANCELLED = "Cancelado por falta de finalizacao";
 
 const products = [
   { id: 1, name: "Camiseta Oversized Street", category: "Camisetas", size: "P ao GG", price: 89.9, image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80" },
@@ -97,6 +101,11 @@ let lastAuthTouchAt = 0;
 
 function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function parseIsoMs(value) {
+  const parsed = Date.parse(String(value || ""));
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function normalizeText(value) {
@@ -213,6 +222,62 @@ async function resolveWorkingPagBankInlineEndpoint() {
   }
 
   return configuredEndpoint;
+}
+
+function buildOrderAlertEndpointFromPaymentEndpoint(paymentEndpoint) {
+  const endpoint = String(paymentEndpoint || "").trim().replace(/\/+$/, "");
+  if (!endpoint) return "";
+  if (/\/api\/pagbank\/inline-payment$/i.test(endpoint)) {
+    return endpoint.replace(/\/api\/pagbank\/inline-payment$/i, "/api/alerts/order-event");
+  }
+  return "";
+}
+
+function resolveOrderAlertEndpoint(preferredPaymentEndpoint) {
+  const fromPreferred = buildOrderAlertEndpointFromPaymentEndpoint(preferredPaymentEndpoint);
+  if (fromPreferred) return fromPreferred;
+  const rawBase = String(localStorage.getItem(PAGBANK_API_BASE_KEY) || "").trim().replace(/\/+$/, "");
+  if (!rawBase) {
+    const host = String(window.location.hostname || "").toLowerCase();
+    if (host === "localhost" || host === "127.0.0.1") return "http://localhost:8787/api/alerts/order-event";
+    return "https://stop-mod-api.onrender.com/api/alerts/order-event";
+  }
+  if (/\/api$/i.test(rawBase)) return `${rawBase}/alerts/order-event`;
+  return `${rawBase}/api/alerts/order-event`;
+}
+
+function sendOrderLifecycleEmailAlert(eventType, order, options = {}) {
+  const event = String(eventType || "").trim().toLowerCase();
+  if (!event || !order || typeof order !== "object") return;
+  const endpoint = resolveOrderAlertEndpoint(options.paymentEndpoint || "");
+  const payload = {
+    eventType: event,
+    occurredAt: new Date().toISOString(),
+    customer: {
+      name: String(order?.ownerName || "").trim(),
+      email: String(order?.ownerEmail || "").trim().toLowerCase()
+    },
+    order: {
+      id: String(order?.referenceId || order?.id || "").trim(),
+      paymentMethod: String(order?.payment || "").trim(),
+      total: Number(order?.totals?.total || 0),
+      status: String(order?.tracking?.status || order?.status || "").trim(),
+      deadlineAt: String(order?.paymentDeadlineAt || "").trim(),
+      cancelReason: String(order?.cancelReason || "").trim()
+    }
+  };
+
+  fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json"
+    },
+    body: JSON.stringify(payload),
+    keepalive: true
+  }).catch(() => {
+    // alerta de email nao pode interromper checkout
+  });
 }
 
 function isNotAllowedHtmlError(message) {
@@ -650,6 +715,35 @@ function saveNotes(notes) {
   localStorage.setItem(NOTES_KEY, JSON.stringify(Array.isArray(notes) ? notes : []));
 }
 
+function upsertNotification(payload) {
+  const safe = {
+    id: String(payload?.id || "").trim(),
+    scope: "individual",
+    type: "pedido",
+    userKey: String(payload?.userKey || "").trim().toLowerCase(),
+    title: String(payload?.title || "Notificacao"),
+    text: String(payload?.text || ""),
+    href: String(payload?.href || "/perfil/processando/"),
+    date: String(payload?.date || "Agora"),
+    createdAt: String(payload?.createdAt || new Date().toISOString())
+  };
+  if (!safe.id) return;
+
+  if (window.StopModNotifications && typeof window.StopModNotifications.add === "function") {
+    window.StopModNotifications.add(safe);
+    if (typeof window.StopModNotifications.sync === "function") {
+      window.StopModNotifications.sync();
+    }
+    return;
+  }
+
+  const notes = loadNotes();
+  const idx = notes.findIndex((note) => String(note?.id || "") === safe.id);
+  if (idx >= 0) notes[idx] = { ...notes[idx], ...safe };
+  else notes.unshift(safe);
+  saveNotes(notes.slice(0, 500));
+}
+
 function loadPayment() {
   const method = String(localStorage.getItem(PAY_KEY) || "").trim();
   return /^(pix|credito|debito|boleto)$/.test(method) ? method : "";
@@ -796,77 +890,245 @@ function genTrackingCode() {
   return `BR${rnd}`;
 }
 
-function createOrder(paymentMethod) {
-  const ids = loadCartIds();
-  if (!ids.length) return null;
+function mapPayloadItemsToOrderItems(items) {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((item) => {
+      const id = Number(item?.id);
+      const product = productById.get(id);
+      const qty = Math.max(1, Number(item?.quantity) || 1);
+      const unitAmount = Number(item?.unitAmount || 0);
+      const price = Number.isFinite(unitAmount) ? unitAmount / 100 : Number(product?.price || 0);
+      return {
+        id,
+        name: String(item?.name || product?.name || `Produto ${id}`),
+        price: Number(price) || 0,
+        qty,
+        image: String(product?.image || ""),
+        category: String(product?.category || ""),
+        size: String(product?.size || "")
+      };
+    })
+    .filter((item) => Number.isInteger(item.id) && item.id > 0);
+}
 
-  const profile = loadProfile();
-  const shipTo = loadShipTo();
-  const coupons = loadCoupons();
-  const grouped = groupedCart(ids);
-  const subtotal = grouped.reduce((sum, item) => sum + item.price * item.qty, 0);
-  const shipping = calcShipping(subtotal, ids.length, shipTo.cep);
-  const discount = calcDiscount(subtotal, coupons);
-  const total = Math.max(0, Math.max(0, subtotal - discount) + (shipping ?? 0));
-
-  const order = {
-    id: genOrderId(),
-    createdAt: new Date().toISOString(),
-    ownerName: String(profile?.name || "").trim(),
-    ownerEmail: String(profile?.email || "").trim().toLowerCase(),
-    payment: String(paymentMethod || "pix"),
-    shipTo,
-    coupon: coupons[0] || "",
-    totals: { subtotal, shipping: shipping ?? 0, discount, total },
-    tracking: { code: genTrackingCode(), status: "Preparando" },
-    items: grouped.map((it) => ({
-      id: it.id,
-      name: it.name,
-      price: it.price,
-      qty: it.qty,
-      image: it.image || "",
-      category: it.category || "",
-      size: it.size || ""
-    }))
+function buildOrderTotalsFromPayload(payloadTotals) {
+  const subtotal = (Number(payloadTotals?.subtotal) || 0) / 100;
+  const shipping = (Number(payloadTotals?.shipping) || 0) / 100;
+  const discount = (Number(payloadTotals?.discount) || 0) / 100;
+  const total = (Number(payloadTotals?.total) || 0) / 100;
+  return {
+    subtotal: Number(subtotal) || 0,
+    shipping: Number(shipping) || 0,
+    discount: Number(discount) || 0,
+    total: Number(total) || 0
   };
+}
+
+function addPendingPaymentNotification(order) {
+  if (!order?.id) return;
+  const owner = String(order?.ownerEmail || "").trim().toLowerCase();
+  upsertNotification({
+    id: `order-${order.id}-payment-pending`,
+    userKey: owner,
+    title: `Pedido ${order.id} aguardando finalizacao`,
+    text: "Finalize o pagamento em ate 5 horas para evitar cancelamento automatico.",
+    href: "/perfil/processando/",
+    createdAt: new Date().toISOString()
+  });
+}
+
+function addTimeoutCancellationNotification(order) {
+  if (!order?.id) return;
+  const owner = String(order?.ownerEmail || "").trim().toLowerCase();
+  upsertNotification({
+    id: `order-${order.id}-payment-timeout`,
+    userKey: owner,
+    title: `Pedido ${order.id} cancelado por tempo`,
+    text: "Seu pedido nao foi finalizado dentro de 5 horas e foi cancelado automaticamente.",
+    href: "/perfil/processando/",
+    createdAt: new Date().toISOString()
+  });
+}
+
+function addProcessingNotification(order) {
+  if (!order?.id) return;
+  const owner = String(order?.ownerEmail || "").trim().toLowerCase();
+  upsertNotification({
+    id: `order-${order.id}-payment-finalized`,
+    userKey: owner,
+    title: `Pedido ${order.id} em processamento`,
+    text: "Pagamento informado. Aguarde a confirmacao na aba Processando.",
+    href: "/perfil/processando/",
+    createdAt: new Date().toISOString()
+  });
+}
+
+function createPendingOrderFromCheckout(payload, paymentMethod, referenceId, options = {}) {
+  if (!payload || !Array.isArray(payload.items) || !payload.items.length) return null;
+  const profile = loadProfile();
+  const customer = loadCheckoutCustomer();
+  const shipTo = payload?.shipTo && typeof payload.shipTo === "object" ? payload.shipTo : loadShipTo();
+  const nowIso = new Date().toISOString();
+  const deadlineIso = new Date(Date.now() + PENDING_PAYMENT_TTL_MS).toISOString();
+  const orderId = String(referenceId || payload.referenceId || genOrderId()).trim() || genOrderId();
+  const method = String(paymentMethod || payload.paymentMethod || "pix").trim();
+  const totals = buildOrderTotalsFromPayload(payload?.totals || {});
+  const items = mapPayloadItemsToOrderItems(payload.items);
+  if (!items.length) return null;
 
   const orders = loadOrders();
-  orders.unshift(order);
+  const idx = orders.findIndex((item) => {
+    const itemRef = String(item?.referenceId || item?.id || "").trim();
+    return itemRef && itemRef === orderId;
+  });
+  const previous = idx >= 0 ? orders[idx] : null;
+
+  const order = {
+    id: orderId,
+    referenceId: orderId,
+    createdAt: nowIso,
+    ownerName: String(profile?.name || customer?.name || "").trim(),
+    ownerEmail: String(profile?.email || customer?.email || "").trim().toLowerCase(),
+    payment: method,
+    shipTo,
+    coupon: String(payload?.coupon || "").trim(),
+    totals,
+    tracking: { code: genTrackingCode(), status: ORDER_STATUS_AWAITING_PAYMENT },
+    status: ORDER_STATUS_AWAITING_PAYMENT,
+    awaitingPayment: true,
+    paymentStartedAt: nowIso,
+    paymentDeadlineAt: deadlineIso,
+    pendingAlertSent: !!previous?.pendingAlertSent,
+    timeoutAlertSent: !!previous?.timeoutAlertSent,
+    processingAlertSent: !!previous?.processingAlertSent,
+    items
+  };
+
+  const shouldSendPendingAlert = !order.pendingAlertSent;
+  if (shouldSendPendingAlert) {
+    order.pendingAlertSent = true;
+  }
+
+  if (idx >= 0) {
+    orders[idx] = {
+      ...orders[idx],
+      ...order,
+      tracking: { ...(orders[idx]?.tracking || {}), ...(order.tracking || {}) }
+    };
+  } else {
+    orders.unshift(order);
+  }
   saveOrders(orders.slice(0, 100));
-  addOrderNotification(order);
+  addPendingPaymentNotification(order);
+  if (shouldSendPendingAlert) {
+    sendOrderLifecycleEmailAlert("payment_pending", order, { paymentEndpoint: options?.paymentEndpoint || "" });
+  }
   return order;
 }
 
-function addOrderNotification(order) {
-  if (!order || !order.id) return;
-  const owner = String(order.ownerEmail || "").trim().toLowerCase();
-  const title = `Pedido ${order.id} criado`;
-  const text = `Pagamento: ${paymentLabel(order.payment)}. Total: R$ ${formatBRL(Number(order?.totals?.total || 0))}.`;
-  const payload = {
-    id: `order-${order.id}-created`,
-    scope: "individual",
-    type: "pedido",
-    userKey: owner,
-    title,
-    text,
-    href: "/perfil/pedidos/",
-    date: "Agora",
-    createdAt: String(order.createdAt || new Date().toISOString())
-  };
+function resolvePendingDeadlineMs(order) {
+  const explicit = parseIsoMs(order?.paymentDeadlineAt);
+  if (explicit > 0) return explicit;
+  const base = parseIsoMs(order?.paymentStartedAt || order?.createdAt);
+  if (base <= 0) return 0;
+  return base + PENDING_PAYMENT_TTL_MS;
+}
 
-  if (window.StopModNotifications && typeof window.StopModNotifications.add === "function") {
-    window.StopModNotifications.add(payload);
-    if (typeof window.StopModNotifications.sync === "function") {
-      window.StopModNotifications.sync();
+function isAwaitingPayment(order) {
+  const rawStatus = normalizeText(order?.tracking?.status || order?.status || "");
+  if (order?.cancelled) return false;
+  if (order?.awaitingPayment === true) return true;
+  return rawStatus.includes("aguard");
+}
+
+function sweepPendingOrdersForTimeout() {
+  const orders = loadOrders();
+  if (!orders.length) return;
+
+  const now = Date.now();
+  let changed = false;
+  const cancelledOrders = [];
+
+  orders.forEach((order) => {
+    if (!order || typeof order !== "object") return;
+    if (!isAwaitingPayment(order)) return;
+
+    const deadlineMs = resolvePendingDeadlineMs(order);
+    if (deadlineMs <= 0) return;
+    if (!order.paymentDeadlineAt) {
+      order.paymentDeadlineAt = new Date(deadlineMs).toISOString();
+      changed = true;
     }
-    return;
-  }
+    if (now < deadlineMs) return;
 
-  const notes = loadNotes();
-  const idx = notes.findIndex((n) => String(n?.id || "") === payload.id);
-  if (idx >= 0) notes[idx] = { ...notes[idx], ...payload };
-  else notes.unshift(payload);
-  saveNotes(notes.slice(0, 500));
+    order.awaitingPayment = false;
+    order.cancelled = true;
+    order.cancelReason = "payment_timeout";
+    order.cancelledAt = new Date(now).toISOString();
+    order.status = ORDER_STATUS_TIMEOUT_CANCELLED;
+    order.tracking = {
+      ...(order.tracking || {}),
+      status: ORDER_STATUS_TIMEOUT_CANCELLED
+    };
+    order.timeoutAlertSent = true;
+    changed = true;
+    cancelledOrders.push(order);
+  });
+
+  if (changed) {
+    saveOrders(orders.slice(0, 100));
+  }
+  cancelledOrders.forEach((order) => {
+    addTimeoutCancellationNotification(order);
+    if (!order?.timeoutAlertSent) return;
+    sendOrderLifecycleEmailAlert("payment_timeout", order);
+  });
+}
+
+function readPendingCheckoutReference() {
+  try {
+    const raw = JSON.parse(localStorage.getItem("stopmod_pending_checkout") || "null");
+    return String(raw?.referenceId || "").trim();
+  } catch {
+    return "";
+  }
+}
+
+function markPendingOrderAsProcessing(referenceId) {
+  const ref = String(referenceId || "").trim();
+  if (!ref) return null;
+
+  const orders = loadOrders();
+  if (!orders.length) return null;
+  const idx = orders.findIndex((order) => {
+    const orderRef = String(order?.referenceId || order?.id || "").trim();
+    return orderRef && orderRef === ref;
+  });
+  if (idx < 0) return null;
+
+  const order = orders[idx];
+  if (!order || typeof order !== "object" || order.cancelled === true) return order || null;
+  if (!isAwaitingPayment(order)) return order;
+
+  order.awaitingPayment = false;
+  order.paymentFinalizedAt = new Date().toISOString();
+  order.status = ORDER_STATUS_PROCESSING_PAYMENT;
+  order.tracking = {
+    ...(order.tracking || {}),
+    status: ORDER_STATUS_PROCESSING_PAYMENT
+  };
+  const shouldSendProcessingAlert = !order.processingAlertSent;
+  if (shouldSendProcessingAlert) {
+    order.processingAlertSent = true;
+  }
+  orders[idx] = order;
+  saveOrders(orders.slice(0, 100));
+  addProcessingNotification(order);
+  if (shouldSendProcessingAlert) {
+    sendOrderLifecycleEmailAlert("payment_processing", order);
+  }
+  return order;
 }
 
 function setCartExtraSpace(itemCount) {
@@ -1220,8 +1482,15 @@ inlinePayModal?.querySelectorAll("[data-inline-close]").forEach((el) => {
 });
 
 inlinePayDoneBtn?.addEventListener("click", () => {
+  const pendingReference = readPendingCheckoutReference();
+  const updated = markPendingOrderAsProcessing(pendingReference);
+  localStorage.removeItem("stopmod_pending_checkout");
   closeInlinePayModal();
-  feedback.textContent = "Pedido em processamento. A confirmacao entrara em Pedidos quando o PagBank aprovar.";
+  if (updated?.cancelled) {
+    feedback.textContent = "Este pedido foi cancelado por falta de finalizacao no prazo.";
+    return;
+  }
+  feedback.textContent = "Pedido em processamento. Aguarde confirmacao na aba Processando.";
 });
 
 toggleMorePaymentsBtn?.addEventListener("click", () => {
@@ -1258,6 +1527,7 @@ confirmAddress?.addEventListener("change", () => {
 
 paymentForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
+  sweepPendingOrdersForTimeout();
   if (!hasActiveAuthSession()) {
     closeModal();
     feedback.textContent = "Sua sessao expirou. Faca login novamente para continuar.";
@@ -1305,6 +1575,7 @@ paymentForm?.addEventListener("submit", async (e) => {
 
   try {
     const endpoint = await resolveWorkingPagBankInlineEndpoint();
+    let effectiveEndpoint = endpoint;
     let data;
 
     try {
@@ -1320,6 +1591,7 @@ paymentForm?.addEventListener("submit", async (e) => {
       const localEndpoint = `${localBase}/api/pagbank/inline-payment`;
       data = await postJson(localEndpoint, payload, 22000);
       localStorage.setItem(PAGBANK_API_BASE_KEY, localBase);
+      effectiveEndpoint = localEndpoint;
     }
 
     if (!data || typeof data !== "object") {
@@ -1329,10 +1601,12 @@ paymentForm?.addEventListener("submit", async (e) => {
     registerSoldItemsFromCheckout(payload.items);
     registerRatingFromCheckout(payload.items);
 
+    const referenceId = String(data?.referenceId || payload.referenceId || "").trim();
+    createPendingOrderFromCheckout(payload, method, referenceId, { paymentEndpoint: effectiveEndpoint });
     localStorage.setItem(
       "stopmod_pending_checkout",
       JSON.stringify({
-        referenceId: String(data?.referenceId || payload.referenceId),
+        referenceId,
         method,
         createdAt: new Date().toISOString()
       })
@@ -1363,6 +1637,7 @@ document.addEventListener("keydown", (e) => {
 });
 
 bindAuthActivity();
+sweepPendingOrdersForTimeout();
 setMorePaymentsOpen(false);
 renderCart();
 renderTopProfile();

@@ -9,6 +9,9 @@ const FAVORITES_KEY = "stopmod_favorites";
 const COUPON_KEY = "stopmod_coupons";
 const SHIP_LIST_KEY = "stopmod_ship_list";
 const NOTES_KEY = "stopmod_notifications";
+const PAGBANK_API_BASE_KEY = "stopmod_pagbank_api_base";
+const PENDING_PAYMENT_TTL_MS = 5 * 60 * 60 * 1000;
+const ORDER_STATUS_TIMEOUT_CANCELLED = "Cancelado por falta de finalizacao";
 
 const PRODUCTS = [
   { id: 1, name: "Camiseta Oversized Street", image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80" },
@@ -97,6 +100,53 @@ function normalizeText(value) {
     .trim();
 }
 
+function resolveOrderAlertEndpoint() {
+  const rawBase = String(localStorage.getItem(PAGBANK_API_BASE_KEY) || "").trim().replace(/\/+$/, "");
+  if (!rawBase) {
+    const host = String(window.location.hostname || "").toLowerCase();
+    if (host === "localhost" || host === "127.0.0.1") return "http://localhost:8787/api/alerts/order-event";
+    return "https://stop-mod-api.onrender.com/api/alerts/order-event";
+  }
+  if (/\/api\/pagbank\/inline-payment$/i.test(rawBase)) {
+    return rawBase.replace(/\/api\/pagbank\/inline-payment$/i, "/api/alerts/order-event");
+  }
+  if (/\/api$/i.test(rawBase)) return `${rawBase}/alerts/order-event`;
+  return `${rawBase}/api/alerts/order-event`;
+}
+
+function sendOrderLifecycleEmailAlert(eventType, order) {
+  const event = String(eventType || "").trim().toLowerCase();
+  if (!event || !order || typeof order !== "object") return;
+  const endpoint = resolveOrderAlertEndpoint();
+  const payload = {
+    eventType: event,
+    occurredAt: new Date().toISOString(),
+    customer: {
+      name: String(order?.ownerName || "").trim(),
+      email: String(order?.ownerEmail || "").trim().toLowerCase()
+    },
+    order: {
+      id: String(order?.referenceId || order?.id || "").trim(),
+      paymentMethod: String(order?.payment || "").trim(),
+      total: Number(order?.totals?.total || 0),
+      status: String(order?.tracking?.status || order?.status || "").trim(),
+      deadlineAt: String(order?.paymentDeadlineAt || "").trim(),
+      cancelReason: String(order?.cancelReason || "").trim()
+    }
+  };
+  fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json"
+    },
+    body: JSON.stringify(payload),
+    keepalive: true
+  }).catch(() => {
+    // ignorar erro de alerta
+  });
+}
+
 function fmtBRL(value) {
   return (Number(value) || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
@@ -136,6 +186,10 @@ function loadShipTo() {
 function loadOrders() {
   const orders = loadJson(ORDERS_KEY, []);
   return Array.isArray(orders) ? orders : [];
+}
+
+function saveOrders(orders) {
+  localStorage.setItem(ORDERS_KEY, JSON.stringify(Array.isArray(orders) ? orders : []));
 }
 
 function loadFavoriteIds() {
@@ -207,6 +261,86 @@ function removeNotification(list, id) {
   if (idx >= 0) list.splice(idx, 1);
 }
 
+function isAwaitingPaymentOrder(order) {
+  const status = normalizeText(order?.tracking?.status || order?.status || "");
+  if (order?.cancelled === true) return false;
+  if (order?.awaitingPayment === true) return true;
+  return status.includes("aguard");
+}
+
+function resolvePendingDeadlineMs(order) {
+  const explicit = noteTime(order?.paymentDeadlineAt);
+  if (explicit > 0) return explicit;
+  const base = noteTime(order?.paymentStartedAt || order?.createdAt);
+  if (base <= 0) return 0;
+  return base + PENDING_PAYMENT_TTL_MS;
+}
+
+function sweepPendingOrdersForTimeout() {
+  const orders = loadOrders();
+  if (!orders.length) return;
+
+  const now = Date.now();
+  let changed = false;
+  const cancelledNow = [];
+
+  orders.forEach((order) => {
+    if (!order || typeof order !== "object") return;
+    if (!isAwaitingPaymentOrder(order)) return;
+
+    const deadline = resolvePendingDeadlineMs(order);
+    if (deadline <= 0) return;
+    if (!order.paymentDeadlineAt) {
+      order.paymentDeadlineAt = new Date(deadline).toISOString();
+      changed = true;
+    }
+    if (now < deadline) return;
+
+    order.awaitingPayment = false;
+    order.cancelled = true;
+    order.cancelReason = "payment_timeout";
+    order.cancelledAt = new Date(now).toISOString();
+    order.status = ORDER_STATUS_TIMEOUT_CANCELLED;
+    order.tracking = {
+      ...(order.tracking || {}),
+      status: ORDER_STATUS_TIMEOUT_CANCELLED
+    };
+    const shouldSendTimeoutAlert = !order.timeoutAlertSent;
+    if (shouldSendTimeoutAlert) {
+      order.timeoutAlertSent = true;
+      cancelledNow.push(order);
+    }
+    changed = true;
+  });
+
+  if (changed) {
+    saveOrders(orders.slice(0, 100));
+  }
+
+  if (!cancelledNow.length) return;
+  const notes = loadJson(NOTES_KEY, []);
+  const list = Array.isArray(notes) ? notes.filter(Boolean) : [];
+  cancelledNow.forEach((order) => {
+    const id = String(order?.id || "").trim();
+    if (!id) return;
+    const owner = normalizeText(order?.ownerEmail || "");
+    upsertNotification(list, {
+      id: `order-${id}-payment-timeout`,
+      scope: "individual",
+      type: "pedido",
+      userKey: owner,
+      title: `Pedido ${id} cancelado por tempo`,
+      text: "Seu pedido nao foi finalizado dentro de 5 horas e foi cancelado automaticamente.",
+      href: "/perfil/processando/",
+      date: "Agora",
+      createdAt: new Date().toISOString()
+    });
+    sendOrderLifecycleEmailAlert("payment_timeout", order);
+  });
+  list.sort((a, b) => noteTime(b?.createdAt) - noteTime(a?.createdAt));
+  localStorage.setItem(NOTES_KEY, JSON.stringify(list.slice(0, 500)));
+}
+
 function isVisibleNotification(note, userKey) {
   if (!note || typeof note !== "object") return false;
   const scope = String(note.scope || "general");
@@ -218,6 +352,7 @@ function isVisibleNotification(note, userKey) {
 }
 
 function syncNotificationsFallback() {
+  sweepPendingOrdersForTimeout();
   const notes = loadJson(NOTES_KEY, []);
   const list = Array.isArray(notes) ? notes.filter(Boolean) : [];
   const userKey = activeUserKey();
@@ -448,6 +583,7 @@ function getOrderBucket(order) {
   if (rawStatus.includes("entreg")) return "delivered";
 
   if (
+    rawStatus.includes("aguard") ||
     rawStatus.includes("prepar") ||
     rawStatus.includes("process") ||
     rawStatus.includes("envi") ||
@@ -754,6 +890,7 @@ function goToStoreSearch() {
 }
 
 function renderPageContent() {
+  sweepPendingOrdersForTimeout();
   const meta = MODE_META[mode] || MODE_META.pedidos;
   if (pageTitleEl) pageTitleEl.textContent = meta.title;
   if (pageDescEl) pageDescEl.textContent = meta.desc;
@@ -804,6 +941,7 @@ function init() {
   }
 
   touchAuthSession(true);
+  sweepPendingOrdersForTimeout();
   renderHeader(profile);
   renderMenuLocation();
   updateCartCount();

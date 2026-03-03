@@ -34,6 +34,8 @@ const defaultPaymentNotificationUrl = String(process.env.PAGBANK_PAYMENT_NOTIFIC
 const webhookLogPath = path.join(__dirname, "data", "pagbank-webhook.log");
 const authJwtSecret = String(process.env.AUTH_JWT_SECRET || "").trim();
 const authTokenTtlSec = clampInt(process.env.AUTH_TOKEN_TTL_SEC, 120, 60 * 60 * 24 * 7);
+const authPasswordResetBaseUrl = String(process.env.AUTH_PASSWORD_RESET_BASE_URL || "https://stopmod.com.br/login/").trim();
+const authPasswordResetTokenTtlSec = clampInt(process.env.AUTH_PASSWORD_RESET_TOKEN_TTL_SEC, 300, 60 * 60 * 24);
 const cpfCivilCheckMode = normalizeCpfCheckMode(process.env.CPF_CIVIL_CHECK_MODE || "off");
 const cpfCivilCheckUrl = String(process.env.CPF_CIVIL_CHECK_URL || "").trim();
 const cpfCivilCheckToken = String(process.env.CPF_CIVIL_CHECK_TOKEN || "").trim();
@@ -59,6 +61,15 @@ const emailAlerts = createEmailAlertSender({
   enabled: alertEmailEnabled,
   recipient: alertRecipientEmail,
   from: alertFromEmail,
+  smtpHost,
+  smtpPort,
+  smtpSecure,
+  smtpUser,
+  smtpPass
+});
+const authEmailSender = createAuthEmailSender({
+  enabled: true,
+  from: normalizeEmailAddress(process.env.AUTH_EMAIL_FROM || alertFromEmail || smtpUser || ""),
   smtpHost,
   smtpPort,
   smtpSecure,
@@ -94,6 +105,8 @@ app.use(
     dataDir: path.join(__dirname, "data"),
     tokenSecret: authJwtSecret,
     tokenTtlSec: authTokenTtlSec,
+    passwordResetBaseUrl: authPasswordResetBaseUrl,
+    passwordResetTtlSec: authPasswordResetTokenTtlSec,
     cpfCheckMode: cpfCivilCheckMode,
     cpfCheckUrl: cpfCivilCheckUrl,
     cpfCheckToken: cpfCivilCheckToken,
@@ -101,7 +114,8 @@ app.use(
     cpfLookupUrl: cpfCivilLookupUrl,
     cpfLookupToken: cpfCivilLookupToken,
     cpfLookupTimeoutMs: cpfCivilLookupTimeoutMs,
-    sendAlert: (payload) => emailAlerts.send(payload)
+    sendAlert: (payload) => emailAlerts.send(payload),
+    sendPasswordResetEmail: (payload) => authEmailSender.sendPasswordReset(payload)
   })
 );
 
@@ -111,7 +125,11 @@ app.get("/api/health", (_req, res) => {
     service: "stopmod-pagbank-backend",
     environment: pagBankEnv,
     pagbankTokenConfigured: hasValidPagBankToken,
-    auth: authStatus,
+    auth: {
+      ...authStatus,
+      passwordResetBaseUrlConfigured: !!authPasswordResetBaseUrl,
+      passwordResetEmailConfigured: authEmailSender.configured
+    },
     alerts: {
       emailEnabled: emailAlerts.enabled,
       emailConfigured: emailAlerts.configured,
@@ -122,6 +140,34 @@ app.get("/api/health", (_req, res) => {
       from: emailAlerts.from,
       missing: emailAlerts.missing
     }
+  });
+});
+
+app.post("/api/alerts/order-event", async (req, res) => {
+  const parsed = parseOrderAlertRequest(req.body || {});
+  if (!parsed.ok) {
+    return res.status(400).json({
+      error: "invalid_order_alert_payload",
+      message: parsed.message
+    });
+  }
+
+  const input = parsed.value;
+  const sendResult = await emailAlerts.send({
+    event: input.event,
+    occurredAt: input.occurredAt,
+    user: input.user,
+    order: input.order,
+    ip: getClientIp(req),
+    userAgent: getUserAgent(req)
+  });
+
+  return res.status(sendResult.ok ? 201 : 202).json({
+    ok: !!sendResult.ok,
+    configured: emailAlerts.configured,
+    reason: sendResult.reason || "",
+    event: input.event,
+    orderId: input.order.id
   });
 });
 
@@ -460,6 +506,7 @@ app.listen(port, () => {
   console.log(`[stopmod] Ambiente PagBank: ${pagBankEnv}`);
   console.log(`[stopmod] Auth seguro: ${authStatus.enabled ? "habilitado" : "desabilitado"}`);
   console.log(`[stopmod] Alertas email: ${emailAlerts.configured ? "habilitado" : "desabilitado"}${emailAlerts.recipient ? ` (${emailAlerts.recipient})` : ""}`);
+  console.log(`[stopmod] Email recuperacao senha: ${authEmailSender.configured ? "habilitado" : "desabilitado"}${authEmailSender.from ? ` (${authEmailSender.from})` : ""}`);
 });
 
 function parseCsvList(value) {
@@ -1040,6 +1087,82 @@ function normalizeEmailAddress(value) {
   return email.includes("@") ? email.slice(0, 160) : "";
 }
 
+function parseOrderAlertRequest(raw) {
+  const eventTypeRaw = String(raw?.eventType || raw?.event || "").trim().toLowerCase();
+  const eventMap = {
+    pending: "order_payment_pending",
+    payment_pending: "order_payment_pending",
+    timeout: "order_payment_timeout",
+    payment_timeout: "order_payment_timeout",
+    processing: "order_payment_processing",
+    payment_processing: "order_payment_processing"
+  };
+  const event = eventMap[eventTypeRaw] || "";
+  if (!event) {
+    return {
+      ok: false,
+      message: "eventType invalido. Use payment_pending, payment_processing ou payment_timeout."
+    };
+  }
+
+  const orderRaw = raw?.order && typeof raw.order === "object" ? raw.order : {};
+  const orderId = sanitizeReferenceId(orderRaw.id || raw?.orderId || "");
+  if (!orderId) {
+    return { ok: false, message: "order.id obrigatorio." };
+  }
+
+  const paymentMethod = normalizeTextPaymentMethod(orderRaw.paymentMethod || raw?.paymentMethod || "");
+  const total = toMoneyAmount(orderRaw.total ?? raw?.total ?? raw?.totalAmount ?? 0);
+  const deadlineAt = String(orderRaw.deadlineAt || raw?.deadlineAt || "").trim().slice(0, 80);
+  const cancelReason = String(orderRaw.cancelReason || raw?.cancelReason || "").trim().slice(0, 120);
+  const status = String(orderRaw.status || raw?.status || "").trim().slice(0, 120);
+
+  const userRaw =
+    raw?.customer && typeof raw.customer === "object"
+      ? raw.customer
+      : raw?.user && typeof raw.user === "object"
+        ? raw.user
+        : {};
+  const userName = String(userRaw.name || "").trim().slice(0, 120) || "Cliente";
+  const userEmail = normalizeEmailAddress(userRaw.email || "");
+  const userCpfMasked = String(userRaw.cpfMasked || "").trim().slice(0, 40);
+
+  const occurredAt = String(raw?.occurredAt || new Date().toISOString()).trim();
+
+  return {
+    ok: true,
+    value: {
+      event,
+      occurredAt,
+      user: {
+        name: userName,
+        email: userEmail,
+        cpfMasked: userCpfMasked
+      },
+      order: {
+        id: orderId,
+        paymentMethod,
+        total,
+        deadlineAt,
+        cancelReason,
+        status
+      }
+    }
+  };
+}
+
+function normalizeTextPaymentMethod(value) {
+  const key = String(value || "").trim().toLowerCase();
+  if (["pix", "credito", "debito", "boleto"].includes(key)) return key;
+  return key.slice(0, 40);
+}
+
+function toMoneyAmount(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(0, Number(n.toFixed(2)));
+}
+
 function createEmailAlertSender(options = {}) {
   const enabled = !!options.enabled;
   const recipient = normalizeEmailAddress(options.recipient || "");
@@ -1098,10 +1221,92 @@ function createEmailAlertSender(options = {}) {
   };
 }
 
+function createAuthEmailSender(options = {}) {
+  const enabled = !!options.enabled;
+  const from = normalizeEmailAddress(options.from || options.smtpUser || "");
+  const host = String(options.smtpHost || "").trim();
+  const port = clampInt(options.smtpPort, 1, 65535);
+  const secure = !!options.smtpSecure;
+  const user = String(options.smtpUser || "").trim();
+  const pass = String(options.smtpPass || "").trim();
+
+  const configured = !!(enabled && from && host && port > 0 && user && pass);
+  const transport = configured
+    ? nodemailer.createTransport({
+        host,
+        port,
+        secure,
+        auth: { user, pass }
+      })
+    : null;
+
+  return {
+    enabled,
+    configured,
+    from,
+    async sendPasswordReset(payload = {}) {
+      if (!configured || !transport) return { ok: false, reason: "not_configured" };
+
+      const to = normalizeEmailAddress(payload.email || "");
+      const name = String(payload.name || "Cliente").trim() || "Cliente";
+      const link = String(payload.resetLink || "").trim();
+      const expiresAt = toBrazilDateTime(payload.expiresAt || "");
+      const expiresMinutes = Math.max(1, Number(payload.expiresMinutes) || 60);
+
+      if (!to || !link) return { ok: false, reason: "invalid_payload" };
+
+      const subject = "[Stop mod] Redefinicao de senha";
+      const text = [
+        `Ola, ${name}.`,
+        "",
+        "Recebemos um pedido para redefinir sua senha da loja Stop mod.",
+        `Link para redefinir: ${link}`,
+        `Validade aproximada: ${expiresMinutes} minuto(s)`,
+        `Expira em: ${expiresAt}`,
+        "",
+        "Se voce nao solicitou, ignore este email."
+      ].join("\n");
+
+      const html = `
+        <div style="font-family:Arial,sans-serif;background:#fff;padding:14px;color:#231f1b">
+          <h2 style="margin:0 0 10px 0;color:#c7512f;">Redefinicao de senha</h2>
+          <p style="margin:0 0 8px 0;">Ola, <strong>${escapeHtml(name)}</strong>.</p>
+          <p style="margin:0 0 10px 0;">Recebemos um pedido para redefinir sua senha na loja Stop mod.</p>
+          <p style="margin:0 0 12px 0;">
+            <a href="${escapeHtml(link)}" style="display:inline-block;background:#c7512f;color:#fff;text-decoration:none;padding:10px 14px;border-radius:10px;font-weight:700;">
+              Redefinir senha
+            </a>
+          </p>
+          <p style="margin:0 0 6px 0;"><strong>Link direto:</strong> ${escapeHtml(link)}</p>
+          <p style="margin:0 0 6px 0;"><strong>Validade:</strong> ${escapeHtml(String(expiresMinutes))} minuto(s)</p>
+          <p style="margin:0 0 6px 0;"><strong>Expira em:</strong> ${escapeHtml(expiresAt)}</p>
+          <hr style="border:none;border-top:1px solid #eadfd7;margin:12px 0;" />
+          <p style="margin:0;color:#6f635c;font-size:12px;">Se voce nao solicitou, ignore este email.</p>
+        </div>
+      `;
+
+      try {
+        await transport.sendMail({
+          from,
+          to,
+          subject,
+          text,
+          html
+        });
+        return { ok: true };
+      } catch (error) {
+        console.warn("[stopmod] Falha ao enviar email de redefinicao:", String(error?.message || error || "erro"));
+        return { ok: false, reason: "send_failed" };
+      }
+    }
+  };
+}
+
 function buildAlertEmail(payload = {}, config = {}) {
   const recipient = String(config.recipient || "").trim();
   const event = String(payload.event || "").trim().toLowerCase();
   const user = payload.user && typeof payload.user === "object" ? payload.user : {};
+  const order = payload.order && typeof payload.order === "object" ? payload.order : {};
   const name = String(user.name || "Cliente").trim() || "Cliente";
   const email = normalizeEmailAddress(user.email || "");
   const cpfMasked = String(user.cpfMasked || "").trim();
@@ -1109,10 +1314,20 @@ function buildAlertEmail(payload = {}, config = {}) {
   const userAgent = String(payload.userAgent || "").trim();
   const occurredAtIso = String(payload.occurredAt || new Date().toISOString()).trim();
   const occurredAt = toBrazilDateTime(occurredAtIso);
+  const orderId = String(order.id || "").trim();
+  const orderStatus = String(order.status || "").trim();
+  const orderCancelReason = String(order.cancelReason || "").trim();
+  const orderTotal = Number(order.total || 0);
+  const orderDeadlineAt = String(order.deadlineAt || "").trim();
+  const orderDeadlineLabel = orderDeadlineAt ? toBrazilDateTime(orderDeadlineAt) : "";
+  const paymentMethod = paymentMethodLabel(order.paymentMethod || "");
 
   let subject = "[Stop mod] Novo alerta";
   if (event === "user_login") subject = `[Stop mod] Login realizado - ${name}`;
   if (event === "user_register") subject = `[Stop mod] Novo cadastro - ${name}`;
+  if (event === "order_payment_pending") subject = `[Stop mod] Pedido aguardando finalizacao - ${orderId || name}`;
+  if (event === "order_payment_processing") subject = `[Stop mod] Pedido em processamento - ${orderId || name}`;
+  if (event === "order_payment_timeout") subject = `[Stop mod] Pedido cancelado por tempo - ${orderId || name}`;
 
   const lines = [
     `Evento: ${event || "geral"}`,
@@ -1120,6 +1335,12 @@ function buildAlertEmail(payload = {}, config = {}) {
     `Nome: ${name}`,
     email ? `Email: ${email}` : "",
     cpfMasked ? `CPF: ${cpfMasked}` : "",
+    orderId ? `Pedido: ${orderId}` : "",
+    paymentMethod ? `Pagamento: ${paymentMethod}` : "",
+    orderTotal > 0 ? `Total: R$ ${orderTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "",
+    orderStatus ? `Status: ${orderStatus}` : "",
+    orderDeadlineLabel ? `Prazo finalizacao: ${orderDeadlineLabel}` : "",
+    orderCancelReason ? `Motivo cancelamento: ${orderCancelReason}` : "",
     ip ? `IP: ${ip}` : "",
     userAgent ? `Navegador: ${userAgent}` : "",
     recipient ? `Destino do alerta: ${recipient}` : ""
@@ -1134,6 +1355,12 @@ function buildAlertEmail(payload = {}, config = {}) {
       <p style="margin:0 0 6px 0;"><strong>Nome:</strong> ${escapeHtml(name)}</p>
       ${email ? `<p style="margin:0 0 6px 0;"><strong>Email:</strong> ${escapeHtml(email)}</p>` : ""}
       ${cpfMasked ? `<p style="margin:0 0 6px 0;"><strong>CPF:</strong> ${escapeHtml(cpfMasked)}</p>` : ""}
+      ${orderId ? `<p style="margin:0 0 6px 0;"><strong>Pedido:</strong> ${escapeHtml(orderId)}</p>` : ""}
+      ${paymentMethod ? `<p style="margin:0 0 6px 0;"><strong>Pagamento:</strong> ${escapeHtml(paymentMethod)}</p>` : ""}
+      ${orderTotal > 0 ? `<p style="margin:0 0 6px 0;"><strong>Total:</strong> R$ ${escapeHtml(orderTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }))}</p>` : ""}
+      ${orderStatus ? `<p style="margin:0 0 6px 0;"><strong>Status:</strong> ${escapeHtml(orderStatus)}</p>` : ""}
+      ${orderDeadlineLabel ? `<p style="margin:0 0 6px 0;"><strong>Prazo finalizacao:</strong> ${escapeHtml(orderDeadlineLabel)}</p>` : ""}
+      ${orderCancelReason ? `<p style="margin:0 0 6px 0;"><strong>Motivo cancelamento:</strong> ${escapeHtml(orderCancelReason)}</p>` : ""}
       ${ip ? `<p style="margin:0 0 6px 0;"><strong>IP:</strong> ${escapeHtml(ip)}</p>` : ""}
       ${userAgent ? `<p style="margin:0 0 6px 0;"><strong>Navegador:</strong> ${escapeHtml(userAgent)}</p>` : ""}
       <hr style="border:none;border-top:1px solid #eadfd7;margin:12px 0;" />
@@ -1148,6 +1375,15 @@ function toBrazilDateTime(value) {
   const date = new Date(String(value || "").trim());
   if (!Number.isFinite(date.getTime())) return new Date().toLocaleString("pt-BR");
   return date.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+}
+
+function paymentMethodLabel(value) {
+  const key = String(value || "").trim().toLowerCase();
+  if (key.includes("credito")) return "Cartao de credito";
+  if (key.includes("debito")) return "Cartao de debito";
+  if (key.includes("boleto")) return "Boleto";
+  if (key.includes("pix")) return "Pix";
+  return key;
 }
 
 function escapeHtml(value) {
