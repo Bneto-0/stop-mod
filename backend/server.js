@@ -250,6 +250,20 @@ app.post("/api/pagbank/inline-payment", async (req, res) => {
   }
 
   const input = parsed.value;
+  const buyerResolution = resolveInlineBuyerCustomer(input.customer, {
+    merchantEmail: pagBankEmail,
+    environment: pagBankEnv
+  });
+  if (!buyerResolution.ok) {
+    return res.status(400).json({
+      error: "invalid_inline_buyer_email",
+      message: buyerResolution.message
+    });
+  }
+  const gatewayInput = {
+    ...input,
+    customer: buyerResolution.customer
+  };
 
   if (input.paymentMethod === "credito" || input.paymentMethod === "debito") {
     return res.status(400).json({
@@ -261,8 +275,8 @@ app.post("/api/pagbank/inline-payment", async (req, res) => {
 
   try {
     if (input.paymentMethod === "pix") {
-      const payload = buildPixInlineOrderPayload(input, {
-        notificationUrl: input.notificationUrl || defaultNotificationUrl
+      const payload = buildPixInlineOrderPayload(gatewayInput, {
+        notificationUrl: gatewayInput.notificationUrl || defaultNotificationUrl
       });
 
       const result = await requestPagBankJson("/orders", payload, {
@@ -299,8 +313,12 @@ app.post("/api/pagbank/inline-payment", async (req, res) => {
     }
 
     if (input.paymentMethod === "boleto") {
-      const payload = buildBoletoInlineOrderPayload(input, {
-        notificationUrl: input.paymentNotificationUrl || input.notificationUrl || defaultPaymentNotificationUrl || defaultNotificationUrl
+      const payload = buildBoletoInlineOrderPayload(gatewayInput, {
+        notificationUrl:
+          gatewayInput.paymentNotificationUrl ||
+          gatewayInput.notificationUrl ||
+          defaultPaymentNotificationUrl ||
+          defaultNotificationUrl
       });
 
       const result = await requestPagBankJson("/orders", payload, {
@@ -548,6 +566,36 @@ function normalizeInlineCustomer(raw) {
   if (cpf.length !== 11) return null;
   if (phone.length < 10) return null;
   return { name, email, cpf, phone };
+}
+
+function resolveInlineBuyerCustomer(customer, options = {}) {
+  const buyerEmail = normalizeEmailAddress(customer?.email || "");
+  const merchantEmail = normalizeEmailAddress(options?.merchantEmail || "");
+  if (!buyerEmail || !merchantEmail) {
+    return { ok: true, customer };
+  }
+  if (buyerEmail !== merchantEmail) {
+    return { ok: true, customer };
+  }
+
+  const env = String(options?.environment || "").trim().toLowerCase();
+  if (env === "sandbox") {
+    const at = buyerEmail.indexOf("@");
+    if (at > 0) {
+      const local = buyerEmail.slice(0, at);
+      const domain = buyerEmail.slice(at + 1);
+      const alias = `${local}+buyer${Date.now().toString(36)}@${domain}`;
+      return {
+        ok: true,
+        customer: { ...customer, email: alias }
+      };
+    }
+  }
+
+  return {
+    ok: false,
+    message: "O email do comprador nao pode ser igual ao email da conta PagBank. Use outro email para o cliente."
+  };
 }
 
 function normalizeInlineAddress(raw) {
