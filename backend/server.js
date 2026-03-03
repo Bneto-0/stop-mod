@@ -321,11 +321,36 @@ app.post("/api/pagbank/inline-payment", async (req, res) => {
           defaultNotificationUrl
       });
 
-      const result = await requestPagBankJson("/orders", payload, {
+      let result = await requestPagBankJson("/orders", payload, {
         pagBankApiBase,
         pagBankToken,
         pagBankEmail
       });
+
+      if (!result.ok && shouldRetryWithBuyerAlias(result.data, result.text)) {
+        const retryCustomer = {
+          ...gatewayInput.customer,
+          email: makeBuyerAliasEmail(gatewayInput.customer?.email || "")
+        };
+        const retryPayload = buildBoletoInlineOrderPayload(
+          {
+            ...gatewayInput,
+            customer: retryCustomer
+          },
+          {
+            notificationUrl:
+              gatewayInput.paymentNotificationUrl ||
+              gatewayInput.notificationUrl ||
+              defaultPaymentNotificationUrl ||
+              defaultNotificationUrl
+          }
+        );
+        result = await requestPagBankJson("/orders", retryPayload, {
+          pagBankApiBase,
+          pagBankToken,
+          pagBankEmail
+        });
+      }
 
       if (!result.ok) {
         return res.status(result.status || 500).json({
@@ -596,6 +621,32 @@ function resolveInlineBuyerCustomer(customer, options = {}) {
     ok: false,
     message: "O email do comprador nao pode ser igual ao email da conta PagBank. Use outro email para o cliente."
   };
+}
+
+function makeBuyerAliasEmail(email) {
+  const normalized = normalizeEmailAddress(email);
+  if (!normalized) return "comprador+stopmod@exemplo.com";
+  const at = normalized.indexOf("@");
+  if (at <= 0) return normalized;
+  const local = normalized.slice(0, at);
+  const domain = normalized.slice(at + 1);
+  return `${local}+buyer${Date.now().toString(36)}@${domain}`;
+}
+
+function shouldRetryWithBuyerAlias(data, rawText) {
+  const text = String(rawText || "").toLowerCase();
+  if (text.includes("buyer email must not be equals to merchant email")) return true;
+
+  if (data && typeof data === "object" && Array.isArray(data.error_messages)) {
+    return data.error_messages.some((item) => {
+      if (!item || typeof item !== "object") return false;
+      const description = String(item.description || item.error || "").toLowerCase();
+      const parameterName = String(item.parameter_name || item.parameter || "").toLowerCase();
+      if (description.includes("buyer email must not be equals to merchant email")) return true;
+      return description.includes("invalid_parameter") && parameterName.includes("payment_method.boleto.holder.email");
+    });
+  }
+  return false;
 }
 
 function normalizeInlineAddress(raw) {
