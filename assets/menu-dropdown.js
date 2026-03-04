@@ -3,6 +3,7 @@
 (function initSharedCategoryDropdowns() {
   const HIDE_NOTIFY_TEXTS = false;
   const NOTES_KEY = "stopmod_notifications";
+  const NOTES_READ_KEY = "stopmod_notifications_read";
   const COUPON_KEY = "stopmod_coupons";
   const ORDERS_KEY = "stopmod_orders";
   const PROFILE_KEY = "stopmod_profile";
@@ -16,6 +17,8 @@
   const LOCAL_DEFAULT_API_BASE = "http://localhost:8787";
   const PENDING_PAYMENT_TTL_MS = 5 * 60 * 60 * 1000;
   const ORDER_STATUS_TIMEOUT_CANCELLED = "Cancelado por falta de finalizacao";
+  const NOTES_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+  const NOTES_READ_MAX_AGE_MS = 45 * 24 * 60 * 60 * 1000;
 
   const loadJson = (key, fallback) => {
     try {
@@ -124,6 +127,94 @@
     return Number.isFinite(ts) ? ts : 0;
   };
 
+  const defaultNoteTtlMs = (note) => {
+    const scope = String(note?.scope || "general").toLowerCase();
+    const type = normalizeText(note?.type || "");
+    if (scope !== "individual") return 48 * 60 * 60 * 1000;
+    if (type.includes("pedido")) return 30 * 24 * 60 * 60 * 1000;
+    if (type.includes("cupom")) return 7 * 24 * 60 * 60 * 1000;
+    if (type.includes("favorito")) return 5 * 24 * 60 * 60 * 1000;
+    return 14 * 24 * 60 * 60 * 1000;
+  };
+
+  const resolveNoteExpiresAt = (note, createdAtIso) => {
+    const explicit = parseTime(note?.expiresAt);
+    if (explicit > 0) return new Date(explicit).toISOString();
+    const createdMs = parseTime(createdAtIso) || Date.now();
+    return new Date(createdMs + defaultNoteTtlMs(note)).toISOString();
+  };
+
+  const isNotificationExpired = (note) => {
+    const expiresMs = parseTime(note?.expiresAt);
+    if (expiresMs > 0) return Date.now() > expiresMs;
+    const createdMs = parseTime(note?.createdAt);
+    if (createdMs <= 0) return false;
+    return Date.now() - createdMs > NOTES_MAX_AGE_MS;
+  };
+
+  const normalizeReadStore = (raw) => {
+    const src = raw && typeof raw === "object" ? raw : {};
+    const out = {};
+    Object.entries(src).forEach(([key, value]) => {
+      const normalizedKey = String(key || "").trim();
+      if (!normalizedKey) return;
+      const ts = parseTime(value);
+      if (ts > 0) out[normalizedKey] = new Date(ts).toISOString();
+    });
+    return out;
+  };
+
+  const loadReadStore = () => normalizeReadStore(loadJson(NOTES_READ_KEY, {}));
+
+  const saveReadStore = (store) => {
+    saveJson(NOTES_READ_KEY, normalizeReadStore(store));
+  };
+
+  const pruneReadStore = (store) => {
+    const map = store && typeof store === "object" ? store : {};
+    let changed = false;
+    const now = Date.now();
+    Object.keys(map).forEach((key) => {
+      const ts = parseTime(map[key]);
+      if (ts <= 0 || now - ts > NOTES_READ_MAX_AGE_MS) {
+        delete map[key];
+        changed = true;
+      }
+    });
+    return changed;
+  };
+
+  const readKeyForNote = (note, userKey) => {
+    const id = String(note?.id || "").trim();
+    if (!id) return "";
+    const scope = String(note?.scope || "general").toLowerCase();
+    if (scope !== "individual") return `g:${id}`;
+    const owner = normalizeText(note?.userKey || userKey || "guest");
+    return `u:${owner || "guest"}:${id}`;
+  };
+
+  const isNotificationRead = (note, userKey, readStore) => {
+    const key = readKeyForNote(note, userKey);
+    if (!key) return false;
+    return !!readStore?.[key];
+  };
+
+  const markNotificationReadById = (noteId) => {
+    const id = String(noteId || "").trim();
+    if (!id) return false;
+    const userKey = activeUserKey();
+    const notes = syncNotifications();
+    const note = notes.find((item) => String(item?.id || "") === id);
+    if (!note) return false;
+    const readStore = loadReadStore();
+    const key = readKeyForNote(note, userKey);
+    if (!key) return false;
+    readStore[key] = nowIso();
+    pruneReadStore(readStore);
+    saveReadStore(readStore);
+    return true;
+  };
+
   const activeProfile = () => {
     const profile = loadJson(PROFILE_KEY, null);
     return profile && typeof profile === "object" ? profile : null;
@@ -224,6 +315,11 @@
     const id = String(incoming?.id || "").trim();
     if (!id) return;
 
+    const idx = list.findIndex((n) => String(n?.id || "") === id);
+    const previous = idx >= 0 ? (list[idx] || {}) : {};
+    const createdAt = String(previous.createdAt || incoming.createdAt || nowIso());
+    const expiresAt = String(incoming.expiresAt || previous.expiresAt || resolveNoteExpiresAt(incoming, createdAt));
+
     const next = {
       id,
       scope: String(incoming.scope || "general"),
@@ -233,20 +329,18 @@
       href: String(incoming.href || "/notificacoes/"),
       userKey: String(incoming.userKey || "").trim(),
       date: String(incoming.date || "Hoje"),
-      createdAt: String(incoming.createdAt || nowIso())
+      createdAt,
+      expiresAt
     };
-
-    const idx = list.findIndex((n) => String(n?.id || "") === id);
     if (idx === -1) {
       list.push(next);
       return;
     }
-
-    const prev = list[idx] || {};
     list[idx] = {
-      ...prev,
+      ...previous,
       ...next,
-      createdAt: String(prev.createdAt || next.createdAt || nowIso())
+      createdAt,
+      expiresAt
     };
   };
 
@@ -400,7 +494,7 @@
     }
 
     list.sort((a, b) => parseTime(b?.createdAt) - parseTime(a?.createdAt));
-    const capped = list.slice(0, 500);
+    const capped = list.filter((note) => !isNotificationExpired(note)).slice(0, 500);
     saveJson(NOTES_KEY, capped);
     return capped;
   };
@@ -417,7 +511,15 @@
 
   const listVisibleNotifications = (limit) => {
     const userKey = activeUserKey();
-    const notes = syncNotifications().filter((note) => isVisibleNote(note, userKey));
+    const readStore = loadReadStore();
+    const changedReadStore = pruneReadStore(readStore);
+    if (changedReadStore) saveReadStore(readStore);
+    const notes = syncNotifications().filter(
+      (note) =>
+        isVisibleNote(note, userKey) &&
+        !isNotificationExpired(note) &&
+        !isNotificationRead(note, userKey, readStore)
+    );
     if (Number.isFinite(limit) && limit > 0) return notes.slice(0, limit);
     return notes;
   };
@@ -437,7 +539,8 @@
   window.StopModNotifications = {
     sync: syncNotifications,
     listVisible: listVisibleNotifications,
-    add: addNotification
+    add: addNotification,
+    markRead: markNotificationReadById
   };
 
   syncNotifications();
@@ -789,11 +892,14 @@
           if (small) small.style.color = "transparent";
         }
         item.addEventListener("click", (event) => {
-          if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-          if (event.cancelable) event.preventDefault();
-          event.stopPropagation();
-          closeAllDropdowns();
-          window.location.assign(item.href);
+          const openInNewTab = event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
+          markNotificationReadById(alert.id);
+          if (!openInNewTab) {
+            if (event.cancelable) event.preventDefault();
+            event.stopPropagation();
+            closeAllDropdowns();
+            window.location.assign(item.href);
+          }
         });
         panel.append(item);
       });

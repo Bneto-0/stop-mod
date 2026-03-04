@@ -1,6 +1,7 @@
 const CART_KEY = "stopmod_cart";
 const COUPON_KEY = "stopmod_coupons";
 const NOTES_KEY = "stopmod_notifications";
+const NOTES_READ_KEY = "stopmod_notifications_read";
 const ORDERS_KEY = "stopmod_orders";
 const FAVORITES_KEY = "stopmod_favorites";
 const SHIP_KEY = "stopmod_ship_to";
@@ -8,6 +9,8 @@ const PROFILE_KEY = "stopmod_profile";
 const PAGBANK_API_BASE_KEY = "stopmod_pagbank_api_base";
 const PENDING_PAYMENT_TTL_MS = 5 * 60 * 60 * 1000;
 const ORDER_STATUS_TIMEOUT_CANCELLED = "Cancelado por falta de finalizacao";
+const NOTES_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+const NOTES_READ_MAX_AGE_MS = 45 * 24 * 60 * 60 * 1000;
 
 const listEl = document.getElementById("list");
 const feedback = document.getElementById("feedback");
@@ -43,6 +46,80 @@ function normalizeText(value) {
 function parseTime(value) {
   const ts = Date.parse(String(value || ""));
   return Number.isFinite(ts) ? ts : 0;
+}
+
+function defaultNoteTtlMs(note) {
+  const scope = String(note?.scope || "general").toLowerCase();
+  const type = normalizeText(note?.type || "");
+  if (scope !== "individual") return 48 * 60 * 60 * 1000;
+  if (type.includes("pedido")) return 30 * 24 * 60 * 60 * 1000;
+  if (type.includes("cupom")) return 7 * 24 * 60 * 60 * 1000;
+  if (type.includes("favorito")) return 5 * 24 * 60 * 60 * 1000;
+  return 14 * 24 * 60 * 60 * 1000;
+}
+
+function resolveNoteExpiresAt(note, createdAtIso) {
+  const explicit = parseTime(note?.expiresAt);
+  if (explicit > 0) return new Date(explicit).toISOString();
+  const createdMs = parseTime(createdAtIso) || Date.now();
+  return new Date(createdMs + defaultNoteTtlMs(note)).toISOString();
+}
+
+function isNoteExpired(note) {
+  const expiresMs = parseTime(note?.expiresAt);
+  if (expiresMs > 0) return Date.now() > expiresMs;
+  const createdMs = parseTime(note?.createdAt);
+  if (createdMs <= 0) return false;
+  return Date.now() - createdMs > NOTES_MAX_AGE_MS;
+}
+
+function normalizeReadStore(raw) {
+  const src = raw && typeof raw === "object" ? raw : {};
+  const out = {};
+  Object.entries(src).forEach(([key, value]) => {
+    const normalizedKey = String(key || "").trim();
+    if (!normalizedKey) return;
+    const ts = parseTime(value);
+    if (ts > 0) out[normalizedKey] = new Date(ts).toISOString();
+  });
+  return out;
+}
+
+function loadReadStore() {
+  return normalizeReadStore(loadJson(NOTES_READ_KEY, {}));
+}
+
+function saveReadStore(store) {
+  saveJson(NOTES_READ_KEY, normalizeReadStore(store));
+}
+
+function pruneReadStore(store) {
+  const map = store && typeof store === "object" ? store : {};
+  let changed = false;
+  const now = Date.now();
+  Object.keys(map).forEach((key) => {
+    const ts = parseTime(map[key]);
+    if (ts <= 0 || now - ts > NOTES_READ_MAX_AGE_MS) {
+      delete map[key];
+      changed = true;
+    }
+  });
+  return changed;
+}
+
+function readKeyForNote(note, currentUserKey) {
+  const id = String(note?.id || "").trim();
+  if (!id) return "";
+  const scope = String(note?.scope || "general").toLowerCase();
+  if (scope !== "individual") return `g:${id}`;
+  const owner = normalizeText(note?.userKey || currentUserKey || "guest");
+  return `u:${owner || "guest"}:${id}`;
+}
+
+function isNoteRead(note, currentUserKey, readStore) {
+  const key = readKeyForNote(note, currentUserKey);
+  if (!key) return false;
+  return !!readStore?.[key];
 }
 
 function userKey() {
@@ -114,6 +191,9 @@ function upsert(list, note) {
   const id = String(note?.id || "").trim();
   if (!id) return;
   const idx = list.findIndex((n) => String(n?.id || "") === id);
+  const previous = idx >= 0 ? (list[idx] || {}) : {};
+  const createdAt = String(previous.createdAt || note.createdAt || new Date().toISOString());
+  const expiresAt = String(note.expiresAt || previous.expiresAt || resolveNoteExpiresAt(note, createdAt));
   const next = {
     id,
     scope: String(note.scope || "general"),
@@ -122,13 +202,14 @@ function upsert(list, note) {
     text: String(note.text || ""),
     href: String(note.href || "../notificacoes/"),
     userKey: String(note.userKey || "").trim(),
-    createdAt: String(note.createdAt || new Date().toISOString()),
+    createdAt,
+    expiresAt,
     date: String(note.date || "Agora"),
     coupon: String(note.coupon || ""),
     claimed: !!note.claimed
   };
 
-  if (idx >= 0) list[idx] = { ...list[idx], ...next, createdAt: String(list[idx]?.createdAt || next.createdAt) };
+  if (idx >= 0) list[idx] = { ...previous, ...next, createdAt, expiresAt };
   else list.push(next);
 }
 
@@ -269,7 +350,10 @@ function sweepPendingOrdersForTimeout() {
     sendOrderLifecycleEmailAlert("payment_timeout", order);
   });
   list.sort((a, b) => parseTime(b?.createdAt) - parseTime(a?.createdAt));
-  saveJson(NOTES_KEY, list.slice(0, 500));
+  saveJson(
+    NOTES_KEY,
+    list.filter((note) => !isNoteExpired(note)).slice(0, 500)
+  );
 }
 
 function fallbackSyncNotifications() {
@@ -394,7 +478,10 @@ function fallbackSyncNotifications() {
   }
 
   list.sort((a, b) => parseTime(b?.createdAt) - parseTime(a?.createdAt));
-  saveJson(NOTES_KEY, list.slice(0, 500));
+  saveJson(
+    NOTES_KEY,
+    list.filter((note) => !isNoteExpired(note)).slice(0, 500)
+  );
   return list;
 }
 
@@ -402,13 +489,18 @@ function loadNotes() {
   if (window.StopModNotifications && typeof window.StopModNotifications.sync === "function") {
     window.StopModNotifications.sync();
     if (typeof window.StopModNotifications.listVisible === "function") {
-      return window.StopModNotifications.listVisible(300);
+      return window.StopModNotifications.listVisible(300).filter((note) => !isNoteExpired(note));
     }
   }
 
   const me = userKey();
+  const readStore = loadReadStore();
+  const changedReadStore = pruneReadStore(readStore);
+  if (changedReadStore) saveReadStore(readStore);
   const notes = fallbackSyncNotifications();
   return notes.filter((note) => {
+    if (isNoteExpired(note)) return false;
+    if (isNoteRead(note, me, readStore)) return false;
     const scope = String(note?.scope || "general");
     if (scope !== "individual") return true;
     const owner = normalizeText(note?.userKey || "");
@@ -416,6 +508,28 @@ function loadNotes() {
     if (!me) return false;
     return owner === me;
   });
+}
+
+function markNotificationAsRead(noteId) {
+  const id = String(noteId || "").trim();
+  if (!id) return;
+
+  if (window.StopModNotifications && typeof window.StopModNotifications.markRead === "function") {
+    window.StopModNotifications.markRead(id);
+    return;
+  }
+
+  const me = userKey();
+  const all = loadJson(NOTES_KEY, []);
+  const notes = Array.isArray(all) ? all : [];
+  const note = notes.find((item) => String(item?.id || "") === id);
+  if (!note) return;
+  const readStore = loadReadStore();
+  const key = readKeyForNote(note, me);
+  if (!key) return;
+  readStore[key] = new Date().toISOString();
+  pruneReadStore(readStore);
+  saveReadStore(readStore);
 }
 
 function saveCoupon(code) {
@@ -457,7 +571,7 @@ function render() {
         n.coupon && !n.claimed
           ? `<button class="btn" data-claim="${n.id}">Resgatar cupom</button>`
           : n.href
-          ? `<a class="btn" href="${n.href}">Abrir</a>`
+          ? `<a class="btn" data-note-open="${n.id}" href="${n.href}">Abrir</a>`
           : "";
 
       return `
@@ -486,11 +600,25 @@ function render() {
       saveCoupon(n.coupon);
       n.claimed = true;
       saveJson(NOTES_KEY, notes2);
+      markNotificationAsRead(id);
       feedback.textContent = `Cupom ativado: ${String(n.coupon).toUpperCase()}`;
       if (window.StopModNotifications && typeof window.StopModNotifications.sync === "function") {
         window.StopModNotifications.sync();
       }
       render();
+    });
+  });
+
+  listEl.querySelectorAll("a[data-note-open]").forEach((link) => {
+    link.addEventListener("click", (event) => {
+      const id = String(link.getAttribute("data-note-open") || "");
+      const href = String(link.getAttribute("href") || "").trim();
+      if (!id || !href) return;
+      const openInNewTab = event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
+      markNotificationAsRead(id);
+      if (openInNewTab) return;
+      if (event.cancelable) event.preventDefault();
+      window.location.assign(href);
     });
   });
 }
