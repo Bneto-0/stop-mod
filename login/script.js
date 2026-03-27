@@ -1,0 +1,1383 @@
+const PROFILE_KEY = "stopmod_profile";
+const PROFILE_EXTRA_KEY = "stopmod_profile_extra";
+const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
+const AUTH_TOKEN_KEY = "stopmod_auth_token";
+const NOTES_KEY = "stopmod_notifications";
+const GOOGLE_CLIENT_KEY = "stopmod_google_client_id";
+const DEFAULT_GOOGLE_CLIENT_ID = "887504211072-0elgoi3dbg80bb9640vvlqfl7cp8guq5.apps.googleusercontent.com";
+const SHIP_KEY = "stopmod_ship_to";
+const SHIP_LIST_KEY = "stopmod_ship_list";
+const API_BASE_KEY = "stopmod_api_base";
+const PAGBANK_API_BASE_KEY = "stopmod_pagbank_api_base";
+const DEFAULT_REMOTE_API_BASES = Object.freeze([
+  "https://stop-mod-api.onrender.com"
+]);
+const DEFAULT_LOCAL_API_BASE = "http://localhost:8787";
+
+const loginForm = document.getElementById("login-form");
+const loginId = document.getElementById("login-id");
+const loginPass = document.getElementById("login-pass");
+const pwToggle = document.getElementById("pw-toggle");
+const forgotBtn = document.getElementById("forgot");
+const googleBtn = document.getElementById("google");
+const msg = document.getElementById("msg");
+
+const registerCard = document.getElementById("register-card");
+const goRegister = document.getElementById("go-register");
+const goLogin = document.getElementById("go-login");
+const registerForm = document.getElementById("register-form");
+const regName = document.getElementById("reg-name");
+const regBirth = document.getElementById("reg-birth");
+const regCpf = document.getElementById("reg-cpf");
+const regEmail = document.getElementById("reg-email");
+const regPhone = document.getElementById("reg-phone");
+const regPass = document.getElementById("reg-pass");
+const regPwToggle = document.getElementById("reg-pw-toggle");
+const regCep = document.getElementById("reg-cep");
+const regStreet = document.getElementById("reg-street");
+const regNumber = document.getElementById("reg-number");
+const regComplement = document.getElementById("reg-complement");
+const regDistrict = document.getElementById("reg-district");
+const regCity = document.getElementById("reg-city");
+const regState = document.getElementById("reg-state");
+const regMsg = document.getElementById("reg-msg");
+
+const modal = document.getElementById("modal");
+const modalTitle = document.getElementById("modal-title");
+const modalBody = document.getElementById("modal-body");
+
+let resolvedApiBase = "";
+let regCpfLookupTimer = null;
+let regCpfLookupSeq = 0;
+let regCepLookupTimer = null;
+let regCepLookupSeq = 0;
+let pendingGoogleOnboarding = null;
+const registerMuted = document.querySelector("#register-card .muted");
+const registerMutedDefaultText = String(registerMuted?.textContent || "").trim() || "Cadastro seguro com dados completos e endereco salvo.";
+
+function isLocalHost() {
+  const host = String(window.location.hostname || "").toLowerCase();
+  return host === "localhost" || host === "127.0.0.1";
+}
+
+function isProdStoreHost() {
+  const host = String(window.location.hostname || "").toLowerCase();
+  return !isLocalHost() && !host.endsWith(".onrender.com");
+}
+
+function shouldUseSameOriginApi() {
+  const host = String(window.location.hostname || "").toLowerCase();
+  return host === "localhost" || host === "127.0.0.1" || host.endsWith(".onrender.com");
+}
+
+function unifiedDefaultApiBase() {
+  return isLocalHost() ? DEFAULT_LOCAL_API_BASE : DEFAULT_REMOTE_API_BASES[0];
+}
+
+function ensureUnifiedApiConfig() {
+  const currentApiBase = normalizeApiBase(localStorage.getItem(API_BASE_KEY) || "");
+  const currentPagbankBase = normalizeApiBase(localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
+  const chosen = currentApiBase || currentPagbankBase || normalizeApiBase(unifiedDefaultApiBase());
+  if (!chosen) return;
+  if (currentApiBase !== chosen) localStorage.setItem(API_BASE_KEY, chosen);
+  if (currentPagbankBase !== chosen) localStorage.setItem(PAGBANK_API_BASE_KEY, chosen);
+}
+
+function nowIso() {
+  return new Date().toISOString();
+}
+
+function loadJson(key, fallback) {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(String(key || "")) || "null");
+    return parsed == null ? fallback : parsed;
+  } catch {
+    return fallback;
+  }
+}
+
+function saveJson(key, value) {
+  try {
+    localStorage.setItem(String(key || ""), JSON.stringify(value));
+  } catch {
+    // ignore storage errors
+  }
+}
+
+function normalizeUserKey(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function normalizeLoginIdentifierInput(raw) {
+  const text = String(raw || "").trim();
+  if (!text) return "";
+
+  if (text.includes("@")) {
+    return text.toLowerCase();
+  }
+
+  const cpfDigits = digitsOnly(text).slice(0, 11);
+  if (cpfDigits.length === 11) {
+    return formatCpf(cpfDigits);
+  }
+
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length >= 2) {
+    return extractNameAndSurname(text);
+  }
+
+  return text;
+}
+
+function normalizeUsernameValue(value, fallback = "") {
+  const raw = String(value || fallback || "").trim();
+  if (!raw) return "";
+  const normalized = raw
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, ".")
+    .replace(/[._-]{2,}/g, ".")
+    .replace(/^[._-]+|[._-]+$/g, "");
+  return normalized.slice(0, 40);
+}
+
+function extractNameAndSurname(fullName) {
+  const words = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return "";
+  if (words.length === 1) return words[0];
+  const particles = new Set(["da", "de", "do", "das", "dos", "e"]);
+  const baseName = words[0];
+  const surnameWord = words
+    .slice(1)
+    .find((part) => !particles.has(String(part || "").toLowerCase().trim())) || words[1];
+  return `${baseName} ${surnameWord}`.trim();
+}
+
+function deriveUsernameFromSession(profile, extra) {
+  const nameSource = String(extra?.fullName || profile?.fullName || profile?.name || "").trim();
+  const emailPrefix = String(extra?.email || profile?.email || "").trim().toLowerCase().split("@")[0] || "cliente";
+  const fromName = normalizeUsernameValue(extractNameAndSurname(nameSource), emailPrefix);
+  if (fromName) return fromName;
+  return normalizeUsernameValue(String(extra?.username || "").trim(), emailPrefix);
+}
+
+function addLoginSuccessNotification(profileLike) {
+  const profile = profileLike && typeof profileLike === "object" ? profileLike : {};
+  const email = normalizeUserKey(profile.email || "");
+  const name = String(profile.name || "Cliente Stop mod").trim() || "Cliente Stop mod";
+  const list = loadJson(NOTES_KEY, []);
+  const notes = Array.isArray(list) ? list : [];
+
+  notes.push({
+    id: `login-success-${email || "guest"}-${Date.now()}`,
+    scope: email ? "individual" : "general",
+    type: "aviso",
+    userKey: email,
+    title: "Login realizado com sucesso",
+    text: `Acesso confirmado para ${name}.`,
+    href: "/perfil/",
+    date: "Agora",
+    createdAt: nowIso()
+  });
+
+  notes.sort((a, b) => Date.parse(String(b?.createdAt || "")) - Date.parse(String(a?.createdAt || "")));
+  saveJson(NOTES_KEY, notes.slice(0, 500));
+}
+
+function showLoginToast(message) {
+  const body = document.body;
+  if (!body) return;
+
+  const existing = document.getElementById("login-success-toast");
+  if (existing) existing.remove();
+
+  const toast = document.createElement("div");
+  toast.id = "login-success-toast";
+  toast.className = "login-success-toast";
+  toast.setAttribute("role", "status");
+  toast.setAttribute("aria-live", "polite");
+  toast.textContent = String(message || "Login realizado com sucesso.");
+  body.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    toast.classList.add("show");
+  });
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 260);
+  }, 2400);
+}
+
+function wait(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, Math.max(0, Number(ms) || 0));
+  });
+}
+
+function setMsg(el, text, isErr = false) {
+  if (!el) return;
+  el.textContent = String(text || "");
+  el.classList.toggle("err", !!isErr);
+}
+
+function setLoading(formEl, loading, buttonText) {
+  if (!formEl) return;
+  const submit = formEl.querySelector("button[type='submit']");
+  if (!(submit instanceof HTMLButtonElement)) return;
+  submit.disabled = !!loading;
+  if (loading) {
+    submit.dataset.label = submit.textContent || "";
+    submit.textContent = String(buttonText || "Aguarde...");
+  } else if (submit.dataset.label) {
+    submit.textContent = submit.dataset.label;
+  }
+}
+
+function setGoogleOnboardingState(enabled, profile = null) {
+  if (!enabled) {
+    pendingGoogleOnboarding = null;
+    if (regEmail) {
+      regEmail.readOnly = false;
+      regEmail.removeAttribute("aria-readonly");
+      regEmail.removeAttribute("title");
+    }
+    if (registerMuted) registerMuted.textContent = registerMutedDefaultText;
+    return;
+  }
+
+  const safeProfile = profile && typeof profile === "object" ? profile : {};
+  const email = String(safeProfile.email || "").trim().toLowerCase();
+  const name = String(safeProfile.name || "Cliente Stop mod").trim() || "Cliente Stop mod";
+  const picture = String(safeProfile.picture || "").trim();
+
+  pendingGoogleOnboarding = { email, name, picture };
+  if (regName && !String(regName.value || "").trim()) regName.value = name;
+  if (regEmail) {
+    regEmail.value = email;
+    regEmail.readOnly = true;
+    regEmail.setAttribute("aria-readonly", "true");
+    regEmail.title = "Email vindo do Google";
+  }
+  if (registerMuted) {
+    registerMuted.textContent = "Google confirmado. Complete CPF, nascimento, senha e endereco para finalizar.";
+  }
+}
+
+function togglePw(input, btn) {
+  if (!input || !btn) return;
+  const isPw = input.type === "password";
+  input.type = isPw ? "text" : "password";
+  btn.textContent = isPw ? "ocultar" : "ver";
+  btn.setAttribute("aria-label", isPw ? "Ocultar senha" : "Mostrar senha");
+}
+
+function showRegister(show) {
+  if (!registerCard) return;
+  registerCard.hidden = !show;
+  const loginCard = document.querySelector(".card[aria-label='Login']");
+  if (loginCard) loginCard.hidden = !!show;
+  if (!show) setGoogleOnboardingState(false);
+  setMsg(msg, "");
+  setMsg(regMsg, "");
+}
+
+function normalizeNextPath(raw) {
+  const next = String(raw || "").trim();
+  if (!next) return "";
+  if (/^[a-z]+:\/\//i.test(next)) return "";
+  if (next.startsWith("../") || next.startsWith("./") || next.startsWith("/")) return next;
+  return "";
+}
+
+function resolvePostLoginUrl() {
+  try {
+    const raw = String(new URLSearchParams(window.location.search).get("next") || "").trim();
+    return normalizeNextPath(raw) || "../perfil/";
+  } catch {
+    return "../perfil/";
+  }
+}
+
+function digitsOnly(value) {
+  return String(value || "").replace(/\D/g, "");
+}
+
+function formatCpf(value) {
+  const cpf = digitsOnly(value).slice(0, 11);
+  if (cpf.length <= 3) return cpf;
+  if (cpf.length <= 6) return `${cpf.slice(0, 3)}.${cpf.slice(3)}`;
+  if (cpf.length <= 9) return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6)}`;
+  return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6, 9)}-${cpf.slice(9)}`;
+}
+
+function isValidCpfDigits(cpfValue) {
+  const cpf = digitsOnly(cpfValue).slice(0, 11);
+  if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+
+  let sum = 0;
+  for (let i = 0; i < 9; i += 1) sum += Number(cpf[i]) * (10 - i);
+  let first = (sum * 10) % 11;
+  if (first === 10) first = 0;
+  if (first !== Number(cpf[9])) return false;
+
+  sum = 0;
+  for (let i = 0; i < 10; i += 1) sum += Number(cpf[i]) * (11 - i);
+  let second = (sum * 10) % 11;
+  if (second === 10) second = 0;
+  return second === Number(cpf[10]);
+}
+
+function formatCep(value) {
+  const cep = digitsOnly(value).slice(0, 8);
+  if (cep.length <= 5) return cep;
+  return `${cep.slice(0, 5)}-${cep.slice(5)}`;
+}
+
+function normalizeCepDigits(value) {
+  return digitsOnly(value).slice(0, 8);
+}
+
+function isValidCepDigits(value) {
+  return /^\d{8}$/.test(String(value || ""));
+}
+
+function normalizeState(value) {
+  return String(value || "")
+    .replace(/[^A-Za-z]/g, "")
+    .toUpperCase()
+    .slice(0, 2);
+}
+
+function normalizeApiBase(raw) {
+  const text = String(raw || "").trim().replace(/\/+$/, "");
+  if (!text) return "";
+  if (/^https?:\/\//i.test(text)) return text;
+  if (text.startsWith("/")) return text;
+  return "";
+}
+
+function buildApiUrl(base, endpoint) {
+  const root = normalizeApiBase(base);
+  let path = `/${String(endpoint || "").replace(/^\/+/, "")}`;
+  if (root && /\/api$/i.test(root) && /^\/api(\/|$)/i.test(path)) {
+    path = path.replace(/^\/api/i, "");
+  }
+  if (!root) return path;
+  return `${root}${path}`;
+}
+
+function isCannotPostAuthRoute(message) {
+  const text = String(message || "").toLowerCase();
+  if (!text) return false;
+  return text.includes("cannot post /api/auth/") || (text.includes("cannot post") && text.includes("/api/auth"));
+}
+
+function is405NotAllowedHtml(message) {
+  const text = String(message || "").toLowerCase();
+  if (!text) return false;
+  return text.includes("405 not allowed") || (text.includes("<html") && text.includes("405") && text.includes("not allowed"));
+}
+
+function uniqueApiBases(list) {
+  const seen = new Set();
+  const output = [];
+  for (const item of list || []) {
+    const normalized = normalizeApiBase(item);
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    output.push(normalized);
+  }
+  return output;
+}
+
+function authFallbackBases(currentBase) {
+  const current = normalizeApiBase(currentBase);
+  const local = "http://localhost:8787";
+  const configuredApiBase = normalizeApiBase(localStorage.getItem(API_BASE_KEY) || "");
+  const configuredPagbankBase = normalizeApiBase(localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
+  const prioritized = isLocalHost()
+    ? [local, configuredApiBase, configuredPagbankBase, ...DEFAULT_REMOTE_API_BASES]
+    : [configuredApiBase, configuredPagbankBase, ...DEFAULT_REMOTE_API_BASES, local];
+  return uniqueApiBases(prioritized).filter((base) => base !== current);
+}
+
+function normalizeAuthErrorMessage(rawMessage) {
+  const message = String(rawMessage || "").trim();
+  const low = message.toLowerCase();
+
+  if (isCannotPostAuthRoute(message)) {
+    return "Backend de cadastro/login nao esta ativo neste dominio. Inicie o backend na porta 8787 ou configure stopmod_api_base.";
+  }
+  if (is405NotAllowedHtml(message)) {
+    return "Backend de cadastro/login nao respondeu esse metodo. Ajuste stopmod_api_base para o backend publicado.";
+  }
+  if (
+    low.includes("failed to fetch") ||
+    low.includes("connection refused") ||
+    low.includes("load failed") ||
+    low.includes("networkerror")
+  ) {
+    return "Nao foi possivel conectar ao backend de cadastro/login.";
+  }
+  return message || "Falha ao comunicar com backend.";
+}
+
+function buildApiRequestError(response, data, text) {
+  const status = Number(response?.status) || 0;
+  const finalMessage = String(data?.message || data?.error || text || `HTTP ${status}`);
+  const normalizedMessage = normalizeAuthErrorMessage(finalMessage);
+  const enrichedError = new Error(normalizedMessage);
+  enrichedError.code = String(data?.error || "").trim();
+  enrichedError.status = status;
+  enrichedError.rawMessage = finalMessage;
+  return enrichedError;
+}
+
+function shouldUseAuthFallbackResponse(response, data, text) {
+  const status = Number(response?.status) || 0;
+  const rawMessage = String(data?.message || data?.error || text || `HTTP ${status}`);
+  const hasHtmlPayload = /<html/i.test(rawMessage);
+  const isRouteMissingLike =
+    isCannotPostAuthRoute(rawMessage) ||
+    is405NotAllowedHtml(rawMessage) ||
+    hasHtmlPayload ||
+    status === 404 ||
+    status === 405 ||
+    status >= 500;
+
+  if (isRouteMissingLike) {
+    // Se for erro conhecido do proprio auth, mantemos.
+    const code = String(data?.error || "").trim().toLowerCase();
+    if (code === "auth_not_configured") return true;
+    return false;
+  }
+
+  // 400/401/403/409/422 etc: resposta valida do backend de auth.
+  return true;
+}
+
+async function isHealthy(base, timeoutMs = 3500) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), Number(timeoutMs) || 3500);
+  try {
+    const healthUrl = buildApiUrl(base, "/api/health");
+    const resp = await fetch(healthUrl, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      signal: controller.signal
+    });
+    if (!resp.ok) return false;
+    const data = await resp.json().catch(() => null);
+    return !!data?.ok;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function resolveApiBase() {
+  if (resolvedApiBase) return resolvedApiBase;
+
+  const configured = normalizeApiBase(localStorage.getItem(API_BASE_KEY) || localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
+
+  // Em producao, evita "pre-flight" lento: usa a base configurada direto.
+  if (isProdStoreHost()) {
+    const chosen = configured || normalizeApiBase(DEFAULT_REMOTE_API_BASES[0]);
+    if (chosen) {
+      resolvedApiBase = chosen;
+      localStorage.setItem(API_BASE_KEY, chosen);
+      localStorage.setItem(PAGBANK_API_BASE_KEY, chosen);
+      return resolvedApiBase;
+    }
+  }
+
+  if (configured) {
+    if (await isHealthy(configured, 2800)) {
+      resolvedApiBase = configured;
+      return resolvedApiBase;
+    }
+    localStorage.removeItem(API_BASE_KEY);
+    localStorage.removeItem(PAGBANK_API_BASE_KEY);
+  }
+
+  if (shouldUseSameOriginApi() && (await isHealthy(""))) {
+    resolvedApiBase = "";
+    return resolvedApiBase;
+  }
+
+  const local = "http://localhost:8787";
+  if (await isHealthy(local)) {
+    resolvedApiBase = local;
+    localStorage.setItem(API_BASE_KEY, local);
+    localStorage.setItem(PAGBANK_API_BASE_KEY, local);
+    return resolvedApiBase;
+  }
+
+  for (const remoteBase of DEFAULT_REMOTE_API_BASES) {
+    if (await isHealthy(remoteBase)) {
+      resolvedApiBase = remoteBase;
+      localStorage.setItem(API_BASE_KEY, remoteBase);
+      localStorage.setItem(PAGBANK_API_BASE_KEY, remoteBase);
+      return resolvedApiBase;
+    }
+  }
+
+  resolvedApiBase = "";
+  return resolvedApiBase;
+}
+
+async function postJson(endpoint, payload, timeoutMs = 12000) {
+  const base = await resolveApiBase();
+  const endpointNormalized = String(endpoint || "").replace(/^\/+/, "");
+  const endpointIsAuth = /^api\/auth\//i.test(endpointNormalized);
+  const timeout = endpointIsAuth
+    ? Math.max(6500, Math.min(10000, Number(timeoutMs) || 12000))
+    : (Number(timeoutMs) || 12000);
+
+    const tryPost = async (url) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeout);
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        },
+        body: JSON.stringify(payload || {}),
+        signal: controller.signal
+      });
+
+      const text = await response.text();
+      let data = null;
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch {
+        data = null;
+      }
+      return { response, text, data };
+    } finally {
+      clearTimeout(timer);
+    }
+    };
+
+  try {
+    let currentBase = base;
+    let url = buildApiUrl(currentBase, endpoint);
+    let response = null;
+    let text = "";
+    let data = null;
+
+    try {
+      ({ response, text, data } = await tryPost(url));
+    } catch (networkError) {
+      if (endpointIsAuth) {
+        const fallbackCandidates = authFallbackBases(currentBase);
+        for (const fallbackBase of fallbackCandidates) {
+          try {
+            currentBase = fallbackBase;
+            url = buildApiUrl(currentBase, endpoint);
+            ({ response, text, data } = await tryPost(url));
+            if (response.ok) {
+              resolvedApiBase = fallbackBase;
+              localStorage.setItem(API_BASE_KEY, fallbackBase);
+              localStorage.setItem(PAGBANK_API_BASE_KEY, fallbackBase);
+              return data || {};
+            }
+            if (shouldUseAuthFallbackResponse(response, data, text)) {
+              resolvedApiBase = fallbackBase;
+              localStorage.setItem(API_BASE_KEY, fallbackBase);
+              localStorage.setItem(PAGBANK_API_BASE_KEY, fallbackBase);
+              throw buildApiRequestError(response, data, text);
+            }
+          } catch (fallbackError) {
+            if (
+              fallbackError &&
+              (Object.prototype.hasOwnProperty.call(fallbackError, "code") ||
+                Object.prototype.hasOwnProperty.call(fallbackError, "status"))
+            ) {
+              throw fallbackError;
+            }
+            // continua para a proxima base candidata
+          }
+        }
+      }
+      throw networkError;
+    }
+
+    if (!response.ok) {
+      const rawMessage = String(data?.message || data?.error || text || `HTTP ${response.status}`);
+      const hasHtmlPayload = /<html/i.test(String(rawMessage || ""));
+      const endpointIsLogin = /^\/?api\/auth\/login$/i.test(String(endpoint || "").replace(/^\/+/, ""));
+      const shouldTryAuthFallbackOnInvalidCredentials =
+        endpointIsLogin &&
+        Number(response.status) === 401 &&
+        String(data?.error || "").trim().toLowerCase() === "invalid_credentials";
+
+      const shouldTryAuthFallback =
+        endpointIsAuth &&
+        (
+          isCannotPostAuthRoute(rawMessage) ||
+          is405NotAllowedHtml(rawMessage) ||
+          hasHtmlPayload ||
+          Number(response.status) === 404 ||
+          Number(response.status) === 405 ||
+          Number(response.status) >= 500 ||
+          shouldTryAuthFallbackOnInvalidCredentials
+        );
+
+      if (shouldTryAuthFallback) {
+        const fallbackCandidates = authFallbackBases(currentBase);
+        for (const fallbackBase of fallbackCandidates) {
+          try {
+            currentBase = fallbackBase;
+            url = buildApiUrl(currentBase, endpoint);
+            ({ response, text, data } = await tryPost(url));
+            if (response.ok) {
+              resolvedApiBase = fallbackBase;
+              localStorage.setItem(API_BASE_KEY, fallbackBase);
+              localStorage.setItem(PAGBANK_API_BASE_KEY, fallbackBase);
+              return data || {};
+            }
+            if (shouldUseAuthFallbackResponse(response, data, text)) {
+              resolvedApiBase = fallbackBase;
+              localStorage.setItem(API_BASE_KEY, fallbackBase);
+              localStorage.setItem(PAGBANK_API_BASE_KEY, fallbackBase);
+              throw buildApiRequestError(response, data, text);
+            }
+          } catch (fallbackError) {
+            if (
+              fallbackError &&
+              (Object.prototype.hasOwnProperty.call(fallbackError, "code") ||
+                Object.prototype.hasOwnProperty.call(fallbackError, "status"))
+            ) {
+              throw fallbackError;
+            }
+            // continua para a proxima base candidata
+          }
+        }
+      }
+      throw buildApiRequestError(response, data, text || rawMessage);
+    }
+
+    return data || {};
+  } catch (error) {
+    if (error && (Object.prototype.hasOwnProperty.call(error, "code") || Object.prototype.hasOwnProperty.call(error, "status"))) {
+      throw error;
+    }
+    if (error?.name === "AbortError") throw new Error("Tempo esgotado para conectar ao backend.");
+    throw new Error(normalizeAuthErrorMessage(error?.message || error));
+  }
+}
+
+async function lookupCpfByBackend(cpfDigits, timeoutMs = 12000) {
+  const base = await resolveApiBase();
+  const url = buildApiUrl(base, "/api/auth/cpf/lookup");
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), Number(timeoutMs) || 12000);
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+      body: JSON.stringify({ cpf: String(cpfDigits || "") }),
+      signal: controller.signal
+    });
+
+    const text = await response.text();
+    let data = null;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      data = null;
+    }
+
+    if (!response.ok) {
+      const err = new Error(String(data?.message || data?.error || text || `HTTP ${response.status}`));
+      err.code = String(data?.error || "");
+      err.status = response.status;
+      throw err;
+    }
+    return data || {};
+  } catch (error) {
+    if (error?.name === "AbortError") throw new Error("Tempo esgotado na consulta CPF.");
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function lookupCpfAndFillRegisterName(forceFeedback = false) {
+  if (!regCpf) return;
+  const cpfDigits = digitsOnly(regCpf.value).slice(0, 11);
+  if (!cpfDigits) return;
+
+  if (cpfDigits.length !== 11) {
+    if (forceFeedback) setMsg(regMsg, "CPF incompleto.", true);
+    return;
+  }
+  if (!isValidCpfDigits(cpfDigits)) {
+    setMsg(regMsg, "CPF invalido.", true);
+    return;
+  }
+
+  const lookupSeq = ++regCpfLookupSeq;
+  setMsg(regMsg, "Validando CPF...", false);
+  try {
+    const data = await lookupCpfByBackend(cpfDigits);
+    if (lookupSeq !== regCpfLookupSeq) return;
+    const fullName = String(data?.name || "").trim();
+    if (!fullName) {
+      setMsg(regMsg, "CPF valido, mas sem nome retornado.", true);
+      return;
+    }
+
+    if (regName) regName.value = fullName;
+    const birthDate = String(data?.birthDate || "").trim();
+    if (regBirth && !String(regBirth.value || "").trim() && /^\d{4}-\d{2}-\d{2}$/.test(birthDate)) {
+      regBirth.value = birthDate;
+    }
+
+    setMsg(regMsg, "CPF confirmado. Nome preenchido automaticamente.", false);
+  } catch (error) {
+    if (lookupSeq !== regCpfLookupSeq) return;
+    const code = String(error?.code || "");
+    if (code === "cpf_lookup_not_configured") {
+      setMsg(regMsg, "Consulta externa de CPF nao configurada no backend.", true);
+      return;
+    }
+    if (code === "cpf_name_not_found") {
+      setMsg(regMsg, "CPF consultado, mas sem nome retornado.", true);
+      return;
+    }
+    if (forceFeedback) {
+      setMsg(regMsg, `Falha na consulta CPF: ${String(error?.message || "tente novamente.")}`, true);
+    }
+  }
+}
+
+async function fetchJsonWithTimeout(url, timeoutMs = 5200) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), Number(timeoutMs) || 5200);
+  try {
+    const response = await fetch(String(url || ""), {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      signal: controller.signal
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    if (error?.name === "AbortError") throw new Error("timeout");
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function normalizeLookupAddress(raw, fallbackCepDigits) {
+  if (!raw || typeof raw !== "object") return null;
+  const street = String(raw.street || raw.logradouro || "").trim();
+  const district = String(raw.district || raw.bairro || "").trim();
+  const city = String(raw.city || raw.localidade || "").trim();
+  const state = normalizeState(raw.state || raw.uf || "");
+  const cepDigits = normalizeCepDigits(raw.cep || fallbackCepDigits);
+  if (!street && !district && !city && !state) return null;
+  if (!isValidCepDigits(cepDigits)) return null;
+  return {
+    cep: formatCep(cepDigits),
+    street,
+    district,
+    city,
+    state
+  };
+}
+
+async function lookupCepViaCep(cepDigits) {
+  const data = await fetchJsonWithTimeout(`https://viacep.com.br/ws/${cepDigits}/json/`, 5200);
+  if (data?.erro) return null;
+  return normalizeLookupAddress(data, cepDigits);
+}
+
+async function lookupCepBrasilApi(cepDigits) {
+  const data = await fetchJsonWithTimeout(`https://brasilapi.com.br/api/cep/v1/${cepDigits}`, 5400);
+  return normalizeLookupAddress(data, cepDigits);
+}
+
+async function lookupCepAndFillRegisterAddress(forceFeedback = false) {
+  const cepDigits = normalizeCepDigits(regCep?.value || "");
+  if (!cepDigits) return;
+
+  if (!isValidCepDigits(cepDigits)) {
+    if (forceFeedback) setMsg(regMsg, "CEP invalido. Use 8 digitos.", true);
+    return;
+  }
+
+  const seq = ++regCepLookupSeq;
+  setMsg(regMsg, "Consultando CEP...", false);
+
+  const providers = [lookupCepViaCep, lookupCepBrasilApi];
+  let found = null;
+  for (const provider of providers) {
+    try {
+      const value = await provider(cepDigits);
+      if (value) {
+        found = value;
+        break;
+      }
+    } catch {
+      // tenta o proximo provedor
+    }
+  }
+
+  if (seq !== regCepLookupSeq) return;
+
+  if (!found) {
+    if (forceFeedback) setMsg(regMsg, "CEP nao encontrado. Verifique e tente novamente.", true);
+    return;
+  }
+
+  if (regCep) regCep.value = String(found.cep || formatCep(cepDigits));
+  if (regStreet) regStreet.value = String(found.street || regStreet.value || "");
+  if (regDistrict) regDistrict.value = String(found.district || regDistrict.value || "");
+  if (regCity) regCity.value = String(found.city || regCity.value || "");
+  if (regState) regState.value = normalizeState(found.state || regState.value || "");
+  setMsg(regMsg, "CEP valido. Endereco preenchido automaticamente.", false);
+}
+
+function normalizeAddressForLocalStorage(raw) {
+  return {
+    street: String(raw?.street || "").trim(),
+    number: String(raw?.number || "").trim(),
+    district: String(raw?.district || "").trim(),
+    city: String(raw?.city || "").trim(),
+    state: normalizeState(raw?.state || ""),
+    cep: formatCep(raw?.cep || ""),
+    complement: String(raw?.complement || "").trim()
+  };
+}
+
+function applySession(session) {
+  const token = String(session?.token || "").trim();
+  const profile = session?.profile || {};
+  const extra = session?.extra || {};
+  const addresses = Array.isArray(session?.addresses) ? session.addresses : [];
+  const defaultAddress = session?.defaultAddress || addresses[0] || null;
+
+  if (token) localStorage.setItem(AUTH_TOKEN_KEY, token);
+  localStorage.setItem(
+    PROFILE_KEY,
+    JSON.stringify({
+      name: String(profile?.name || profile?.fullName || "Cliente Stop mod"),
+      email: String(profile?.email || ""),
+      picture: String(profile?.picture || "")
+    })
+  );
+
+  localStorage.setItem(
+    PROFILE_EXTRA_KEY,
+    JSON.stringify({
+      displayName: String(extra?.displayName || profile?.fullName || profile?.name || ""),
+      fullName: String(extra?.fullName || profile?.fullName || profile?.name || ""),
+      birthDate: String(extra?.birthDate || profile?.birthDate || ""),
+      cpf: String(extra?.cpf || profile?.cpf || ""),
+      cpfMasked: String(extra?.cpfMasked || profile?.cpfMasked || ""),
+      email: String(extra?.email || profile?.email || ""),
+      phone: String(extra?.phone || profile?.phone || ""),
+      username: deriveUsernameFromSession(profile, extra) || "cliente"
+    })
+  );
+  localStorage.setItem(AUTH_LAST_SEEN_KEY, String(Date.now()));
+
+  if (defaultAddress) {
+    localStorage.setItem(SHIP_KEY, JSON.stringify(normalizeAddressForLocalStorage(defaultAddress)));
+  }
+  if (addresses.length) {
+    localStorage.setItem(SHIP_LIST_KEY, JSON.stringify(addresses.map(normalizeAddressForLocalStorage)));
+  }
+}
+
+function openModal(title, html) {
+  if (!modal || !modalTitle || !modalBody) return;
+  modalTitle.textContent = title;
+  modalBody.innerHTML = html;
+  modal.hidden = false;
+}
+
+function closeModal() {
+  if (!modal) return;
+  modal.hidden = true;
+  if (modalBody) modalBody.innerHTML = "";
+}
+
+function setModalMessage(elementId, text, isErr = false) {
+  const el = document.getElementById(String(elementId || ""));
+  if (!el) return;
+  el.textContent = String(text || "");
+  el.classList.toggle("err", !!isErr);
+}
+
+function setButtonBusy(buttonEl, busy, busyLabel = "Aguarde...") {
+  if (!(buttonEl instanceof HTMLButtonElement)) return;
+  if (busy) {
+    buttonEl.disabled = true;
+    buttonEl.dataset.label = buttonEl.textContent || "";
+    buttonEl.textContent = String(busyLabel || "Aguarde...");
+    return;
+  }
+  buttonEl.disabled = false;
+  if (buttonEl.dataset.label) buttonEl.textContent = buttonEl.dataset.label;
+}
+
+function renderForgotPasswordModal() {
+  openModal(
+    "Recuperar senha",
+    `
+      <form id="forgot-form" class="form">
+        <p class="hint">Informe o email da sua conta para receber o link de redefinicao.</p>
+        <input id="forgot-email" type="email" placeholder="Seu email" autocomplete="email" />
+        <p id="forgot-msg" class="msg" aria-live="polite"></p>
+        <div class="actions">
+          <button id="forgot-send-btn" class="btn primary" type="submit">Enviar link</button>
+          <button class="btn ghost" type="button" data-close="1">Cancelar</button>
+        </div>
+      </form>
+    `
+  );
+
+  const form = document.getElementById("forgot-form");
+  const emailInput = document.getElementById("forgot-email");
+  const sendBtn = document.getElementById("forgot-send-btn");
+  if (emailInput instanceof HTMLInputElement) emailInput.focus();
+  if (!(form instanceof HTMLFormElement)) return;
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const email = String(emailInput?.value || "").trim().toLowerCase();
+    if (!email) {
+      setModalMessage("forgot-msg", "Informe seu email.", true);
+      return;
+    }
+    if (!email.includes("@")) {
+      setModalMessage("forgot-msg", "Email invalido.", true);
+      return;
+    }
+
+    setButtonBusy(sendBtn, true, "Enviando...");
+    setModalMessage("forgot-msg", "");
+    try {
+      const data = await postJson("/api/auth/password/forgot", { email }, 18000);
+      setModalMessage("forgot-msg", String(data?.message || "Se o email existir, enviaremos o link."), false);
+    } catch (error) {
+      setModalMessage("forgot-msg", `Falha ao enviar link: ${String(error?.message || "tente novamente.")}`, true);
+    } finally {
+      setButtonBusy(sendBtn, false);
+    }
+  });
+}
+
+function getResetTokenFromQuery() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const token = String(params.get("reset_token") || params.get("token") || "").trim();
+    return token || "";
+  } catch {
+    return "";
+  }
+}
+
+function clearResetQueryParams() {
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("mode");
+    url.searchParams.delete("reset_token");
+    url.searchParams.delete("token");
+    const next = `${url.pathname}${url.search}${url.hash}`;
+    window.history.replaceState({}, "", next);
+  } catch {
+    // ignore
+  }
+}
+
+function renderResetPasswordModal(token) {
+  const safeToken = String(token || "").trim();
+  if (!safeToken) return;
+
+  openModal(
+    "Redefinir senha",
+    `
+      <form id="reset-form" class="form">
+        <p class="hint">Defina sua nova senha para entrar na conta.</p>
+        <input id="reset-pass" type="password" placeholder="Nova senha" autocomplete="new-password" />
+        <input id="reset-pass-confirm" type="password" placeholder="Confirmar nova senha" autocomplete="new-password" />
+        <p id="reset-msg" class="msg" aria-live="polite"></p>
+        <div class="actions">
+          <button id="reset-save-btn" class="btn primary" type="submit">Salvar nova senha</button>
+          <button class="btn ghost" type="button" data-close="1">Cancelar</button>
+        </div>
+      </form>
+    `
+  );
+
+  const form = document.getElementById("reset-form");
+  const passInput = document.getElementById("reset-pass");
+  const confirmInput = document.getElementById("reset-pass-confirm");
+  const saveBtn = document.getElementById("reset-save-btn");
+  if (passInput instanceof HTMLInputElement) passInput.focus();
+  if (!(form instanceof HTMLFormElement)) return;
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const newPassword = String(passInput?.value || "");
+    const confirmPassword = String(confirmInput?.value || "");
+
+    if (!newPassword || !confirmPassword) {
+      setModalMessage("reset-msg", "Preencha a nova senha e a confirmacao.", true);
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setModalMessage("reset-msg", "As senhas nao coincidem.", true);
+      return;
+    }
+
+    setButtonBusy(saveBtn, true, "Salvando...");
+    setModalMessage("reset-msg", "");
+    try {
+      const data = await postJson("/api/auth/password/reset", { token: safeToken, newPassword }, 20000);
+      setModalMessage("reset-msg", String(data?.message || "Senha redefinida com sucesso."), false);
+      clearResetQueryParams();
+      setMsg(msg, "Senha alterada com sucesso. Faca login com a nova senha.", false);
+      showLoginToast("Senha redefinida com sucesso.");
+      await wait(800);
+      closeModal();
+    } catch (error) {
+      setModalMessage("reset-msg", `Falha ao redefinir senha: ${String(error?.message || "tente novamente.")}`, true);
+    } finally {
+      setButtonBusy(saveBtn, false);
+    }
+  });
+}
+
+function finishSocialLogin(user) {
+  const name = String(user?.name || "Cliente Stop mod").trim() || "Cliente Stop mod";
+  const email = String(user?.email || "").trim().toLowerCase();
+  const picture = String(user?.picture || "").trim();
+
+  // Social login does not return backend JWT; avoid stale token reuse.
+  localStorage.removeItem(AUTH_TOKEN_KEY);
+  localStorage.setItem(
+    PROFILE_KEY,
+    JSON.stringify({
+      name,
+      email,
+      picture
+    })
+  );
+  localStorage.setItem(
+    PROFILE_EXTRA_KEY,
+    JSON.stringify({
+      displayName: name,
+      fullName: name,
+      birthDate: "",
+      cpf: "",
+      cpfMasked: "",
+      email,
+      phone: "",
+      username: deriveUsernameFromSession({ name, email }, {}),
+      picture
+    })
+  );
+  localStorage.setItem(AUTH_LAST_SEEN_KEY, String(Date.now()));
+  addLoginSuccessNotification({ name, email });
+  setMsg(msg, "Login Google realizado com sucesso.", false);
+  showLoginToast("Login realizado com sucesso.");
+  setTimeout(() => {
+    window.location.href = resolvePostLoginUrl();
+  }, 900);
+}
+
+async function fetchGoogleProfileWithAccessToken(accessToken) {
+  const token = String(accessToken || "").trim();
+  if (!token) throw new Error("google_token_missing");
+
+  const response = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store"
+  });
+  if (!response.ok) throw new Error("google_profile_error");
+
+  const profile = await response.json();
+  const email = String(profile?.email || "").trim().toLowerCase();
+  if (!email) throw new Error("google_email_missing");
+  return {
+    name: String(profile?.name || profile?.given_name || "Cliente Stop mod").trim() || "Cliente Stop mod",
+    email,
+    picture: String(profile?.picture || "").trim()
+  };
+}
+
+function ensureGoogleScript(callback) {
+  if (window.google?.accounts?.oauth2) {
+    callback();
+    return;
+  }
+
+  const script = document.createElement("script");
+  script.src = "https://accounts.google.com/gsi/client";
+  script.async = true;
+  script.defer = true;
+  script.onload = callback;
+  script.onerror = () => setMsg(msg, "Nao foi possivel carregar o Google.", true);
+  document.head.appendChild(script);
+}
+
+function googleSignIn() {
+  const clientId = String(localStorage.getItem(GOOGLE_CLIENT_KEY) || DEFAULT_GOOGLE_CLIENT_ID || "").trim();
+  if (!clientId) {
+    setMsg(msg, "Login Google indisponivel: Client ID nao configurado.", true);
+    return;
+  }
+
+  if (!String(localStorage.getItem(GOOGLE_CLIENT_KEY) || "").trim()) {
+    localStorage.setItem(GOOGLE_CLIENT_KEY, clientId);
+  }
+
+  ensureGoogleScript(() => {
+    if (!window.google?.accounts?.oauth2) {
+      setMsg(msg, "Google indisponivel no momento.", true);
+      return;
+    }
+
+    try {
+      const tokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: "openid email profile",
+        callback: async (tokenResponse) => {
+          const accessToken = String(tokenResponse?.access_token || "").trim();
+          if (!accessToken) {
+            setMsg(msg, "Falha no login Google.", true);
+            return;
+          }
+
+          setMsg(msg, "Validando conta Google...", false);
+          try {
+            const data = await postJson("/api/auth/google-login", { accessToken }, 16000);
+            applySession(data);
+            addLoginSuccessNotification(data?.profile || null);
+            setMsg(msg, "Login Google realizado com sucesso.", false);
+            showLoginToast("Login realizado com sucesso.");
+            await wait(900);
+            window.location.href = resolvePostLoginUrl();
+          } catch (error) {
+            const errorCode = String(error?.code || "").trim().toLowerCase();
+            if (errorCode === "google_account_not_linked") {
+              try {
+                const googleProfile = await fetchGoogleProfileWithAccessToken(accessToken);
+                showRegister(true);
+                setGoogleOnboardingState(true, googleProfile);
+                setMsg(regMsg, "Google confirmado. Complete CPF e endereco para concluir o cadastro.", false);
+                regBirth?.focus();
+                return;
+              } catch {
+                setMsg(msg, "Falha ao obter dados da conta Google para completar cadastro.", true);
+                return;
+              }
+            }
+            setMsg(msg, `Falha no login Google: ${String(error?.message || "tente novamente.")}`, true);
+          }
+        },
+        error_callback: () => {
+          setMsg(msg, "Nao foi possivel abrir o login Google. Verifique bloqueio de pop-up.", true);
+        }
+      });
+
+      setMsg(msg, "Abrindo login Google...", false);
+      tokenClient.requestAccessToken({ prompt: "select_account" });
+    } catch {
+      setMsg(msg, "Erro ao iniciar login Google.", true);
+    }
+  });
+}
+
+async function handleRegisterSubmit(event) {
+  event.preventDefault();
+  const payload = {
+    fullName: String(regName?.value || "").trim(),
+    birthDate: String(regBirth?.value || "").trim(),
+    cpf: digitsOnly(regCpf?.value || ""),
+    email: String(regEmail?.value || "").trim().toLowerCase(),
+    phone: digitsOnly(regPhone?.value || ""),
+    password: String(regPass?.value || ""),
+    address: {
+      cep: digitsOnly(regCep?.value || ""),
+      street: String(regStreet?.value || "").trim(),
+      number: String(regNumber?.value || "").trim(),
+      complement: String(regComplement?.value || "").trim(),
+      district: String(regDistrict?.value || "").trim(),
+      city: String(regCity?.value || "").trim(),
+      state: normalizeState(regState?.value || "")
+    }
+  };
+
+  if (!payload.fullName || !payload.birthDate || !payload.cpf || !payload.email || !payload.password) {
+    setMsg(regMsg, "Preencha nome, nascimento, CPF, email e senha.", true);
+    return;
+  }
+
+  if (pendingGoogleOnboarding?.email && normalizeUserKey(payload.email) !== normalizeUserKey(pendingGoogleOnboarding.email)) {
+    setMsg(regMsg, "Para concluir com Google, use o mesmo email da conta Google.", true);
+    return;
+  }
+
+  if (!isValidCepDigits(payload.address.cep)) {
+    setMsg(regMsg, "Informe CEP valido com 8 digitos.", true);
+    return;
+  }
+
+  if (
+    !payload.address.cep ||
+    !payload.address.street ||
+    !payload.address.number ||
+    !payload.address.district ||
+    !payload.address.city ||
+    !payload.address.state
+  ) {
+    setMsg(regMsg, "Preencha o endereco completo.", true);
+    return;
+  }
+
+  setLoading(registerForm, true, "Criando conta...");
+  setMsg(regMsg, "");
+
+  try {
+    const data = await postJson("/api/auth/register", payload, 18000);
+    applySession(data);
+    if (pendingGoogleOnboarding?.picture) {
+      const profileLocal = loadJson(PROFILE_KEY, {});
+      saveJson(PROFILE_KEY, {
+        ...(profileLocal && typeof profileLocal === "object" ? profileLocal : {}),
+        picture: pendingGoogleOnboarding.picture
+      });
+    }
+    setGoogleOnboardingState(false);
+    addLoginSuccessNotification(data?.profile || { name: payload.fullName, email: payload.email });
+
+    const civil = data?.civilCheck;
+    if (civil?.checked && civil?.accepted === false) {
+      setMsg(regMsg, "Conta criada, mas verificacao civil CPF ficou pendente.", false);
+    } else {
+      setMsg(regMsg, "Conta criada com sucesso.", false);
+    }
+    showLoginToast("Conta criada e login realizado com sucesso.");
+    await wait(900);
+    window.location.href = resolvePostLoginUrl();
+  } catch (error) {
+    setMsg(regMsg, `Falha no cadastro: ${String(error?.message || "tente novamente.")}`, true);
+  } finally {
+    setLoading(registerForm, false);
+  }
+}
+
+async function handleLoginSubmit(event) {
+  event.preventDefault();
+  const identifier = normalizeLoginIdentifierInput(loginId?.value || "");
+  const password = String(loginPass?.value || "");
+  if (!identifier || !password) {
+    setMsg(msg, "Informe email, CPF ou usuario e senha.", true);
+    return;
+  }
+  if (loginId) loginId.value = identifier;
+
+  setLoading(loginForm, true, "Entrando...");
+  setMsg(msg, "");
+  try {
+    const data = await postJson("/api/auth/login", { identifier, password }, 14000);
+    applySession(data);
+    addLoginSuccessNotification(data?.profile || null);
+    setMsg(msg, "Login realizado com sucesso.", false);
+    showLoginToast("Login realizado com sucesso.");
+    await wait(900);
+    window.location.href = resolvePostLoginUrl();
+  } catch (error) {
+    setMsg(msg, `Falha no login: ${String(error?.message || "tente novamente.")}`, true);
+  } finally {
+    setLoading(loginForm, false);
+  }
+}
+
+pwToggle?.addEventListener("click", () => togglePw(loginPass, pwToggle));
+regPwToggle?.addEventListener("click", () => togglePw(regPass, regPwToggle));
+goRegister?.addEventListener("click", () => {
+  setGoogleOnboardingState(false);
+  showRegister(true);
+});
+goLogin?.addEventListener("click", () => showRegister(false));
+loginForm?.addEventListener("submit", handleLoginSubmit);
+loginId?.addEventListener("blur", () => {
+  if (!loginId) return;
+  loginId.value = normalizeLoginIdentifierInput(loginId.value || "");
+});
+registerForm?.addEventListener("submit", handleRegisterSubmit);
+
+regCpf?.addEventListener("input", () => {
+  const cpfDigits = digitsOnly(regCpf.value).slice(0, 11);
+  regCpf.value = formatCpf(cpfDigits);
+  if (regCpfLookupTimer) clearTimeout(regCpfLookupTimer);
+  if (cpfDigits.length !== 11) return;
+  regCpfLookupTimer = setTimeout(() => {
+    void lookupCpfAndFillRegisterName(false);
+  }, 600);
+});
+regCpf?.addEventListener("blur", () => {
+  if (regCpfLookupTimer) clearTimeout(regCpfLookupTimer);
+  void lookupCpfAndFillRegisterName(true);
+});
+regCep?.addEventListener("input", () => {
+  const cepDigits = normalizeCepDigits(regCep.value);
+  regCep.value = formatCep(cepDigits);
+  if (regCepLookupTimer) clearTimeout(regCepLookupTimer);
+  if (!isValidCepDigits(cepDigits)) return;
+  regCepLookupTimer = setTimeout(() => {
+    void lookupCepAndFillRegisterAddress(false);
+  }, 450);
+});
+regCep?.addEventListener("blur", () => {
+  if (regCepLookupTimer) clearTimeout(regCepLookupTimer);
+  void lookupCepAndFillRegisterAddress(true);
+});
+regState?.addEventListener("input", () => {
+  regState.value = normalizeState(regState.value);
+});
+
+forgotBtn?.addEventListener("click", () => {
+  renderForgotPasswordModal();
+});
+
+googleBtn?.addEventListener("click", () => {
+  googleSignIn();
+});
+
+modal?.querySelectorAll("[data-close]").forEach((el) => el.addEventListener("click", closeModal));
+document.addEventListener("click", (event) => {
+  const target = event.target instanceof Element ? event.target.closest("[data-close='1']") : null;
+  if (target) closeModal();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && modal && !modal.hidden) closeModal();
+});
+
+showRegister(false);
+ensureUnifiedApiConfig();
+
+const resetTokenFromUrl = getResetTokenFromQuery();
+if (resetTokenFromUrl) {
+  renderResetPasswordModal(resetTokenFromUrl);
+}
+
+
+

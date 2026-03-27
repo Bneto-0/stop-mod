@@ -1,4 +1,34 @@
 const CART_KEY = "stopmod_cart";
+const MAX_CART_ITEMS = 2000;
+const SHIP_KEY = "stopmod_ship_to";
+const LEGACY_SHIP_KEY = "stopmod_ship_cep";
+const COUPON_KEY = "stopmod_coupons";
+const PAY_KEY = "stopmod_payment";
+const ORDERS_KEY = "stopmod_orders";
+const NOTES_KEY = "stopmod_notifications";
+const SOLD_COUNTS_KEY = "stopmod_sold_counts";
+const RATINGS_KEY = "stopmod_product_ratings";
+const PROFILE_KEY = "stopmod_profile";
+const PROFILE_EXTRA_KEY = "stopmod_profile_extra";
+const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
+const ADDRESS_CONFIRM_FINGERPRINT_KEY = "stopmod_address_confirmed_fp";
+const AUTH_TIMEOUT_MS = 2 * 60 * 60 * 1000;
+const AUTH_TOUCH_MIN_GAP_MS = 15 * 1000;
+const PAGBANK_API_BASE_KEY = "stopmod_pagbank_api_base";
+const PAGBANK_RETURN_URL_KEY = "stopmod_pagbank_return_url";
+const PAGBANK_REDIRECT_URL_KEY = "stopmod_pagbank_redirect_url";
+const PAGBANK_NOTIFICATION_URL_KEY = "stopmod_pagbank_notification_url";
+const PAGBANK_PAYMENT_NOTIFICATION_URL_KEY = "stopmod_pagbank_payment_notification_url";
+const PAYMENT_METHOD_LABELS = Object.freeze({
+  pix: "Pix",
+  credito: "Cartao de credito",
+  debito: "Cartao de debito",
+  boleto: "Boleto"
+});
+const PENDING_PAYMENT_TTL_MS = 5 * 60 * 60 * 1000;
+const ORDER_STATUS_AWAITING_PAYMENT = "Aguardando finalizacao";
+const ORDER_STATUS_PROCESSING_PAYMENT = "Processando pagamento";
+const ORDER_STATUS_TIMEOUT_CANCELLED = "Cancelado por falta de finalizacao";
 
 const products = [
   { id: 1, name: "Camiseta Oversized Street", category: "Camisetas", size: "P ao GG", price: 89.9, image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80" },
@@ -10,33 +40,721 @@ const products = [
   { id: 7, name: "Cardigan Tricot Cozy", category: "Casacos", size: "P ao G", price: 149.9, image: "https://images.unsplash.com/photo-1503341338985-c0477be52513?auto=format&fit=crop&w=700&q=80" },
   { id: 8, name: "Blazer Minimal Preto", category: "Blazers", size: "P ao GG", price: 249.9, image: "https://images.unsplash.com/photo-1484515991647-c5760fcecfc7?auto=format&fit=crop&w=700&q=80" },
   { id: 9, name: "Saia Midi Plissada", category: "Saias", size: "PP ao G", price: 119.9, image: "https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb?auto=format&fit=crop&w=700&q=80" },
-  { id: 10, name: "Short Alfaiataria", category: "Shorts", size: "36 ao 44", price: 109.9, image: "https://images.unsplash.com/photo-1542293787938-4d273c37c18d?auto=format&fit=crop&w=700&q=80" },
+  { id: 10, name: "Short Alfaiataria", category: "Shorts", size: "36 ao 44", price: 109.9, image: "https://images.unsplash.com/photo-1562157873-818bc0726f68?auto=format&fit=crop&w=700&q=80" },
   { id: 11, name: "Tenis Street Clean", category: "Calcados", size: "37 ao 43", price: 239.9, image: "https://images.unsplash.com/photo-1549298916-f52d724204b4?auto=format&fit=crop&w=700&q=80" },
-  { id: 12, name: "Bolsa Tote Minimal", category: "Acessorios", size: "Unico", price: 189.9, image: "https://images.unsplash.com/photo-1495107334309-fcf20504a5ab?auto=format&fit=crop&w=700&q=80" }
+  { id: 12, name: "Bolsa Tote Minimal", category: "Acessorios", size: "Unico", price: 189.9, image: "https://images.unsplash.com/photo-1495107334309-fcf20504a5ab?auto=format&fit=crop&w=700&q=80" },
+  { id: 13, name: "Camiseta Basic Premium", category: "Camisetas", size: "P ao GG", price: 99.9, image: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=700&q=80" },
+  { id: 14, name: "Calca Wide Leg Stone", category: "Calcas", size: "36 ao 46", price: 169.9, image: "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?auto=format&fit=crop&w=700&q=80" },
+  { id: 15, name: "Jaqueta Bomber Utility", category: "Jaquetas", size: "P ao XG", price: 259.9, image: "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=700&q=80" },
+  { id: 16, name: "Moletom Canguru Urban", category: "Moletons", size: "P ao GG", price: 199.9, image: "https://images.unsplash.com/photo-1562157873-818bc0726f68?auto=format&fit=crop&w=700&q=80" },
+  { id: 17, name: "Vestido Midi Floral Fresh", category: "Vestidos", size: "PP ao G", price: 159.9, image: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=700&q=80" },
+  { id: 18, name: "Camisa Social Slim", category: "Camisas", size: "P ao GG", price: 149.9, image: "https://images.unsplash.com/photo-1475180098004-ca77a66827be?auto=format&fit=crop&w=700&q=80" },
+  { id: 19, name: "Saia Jeans Cargo", category: "Saias", size: "36 ao 46", price: 129.9, image: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&fit=crop&w=700&q=80" },
+  { id: 20, name: "Regata Canelada Soft", category: "Blusas", size: "PP ao GG", price: 89.9, image: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=700&q=80" },
+  { id: 21, name: "Conjunto Tricot Elegance", category: "Conjuntos", size: "P ao G", price: 219.9, image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=700&q=80" }
 ];
 
+const productById = new Map(products.map((p) => [p.id, p]));
+
 const cartItems = document.getElementById("cart-items");
-const cartTotal = document.getElementById("cart-total");
+const productsBeforeWrap = document.getElementById("products-before-wrap");
+const productsBeforeMain = document.getElementById("products-before-main");
+const productsBeforeCents = document.getElementById("products-before-cents");
+const productsNowMain = document.getElementById("products-now-main");
+const productsNowCents = document.getElementById("products-now-cents");
+const cartTotalMain = document.getElementById("cart-total-main");
+const cartTotalCents = document.getElementById("cart-total-cents");
+const itemsCount = document.getElementById("items-count");
+const shippingValue = document.getElementById("shipping-value");
+const freeShipCount = document.getElementById("free-ship-count");
+const couponCount = document.getElementById("coupon-count");
 const feedback = document.getElementById("feedback");
 const checkoutBtn = document.getElementById("checkout");
-const clearBtn = document.getElementById("clear-cart");
 const searchInput = document.getElementById("search-input");
 const cartCount = document.getElementById("cart-count");
+const shipSummary = document.getElementById("ship-summary");
+const profileTopLink = document.getElementById("profile-top-link");
+const profileTopName = document.getElementById("profile-top-name");
+const profileTopPhoto = document.getElementById("profile-top-photo");
+const paymentSelected = document.getElementById("payment-selected");
+const checkoutModal = document.getElementById("checkout-modal");
+const paymentForm = document.getElementById("payment-form");
+const confirmPaymentBtn = document.getElementById("confirm-payment");
+const cardKindSelect = document.getElementById("card-kind-select");
+const morePaymentOptions = document.getElementById("more-payment-options");
+const toggleMorePaymentsBtn = document.getElementById("toggle-more-payments");
+const checkoutAddressLine = document.getElementById("checkout-address-line");
+const checkoutAddressShip = document.getElementById("checkout-address-ship");
+const checkoutFeedback = document.getElementById("checkout-feedback");
+const confirmAddress = document.getElementById("confirm-address");
+const inlinePayModal = document.getElementById("inline-pay-modal");
+const inlinePayContent = document.getElementById("inline-pay-content");
+const inlinePayStatus = document.getElementById("inline-pay-status");
+const inlinePayOpenLink = document.getElementById("inline-pay-open-link");
+const inlinePayDoneBtn = document.getElementById("inline-pay-done");
+const addressInlineText = document.getElementById("address-inline-text");
+const addressInlineState = document.getElementById("address-inline-state");
+const addressInlineConfirm = document.getElementById("address-inline-confirm");
+const confirmPaymentDefaultLabel = String(confirmPaymentBtn?.textContent || "Continuar");
+
+let lastAuthTouchAt = 0;
 
 function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function parseIsoMs(value) {
+  const parsed = Date.parse(String(value || ""));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function normalizeText(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function paymentLabel(method) {
+  return PAYMENT_METHOD_LABELS[String(method || "").trim()] || "";
+}
+
+function moneyParts(value) {
+  const fixed = (Number(value) || 0).toFixed(2);
+  const [a, b] = fixed.split(".");
+  const main = Number(a).toLocaleString("pt-BR");
+  return { main, cents: b || "00" };
+}
+
+function moneyToCents(value) {
+  return Math.round((Number(value) || 0) * 100);
+}
+
+function digitsOnly(value) {
+  return String(value || "").replace(/\D/g, "");
+}
+
+function normalizeBarcodeDigits(value) {
+  return digitsOnly(value).slice(0, 80);
+}
+
+function buildBarcodeImageUrl(value) {
+  const digits = normalizeBarcodeDigits(value);
+  if (digits.length < 20) return "";
+  const params = new URLSearchParams({
+    bcid: "code128",
+    text: digits,
+    includetext: "false",
+    scale: "2",
+    height: "14",
+    paddingwidth: "8",
+    paddingheight: "4"
+  });
+  return `https://bwipjs-api.metafloor.com/?${params.toString()}`;
+}
+
+function optionalHttpUrlFromStorage(key) {
+  const value = String(localStorage.getItem(key) || "").trim();
+  if (!value) return "";
+  return /^https?:\/\//i.test(value) ? value : "";
+}
+
+function buildPagBankInlineEndpointFromBase(raw) {
+  const base = String(raw || "").trim().replace(/\/+$/, "");
+  if (!base) return "/api/pagbank/inline-payment";
+  if (/\/api\/pagbank\/inline-payment$/i.test(base)) return base;
+  if (/\/api$/i.test(base)) return `${base}/pagbank/inline-payment`;
+  return `${base}/api/pagbank/inline-payment`;
+}
+
+function hasConfiguredPagBankApiBase() {
+  return !!String(localStorage.getItem(PAGBANK_API_BASE_KEY) || "").trim();
+}
+
+function resolvePagBankInlineEndpoint() {
+  const raw = String(localStorage.getItem(PAGBANK_API_BASE_KEY) || "").trim();
+  return buildPagBankInlineEndpointFromBase(raw);
+}
+
+async function isBackendHealthy(url, timeoutMs) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), Number(timeoutMs) || 4500);
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      signal: controller.signal
+    });
+    if (!response.ok) return false;
+    const data = await response.json().catch(() => null);
+    return !!data?.ok;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function resolveWorkingPagBankInlineEndpoint() {
+  const configuredEndpoint = resolvePagBankInlineEndpoint();
+  if (hasConfiguredPagBankApiBase()) {
+    return configuredEndpoint;
+  }
+
+  const sameOriginHealthy = await isBackendHealthy("/api/health", 2600);
+  if (sameOriginHealthy) return "/api/pagbank/inline-payment";
+
+  const localBase = "http://localhost:8787";
+  const localHealthy = await isBackendHealthy(`${localBase}/api/health`, 3200);
+  if (localHealthy) {
+    localStorage.setItem(PAGBANK_API_BASE_KEY, localBase);
+    return `${localBase}/api/pagbank/inline-payment`;
+  }
+
+  const remoteBase = "https://stop-mod-api.onrender.com";
+  localStorage.setItem(PAGBANK_API_BASE_KEY, remoteBase);
+  return `${remoteBase}/api/pagbank/inline-payment`;
+}
+
+function buildOrderAlertEndpointFromPaymentEndpoint(paymentEndpoint) {
+  const endpoint = String(paymentEndpoint || "").trim().replace(/\/+$/, "");
+  if (!endpoint) return "";
+  if (/\/api\/pagbank\/inline-payment$/i.test(endpoint)) {
+    return endpoint.replace(/\/api\/pagbank\/inline-payment$/i, "/api/alerts/order-event");
+  }
+  return "";
+}
+
+function resolveOrderAlertEndpoint(preferredPaymentEndpoint) {
+  const fromPreferred = buildOrderAlertEndpointFromPaymentEndpoint(preferredPaymentEndpoint);
+  if (fromPreferred) return fromPreferred;
+  const rawBase = String(localStorage.getItem(PAGBANK_API_BASE_KEY) || "").trim().replace(/\/+$/, "");
+  if (!rawBase) {
+    const host = String(window.location.hostname || "").toLowerCase();
+    if (host === "localhost" || host === "127.0.0.1") return "http://localhost:8787/api/alerts/order-event";
+    return "https://stop-mod-api.onrender.com/api/alerts/order-event";
+  }
+  if (/\/api$/i.test(rawBase)) return `${rawBase}/alerts/order-event`;
+  return `${rawBase}/api/alerts/order-event`;
+}
+
+function sendOrderLifecycleEmailAlert(eventType, order, options = {}) {
+  const event = String(eventType || "").trim().toLowerCase();
+  if (!event || !order || typeof order !== "object") return;
+  const endpoint = resolveOrderAlertEndpoint(options.paymentEndpoint || "");
+  const payload = {
+    eventType: event,
+    occurredAt: new Date().toISOString(),
+    customer: {
+      name: String(order?.ownerName || "").trim(),
+      email: String(order?.ownerEmail || "").trim().toLowerCase()
+    },
+    order: {
+      id: String(order?.referenceId || order?.id || "").trim(),
+      paymentMethod: String(order?.payment || "").trim(),
+      total: Number(order?.totals?.total || 0),
+      status: String(order?.tracking?.status || order?.status || "").trim(),
+      deadlineAt: String(order?.paymentDeadlineAt || "").trim(),
+      cancelReason: String(order?.cancelReason || "").trim()
+    }
+  };
+
+  fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json"
+    },
+    body: JSON.stringify(payload),
+    keepalive: true
+  }).catch(() => {
+    // alerta de email nao pode interromper checkout
+  });
+}
+
+function isNotAllowedHtmlError(message) {
+  const text = String(message || "").toLowerCase();
+  if (!text) return false;
+  if (text.includes("cannot post")) return true;
+  if (text.includes("404") && text.includes("not found")) return true;
+  return text.includes("405") && text.includes("not allowed");
+}
+
+function normalizeCheckoutErrorMessage(error) {
+  const raw = String(error?.message || "").trim();
+  const lower = raw.toLowerCase();
+
+  if (isNotAllowedHtmlError(raw)) {
+    return "Backend de pagamento nao esta ativo neste dominio. Inicie o backend local (porta 8787) ou configure stopmod_pagbank_api_base.";
+  }
+  if (lower.includes("failed to fetch") || lower.includes("connection refused")) {
+    return "Nao foi possivel conectar ao backend de pagamento. Verifique se ele esta ligado.";
+  }
+  return raw || "tente novamente.";
+}
+
+async function postJson(url, payload, timeoutMs) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), Number(timeoutMs) || 15000);
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+
+    const text = await response.text();
+    let data = null;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      data = null;
+    }
+
+    if (!response.ok) {
+      const message = String(data?.message || data?.error || text || `HTTP ${response.status}`);
+      throw new Error(message);
+    }
+
+    return data || {};
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error("Tempo esgotado ao iniciar pagamento no PagBank.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 function loadCartIds() {
   try {
-    return JSON.parse(localStorage.getItem(CART_KEY) || "[]");
+    const raw = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
+    if (!Array.isArray(raw)) return [];
+    const normalized = raw
+      .map((item) => Number(item))
+      .filter((item) => Number.isInteger(item) && item > 0 && productById.has(item));
+    if (normalized.length !== raw.length) {
+      saveCartIds(normalized);
+    }
+    return normalized;
   } catch {
     return [];
   }
 }
 
+function loadProfile() {
+  try {
+    return JSON.parse(localStorage.getItem(PROFILE_KEY) || "null");
+  } catch {
+    return null;
+  }
+}
+
+function loadProfileExtra() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PROFILE_EXTRA_KEY) || "null");
+    return raw && typeof raw === "object" ? raw : null;
+  } catch {
+    return null;
+  }
+}
+
+function loadCheckoutCustomer() {
+  const profile = loadProfile() || {};
+  const extra = loadProfileExtra() || {};
+  return {
+    name: String(profile?.name || extra?.fullName || extra?.displayName || "").trim(),
+    email: String(profile?.email || extra?.email || "").trim().toLowerCase(),
+    cpf: digitsOnly(extra?.cpf || profile?.cpf || ""),
+    phone: digitsOnly(extra?.phone || profile?.phone || "")
+  };
+}
+
+function renderTopProfile() {
+  if (!profileTopLink || !profileTopName) return;
+  const profile = loadProfile();
+  if (!profile) {
+    profileTopName.textContent = "Perfil";
+    profileTopLink.classList.remove("logged");
+    if (profileTopPhoto) {
+      profileTopPhoto.hidden = true;
+      profileTopPhoto.removeAttribute("src");
+      profileTopPhoto.alt = "";
+    }
+    return;
+  }
+
+  const displayName = String(profile.name || "").trim().split(/\s+/)[0] || "Perfil";
+  const picture = String(profile.picture || "").trim();
+  profileTopName.textContent = displayName;
+  profileTopLink.classList.add("logged");
+  profileTopLink.setAttribute("aria-label", `Perfil de ${displayName}`);
+  if (profileTopPhoto) {
+    profileTopPhoto.hidden = false;
+    profileTopPhoto.src = picture || "../assets/icons/user-solid.svg";
+    profileTopPhoto.alt = `Foto de ${displayName}`;
+  }
+}
+
+function clearAuthSession() {
+  localStorage.removeItem(PROFILE_KEY);
+  localStorage.removeItem(AUTH_LAST_SEEN_KEY);
+}
+
+function hasActiveAuthSession() {
+  const profile = loadProfile();
+  if (!profile) return false;
+
+  const rawLastSeen = Number(localStorage.getItem(AUTH_LAST_SEEN_KEY) || "0");
+  if (!Number.isFinite(rawLastSeen) || rawLastSeen <= 0) {
+    localStorage.setItem(AUTH_LAST_SEEN_KEY, String(Date.now()));
+    return true;
+  }
+
+  if (Date.now() - rawLastSeen > AUTH_TIMEOUT_MS) {
+    clearAuthSession();
+    return false;
+  }
+
+  return true;
+}
+
+function touchAuthSession(force) {
+  if (!hasActiveAuthSession()) return;
+  const now = Date.now();
+  if (!force && now - lastAuthTouchAt < AUTH_TOUCH_MIN_GAP_MS) return;
+  lastAuthTouchAt = now;
+  localStorage.setItem(AUTH_LAST_SEEN_KEY, String(now));
+}
+
+function bindAuthActivity() {
+  const touch = () => touchAuthSession(false);
+  ["pointerdown", "keydown", "touchstart", "mousemove", "scroll"].forEach((eventName) => {
+    document.addEventListener(eventName, touch, { passive: true });
+  });
+  window.addEventListener("focus", touch);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) touch();
+  });
+}
+
 function saveCartIds(ids) {
   localStorage.setItem(CART_KEY, JSON.stringify(ids));
+}
+
+function loadShipTo() {
+  // New format: JSON { street, number, city, cep }
+  try {
+    const raw = localStorage.getItem(SHIP_KEY);
+    if (raw) {
+      const obj = JSON.parse(raw);
+      if (obj && typeof obj === "object") {
+        return {
+          street: String(obj.street || "").trim(),
+          number: String(obj.number || "").trim(),
+          district: String(obj.district || "").trim(),
+          city: String(obj.city || "").trim(),
+          state: normalizeState(String(obj.state || "")),
+          cep: normalizeCep(String(obj.cep || "")),
+          complement: String(obj.complement || "").trim()
+        };
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  // Legacy: stored CEP string
+  const legacy = String(localStorage.getItem(LEGACY_SHIP_KEY) || "").trim();
+  if (legacy) {
+    const to = { street: "", number: "", district: "", city: "", state: "", cep: normalizeCep(legacy), complement: "" };
+    try {
+      localStorage.setItem(SHIP_KEY, JSON.stringify(to));
+    } catch {
+      // ignore
+    }
+    return to;
+  }
+  return { street: "", number: "", district: "", city: "", state: "", cep: "", complement: "" };
+}
+
+function shipSummaryText(to) {
+  const street = String(to?.street || "").trim();
+  const number = String(to?.number || "").trim();
+  const streetLine = street ? [street, number].filter(Boolean).join(", ") : "";
+  return streetLine || "Rua nao informada";
+}
+
+function addressLineText(to) {
+  const street = String(to?.street || "").trim();
+  const number = String(to?.number || "").trim();
+  const city = String(to?.city || "").trim();
+  const cep = String(to?.cep || "").trim();
+
+  const lineA = street ? [street, number].filter(Boolean).join(", ") : "";
+  const lineB = [city, cep].filter(Boolean).join(" ");
+
+  if (lineA && lineB) return `${lineA} - ${lineB}`;
+  if (lineA) return lineA;
+  if (lineB) return lineB;
+  return "Rua nao informada";
+}
+
+function shipValueText(value) {
+  if (value === null) return "Frete: informe o CEP";
+  if (value === 0) return "Frete: Gratis";
+  return `Frete: R$ ${formatBRL(value)}`;
+}
+
+function addressFingerprint(to) {
+  const street = normalizeText(to?.street || "");
+  const number = normalizeText(to?.number || "");
+  const city = normalizeText(to?.city || "");
+  const cep = String(to?.cep || "").replace(/\D/g, "");
+  return [street, number, city, cep].join("|");
+}
+
+function isAddressConfirmed(to) {
+  const fp = addressFingerprint(to);
+  if (!fp || !isCepValid(to?.cep)) return false;
+  return String(localStorage.getItem(ADDRESS_CONFIRM_FINGERPRINT_KEY) || "") === fp;
+}
+
+function setAddressConfirmed(to, confirmed) {
+  if (!confirmed) {
+    localStorage.removeItem(ADDRESS_CONFIRM_FINGERPRINT_KEY);
+    return;
+  }
+  const fp = addressFingerprint(to);
+  if (!fp || !isCepValid(to?.cep)) return;
+  localStorage.setItem(ADDRESS_CONFIRM_FINGERPRINT_KEY, fp);
+}
+
+function clearCheckoutFeedback() {
+  if (!checkoutFeedback) return;
+  checkoutFeedback.textContent = "";
+  checkoutFeedback.classList.remove("error");
+}
+
+function setCheckoutFeedback(text, isError) {
+  if (!checkoutFeedback) return;
+  checkoutFeedback.textContent = String(text || "");
+  checkoutFeedback.classList.toggle("error", !!isError);
+}
+
+function renderAddressConfirmation() {
+  const to = loadShipTo();
+  const ids = loadCartIds();
+  const subtotal = groupedCart(ids).reduce((sum, item) => sum + item.price * item.qty, 0);
+  const shipping = calcShipping(subtotal, ids.length, to.cep);
+  const confirmed = isAddressConfirmed(to);
+
+  if (checkoutAddressLine) checkoutAddressLine.textContent = addressLineText(to);
+  if (checkoutAddressShip) {
+    checkoutAddressShip.textContent = shipValueText(shipping);
+    checkoutAddressShip.classList.toggle("free", shipping === 0);
+  }
+
+  if (addressInlineText) {
+    addressInlineText.textContent = `Endereco padrao: ${addressLineText(to)}`;
+  }
+  if (addressInlineState) {
+    addressInlineState.textContent = confirmed ? "Endereco confirmado" : "Aguardando confirmacao";
+    addressInlineState.classList.toggle("ok", confirmed);
+  }
+  if (addressInlineConfirm) {
+    addressInlineConfirm.textContent = confirmed ? "Confirmado" : "Confirmar endereco";
+    addressInlineConfirm.classList.toggle("confirmed", confirmed);
+  }
+  if (confirmAddress) {
+    confirmAddress.checked = confirmed;
+  }
+}
+
+function normalizeCep(value) {
+  const digits = String(value || "").replace(/\D/g, "").slice(0, 8);
+  if (digits.length <= 5) return digits;
+  return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+}
+
+function normalizeState(value) {
+  return String(value || "")
+    .replace(/[^a-zA-Z]/g, "")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+function isCepValid(value) {
+  return String(value || "").replace(/\D/g, "").length === 8;
+}
+
+function loadCoupons() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(COUPON_KEY) || "[]");
+    if (!Array.isArray(raw)) return [];
+    return raw.map((c) => String(c || "").trim().toUpperCase()).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+function saveCoupons(coupons) {
+  localStorage.setItem(COUPON_KEY, JSON.stringify(coupons));
+}
+
+function loadOrders() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(ORDERS_KEY) || "[]");
+    return Array.isArray(raw) ? raw : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveOrders(orders) {
+  localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+}
+
+function loadSoldCounters() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SOLD_COUNTS_KEY) || "{}");
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+    return raw;
+  } catch {
+    return {};
+  }
+}
+
+function saveSoldCounters(counters) {
+  localStorage.setItem(SOLD_COUNTS_KEY, JSON.stringify(counters || {}));
+}
+
+function loadRatingStatsMap() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(RATINGS_KEY) || "{}");
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+    return raw;
+  } catch {
+    return {};
+  }
+}
+
+function saveRatingStatsMap(stats) {
+  localStorage.setItem(RATINGS_KEY, JSON.stringify(stats || {}));
+}
+
+function estimateAutoRatingByProduct(id) {
+  const base = Number(id) || 0;
+  const raw = 4.6 + (base % 5) * 0.08;
+  return Math.max(1, Math.min(5, Number(raw.toFixed(2))));
+}
+
+function registerSoldItemsFromCheckout(items) {
+  if (!Array.isArray(items) || !items.length) return;
+  const counters = loadSoldCounters();
+
+  items.forEach((item) => {
+    const id = Number(item?.id);
+    const qty = Number(item?.quantity);
+    if (!Number.isInteger(id) || id <= 0) return;
+    if (!Number.isFinite(qty) || qty <= 0) return;
+    const prev = Number(counters[String(id)] || 0);
+    counters[String(id)] = Math.max(0, Math.floor(prev + qty));
+  });
+
+  saveSoldCounters(counters);
+}
+
+function registerRatingFromCheckout(items) {
+  if (!Array.isArray(items) || !items.length) return;
+  const stats = loadRatingStatsMap();
+
+  items.forEach((item) => {
+    const id = Number(item?.id);
+    const qty = Number(item?.quantity);
+    if (!Number.isInteger(id) || id <= 0) return;
+    if (!Number.isFinite(qty) || qty <= 0) return;
+
+    const key = String(id);
+    const prevSum = Number(stats[key]?.sum || 0);
+    const prevCount = Number(stats[key]?.count || 0);
+    const score = estimateAutoRatingByProduct(id);
+
+    stats[key] = {
+      sum: Math.max(0, prevSum + score * qty),
+      count: Math.max(0, Math.floor(prevCount + qty))
+    };
+  });
+
+  saveRatingStatsMap(stats);
+}
+
+function loadNotes() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(NOTES_KEY) || "[]");
+    return Array.isArray(raw) ? raw : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveNotes(notes) {
+  localStorage.setItem(NOTES_KEY, JSON.stringify(Array.isArray(notes) ? notes : []));
+}
+
+function upsertNotification(payload) {
+  const safe = {
+    id: String(payload?.id || "").trim(),
+    scope: "individual",
+    type: "pedido",
+    userKey: String(payload?.userKey || "").trim().toLowerCase(),
+    title: String(payload?.title || "Notificacao"),
+    text: String(payload?.text || ""),
+    href: String(payload?.href || "/perfil/processando/"),
+    date: String(payload?.date || "Agora"),
+    createdAt: String(payload?.createdAt || new Date().toISOString())
+  };
+  if (!safe.id) return;
+
+  if (window.StopModNotifications && typeof window.StopModNotifications.add === "function") {
+    window.StopModNotifications.add(safe);
+    if (typeof window.StopModNotifications.sync === "function") {
+      window.StopModNotifications.sync();
+    }
+    return;
+  }
+
+  const notes = loadNotes();
+  const idx = notes.findIndex((note) => String(note?.id || "") === safe.id);
+  if (idx >= 0) notes[idx] = { ...notes[idx], ...safe };
+  else notes.unshift(safe);
+  saveNotes(notes.slice(0, 500));
+}
+
+function loadPayment() {
+  const method = String(localStorage.getItem(PAY_KEY) || "").trim();
+  return /^(pix|credito|debito|boleto)$/.test(method) ? method : "";
+}
+
+function savePayment(method) {
+  const value = String(method || "").trim();
+  if (!/^(pix|credito|debito|boleto)$/.test(value)) return;
+  localStorage.setItem(PAY_KEY, value);
 }
 
 function updateCartCount() {
@@ -46,33 +764,601 @@ function updateCartCount() {
   cartCount.style.display = ids.length ? "inline-flex" : "none";
 }
 
+function openStoreProductSearch() {
+  const query = String(searchInput?.value || "").trim();
+  const target = query ? `../index.html?q=${encodeURIComponent(query)}#produtos` : "../index.html#produtos";
+  window.location.href = target;
+}
+
+function redirectToLoginForCheckout() {
+  const nextPath = `${window.location.pathname || "/carrinho/"}${window.location.search || ""}${window.location.hash || ""}` || "/carrinho/";
+  window.location.href = `/login/?next=${encodeURIComponent(nextPath)}`;
+}
+
 function groupedCart(ids) {
-  const map = {};
+  const map = new Map();
   ids.forEach((id) => {
-    const p = products.find((item) => item.id === id);
+    const p = productById.get(id);
     if (!p) return;
-    if (!map[id]) map[id] = { ...p, qty: 0 };
-    map[id].qty += 1;
+    const cur = map.get(id) || { ...p, qty: 0 };
+    cur.qty += 1;
+    map.set(id, cur);
   });
-  return Object.values(map);
+  return Array.from(map.values());
+}
+
+function addOne(id) {
+  if (!productById.has(id)) return;
+  const ids = loadCartIds();
+  if (ids.length >= MAX_CART_ITEMS) {
+    feedback.textContent = "Limite de 2000 itens no carrinho atingido.";
+    return;
+  }
+  ids.push(id);
+  saveCartIds(ids);
+  renderCart();
+}
+
+function removeOne(id) {
+  const ids = loadCartIds();
+  const idx = ids.indexOf(id);
+  if (idx === -1) return;
+  ids.splice(idx, 1);
+  saveCartIds(ids);
+  renderCart();
+}
+
+function calcShipping(subtotal, itemCount, cep) {
+  if (!isCepValid(cep)) return null;
+  const free = subtotal >= 249.9 || itemCount >= 5;
+  return free ? 0 : 19.9;
+}
+
+function calcDiscount(subtotal, coupons) {
+  const unique = Array.from(new Set(coupons)).slice(0, 1);
+  if (!unique.length) return 0;
+  // Simples: 10% com 1 cupom (demo).
+  return subtotal * 0.1;
+}
+
+function checkoutSnapshot() {
+  const ids = loadCartIds();
+  const grouped = groupedCart(ids);
+  const shipTo = loadShipTo();
+  const coupons = loadCoupons();
+  const subtotal = grouped.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const shipping = calcShipping(subtotal, ids.length, shipTo.cep);
+  const discount = calcDiscount(subtotal, coupons);
+  const total = Math.max(0, Math.max(0, subtotal - discount) + (shipping ?? 0));
+
+  return {
+    ids,
+    grouped,
+    shipTo,
+    coupons,
+    subtotal,
+    shipping: shipping ?? 0,
+    discount,
+    total
+  };
+}
+
+function buildPagBankCheckoutPayload(paymentMethod) {
+  const snapshot = checkoutSnapshot();
+  if (!snapshot.ids.length || !snapshot.grouped.length) return null;
+
+  const customer = loadCheckoutCustomer();
+  const returnUrl = optionalHttpUrlFromStorage(PAGBANK_RETURN_URL_KEY);
+  const redirectUrl = optionalHttpUrlFromStorage(PAGBANK_REDIRECT_URL_KEY);
+  const notificationUrl = optionalHttpUrlFromStorage(PAGBANK_NOTIFICATION_URL_KEY);
+  const paymentNotificationUrl = optionalHttpUrlFromStorage(PAGBANK_PAYMENT_NOTIFICATION_URL_KEY);
+
+  return {
+    referenceId: genOrderId(),
+    paymentMethod: String(paymentMethod || "").trim(),
+    customer,
+    coupon: snapshot.coupons[0] || "",
+    shipTo: snapshot.shipTo,
+    discountAmount: moneyToCents(snapshot.discount),
+    shippingAmount: moneyToCents(snapshot.shipping),
+    items: snapshot.grouped.map((item) => ({
+      id: String(item.id),
+      referenceId: `SKU-${item.id}`,
+      name: String(item.name || "").trim(),
+      description: [item.category, item.size].filter(Boolean).join(" | ").slice(0, 240),
+      quantity: Number(item.qty) || 1,
+      unitAmount: moneyToCents(item.price)
+    })),
+    totals: {
+      subtotal: moneyToCents(snapshot.subtotal),
+      discount: moneyToCents(snapshot.discount),
+      shipping: moneyToCents(snapshot.shipping),
+      total: moneyToCents(snapshot.total)
+    },
+    returnUrl,
+    redirectUrl,
+    notificationUrl,
+    paymentNotificationUrl
+  };
+}
+
+function genOrderId() {
+  const rnd = Math.random().toString(16).slice(2, 6).toUpperCase();
+  return `SM-${Date.now().toString(36).toUpperCase()}-${rnd}`;
+}
+
+function genTrackingCode() {
+  const rnd = Math.random().toString(36).slice(2, 10).toUpperCase();
+  return `BR${rnd}`;
+}
+
+function mapPayloadItemsToOrderItems(items) {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((item) => {
+      const id = Number(item?.id);
+      const product = productById.get(id);
+      const qty = Math.max(1, Number(item?.quantity) || 1);
+      const unitAmount = Number(item?.unitAmount || 0);
+      const price = Number.isFinite(unitAmount) ? unitAmount / 100 : Number(product?.price || 0);
+      return {
+        id,
+        name: String(item?.name || product?.name || `Produto ${id}`),
+        price: Number(price) || 0,
+        qty,
+        image: String(product?.image || ""),
+        category: String(product?.category || ""),
+        size: String(product?.size || "")
+      };
+    })
+    .filter((item) => Number.isInteger(item.id) && item.id > 0);
+}
+
+function buildOrderTotalsFromPayload(payloadTotals) {
+  const subtotal = (Number(payloadTotals?.subtotal) || 0) / 100;
+  const shipping = (Number(payloadTotals?.shipping) || 0) / 100;
+  const discount = (Number(payloadTotals?.discount) || 0) / 100;
+  const total = (Number(payloadTotals?.total) || 0) / 100;
+  return {
+    subtotal: Number(subtotal) || 0,
+    shipping: Number(shipping) || 0,
+    discount: Number(discount) || 0,
+    total: Number(total) || 0
+  };
+}
+
+function addPendingPaymentNotification(order) {
+  if (!order?.id) return;
+  const owner = String(order?.ownerEmail || "").trim().toLowerCase();
+  upsertNotification({
+    id: `order-${order.id}-payment-pending`,
+    userKey: owner,
+    title: `Pedido ${order.id} aguardando finalizacao`,
+    text: "Finalize o pagamento em ate 5 horas para evitar cancelamento automatico.",
+    href: "/perfil/processando/",
+    createdAt: new Date().toISOString()
+  });
+}
+
+function addTimeoutCancellationNotification(order) {
+  if (!order?.id) return;
+  const owner = String(order?.ownerEmail || "").trim().toLowerCase();
+  upsertNotification({
+    id: `order-${order.id}-payment-timeout`,
+    userKey: owner,
+    title: `Pedido ${order.id} cancelado por tempo`,
+    text: "Seu pedido nao foi finalizado dentro de 5 horas e foi cancelado automaticamente.",
+    href: "/perfil/processando/",
+    createdAt: new Date().toISOString()
+  });
+}
+
+function addProcessingNotification(order) {
+  if (!order?.id) return;
+  const owner = String(order?.ownerEmail || "").trim().toLowerCase();
+  upsertNotification({
+    id: `order-${order.id}-payment-finalized`,
+    userKey: owner,
+    title: `Pedido ${order.id} em processamento`,
+    text: "Pagamento informado. Aguarde a confirmacao na aba Processando.",
+    href: "/perfil/processando/",
+    createdAt: new Date().toISOString()
+  });
+}
+
+function createPendingOrderFromCheckout(payload, paymentMethod, referenceId, options = {}) {
+  if (!payload || !Array.isArray(payload.items) || !payload.items.length) return null;
+  const profile = loadProfile();
+  const customer = loadCheckoutCustomer();
+  const shipTo = payload?.shipTo && typeof payload.shipTo === "object" ? payload.shipTo : loadShipTo();
+  const nowIso = new Date().toISOString();
+  const deadlineIso = new Date(Date.now() + PENDING_PAYMENT_TTL_MS).toISOString();
+  const orderId = String(referenceId || payload.referenceId || genOrderId()).trim() || genOrderId();
+  const method = String(paymentMethod || payload.paymentMethod || "pix").trim();
+  const totals = buildOrderTotalsFromPayload(payload?.totals || {});
+  const items = mapPayloadItemsToOrderItems(payload.items);
+  if (!items.length) return null;
+
+  const orders = loadOrders();
+  const idx = orders.findIndex((item) => {
+    const itemRef = String(item?.referenceId || item?.id || "").trim();
+    return itemRef && itemRef === orderId;
+  });
+  const previous = idx >= 0 ? orders[idx] : null;
+
+  const order = {
+    id: orderId,
+    referenceId: orderId,
+    createdAt: nowIso,
+    ownerName: String(profile?.name || customer?.name || "").trim(),
+    ownerEmail: String(profile?.email || customer?.email || "").trim().toLowerCase(),
+    payment: method,
+    shipTo,
+    coupon: String(payload?.coupon || "").trim(),
+    totals,
+    tracking: { code: genTrackingCode(), status: ORDER_STATUS_AWAITING_PAYMENT },
+    status: ORDER_STATUS_AWAITING_PAYMENT,
+    awaitingPayment: true,
+    paymentStartedAt: nowIso,
+    paymentDeadlineAt: deadlineIso,
+    pendingAlertSent: !!previous?.pendingAlertSent,
+    timeoutAlertSent: !!previous?.timeoutAlertSent,
+    processingAlertSent: !!previous?.processingAlertSent,
+    items
+  };
+
+  const shouldSendPendingAlert = !order.pendingAlertSent;
+  if (shouldSendPendingAlert) {
+    order.pendingAlertSent = true;
+  }
+
+  if (idx >= 0) {
+    orders[idx] = {
+      ...orders[idx],
+      ...order,
+      tracking: { ...(orders[idx]?.tracking || {}), ...(order.tracking || {}) }
+    };
+  } else {
+    orders.unshift(order);
+  }
+  saveOrders(orders.slice(0, 100));
+  addPendingPaymentNotification(order);
+  if (shouldSendPendingAlert) {
+    sendOrderLifecycleEmailAlert("payment_pending", order, { paymentEndpoint: options?.paymentEndpoint || "" });
+  }
+  return order;
+}
+
+function resolvePendingDeadlineMs(order) {
+  const explicit = parseIsoMs(order?.paymentDeadlineAt);
+  if (explicit > 0) return explicit;
+  const base = parseIsoMs(order?.paymentStartedAt || order?.createdAt);
+  if (base <= 0) return 0;
+  return base + PENDING_PAYMENT_TTL_MS;
+}
+
+function isAwaitingPayment(order) {
+  const rawStatus = normalizeText(order?.tracking?.status || order?.status || "");
+  if (order?.cancelled) return false;
+  if (order?.awaitingPayment === true) return true;
+  return rawStatus.includes("aguard");
+}
+
+function sweepPendingOrdersForTimeout() {
+  const orders = loadOrders();
+  if (!orders.length) return;
+
+  const now = Date.now();
+  let changed = false;
+  const cancelledOrders = [];
+
+  orders.forEach((order) => {
+    if (!order || typeof order !== "object") return;
+    if (!isAwaitingPayment(order)) return;
+
+    const deadlineMs = resolvePendingDeadlineMs(order);
+    if (deadlineMs <= 0) return;
+    if (!order.paymentDeadlineAt) {
+      order.paymentDeadlineAt = new Date(deadlineMs).toISOString();
+      changed = true;
+    }
+    if (now < deadlineMs) return;
+
+    order.awaitingPayment = false;
+    order.cancelled = true;
+    order.cancelReason = "payment_timeout";
+    order.cancelledAt = new Date(now).toISOString();
+    order.status = ORDER_STATUS_TIMEOUT_CANCELLED;
+    order.tracking = {
+      ...(order.tracking || {}),
+      status: ORDER_STATUS_TIMEOUT_CANCELLED
+    };
+    order.timeoutAlertSent = true;
+    changed = true;
+    cancelledOrders.push(order);
+  });
+
+  if (changed) {
+    saveOrders(orders.slice(0, 100));
+  }
+  cancelledOrders.forEach((order) => {
+    addTimeoutCancellationNotification(order);
+    if (!order?.timeoutAlertSent) return;
+    sendOrderLifecycleEmailAlert("payment_timeout", order);
+  });
+}
+
+function readPendingCheckoutReference() {
+  try {
+    const raw = JSON.parse(localStorage.getItem("stopmod_pending_checkout") || "null");
+    return String(raw?.referenceId || "").trim();
+  } catch {
+    return "";
+  }
+}
+
+function markPendingOrderAsProcessing(referenceId) {
+  const ref = String(referenceId || "").trim();
+  if (!ref) return null;
+
+  const orders = loadOrders();
+  if (!orders.length) return null;
+  const idx = orders.findIndex((order) => {
+    const orderRef = String(order?.referenceId || order?.id || "").trim();
+    return orderRef && orderRef === ref;
+  });
+  if (idx < 0) return null;
+
+  const order = orders[idx];
+  if (!order || typeof order !== "object" || order.cancelled === true) return order || null;
+  if (!isAwaitingPayment(order)) return order;
+
+  order.awaitingPayment = false;
+  order.paymentFinalizedAt = new Date().toISOString();
+  order.status = ORDER_STATUS_PROCESSING_PAYMENT;
+  order.tracking = {
+    ...(order.tracking || {}),
+    status: ORDER_STATUS_PROCESSING_PAYMENT
+  };
+  const shouldSendProcessingAlert = !order.processingAlertSent;
+  if (shouldSendProcessingAlert) {
+    order.processingAlertSent = true;
+  }
+  orders[idx] = order;
+  saveOrders(orders.slice(0, 100));
+  addProcessingNotification(order);
+  if (shouldSendProcessingAlert) {
+    sendOrderLifecycleEmailAlert("payment_processing", order);
+  }
+  return order;
+}
+
+function setCartExtraSpace(itemCount) {
+  const extra = Math.round(Math.min(600, 120 + itemCount * 0.24));
+  document.documentElement.style.setProperty("--cart-extra", `${extra}px`);
+}
+
+function updatePaymentUI(method) {
+  if (!paymentSelected) return;
+  const label = paymentLabel(method);
+  if (!label) {
+    paymentSelected.textContent = "";
+    paymentSelected.hidden = true;
+    return;
+  }
+  paymentSelected.textContent = `com ${label}`;
+  paymentSelected.hidden = false;
+}
+
+function openModal() {
+  if (!checkoutModal) return;
+  renderAddressConfirmation();
+  clearCheckoutFeedback();
+  checkoutModal.hidden = false;
+}
+
+function closeModal() {
+  if (!checkoutModal) return;
+  clearCheckoutFeedback();
+  checkoutModal.hidden = true;
+}
+
+function setInlinePayStatus(text, isError) {
+  if (!inlinePayStatus) return;
+  inlinePayStatus.textContent = String(text || "");
+  inlinePayStatus.classList.toggle("error", !!isError);
+}
+
+function hideInlinePayOpenLink() {
+  if (!inlinePayOpenLink) return;
+  inlinePayOpenLink.hidden = true;
+  inlinePayOpenLink.removeAttribute("href");
+  inlinePayOpenLink.textContent = "";
+}
+
+function showInlinePayOpenLink(text, href) {
+  if (!inlinePayOpenLink) return;
+  const targetHref = String(href || "").trim();
+  if (!targetHref || !/^https?:\/\//i.test(targetHref)) {
+    hideInlinePayOpenLink();
+    return;
+  }
+  inlinePayOpenLink.hidden = false;
+  inlinePayOpenLink.href = targetHref;
+  inlinePayOpenLink.textContent = String(text || "Abrir");
+}
+
+function renderInlinePaymentContent(data) {
+  if (!inlinePayContent) return;
+  const mode = String(data?.mode || "").trim().toLowerCase();
+  const referenceId = escapeHtml(String(data?.referenceId || ""));
+
+  if (mode === "pix") {
+    const qrText = String(data?.pix?.qrText || "").trim();
+    const qrImage = String(
+      data?.pix?.qrImageBase64 ||
+        data?.pix?.qrImageDataUrl ||
+        data?.pix?.qrImageUrl ||
+        data?.pix?.qrLink ||
+        ""
+    ).trim();
+    const expiresAt = String(data?.pix?.expiresAt || data?.expiresAt || "").trim();
+    const expiryText = expiresAt ? new Date(expiresAt).toLocaleString("pt-BR") : "";
+    inlinePayContent.innerHTML = `
+      <h3 class="inline-pay-title">Pix gerado com sucesso</h3>
+      <p class="inline-pay-text">Escaneie o QR Code ou copie o codigo Pix.</p>
+      <p class="inline-pay-line"><strong>Recebedor:</strong> Stop mod</p>
+      ${qrImage ? `<img src="${escapeHtml(qrImage)}" alt="QR Code Pix" />` : ""}
+      ${referenceId ? `<p class="inline-pay-line"><strong>Pedido:</strong> ${referenceId}</p>` : ""}
+      ${expiryText ? `<p class="inline-pay-line"><strong>Validade:</strong> ${escapeHtml(expiryText)}</p>` : ""}
+      ${qrText ? "<button id=\"inline-pay-copy\" class=\"inline-pay-copy\" type=\"button\">Copiar codigo Pix</button>" : ""}
+      ${!qrText ? "<p class=\"inline-pay-line\">Codigo Pix indisponivel.</p>" : ""}
+    `;
+    const copyBtn = document.getElementById("inline-pay-copy");
+    copyBtn?.addEventListener("click", async () => {
+      const value = String(qrText || "");
+      if (!value) return;
+      try {
+        await navigator.clipboard.writeText(value);
+        setInlinePayStatus("Codigo Pix copiado com sucesso.", false);
+      } catch {
+        setInlinePayStatus("Nao foi possivel copiar automaticamente. Copie manualmente o codigo.", true);
+      }
+    });
+    hideInlinePayOpenLink();
+    return;
+  }
+
+  if (mode === "boleto") {
+    const barcodeFormatted = String(data?.boleto?.formattedBarcode || data?.boleto?.barcode || "").trim();
+    const barcodeDigits = normalizeBarcodeDigits(data?.boleto?.barcode || barcodeFormatted);
+    const barcodeImage = buildBarcodeImageUrl(barcodeDigits || barcodeFormatted);
+    const dueDate = String(data?.boleto?.dueDate || "").trim();
+    const dueText = dueDate ? new Date(dueDate).toLocaleDateString("pt-BR") : "";
+    inlinePayContent.innerHTML = `
+      <h3 class="inline-pay-title">Boleto gerado com sucesso</h3>
+      <p class="inline-pay-text">Use o codigo de barras abaixo para pagar no banco/app.</p>
+      ${barcodeImage ? `<img class="inline-pay-boleto-barcode" src="${escapeHtml(barcodeImage)}" alt="Codigo de barras do boleto" loading="lazy" referrerpolicy="no-referrer" />` : ""}
+      ${barcodeFormatted ? `<p class="inline-pay-barcode-number">${escapeHtml(barcodeFormatted)}</p>` : "<p class=\"inline-pay-line\">Codigo de barras indisponivel.</p>"}
+      ${referenceId ? `<p class="inline-pay-line"><strong>Pedido:</strong> ${referenceId}</p>` : ""}
+      ${dueText ? `<p class="inline-pay-line"><strong>Vencimento:</strong> ${escapeHtml(dueText)}</p>` : ""}
+      ${barcodeFormatted ? "<button id=\"inline-pay-copy\" class=\"inline-pay-copy\" type=\"button\">Copiar codigo de barras</button>" : ""}
+    `;
+    const copyBtn = document.getElementById("inline-pay-copy");
+    copyBtn?.addEventListener("click", async () => {
+      const value = String(barcodeDigits || barcodeFormatted || "");
+      if (!value) return;
+      try {
+        await navigator.clipboard.writeText(value);
+        setInlinePayStatus("Codigo de barras copiado com sucesso.", false);
+      } catch {
+        setInlinePayStatus("Nao foi possivel copiar automaticamente. Copie manualmente o codigo.", true);
+      }
+    });
+    showInlinePayOpenLink("Abrir boleto (PDF)", data?.boleto?.pdfUrl || "");
+    return;
+  }
+
+  inlinePayContent.innerHTML = `
+    <h3 class="inline-pay-title">Pagamento iniciado</h3>
+    <p class="inline-pay-text">Seu pedido foi criado. Acompanhe o status em Meus pedidos.</p>
+    ${referenceId ? `<p class="inline-pay-line"><strong>Pedido:</strong> ${referenceId}</p>` : ""}
+  `;
+  hideInlinePayOpenLink();
+}
+
+function openInlinePayModal(data, method) {
+  if (!inlinePayModal || !inlinePayContent) return;
+  setInlinePayStatus(
+    `Pagamento com ${paymentLabel(method) || "PagBank"} iniciado sem redirecionamento.`,
+    false
+  );
+  renderInlinePaymentContent(data || {});
+  inlinePayModal.hidden = false;
+}
+
+function closeInlinePayModal() {
+  if (!inlinePayModal) return;
+  inlinePayModal.hidden = true;
+  if (inlinePayContent) inlinePayContent.innerHTML = "";
+  hideInlinePayOpenLink();
+}
+
+function syncPaymentRadios() {
+  if (!paymentForm) return;
+  const cur = loadPayment();
+  const radioValue = cur === "debito" ? "credito" : cur;
+  const radios = paymentForm.querySelectorAll("input[name=\"pay\"]");
+  radios.forEach((r) => {
+    r.checked = String(r.value) === radioValue;
+  });
+  if (cardKindSelect) {
+    cardKindSelect.value = cur === "debito" ? "debito" : "credito";
+  }
+  setMorePaymentsOpen(shouldExpandMorePayments(cur));
+}
+
+function selectedPaymentFromModal() {
+  if (!paymentForm) return "";
+  const checked = paymentForm.querySelector("input[name=\"pay\"]:checked");
+  if (!checked) return "";
+  const selected = String(checked.value);
+  if (selected !== "credito") return selected;
+  if (!cardKindSelect) return "credito";
+  const mode = String(cardKindSelect.value || "").trim().toLowerCase();
+  return mode === "debito" ? "debito" : "credito";
+}
+
+function shouldExpandMorePayments(method) {
+  const value = String(method || "").trim();
+  return value === "boleto";
+}
+
+function setMorePaymentsOpen(open) {
+  if (!morePaymentOptions || !toggleMorePaymentsBtn) return;
+  const expanded = !!open;
+  morePaymentOptions.hidden = !expanded;
+  toggleMorePaymentsBtn.setAttribute("aria-expanded", expanded ? "true" : "false");
+  toggleMorePaymentsBtn.textContent = expanded
+    ? "Mostrar menos meios de pagamento"
+    : "Mostrar mais meios de pagamento";
 }
 
 function renderCart() {
   const ids = loadCartIds();
+  updatePaymentUI(loadPayment());
   updateCartCount();
+  setCartExtraSpace(ids.length);
+  const shipTo = loadShipTo();
+  if (shipSummary) shipSummary.textContent = shipSummaryText(shipTo);
+  renderAddressConfirmation();
 
   if (!ids.length) {
     cartItems.innerHTML = "<li class=\"empty\">Seu carrinho esta vazio.</li>";
-    cartTotal.textContent = "0,00";
     checkoutBtn.disabled = true;
     feedback.textContent = "";
+    if (itemsCount) itemsCount.textContent = "0";
+    if (freeShipCount) freeShipCount.textContent = "0";
+    if (shippingValue) {
+      shippingValue.textContent = "--";
+      shippingValue.classList.remove("free");
+    }
+    if (couponCount) couponCount.textContent = String(loadCoupons().length);
+    if (productsBeforeWrap) productsBeforeWrap.hidden = true;
+    if (productsNowMain && productsNowCents) {
+      productsNowMain.textContent = "0";
+      productsNowCents.textContent = "00";
+    }
+    if (cartTotalMain && cartTotalCents) {
+      cartTotalMain.textContent = "0";
+      cartTotalCents.textContent = "00";
+    }
     return;
   }
 
-  const term = (searchInput?.value || "").toLowerCase().trim();
-  const grouped = groupedCart(ids).filter((item) =>
-    !term ? true : item.name.toLowerCase().includes(term)
-  );
+  const cep = shipTo.cep;
+
+  const grouped = groupedCart(ids);
   if (!grouped.length) {
     cartItems.innerHTML = "<li class=\"empty\">Nenhum item encontrado.</li>";
   } else {
@@ -81,13 +1367,16 @@ function renderCart() {
         const meta = [item.category, item.size].filter(Boolean).join(" | ");
         return `
         <li class="cart-item">
-          <button class="remove" data-id="${item.id}" aria-label="Remover 1 unidade">x</button>
           <img src="${item.image}" alt="${item.name}" loading="lazy" />
           <div class="cart-item-body">
             <strong>${item.name}</strong>
             ${meta ? `<div class="cart-item-meta">${meta}</div>` : ""}
             <div class="cart-item-row">
-              <span class="cart-item-qty">Qtd: ${item.qty}</span>
+              <div class="qty-controls" aria-label="Quantidade">
+                <button class="qty-btn" data-action="dec" data-id="${item.id}" aria-label="Diminuir">-</button>
+                <span class="qty-val" aria-label="Quantidade">${item.qty}</span>
+                <button class="qty-btn" data-action="inc" data-id="${item.id}" aria-label="Aumentar">+</button>
+              </div>
               <span class="cart-item-price">R$ ${formatBRL(item.price)}</span>
             </div>
             <div class="cart-item-meta">Subtotal: R$ ${formatBRL(item.price * item.qty)}</div>
@@ -98,40 +1387,268 @@ function renderCart() {
       .join("");
   }
 
-  const total = groupedCart(ids).reduce((sum, item) => sum + item.price * item.qty, 0);
-  cartTotal.textContent = formatBRL(total);
+  const subtotal = groupedCart(ids).reduce((sum, item) => sum + item.price * item.qty, 0);
+  const coupons = loadCoupons();
+  const shipping = calcShipping(subtotal, ids.length, cep);
+  const discount = calcDiscount(subtotal, coupons);
+
+  const productsBefore = subtotal;
+  const productsNow = Math.max(0, subtotal - discount);
+  const totalFinal = Math.max(0, productsNow + (shipping ?? 0));
+
+  const pNow = moneyParts(productsNow);
+  if (productsNowMain) productsNowMain.textContent = pNow.main;
+  if (productsNowCents) productsNowCents.textContent = pNow.cents;
+
+  if (productsBeforeWrap && productsBeforeMain && productsBeforeCents) {
+    if (discount > 0.01) {
+      const pBefore = moneyParts(productsBefore);
+      productsBeforeMain.textContent = pBefore.main;
+      productsBeforeCents.textContent = pBefore.cents;
+      productsBeforeWrap.hidden = false;
+    } else {
+      productsBeforeWrap.hidden = true;
+    }
+  }
+
+  if (cartTotalMain && cartTotalCents) {
+    const t = moneyParts(totalFinal);
+    cartTotalMain.textContent = t.main;
+    cartTotalCents.textContent = t.cents;
+  }
+
+  if (itemsCount) itemsCount.textContent = String(ids.length);
+  if (couponCount) couponCount.textContent = String(coupons.length);
+
+  if (shippingValue) {
+    if (shipping === null) {
+      shippingValue.textContent = "Selecionar";
+      shippingValue.classList.remove("free");
+    } else if (shipping === 0) {
+      shippingValue.textContent = "Gratis";
+      shippingValue.classList.add("free");
+    } else {
+      shippingValue.textContent = `R$ ${formatBRL(shipping)}`;
+      shippingValue.classList.remove("free");
+    }
+  }
+
+  if (freeShipCount) {
+    freeShipCount.textContent = String(shipping === 0 ? ids.length : 0);
+  }
+
   checkoutBtn.disabled = false;
 
-  cartItems.querySelectorAll("button[data-id]").forEach((btn) => {
+  cartItems.querySelectorAll("button[data-action][data-id]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      removeItem(Number(btn.getAttribute("data-id")));
+      const id = Number(btn.getAttribute("data-id"));
+      const action = String(btn.getAttribute("data-action"));
+      if (action === "inc") addOne(id);
+      if (action === "dec") removeOne(id);
     });
   });
 }
 
-function removeItem(id) {
-  const ids = loadCartIds();
-  const idx = ids.indexOf(id);
-  if (idx !== -1) {
-    ids.splice(idx, 1);
-    saveCartIds(ids);
-    renderCart();
-  }
-}
-
 checkoutBtn.addEventListener("click", () => {
+  if (!hasActiveAuthSession()) {
+    feedback.textContent = "Faca login para finalizar a compra.";
+    redirectToLoginForCheckout();
+    return;
+  }
+
+  touchAuthSession(true);
   const ids = loadCartIds();
   if (!ids.length) return;
-  feedback.textContent = "Pedido enviado! Obrigado pela compra.";
-  saveCartIds([]);
-  renderCart();
+  if (!isCepValid(loadShipTo().cep)) {
+    feedback.textContent = "Selecione o endereco de entrega antes de finalizar.";
+    return;
+  }
+  feedback.textContent = "";
+  clearCheckoutFeedback();
+  syncPaymentRadios();
+  openModal();
 });
 
-clearBtn.addEventListener("click", () => {
-  saveCartIds([]);
-  renderCart();
+searchInput?.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter") return;
+  event.preventDefault();
+  openStoreProductSearch();
 });
 
-searchInput?.addEventListener("input", renderCart);
+checkoutModal?.querySelectorAll("[data-close]").forEach((el) => {
+  el.addEventListener("click", closeModal);
+});
 
+inlinePayModal?.querySelectorAll("[data-inline-close]").forEach((el) => {
+  el.addEventListener("click", closeInlinePayModal);
+});
+
+inlinePayDoneBtn?.addEventListener("click", () => {
+  const pendingReference = readPendingCheckoutReference();
+  const updated = markPendingOrderAsProcessing(pendingReference);
+  localStorage.removeItem("stopmod_pending_checkout");
+  closeInlinePayModal();
+  if (updated?.cancelled) {
+    feedback.textContent = "Este pedido foi cancelado por falta de finalizacao no prazo.";
+    return;
+  }
+  feedback.textContent = "Pedido em processamento. Aguarde confirmacao na aba Processando.";
+});
+
+toggleMorePaymentsBtn?.addEventListener("click", () => {
+  const isOpen = String(toggleMorePaymentsBtn.getAttribute("aria-expanded") || "false") === "true";
+  setMorePaymentsOpen(!isOpen);
+});
+
+cardKindSelect?.addEventListener("change", () => {
+  if (!paymentForm) return;
+  const cardRadio = paymentForm.querySelector('input[name="pay"][value="credito"]');
+  if (cardRadio) cardRadio.checked = true;
+});
+
+addressInlineConfirm?.addEventListener("click", () => {
+  const to = loadShipTo();
+  if (!isCepValid(to?.cep)) {
+    feedback.textContent = "Selecione o endereco de entrega antes de confirmar.";
+    return;
+  }
+  setAddressConfirmed(to, true);
+  feedback.textContent = "Endereco confirmado para finalizar a compra.";
+  renderAddressConfirmation();
+});
+
+confirmAddress?.addEventListener("change", () => {
+  const to = loadShipTo();
+  if (confirmAddress.checked && isCepValid(to?.cep)) {
+    setAddressConfirmed(to, true);
+  } else if (!confirmAddress.checked) {
+    setAddressConfirmed(to, false);
+  }
+  renderAddressConfirmation();
+});
+
+paymentForm?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  sweepPendingOrdersForTimeout();
+  if (!hasActiveAuthSession()) {
+    closeModal();
+    feedback.textContent = "Sua sessao expirou. Faca login novamente para continuar.";
+    redirectToLoginForCheckout();
+    return;
+  }
+
+  touchAuthSession(true);
+  const method = selectedPaymentFromModal();
+  if (!method) {
+    setCheckoutFeedback("Escolha a forma de pagamento para continuar.", true);
+    feedback.textContent = "";
+    return;
+  }
+
+  const shipTo = loadShipTo();
+  const confirmedInModal = !!confirmAddress?.checked;
+  if (!isCepValid(shipTo?.cep)) {
+    setCheckoutFeedback("Selecione um endereco valido para entrega.", true);
+    feedback.textContent = "";
+    return;
+  }
+  if (!confirmedInModal && !isAddressConfirmed(shipTo)) {
+    setCheckoutFeedback("Confirme o endereco ou altere antes de continuar.", true);
+    feedback.textContent = "";
+    return;
+  }
+  setAddressConfirmed(shipTo, true);
+  clearCheckoutFeedback();
+
+  const payload = buildPagBankCheckoutPayload(method);
+  if (!payload) {
+    setCheckoutFeedback("Seu carrinho esta vazio.", true);
+    feedback.textContent = "";
+    return;
+  }
+
+  if (confirmPaymentBtn) {
+    confirmPaymentBtn.disabled = true;
+    confirmPaymentBtn.textContent = "Gerando pagamento...";
+  }
+
+  savePayment(method);
+  updatePaymentUI(method);
+
+  try {
+    const endpoint = await resolveWorkingPagBankInlineEndpoint();
+    let effectiveEndpoint = endpoint;
+    let data;
+
+    try {
+      data = await postJson(endpoint, payload, 22000);
+    } catch (firstError) {
+      const shouldTryLocalFallback =
+        isNotAllowedHtmlError(firstError?.message) &&
+        !/^https?:\/\/localhost:8787\/api\/pagbank\/inline-payment$/i.test(String(endpoint || ""));
+
+      if (!shouldTryLocalFallback) throw firstError;
+
+      const localBase = "http://localhost:8787";
+      const localEndpoint = `${localBase}/api/pagbank/inline-payment`;
+      data = await postJson(localEndpoint, payload, 22000);
+      localStorage.setItem(PAGBANK_API_BASE_KEY, localBase);
+      effectiveEndpoint = localEndpoint;
+    }
+
+    if (!data || typeof data !== "object") {
+      throw new Error("PagBank nao retornou dados de pagamento.");
+    }
+
+    registerSoldItemsFromCheckout(payload.items);
+    registerRatingFromCheckout(payload.items);
+
+    const referenceId = String(data?.referenceId || payload.referenceId || "").trim();
+    createPendingOrderFromCheckout(payload, method, referenceId, { paymentEndpoint: effectiveEndpoint });
+    localStorage.setItem(
+      "stopmod_pending_checkout",
+      JSON.stringify({
+        referenceId,
+        method,
+        createdAt: new Date().toISOString()
+      })
+    );
+
+    closeModal();
+    feedback.textContent = "Pagamento iniciado. Finalize no quadro seguro abaixo.";
+    openInlinePayModal(data, method);
+  } catch (error) {
+    feedback.textContent = `Falha ao iniciar pagamento real: ${normalizeCheckoutErrorMessage(error)}`;
+  } finally {
+    if (confirmPaymentBtn) {
+      confirmPaymentBtn.disabled = false;
+      confirmPaymentBtn.textContent = confirmPaymentDefaultLabel;
+    }
+  }
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  if (inlinePayModal && !inlinePayModal.hidden) {
+    closeInlinePayModal();
+    return;
+  }
+  if (checkoutModal && !checkoutModal.hidden) {
+    closeModal();
+  }
+});
+
+bindAuthActivity();
+sweepPendingOrdersForTimeout();
+setMorePaymentsOpen(false);
 renderCart();
+renderTopProfile();
+
+window.addEventListener("storage", (event) => {
+  if (event.key === PROFILE_KEY) renderTopProfile();
+  if (event.key === SHIP_KEY || event.key === LEGACY_SHIP_KEY || event.key === CART_KEY) {
+    renderCart();
+  }
+});
+
+

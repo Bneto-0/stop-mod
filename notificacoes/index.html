@@ -1,0 +1,4 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Notificacoes | Stop mod</title><link rel="icon" href="../favicon.svg" type="image/svg+xml" /><link rel="stylesheet" href="../style.css" /></head>
+<body><main class="page-shell container"><section class="page-card"><p class="eyebrow">Conta</p><h1>Notificacoes</h1><div id="notes-list" class="page-stack"></div></section></main><script>const NOTES_KEY="stopmod_notifications"; const list=document.getElementById("notes-list"); let notes=[]; try { notes=JSON.parse(localStorage.getItem(NOTES_KEY) || "[]"); } catch {} list.innerHTML = notes.length ? notes.map((note)=>`<article class="helper-card"><h3>${note.title || "Notificacao"}</h3><p>${note.text || ""}</p></article>`).join("") : "<p>Nenhuma notificacao no momento.</p>";</script></body></html>
