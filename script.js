@@ -374,6 +374,14 @@ document.addEventListener("click", (event) => {
   if (dot) {
     activateAnnouncement(Number(dot.getAttribute("data-announcement-dot") || 0));
     restartAnnouncementTimer();
+    return;
+  }
+
+  const nav = event.target instanceof Element ? event.target.closest("[data-announcement-nav]") : null;
+  if (nav) {
+    const direction = nav.getAttribute("data-announcement-nav") === "prev" ? -1 : 1;
+    activateAnnouncement(activeAnnouncementIndex + direction);
+    restartAnnouncementTimer();
   }
 });
 

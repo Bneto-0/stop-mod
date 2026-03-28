@@ -268,8 +268,37 @@ button, input, select, textarea { font: inherit; }
 .announcement-slide__overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(18,15,13,0.92) 0%, rgba(18,15,13,0.74) 48%, rgba(18,15,13,0.18) 100%);
+  background:
+    linear-gradient(90deg, rgba(18,15,13,0.92) 0%, rgba(18,15,13,0.74) 48%, rgba(18,15,13,0.18) 100%),
+    linear-gradient(0deg, rgba(115,67,39,0.92) 0%, rgba(115,67,39,0.58) 17%, rgba(115,67,39,0) 38%);
 }
+
+.announcement-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  width: 52px;
+  height: 52px;
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 999px;
+  background: rgba(23,20,17,0.46);
+  color: #fff;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+}
+
+.announcement-arrow:hover {
+  background: rgba(23,20,17,0.72);
+}
+
+.announcement-arrow--prev { left: 20px; }
+.announcement-arrow--next { right: 20px; }
 
 .announcement-slide__content {
   position: relative;
@@ -717,6 +746,9 @@ button, input, select, textarea { font: inherit; }
   .announcement-slide__content { max-width: 100%; padding: 26px; }
   .home-stage__slogan { padding: 18px 20px; }
   .announcement-dots { left: 26px; bottom: 18px; }
+  .announcement-arrow { width: 44px; height: 44px; }
+  .announcement-arrow--prev { left: 14px; }
+  .announcement-arrow--next { right: 14px; }
   .promo-card__actions,
   .product-card__actions,
   .shelf-card__actions,
