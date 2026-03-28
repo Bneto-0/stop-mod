@@ -152,10 +152,46 @@ button, input, select, textarea { font: inherit; }
 .showcase-shell,
 .shelf-shell { padding: 26px 0 42px; }
 
-.home-stage__grid {
+.home-stage__stack {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.82fr);
+  gap: 18px;
+}
+
+.home-stage__hero {
+  display: block;
+}
+
+.home-stage__support {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
   gap: 24px;
+}
+
+.home-stage__slogan {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+  background: #6b4d3b;
+  color: #fff;
+  border-radius: var(--radius-lg);
+  padding: 20px 28px;
+  box-shadow: var(--shadow);
+}
+
+.home-stage__slogan-copy {
+  margin: 0;
+  color: rgba(255,255,255,0.82);
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.home-stage__slogan-title {
+  font-size: clamp(2.3rem, 6vw, 5rem);
+  line-height: 0.9;
+  letter-spacing: -0.06em;
+  font-style: italic;
+  white-space: nowrap;
 }
 
 .announcement-board,
@@ -192,7 +228,7 @@ button, input, select, textarea { font: inherit; }
 .announcement-carousel {
   position: relative;
   overflow: hidden;
-  min-height: 430px;
+  min-height: 540px;
   border-radius: var(--radius-xl);
   background: linear-gradient(135deg, #1a1512 0%, #3a2619 55%, #9b4b22 100%);
   box-shadow: 0 24px 54px rgba(23,20,17,0.18);
@@ -200,7 +236,7 @@ button, input, select, textarea { font: inherit; }
 
 .announcement-track {
   position: relative;
-  min-height: 430px;
+  min-height: 540px;
 }
 
 .announcement-slide {
@@ -243,7 +279,7 @@ button, input, select, textarea { font: inherit; }
   align-content: end;
   gap: 14px;
   padding: 34px;
-  max-width: 58%;
+  max-width: 44%;
   color: #fff;
 }
 
@@ -637,7 +673,9 @@ button, input, select, textarea { font: inherit; }
 .pill.is-active { background: var(--surface-alt); color: #fff; border-color: var(--surface-alt); }
 
 @media (max-width: 1220px) {
-  .home-stage__grid { grid-template-columns: 1fr; }
+  .home-stage__support { grid-template-columns: 1fr; }
+  .home-stage__slogan { grid-template-columns: 1fr; }
+  .home-stage__slogan-title { white-space: normal; }
   .compact-product-board { grid-template-columns: repeat(5, minmax(0, 1fr)); }
   .product-grid--dense { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
@@ -677,6 +715,7 @@ button, input, select, textarea { font: inherit; }
 
   .search-box { width: 100%; }
   .announcement-slide__content { max-width: 100%; padding: 26px; }
+  .home-stage__slogan { padding: 18px 20px; }
   .announcement-dots { left: 26px; bottom: 18px; }
   .promo-card__actions,
   .product-card__actions,

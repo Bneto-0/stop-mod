@@ -34,45 +34,53 @@
 
   <main>
     <section class="home-stage" id="anuncios">
-      <div class="container home-stage__grid">
-        <div class="announcement-board">
+      <div class="container home-stage__stack">
+        <div class="home-stage__hero">
           <section class="announcement-carousel" aria-label="Anuncios principais da loja">
             <div id="announcement-track" class="announcement-track"></div>
             <div id="announcement-dots" class="announcement-dots" aria-label="Controle dos anuncios"></div>
           </section>
-          <div id="announcement-mini-grid" class="announcement-mini-grid" aria-label="Banners menores da loja"></div>
         </div>
 
-        <aside class="promo-stack" aria-label="Blocos promocionais">
-          <article class="promo-card promo-card--warm">
-            <p class="promo-card__kicker">Campanha ativa</p>
-            <h2>Vitrine com cara de loja: anuncio grande, destaques laterais e prateleira cheia.</h2>
-            <p>Deixamos a home mais proxima do layout antigo, com mais peso visual para os anuncios e mais espaco para os produtos.</p>
-            <div class="promo-card__actions">
-              <a class="btn primary" href="#produtos">Ver vitrine</a>
-              <a class="btn secondary" href="./login/">Minha conta</a>
-            </div>
-          </article>
+        <div class="home-stage__slogan" aria-label="Faixa de campanha">
+          <p class="home-stage__slogan-copy">Vista atitude com a Stop mod. Campanhas de destaque, vitrine forte e produtos em sequencia.</p>
+          <strong class="home-stage__slogan-title">VISTA ATITUDE</strong>
+        </div>
 
-          <article class="promo-card promo-card--dark">
-            <p class="promo-card__kicker">Pagamento</p>
-            <h3>Pix, boleto e cartao em uma mesma vitrine.</h3>
-            <p>Login, carrinho e checkout continuam ligados ao backend publicado.</p>
-            <ul class="promo-checks">
-              <li>sessao ativa por 2 horas</li>
-              <li>carrinho sincronizado</li>
-              <li>retorno e cancelamento configurados</li>
-            </ul>
-          </article>
+        <div class="home-stage__support">
+          <div id="announcement-mini-grid" class="announcement-mini-grid" aria-label="Banners menores da loja"></div>
 
-          <section class="search-banners" aria-label="Banners de pesquisa em alta">
-            <div class="search-banners__head">
-              <p class="eyebrow">Pesquisas em alta</p>
-              <h3>Banners de pesquisa</h3>
-            </div>
-            <div id="search-banner-list" class="search-banner-list"></div>
-          </section>
-        </aside>
+          <aside class="promo-stack" aria-label="Blocos promocionais">
+            <article class="promo-card promo-card--warm">
+              <p class="promo-card__kicker">Campanha ativa</p>
+              <h2>Vitrine com cara de loja: anuncio grande, destaques laterais e prateleira cheia.</h2>
+              <p>Deixamos a home mais proxima do layout antigo, com mais peso visual para os anuncios e mais espaco para os produtos.</p>
+              <div class="promo-card__actions">
+                <a class="btn primary" href="#produtos">Ver vitrine</a>
+                <a class="btn secondary" href="./login/">Minha conta</a>
+              </div>
+            </article>
+
+            <article class="promo-card promo-card--dark">
+              <p class="promo-card__kicker">Pagamento</p>
+              <h3>Pix, boleto e cartao em uma mesma vitrine.</h3>
+              <p>Login, carrinho e checkout continuam ligados ao backend publicado.</p>
+              <ul class="promo-checks">
+                <li>sessao ativa por 2 horas</li>
+                <li>carrinho sincronizado</li>
+                <li>retorno e cancelamento configurados</li>
+              </ul>
+            </article>
+
+            <section class="search-banners" aria-label="Banners de pesquisa em alta">
+              <div class="search-banners__head">
+                <p class="eyebrow">Pesquisas em alta</p>
+                <h3>Banners de pesquisa</h3>
+              </div>
+              <div id="search-banner-list" class="search-banner-list"></div>
+            </section>
+          </aside>
+        </div>
       </div>
     </section>
 
