@@ -125,16 +125,19 @@ function renderCartCount() {
 
 function renderProfileState() {
   if (!profileLink) return;
+  const label = profileLink.querySelector(".profile-chip__label");
   try {
     const profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || "null");
     const firstName = String(profile?.name || "").trim().split(/\s+/)[0];
     if (firstName) {
-      profileLink.textContent = firstName;
+      if (label) label.textContent = firstName;
       profileLink.href = "./perfil/";
+      return;
     }
   } catch {
     // ignore profile state errors
   }
+  if (label) label.textContent = "Perfil";
 }
 
 function showToast(message) {

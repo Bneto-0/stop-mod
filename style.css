@@ -38,12 +38,15 @@ button, input, select, textarea { font: inherit; }
   position: sticky;
   top: 0;
   z-index: 40;
-  background: rgba(247,241,232,0.94);
-  backdrop-filter: blur(18px);
-  border-bottom: 1px solid rgba(23,20,17,0.08);
+  background: #765645;
+  color: #fff;
+  box-shadow: 0 12px 28px rgba(23,20,17,0.22);
 }
 
-.site-header__row,
+.site-header__shell,
+.site-header__top,
+.site-header__brandline,
+.site-header__utility,
 .site-footer__row,
 .site-nav,
 .site-actions,
@@ -52,15 +55,164 @@ button, input, select, textarea { font: inherit; }
 .page-actions,
 .filter-pills,
 .promo-card__actions { display: flex; align-items: center; gap: 16px; }
-.site-header__row,
+
+.site-header__shell {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  padding: 14px 0 12px;
+}
+
+.site-header__top {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.site-header__brandline {
+  flex: 0 1 auto;
+  gap: 26px;
+}
+
+.site-header__utility {
+  margin-left: auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .site-footer__row { justify-content: space-between; padding: 18px 0; }
-.brand-wordmark { font-size: 1.45rem; font-weight: 800; letter-spacing: -0.03em; }
-.brand-wordmark em { color: var(--accent); font-style: normal; }
-.site-nav a,
-.ghost-link,
+
+.brand-wordmark {
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.brand-wordmark--legacy {
+  font-size: clamp(2rem, 3vw, 3rem);
+  line-height: 0.92;
+  color: #fff;
+}
+
+.brand-wordmark em { color: #f1a25e; font-style: normal; }
+
+.delivery-chip,
+.profile-chip,
+.icon-chip,
+.cart-pill--legacy,
+.site-nav--legacy a,
 .footer-links a,
-.helper-card a { color: var(--text-soft); }
-.search-box { width: min(300px, 100%); }
+.helper-card a { color: #fff; }
+
+.delivery-chip,
+.profile-chip,
+.icon-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.delivery-chip__text {
+  display: grid;
+  gap: 2px;
+}
+
+.delivery-chip__text small {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.7);
+}
+
+.delivery-chip__text strong {
+  font-size: 1.15rem;
+  line-height: 0.95;
+}
+
+.site-icon {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.site-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.site-icon--pin {
+  width: 36px;
+  height: 36px;
+}
+
+.site-nav a,
+.ghost-link { color: inherit; }
+
+.site-nav--legacy {
+  gap: 34px;
+  align-items: center;
+  padding-left: 8px;
+}
+
+.site-nav--legacy a {
+  font-weight: 700;
+  font-size: 1rem;
+  color: rgba(255,255,255,0.96);
+}
+
+.search-box {
+  width: min(300px, 100%);
+}
+
+.search-box--legacy {
+  flex: 1 1 420px;
+  max-width: 620px;
+}
+
+.search-box--legacy input {
+  min-height: 54px;
+  padding: 0 20px;
+  border: 0;
+  background: #fff8f2;
+  color: #2a221d;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.18);
+}
+
+.search-box--legacy input::placeholder {
+  color: #7f7266;
+}
+
+.profile-chip {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.profile-chip__label {
+  display: inline-flex;
+  align-items: center;
+}
+
+.icon-chip {
+  width: 42px;
+  height: 42px;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+}
+
+.cart-pill--legacy {
+  background: transparent;
+  padding: 0;
+  gap: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.cart-pill--legacy strong {
+  background: rgba(255,255,255,0.18);
+}
 .search-box input,
 .page-input,
 .page-textarea {
@@ -773,4 +925,42 @@ button, input, select, textarea { font: inherit; }
 
 .announcement-carousel.is-dragging {
   cursor: grabbing;
+}
+
+.site-header .search-box--legacy {
+  width: min(620px, 100%);
+}
+
+.site-header .search-box--legacy input {
+  min-height: 54px;
+  padding: 0 22px;
+  border: none;
+  background: #fff8f2;
+  color: #2a221d;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.site-header .search-box--legacy input::placeholder {
+  color: #7f7266;
+}
+
+.site-header .icon-chip {
+  gap: 0;
+}
+
+.site-header .icon-chip .site-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.cart-pill.cart-pill--legacy {
+  background: transparent;
+  color: #fff;
+  padding: 0;
+  gap: 10px;
+}
+
+.cart-pill.cart-pill--legacy strong {
+  background: rgba(255,255,255,0.18);
 }

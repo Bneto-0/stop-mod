@@ -11,24 +11,64 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./style.css?v=2" />
+  <link rel="stylesheet" href="./style.css?v=3" />
 </head>
 <body id="top">
-  <header class="site-header">
-    <div class="container site-header__row">
-      <a class="brand-wordmark" href="./index.html#top" aria-label="Stop mod">Stop <em>mod</em></a>
-      <nav class="site-nav" aria-label="Navegacao principal">
-        <a href="./index.html#anuncios">Anuncios</a>
-        <a href="./index.html#produtos">Produtos</a>
-        <a href="./categorias/">Categorias</a>
-        <a href="./cupons/">Cupons</a>
-        <a href="./entrega/">Entrega</a>
-      </nav>
-      <div class="site-actions">
-        <label class="search-box" for="search-home"><span class="sr-only">Pesquisar produto</span><input id="search-home" type="search" placeholder="Pesquisar produto, cor ou categoria" /></label>
-        <a id="profile-link" class="ghost-link" href="./login/">Entrar</a>
-        <a class="cart-pill" href="./carrinho/">Carrinho <strong id="cart-count">0</strong></a>
+  <header class="site-header site-header--legacy">
+    <div class="container site-header__shell">
+      <div class="site-header__top">
+        <div class="site-header__brandline">
+          <a class="brand-wordmark brand-wordmark--legacy" href="./index.html#top" aria-label="Stop mod">Stop <em>mod</em></a>
+          <a class="delivery-chip" href="./entrega/" aria-label="Enviar para Sao Paulo">
+            <span class="site-icon site-icon--pin" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.4-6-11a6 6 0 1 1 12 0c0 5.6-6 11-6 11Z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>
+            </span>
+            <span class="delivery-chip__text">
+              <small>Enviar para</small>
+              <strong>Sao Paulo</strong>
+            </span>
+          </a>
+        </div>
+
+        <label class="search-box search-box--legacy" for="search-home">
+          <span class="sr-only">Pesquisar produto</span>
+          <input id="search-home" type="search" placeholder="Pesquisar produto" />
+        </label>
+
+        <div class="site-header__utility">
+          <a id="profile-link" class="profile-chip" href="./login/">
+            <span class="site-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="8" r="4"></circle></svg>
+            </span>
+            <span class="profile-chip__label">Perfil</span>
+          </a>
+          <a class="icon-chip" href="./notificacoes/" aria-label="Notificacoes">
+            <span class="site-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18H9"></path><path d="M18 16V11a6 6 0 1 0-12 0v5l-2 2h16l-2-2Z"></path></svg>
+            </span>
+          </a>
+          <a class="icon-chip icon-chip--shortcut" href="./cupons/" aria-label="Atalhos da loja">
+            <span class="site-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="7" cy="7" r="2.2"></circle><circle cx="17" cy="7" r="2.2"></circle><circle cx="7" cy="17" r="2.2"></circle><circle cx="17" cy="17" r="2.2"></circle></svg>
+            </span>
+          </a>
+          <a class="cart-pill cart-pill--legacy" href="./carrinho/">
+            <span class="site-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="19" r="1.6"></circle><circle cx="18" cy="19" r="1.6"></circle><path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h9.8a1 1 0 0 0 1-.8L21 7H7.4"></path></svg>
+            </span>
+            <span>Carrinho</span>
+            <strong id="cart-count">0</strong>
+          </a>
+        </div>
       </div>
+
+      <nav class="site-nav site-nav--legacy" aria-label="Navegacao principal">
+        <a href="./perfil/">Pedidos</a>
+        <a href="./perfil/">Favoritos</a>
+        <a href="./perfil/">Processando</a>
+        <a href="./cupons/">Cupons</a>
+        <a href="./categorias/">Categorias</a>
+      </nav>
     </div>
   </header>
 
