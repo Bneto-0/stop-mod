@@ -238,6 +238,9 @@ button, input, select, textarea { font: inherit; }
   border-radius: 0;
   background: linear-gradient(135deg, #1a1512 0%, #3a2619 55%, #9b4b22 100%);
   box-shadow: none;
+  touch-action: pan-y;
+  user-select: none;
+  cursor: grab;
 }
 
 .announcement-carousel::after {
@@ -292,6 +295,7 @@ button, input, select, textarea { font: inherit; }
 }
 
 .announcement-arrow {
+  display: none;
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -781,4 +785,8 @@ button, input, select, textarea { font: inherit; }
   .hero-banner__card { padding: 20px; }
   .section-head--split .section-note { text-align: left; max-width: none; }
   .product-shelf { grid-auto-columns: minmax(240px, 82vw); }
+}
+
+.announcement-carousel.is-dragging {
+  cursor: grabbing;
 }

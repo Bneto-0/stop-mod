@@ -83,6 +83,7 @@ const cartCount = document.getElementById("cart-count");
 const profileLink = document.getElementById("profile-link");
 const filters = Array.from(document.querySelectorAll("[data-filter]"));
 const announcementTrack = document.getElementById("announcement-track");
+const announcementCarousel = document.querySelector(".announcement-carousel");
 const announcementDots = document.getElementById("announcement-dots");
 const announcementMiniGrid = document.getElementById("announcement-mini-grid");
 const searchBannerList = document.getElementById("search-banner-list");
@@ -90,6 +91,8 @@ const adFlow = document.getElementById("ad-flow");
 
 let activeAnnouncementIndex = 0;
 let announcementTimer = null;
+let announcementDragStartX = null;
+let announcementDragCurrentX = null;
 
 function loadCartIds() {
   try {
@@ -304,6 +307,36 @@ function restartAnnouncementTimer() {
   }, 4800);
 }
 
+function beginAnnouncementDrag(clientX) {
+  if (clientX === null || !announcementCarousel) return;
+  announcementDragStartX = clientX;
+  announcementDragCurrentX = clientX;
+  announcementCarousel.classList.add("is-dragging");
+}
+
+function moveAnnouncementDrag(clientX) {
+  if (announcementDragStartX === null || clientX === null) return;
+  announcementDragCurrentX = clientX;
+}
+
+function endAnnouncementDrag() {
+  if (announcementDragStartX === null || announcementDragCurrentX === null) {
+    announcementDragStartX = null;
+    announcementDragCurrentX = null;
+    announcementCarousel?.classList.remove("is-dragging");
+    return;
+  }
+
+  const delta = announcementDragCurrentX - announcementDragStartX;
+  if (Math.abs(delta) >= 48) {
+    activateAnnouncement(activeAnnouncementIndex + (delta < 0 ? 1 : -1));
+    restartAnnouncementTimer();
+  }
+
+  announcementDragStartX = null;
+  announcementDragCurrentX = null;
+  announcementCarousel?.classList.remove("is-dragging");
+}
 function renderMiniAnnouncements() {
   if (!announcementMiniGrid) return;
   announcementMiniGrid.innerHTML = miniAnnouncements.map((item) => `
@@ -385,6 +418,39 @@ document.addEventListener("click", (event) => {
   }
 });
 
+announcementCarousel?.addEventListener("mousedown", (event) => {
+  beginAnnouncementDrag(event.clientX);
+});
+
+announcementCarousel?.addEventListener("mousemove", (event) => {
+  moveAnnouncementDrag(event.clientX);
+});
+
+announcementCarousel?.addEventListener("mouseup", () => {
+  endAnnouncementDrag();
+});
+
+announcementCarousel?.addEventListener("mouseleave", () => {
+  if (announcementDragStartX !== null) endAnnouncementDrag();
+});
+
+announcementCarousel?.addEventListener("touchstart", (event) => {
+  beginAnnouncementDrag(event.touches[0]?.clientX ?? null);
+}, { passive: true });
+
+announcementCarousel?.addEventListener("touchmove", (event) => {
+  moveAnnouncementDrag(event.touches[0]?.clientX ?? null);
+}, { passive: true });
+
+announcementCarousel?.addEventListener("touchend", (event) => {
+  const endX = event.changedTouches[0]?.clientX ?? announcementDragCurrentX;
+  moveAnnouncementDrag(endX ?? null);
+  endAnnouncementDrag();
+}, { passive: true });
+
+announcementCarousel?.addEventListener("touchcancel", () => {
+  endAnnouncementDrag();
+}, { passive: true });
 renderAnnouncementCarousel();
 renderMiniAnnouncements();
 renderSearchBanners();
