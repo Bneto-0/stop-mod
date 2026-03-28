@@ -292,11 +292,20 @@ function normalizeNextPath(raw) {
 }
 
 function resolvePostLoginUrl() {
+  const fallbackUrl = "../index.html#top";
   try {
     const raw = String(new URLSearchParams(window.location.search).get("next") || "").trim();
-    return normalizeNextPath(raw) || "../perfil/";
+    const nextUrl = normalizeNextPath(raw);
+    if (!nextUrl) return fallbackUrl;
+
+    const normalizedNext = nextUrl.replace(/\/+$/, "").toLowerCase();
+    if (normalizedNext === "/perfil" || normalizedNext === "../perfil" || normalizedNext === "perfil") {
+      return fallbackUrl;
+    }
+
+    return nextUrl;
   } catch {
-    return "../perfil/";
+    return fallbackUrl;
   }
 }
 
