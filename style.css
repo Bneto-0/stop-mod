@@ -265,12 +265,15 @@ button, input, select, textarea { font: inherit; }
   inset: 0;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 420ms ease;
+  transform: translateX(24px) scale(1.01);
+  transition: opacity 700ms ease, transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
 }
 
 .announcement-slide.is-active {
   opacity: 1;
   pointer-events: auto;
+  transform: translateX(0) scale(1);
 }
 
 .announcement-slide__media {
@@ -382,12 +385,7 @@ button, input, select, textarea { font: inherit; }
 }
 
 .announcement-dots {
-  position: absolute;
-  left: 34px;
-  bottom: 30px;
-  display: flex;
-  gap: 8px;
-  z-index: 4;
+  display: none;
 }
 
 .announcement-dots button {
@@ -767,7 +765,7 @@ button, input, select, textarea { font: inherit; }
   .search-box { width: 100%; }
 .announcement-slide__content { max-width: 100%; padding: 26px 26px 92px; }
   .home-stage__slogan { padding: 18px 20px; }
-  .announcement-dots { left: 26px; bottom: 22px; }
+  .announcement-dots { display: none; }
 .announcement-arrow { width: 44px; height: 44px; }
   .announcement-arrow--prev { left: 14px; }
   .announcement-arrow--next { right: 14px; }
