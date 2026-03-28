@@ -409,13 +409,6 @@ document.addEventListener("click", (event) => {
     restartAnnouncementTimer();
     return;
   }
-
-  const nav = event.target instanceof Element ? event.target.closest("[data-announcement-nav]") : null;
-  if (nav) {
-    const direction = nav.getAttribute("data-announcement-nav") === "prev" ? -1 : 1;
-    activateAnnouncement(activeAnnouncementIndex + direction);
-    restartAnnouncementTimer();
-  }
 });
 
 announcementCarousel?.addEventListener("mousedown", (event) => {
