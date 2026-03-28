@@ -161,7 +161,9 @@ button, input, select, textarea { font: inherit; }
 .home-stage__hero {
   display: block;
   width: 100%;
-  margin-bottom: 18px;
+  margin-bottom: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .home-stage__support {
@@ -238,6 +240,18 @@ button, input, select, textarea { font: inherit; }
   box-shadow: none;
 }
 
+.announcement-carousel::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 190px;
+  background: linear-gradient(180deg, rgba(247,241,232,0) 0%, rgba(247,241,232,0.14) 24%, rgba(247,241,232,0.68) 74%, rgba(247,241,232,1) 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
 .announcement-track {
   position: relative;
   min-height: 540px;
@@ -273,15 +287,15 @@ button, input, select, textarea { font: inherit; }
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(18,15,13,0.92) 0%, rgba(18,15,13,0.74) 48%, rgba(18,15,13,0.18) 100%),
-    linear-gradient(0deg, rgba(115,67,39,0.92) 0%, rgba(115,67,39,0.58) 17%, rgba(115,67,39,0) 38%);
+    linear-gradient(90deg, rgba(18,15,13,0.92) 0%, rgba(18,15,13,0.76) 44%, rgba(18,15,13,0.14) 100%),
+    linear-gradient(180deg, rgba(18,15,13,0.12) 0%, rgba(18,15,13,0.04) 44%, rgba(18,15,13,0.2) 100%);
 }
 
 .announcement-arrow {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 3;
+  z-index: 4;
   width: 52px;
   height: 52px;
   border: 1px solid rgba(255,255,255,0.22);
@@ -306,12 +320,12 @@ button, input, select, textarea { font: inherit; }
 
 .announcement-slide__content {
   position: relative;
-  z-index: 1;
+  z-index: 3;
   height: 100%;
   display: grid;
   align-content: end;
   gap: 14px;
-  padding: 34px;
+  padding: 34px 34px 102px;
   max-width: 44%;
   color: #fff;
 }
@@ -366,10 +380,10 @@ button, input, select, textarea { font: inherit; }
 .announcement-dots {
   position: absolute;
   left: 34px;
-  bottom: 24px;
+  bottom: 30px;
   display: flex;
   gap: 8px;
-  z-index: 2;
+  z-index: 4;
 }
 
 .announcement-dots button {
@@ -747,10 +761,10 @@ button, input, select, textarea { font: inherit; }
   }
 
   .search-box { width: 100%; }
-  .announcement-slide__content { max-width: 100%; padding: 26px; }
+.announcement-slide__content { max-width: 100%; padding: 26px 26px 92px; }
   .home-stage__slogan { padding: 18px 20px; }
-  .announcement-dots { left: 26px; bottom: 18px; }
-  .announcement-arrow { width: 44px; height: 44px; }
+  .announcement-dots { left: 26px; bottom: 22px; }
+.announcement-arrow { width: 44px; height: 44px; }
   .announcement-arrow--prev { left: 14px; }
   .announcement-arrow--next { right: 14px; }
   .promo-card__actions,
