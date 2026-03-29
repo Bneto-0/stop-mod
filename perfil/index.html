@@ -1,7 +1,114 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Minha conta | Stop mod</title><link rel="icon" href="../favicon.svg" type="image/svg+xml" /><link rel="stylesheet" href="../style.css" />  <link rel="stylesheet" href="/assets/site-header.css?v=1" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Minha conta | Stop mod</title>
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="/assets/site-header.css?v=1" />
 </head>
 <body>
 <div id="site-header-root"></div>
-<script src="/assets/site-header.js?v=1"></script><main class="page-shell container"><section class="page-card"><p class="eyebrow">Conta</p><h1 id="profile-name">Minha conta</h1><p id="profile-text">Entre ou cadastre-se para salvar endereco, acompanhar pedidos e finalizar compras.</p><div class="page-actions"><a class="btn primary" href="../login/">Entrar</a><a class="btn secondary" href="./pedidos/">Meus pedidos</a><a class="btn secondary" href="../entrega/">Enderecos</a></div></section></main><script>const profileName=document.getElementById("profile-name"); const profileText=document.getElementById("profile-text"); try { const profile=JSON.parse(localStorage.getItem("stopmod_profile") || "null"); if (profile && profile.name) { profileName.textContent = profile.name.split(/\s+/)[0]; profileText.textContent = `Conta ativa para ${profile.email || "cliente"}.`; } } catch {}</script></body></html>
+<script src="/assets/site-header.js?v=1"></script>
+<main class="page-shell container profile-page">
+  <section class="page-card profile-summary-card">
+    <p class="eyebrow">Conta</p>
+    <h1 id="profile-name">Minha conta</h1>
+    <p id="profile-text">Entre ou cadastre-se para salvar endereco, acompanhar pedidos e finalizar compras.</p>
+    <div class="page-actions profile-actions">
+      <a id="profile-login-action" class="btn primary" href="../login/">Entrar</a>
+      <a class="btn secondary" href="./pedidos/">Meus pedidos</a>
+      <a class="btn secondary" href="../entrega/">Enderecos</a>
+    </div>
+  </section>
+
+  <section class="page-card payment-guide-card">
+    <p class="eyebrow">Pagamento</p>
+    <h2>Formas de pagamento aceitas</h2>
+    <p class="payment-guide-copy">Aceitamos pagamento por Pix, cartoes de debito e credito das principais bandeiras, boleto bancario e tambem PayPal. Assim o cliente entende com clareza como finalizar a compra dentro da loja.</p>
+
+    <div class="payment-methods-grid">
+      <article class="payment-method-card payment-method-card--pix">
+        <div class="payment-method-head">
+          <span class="payment-method-icon" aria-hidden="true">
+            <svg viewBox="0 0 32 32"><path d="M10.3 7.2c1.5 0 2.9.6 4 1.7l1.7 1.7 1.7-1.7c1.1-1.1 2.5-1.7 4-1.7h3.2l-5.4 5.4c-1.9 1.9-5.1 1.9-7 0L7.1 7.2zm14.5 7.1 2 2c.7.7.7 1.8 0 2.5l-2 2-2.9-2.9a8.1 8.1 0 0 1 0-5.7l2.9 2.9zM7.2 21.7c0-1.5.6-2.9 1.7-4l1.7-1.7 1.7 1.7c1.9 1.9 1.9 5.1 0 7l-5.4 5.4v-3.2zm8.8 3.1a8 8 0 0 1-5.7-2.3l2.9-2.9a8.1 8.1 0 0 1 5.7 0l2.9 2.9a8 8 0 0 1-5.8 2.3zm-2.8-11.5a4 4 0 0 0 5.6 0l1.7-1.7a4 4 0 0 0-5.6 0l-1.7 1.7zm0 5.4a4 4 0 0 0 0 5.6l1.7-1.7a4 4 0 0 0 0-5.6l-1.7 1.7z"/></svg>
+          </span>
+          <div>
+            <h3>Pix</h3>
+            <p>Pagamento rapido com confirmacao mais agil.</p>
+          </div>
+        </div>
+        <div class="payment-brand-list">
+          <span class="payment-brand-pill payment-brand-pill--pix">PIX</span>
+        </div>
+      </article>
+
+      <article class="payment-method-card payment-method-card--cards">
+        <div class="payment-method-head">
+          <span class="payment-method-icon" aria-hidden="true">
+            <svg viewBox="0 0 32 32"><rect x="4" y="7" width="24" height="18" rx="4" ry="4"></rect><path d="M4 12h24"></path></svg>
+          </span>
+          <div>
+            <h3>Cartao de debito e credito</h3>
+            <p>Aceitamos as principais bandeiras para debito e credito.</p>
+          </div>
+        </div>
+        <div class="payment-brand-list">
+          <span class="payment-brand-pill payment-brand-pill--visa">Visa</span>
+          <span class="payment-brand-pill payment-brand-pill--master">Mastercard</span>
+          <span class="payment-brand-pill payment-brand-pill--elo">Elo</span>
+        </div>
+      </article>
+
+      <article class="payment-method-card payment-method-card--boleto">
+        <div class="payment-method-head">
+          <span class="payment-method-icon" aria-hidden="true">
+            <svg viewBox="0 0 32 32"><rect x="6" y="5" width="20" height="22" rx="3" ry="3"></rect><path d="M10 10v12M13 10v12M18 10v12M22 10v12"></path></svg>
+          </span>
+          <div>
+            <h3>Boleto bancario</h3>
+            <p>Os pagamentos com boleto sao confirmados em ate 3 dias.</p>
+          </div>
+        </div>
+        <div class="payment-brand-list">
+          <span class="payment-brand-pill payment-brand-pill--boleto">Boleto</span>
+        </div>
+      </article>
+
+      <article class="payment-method-card payment-method-card--paypal">
+        <div class="payment-method-head">
+          <span class="payment-method-icon" aria-hidden="true">
+            <svg viewBox="0 0 32 32"><path d="M11 8h8.8c3.8 0 6.2 2.1 6.2 5.3 0 4.4-3.2 7.1-8 7.1H15l-1 5H9l2.6-15.4A2.3 2.3 0 0 1 11 8z"></path><path d="M13 13.4h5.2c2.4 0 3.8 1.1 3.8 3 0 2.6-2 4.3-5.1 4.3h-2.6"></path></svg>
+          </span>
+          <div>
+            <h3>PayPal</h3>
+            <p>Pagamento digital com confirmacao online e protecao adicional para compras elegiveis.</p>
+          </div>
+        </div>
+        <div class="payment-brand-list">
+          <span class="payment-brand-pill payment-brand-pill--paypal">PayPal</span>
+        </div>
+      </article>
+    </div>
+  </section>
+</main>
+<script>
+const profileName = document.getElementById("profile-name");
+const profileText = document.getElementById("profile-text");
+const profileLoginAction = document.getElementById("profile-login-action");
+try {
+  const profile = JSON.parse(localStorage.getItem("stopmod_profile") || "null");
+  if (profile && profile.name) {
+    profileName.textContent = profile.name.split(/\s+/)[0];
+    profileText.textContent = `Conta ativa para ${profile.email || "cliente"}.`;
+    if (profileLoginAction) profileLoginAction.hidden = true;
+  } else if (profileLoginAction) {
+    profileLoginAction.hidden = false;
+  }
+} catch {
+  if (profileLoginAction) profileLoginAction.hidden = false;
+}
+</script>
+</body>
+</html>
