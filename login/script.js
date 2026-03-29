@@ -186,28 +186,7 @@ function addLoginSuccessNotification(profileLike) {
 }
 
 function showLoginToast(message) {
-  const body = document.body;
-  if (!body) return;
-
-  const existing = document.getElementById("login-success-toast");
-  if (existing) existing.remove();
-
-  const toast = document.createElement("div");
-  toast.id = "login-success-toast";
-  toast.className = "login-success-toast";
-  toast.setAttribute("role", "status");
-  toast.setAttribute("aria-live", "polite");
-  toast.textContent = String(message || "Login realizado com sucesso.");
-  body.appendChild(toast);
-
-  requestAnimationFrame(() => {
-    toast.classList.add("show");
-  });
-
-  setTimeout(() => {
-    toast.classList.remove("show");
-    setTimeout(() => toast.remove(), 260);
-  }, 2400);
+  return;
 }
 
 function wait(ms) {
@@ -1103,7 +1082,7 @@ function finishSocialLogin(user) {
   );
   localStorage.setItem(AUTH_LAST_SEEN_KEY, String(Date.now()));
   addLoginSuccessNotification({ name, email });
-  setMsg(msg, "Login Google realizado com sucesso.", false);
+  setMsg(msg, "", false);
   showLoginToast("Login realizado com sucesso.");
   setTimeout(() => {
     window.location.href = resolvePostLoginUrl();
@@ -1178,7 +1157,7 @@ function googleSignIn() {
             const data = await postJson("/api/auth/google-login", { accessToken }, 16000);
             applySession(data);
             addLoginSuccessNotification(data?.profile || null);
-            setMsg(msg, "Login Google realizado com sucesso.", false);
+            setMsg(msg, "", false);
             showLoginToast("Login realizado com sucesso.");
             await wait(900);
             window.location.href = resolvePostLoginUrl();
@@ -1278,9 +1257,9 @@ async function handleRegisterSubmit(event) {
 
     const civil = data?.civilCheck;
     if (civil?.checked && civil?.accepted === false) {
-      setMsg(regMsg, "Conta criada, mas verificacao civil CPF ficou pendente.", false);
+      setMsg(regMsg, "", false);
     } else {
-      setMsg(regMsg, "Conta criada com sucesso.", false);
+      setMsg(regMsg, "", false);
     }
     showLoginToast("Conta criada e login realizado com sucesso.");
     await wait(900);
@@ -1308,7 +1287,7 @@ async function handleLoginSubmit(event) {
     const data = await postJson("/api/auth/login", { identifier, password }, 14000);
     applySession(data);
     addLoginSuccessNotification(data?.profile || null);
-    setMsg(msg, "Login realizado com sucesso.", false);
+    setMsg(msg, "", false);
     showLoginToast("Login realizado com sucesso.");
     await wait(900);
     window.location.href = resolvePostLoginUrl();
