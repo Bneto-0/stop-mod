@@ -1082,7 +1082,7 @@ function finishSocialLogin(user) {
   );
   localStorage.setItem(AUTH_LAST_SEEN_KEY, String(Date.now()));
   addLoginSuccessNotification({ name, email });
-  setMsg(msg, "", false);
+  setMsg(msg, "Entrando...", false);
   showLoginToast("Login realizado com sucesso.");
   setTimeout(() => {
     window.location.href = resolvePostLoginUrl();
@@ -1157,7 +1157,7 @@ function googleSignIn() {
             const data = await postJson("/api/auth/google-login", { accessToken }, 16000);
             applySession(data);
             addLoginSuccessNotification(data?.profile || null);
-            setMsg(msg, "", false);
+            setMsg(msg, "Entrando...", false);
             showLoginToast("Login realizado com sucesso.");
             await wait(900);
             window.location.href = resolvePostLoginUrl();
@@ -1257,9 +1257,9 @@ async function handleRegisterSubmit(event) {
 
     const civil = data?.civilCheck;
     if (civil?.checked && civil?.accepted === false) {
-      setMsg(regMsg, "", false);
+      setMsg(regMsg, "Entrando...", false);
     } else {
-      setMsg(regMsg, "", false);
+      setMsg(regMsg, "Entrando...", false);
     }
     showLoginToast("Conta criada e login realizado com sucesso.");
     await wait(900);
@@ -1287,7 +1287,7 @@ async function handleLoginSubmit(event) {
     const data = await postJson("/api/auth/login", { identifier, password }, 14000);
     applySession(data);
     addLoginSuccessNotification(data?.profile || null);
-    setMsg(msg, "", false);
+    setMsg(msg, "Entrando...", false);
     showLoginToast("Login realizado com sucesso.");
     await wait(900);
     window.location.href = resolvePostLoginUrl();
