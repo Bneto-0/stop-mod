@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Endereco de entrega | Stop mod</title><link rel="icon" href="../favicon.svg" type="image/svg+xml" /><link rel="stylesheet" href="../style.css" /></head>
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Endereco de entrega | Stop mod</title><link rel="icon" href="../favicon.svg" type="image/svg+xml" /><link rel="stylesheet" href="../style.css" />  <link rel="stylesheet" href="/assets/site-header.css?v=1" />
+</head>
 <body>
+<div id="site-header-root"></div>
+<script src="/assets/site-header.js?v=1"></script>
 <main class="page-shell container"><section class="page-card"><p class="eyebrow">Entrega</p><h1>Endereco de entrega</h1><p>Preencha e salve o endereco padrao. O carrinho usa esses dados na finalizacao do pedido.</p><form id="ship-form" class="page-stack"><div class="page-grid"><label class="field-row"><span>CEP</span><input class="page-input" id="cep" type="text" /></label><label class="field-row"><span>Estado</span><input class="page-input" id="state" type="text" /></label><label class="field-row"><span>Cidade</span><input class="page-input" id="city" type="text" /></label><label class="field-row"><span>Bairro</span><input class="page-input" id="district" type="text" /></label><label class="field-row"><span>Rua</span><input class="page-input" id="street" type="text" /></label><label class="field-row"><span>Numero</span><input class="page-input" id="number" type="text" /></label></div><label class="field-row"><span>Complemento</span><input class="page-input" id="complement" type="text" /></label><div class="page-actions"><button class="btn primary" type="submit">Salvar endereco</button><a class="btn secondary" href="../carrinho/">Ir para o carrinho</a></div><p id="ship-message" class="message"></p></form></section></main>
 <script>
 const SHIP_KEY = "stopmod_ship_to";

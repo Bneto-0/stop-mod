@@ -12,25 +12,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./style.css?v=4" />
+  <link rel="stylesheet" href="/assets/site-header.css?v=1" />
 </head>
 <body id="top">
-  <header class="site-header">
-    <div class="container site-header__row">
-      <a class="brand-wordmark" href="./index.html#top" aria-label="Stop mod">Stop <em>mod</em></a>
-      <nav class="site-nav" aria-label="Navegacao principal">
-        <a href="./index.html#anuncios">Anuncios</a>
-        <a href="./index.html#produtos">Produtos</a>
-        <a href="./categorias/">Categorias</a>
-        <a href="./cupons/">Cupons</a>
-        <a href="./entrega/">Entrega</a>
-      </nav>
-      <div class="site-actions">
-        <label class="search-box" for="search-home"><span class="sr-only">Pesquisar produto</span><input id="search-home" type="search" placeholder="Pesquisar produto, cor ou categoria" /></label>
-        <a id="profile-link" class="ghost-link" href="./login/">Entrar</a>
-        <a class="cart-pill" href="./carrinho/">Carrinho <strong id="cart-count">0</strong></a>
-      </div>
-    </div>
-  </header>
+  <div id="site-header-root"></div>
+  <script src="/assets/site-header.js?v=1"></script>
 
   <main>
     <section class="home-stage" id="anuncios">
