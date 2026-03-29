@@ -1,8 +1,9 @@
-(function () {
+﻿(function () {
   const CART_KEY = "stopmod_cart";
   const PROFILE_KEY = "stopmod_profile";
   const SHIP_KEY = "stopmod_ship_to";
   const LEGACY_SHIP_KEY = "stopmod_ship_cep";
+  const FALLBACK_AVATAR_BASE = "https://ui-avatars.com/api/?background=f2e5d7&color=6d5849&bold=true&size=96&name=";
 
   const root = document.getElementById("site-header-root");
   if (!root) return;
@@ -38,7 +39,7 @@
 
         <div class="shared-header__actions">
           <a id="profile-top-link" class="shared-profile" href="/login/" aria-label="Perfil">
-            <img id="profile-top-photo" class="shared-profile-photo" src="/assets/icons/user-solid.svg" alt="" hidden />
+            <img id="profile-top-photo" class="shared-profile-photo" alt="" hidden />
             <svg class="shared-profile-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"></path></svg>
             <span id="profile-top-name">Perfil</span>
           </a>
@@ -125,31 +126,51 @@
     return "Rua nao informada";
   }
 
+  function buildFallbackAvatar(name) {
+    return `${FALLBACK_AVATAR_BASE}${encodeURIComponent(String(name || "Perfil").trim())}`;
+  }
+
+  function isUsablePicture(value) {
+    const picture = String(value || "").trim();
+    return /^(https?:)?\/\//i.test(picture) || /^data:image\//i.test(picture);
+  }
+
   function renderHeaderProfile() {
     const profile = loadJson(PROFILE_KEY);
     if (!profile || !profileName || !profileLink) {
       if (profileName) profileName.textContent = "Perfil";
-      if (profileLink) profileLink.href = "/login/";
+      if (profileLink) {
+        profileLink.href = "/login/";
+        profileLink.classList.remove("has-photo");
+      }
       if (profilePhoto) {
         profilePhoto.hidden = true;
         profilePhoto.removeAttribute("src");
+        profilePhoto.alt = "";
+        profilePhoto.onerror = null;
       }
       return;
     }
 
     const displayName = String(profile.name || "").trim().split(/\s+/)[0] || "Perfil";
     const picture = String(profile.picture || "").trim();
+    const avatarSrc = isUsablePicture(picture) ? picture : buildFallbackAvatar(displayName);
+
     profileName.textContent = displayName;
     profileLink.href = "/perfil/";
     profileLink.setAttribute("aria-label", `Perfil de ${displayName}`);
-    if (picture && profilePhoto) {
+    profileLink.classList.add("has-photo");
+
+    if (profilePhoto) {
       profilePhoto.hidden = false;
-      profilePhoto.src = picture;
+      profilePhoto.src = avatarSrc;
       profilePhoto.alt = `Foto de ${displayName}`;
-    } else if (profilePhoto) {
-      profilePhoto.hidden = true;
-      profilePhoto.removeAttribute("src");
-      profilePhoto.alt = "";
+      profilePhoto.onerror = () => {
+        profilePhoto.hidden = true;
+        profilePhoto.removeAttribute("src");
+        profilePhoto.alt = "";
+        profileLink.classList.remove("has-photo");
+      };
     }
   }
 

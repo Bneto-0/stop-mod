@@ -1,7 +1,7 @@
 .shared-header {
   background: #f7f1e8;
-  border-bottom: 1px solid rgba(53, 34, 19, 0.08);
-  box-shadow: 0 1px 0 rgba(255,255,255,0.72) inset;
+  border-bottom: none;
+  box-shadow: none;
 }
 
 .shared-header__container {
@@ -121,6 +121,10 @@
   object-fit: cover;
 }
 
+.shared-profile.has-photo .shared-profile-icon {
+  display: none;
+}
+
 .shared-icon-link,
 .shared-cart {
   gap: 9px;
@@ -140,7 +144,7 @@
 }
 
 .shared-header__bottom {
-  border-top: 1px solid rgba(79, 59, 42, 0.07);
+  border-top: none;
 }
 
 .shared-header__bottom-row {
