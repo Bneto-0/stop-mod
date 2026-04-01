@@ -789,43 +789,42 @@ button, input, select, textarea { font: inherit; }
 }
 
 .payment-guide-copy {
-  max-width: 760px;
+  max-width: 860px;
+  font-size: 1rem;
+  line-height: 1.55;
 }
 
-.payment-methods-grid {
+.payment-guide-card--stacked {
+  padding-bottom: 28px;
+}
+
+.payment-method-list {
   display: grid;
-  gap: 16px;
-  margin-top: 20px;
+  gap: 26px;
+  margin-top: 28px;
 }
 
-.payment-method-card {
-  border: 1px solid rgba(23,20,17,0.08);
-  border-radius: 24px;
-  background: rgba(255,255,255,0.7);
-  padding: 20px;
+.payment-method-row {
   display: grid;
-  gap: 16px;
-}
-
-.payment-method-head {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
 }
 
 .payment-method-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 18px;
+  width: 72px;
+  height: 72px;
+  border-radius: 22px;
   display: inline-grid;
   place-items: center;
   flex: 0 0 auto;
   color: #fff;
+  box-shadow: 0 12px 24px rgba(23, 20, 17, 0.08);
 }
 
 .payment-method-icon svg {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   fill: none;
   stroke: currentColor;
   stroke-width: 2;
@@ -833,75 +832,103 @@ button, input, select, textarea { font: inherit; }
   stroke-linejoin: round;
 }
 
-.payment-method-card h3 {
-  margin: 0 0 6px;
-  font-size: 1.18rem;
+.payment-method-body h3 {
+  margin: 2px 0 6px;
+  font-size: 1.22rem;
+  line-height: 1.1;
 }
 
-.payment-method-card p {
+.payment-method-body p {
   margin: 0;
+  font-size: 0.99rem;
+  line-height: 1.5;
 }
 
-.payment-method-card--pix .payment-method-icon {
-  background: linear-gradient(135deg, #00b394, #008c73);
+.payment-method-row--pix .payment-method-icon {
+  background: linear-gradient(135deg, #1fd2c2, #009f95);
 }
 
-.payment-method-card--cards .payment-method-icon {
-  background: linear-gradient(135deg, #1f2937, #111827);
+.payment-method-row--cards .payment-method-icon {
+  background: linear-gradient(135deg, #1e293b, #0f172a);
 }
 
-.payment-method-card--boleto .payment-method-icon {
-  background: linear-gradient(135deg, #8b5a3c, #5d3b26);
+.payment-method-row--boleto .payment-method-icon {
+  background: linear-gradient(135deg, #9c643f, #714626);
 }
 
-.payment-brand-list {
+.payment-method-row--paypal .payment-method-icon {
+  background: linear-gradient(135deg, #0a58c6, #003087);
+}
+
+.payment-brand-logos {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 14px;
+  align-items: center;
+  margin-top: 18px;
 }
 
-.payment-brand-pill {
+.payment-brand-logo {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 42px;
-  padding: 0 16px;
-  border-radius: 999px;
-  font-weight: 800;
-  letter-spacing: 0.01em;
-  border: 1px solid transparent;
+  min-width: 92px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 14px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  background: #fff;
+  border: 1px solid rgba(23,20,17,0.08);
+  box-shadow: 0 10px 18px rgba(23,20,17,0.06);
 }
 
-.payment-brand-pill--pix {
-  background: rgba(0, 179, 148, 0.12);
-  color: #007e68;
-}
-
-.payment-brand-pill--visa {
-  background: rgba(26, 67, 185, 0.1);
+.payment-brand-logo--visa {
   color: #1a43b9;
+  font-size: 1rem;
 }
 
-.payment-brand-pill--master {
-  background: rgba(235, 87, 87, 0.12);
+.payment-brand-logo--master {
   color: #cf4b2d;
+  font-size: 0.94rem;
 }
 
-.payment-brand-pill--elo {
-  background: rgba(17, 24, 39, 0.08);
+.payment-brand-logo--hiper {
+  color: #b32025;
+  font-size: 0.9rem;
+}
+
+.payment-brand-logo--elo {
   color: #111827;
+  font-size: 1.05rem;
+  text-transform: lowercase;
 }
 
-.payment-brand-pill--boleto {
-  background: rgba(93, 59, 38, 0.1);
-  color: #5d3b26;
-}
+@media (max-width: 640px) {
+  .payment-method-row {
+    grid-template-columns: 60px minmax(0, 1fr);
+    gap: 14px;
+  }
 
-.payment-method-card--paypal .payment-method-icon {
-  background: linear-gradient(135deg, #0a4ea3, #003087);
-}
+  .payment-method-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 18px;
+  }
 
-.payment-brand-pill--paypal {
-  background: rgba(0, 48, 135, 0.1);
-  color: #003087;
+  .payment-method-icon svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .payment-brand-logos {
+    gap: 10px;
+  }
+
+  .payment-brand-logo {
+    min-width: 76px;
+    min-height: 40px;
+    padding: 0 10px;
+    font-size: 0.88rem;
+  }
 }
