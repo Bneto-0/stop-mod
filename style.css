@@ -1037,3 +1037,120 @@ button, input, select, textarea { font: inherit; }
     grid-column: auto;
   }
 }
+
+
+.order-history-shell {
+  width: min(980px, 100%);
+}
+
+.order-history-list {
+  display: grid;
+  gap: 18px;
+  margin-top: 22px;
+}
+
+.order-history-card {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: 24px;
+  align-items: center;
+  padding: 20px;
+  background: rgba(255,255,255,0.9);
+  border: 1px solid rgba(221,210,197,0.86);
+  border-radius: 30px;
+  box-shadow: 0 14px 30px rgba(23,20,17,0.08);
+}
+
+.order-history-thumb-wrap {
+  width: 132px;
+  height: 132px;
+  border-radius: 24px;
+  overflow: hidden;
+  background: #efe3d6;
+}
+
+.order-history-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.order-history-body {
+  display: grid;
+  gap: 8px;
+  align-content: center;
+}
+
+.order-history-id {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--text-soft);
+  text-transform: uppercase;
+}
+
+.order-history-title {
+  margin: 0;
+  font-size: 1.45rem;
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+}
+
+.order-history-extra,
+.order-history-status,
+.order-history-note,
+.order-history-empty {
+  margin: 0;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+
+.order-history-price-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.order-history-price {
+  font-size: 1.18rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.order-history-price.is-cancelled {
+  color: #a06b52;
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+
+.order-history-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(159,66,21,0.12);
+  color: #a3311f;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.order-history-card.is-cancelled {
+  background: rgba(255,255,255,0.95);
+}
+
+@media (max-width: 760px) {
+  .order-history-card {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 18px;
+  }
+
+  .order-history-thumb-wrap {
+    width: 100%;
+    height: 180px;
+  }
+}
