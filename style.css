@@ -878,8 +878,9 @@ button, input, select, textarea { font: inherit; }
 .payment-brand-logos {
   display: flex;
   flex-wrap: nowrap;
-  gap: 26px;
+  gap: 20px;
   align-items: center;
+  justify-content: flex-start;
   margin-top: 18px;
   overflow-x: auto;
   padding-bottom: 4px;
@@ -894,22 +895,22 @@ button, input, select, textarea { font: inherit; }
 }
 
 .payment-brand-image--visa {
-  width: 150px;
+  width: 190px;
   height: auto;
 }
 
 .payment-brand-image--master {
-  width: 138px;
+  width: 175px;
   height: auto;
 }
 
 .payment-brand-image--hiper {
-  width: 136px;
+  width: 182px;
   height: auto;
 }
 
 .payment-brand-image--elo {
-  width: 82px;
+  width: 104px;
   height: auto;
 }
 
@@ -936,7 +937,7 @@ button, input, select, textarea { font: inherit; }
   }
 
   .payment-brand-logos {
-    gap: 14px;
+    gap: 12px;
   }
 
   .payment-brand-image {
@@ -944,24 +945,25 @@ button, input, select, textarea { font: inherit; }
   }
 
   .payment-brand-image--visa {
-  width: 150px;
+  width: 190px;
   height: auto;
 }
 
   .payment-brand-image--master {
-  width: 138px;
+  width: 175px;
   height: auto;
 }
 
   .payment-brand-image--hiper {
-  width: 136px;
+  width: 182px;
   height: auto;
 }
 
   .payment-brand-image--elo {
-  width: 82px;
+  width: 104px;
   height: auto;
 }
 }
+
 
 
