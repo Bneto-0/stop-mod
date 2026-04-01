@@ -877,33 +877,40 @@ button, input, select, textarea { font: inherit; }
 
 .payment-brand-logos {
   display: flex;
-  flex-wrap: wrap;
-  gap: 22px;
+  flex-wrap: nowrap;
+  gap: 26px;
   align-items: center;
   margin-top: 18px;
+  overflow-x: auto;
+  padding-bottom: 4px;
 }
 
 .payment-brand-image {
   display: block;
   width: auto;
-  max-height: 68px;
+  max-height: none;
   object-fit: contain;
+  flex: 0 0 auto;
 }
 
 .payment-brand-image--visa {
-  height: 52px;
+  width: 150px;
+  height: auto;
 }
 
 .payment-brand-image--master {
-  height: 62px;
+  width: 138px;
+  height: auto;
 }
 
 .payment-brand-image--hiper {
-  height: 50px;
+  width: 136px;
+  height: auto;
 }
 
 .payment-brand-image--elo {
-  height: 54px;
+  width: 82px;
+  height: auto;
 }
 
 @media (max-width: 640px) {
@@ -929,27 +936,32 @@ button, input, select, textarea { font: inherit; }
   }
 
   .payment-brand-logos {
-    gap: 12px;
+    gap: 14px;
   }
 
   .payment-brand-image {
-    max-height: 52px;
+    max-height: none;
   }
 
   .payment-brand-image--visa {
-    height: 38px;
-  }
+  width: 150px;
+  height: auto;
+}
 
   .payment-brand-image--master {
-    height: 46px;
-  }
+  width: 138px;
+  height: auto;
+}
 
   .payment-brand-image--hiper {
-    height: 38px;
-  }
+  width: 136px;
+  height: auto;
+}
 
   .payment-brand-image--elo {
-    height: 40px;
-  }
+  width: 82px;
+  height: auto;
 }
+}
+
 

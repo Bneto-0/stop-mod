@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 120" role="img" aria-label="Visa">
-  <rect width="360" height="120" fill="none"/>
-  <g transform="translate(8 14) skewX(-12)">
-    <polygon points="6,78 22,16 46,16 30,78" fill="#f7b600"/>
-    <text x="22" y="80" fill="#1a57b8" font-family="Arial Black, Arial, Helvetica, sans-serif" font-size="90" font-style="italic" font-weight="900" letter-spacing="-8">VISA</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 430 130" role="img" aria-label="Visa">
+  <rect width="430" height="130" fill="none"/>
+  <g transform="translate(10 12) skewX(-11)">
+    <polygon points="8,92 25,18 47,18 30,92" fill="#f7b600"/>
+    <text x="28" y="94" fill="#1a57b8" font-family="Arial Black, Arial, Helvetica, sans-serif" font-size="104" font-style="italic" font-weight="900" letter-spacing="-10">VISA</text>
   </g>
 </svg>
