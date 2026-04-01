@@ -77,6 +77,14 @@ function unifiedDefaultApiBase() {
 function ensureUnifiedApiConfig() {
   const currentApiBase = normalizeApiBase(localStorage.getItem(API_BASE_KEY) || "");
   const currentPagbankBase = normalizeApiBase(localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
+  const forcedRemote = normalizeApiBase(DEFAULT_REMOTE_API_BASES[0]);
+
+  if (isProdStoreHost() && forcedRemote) {
+    if (currentApiBase !== forcedRemote) localStorage.setItem(API_BASE_KEY, forcedRemote);
+    if (currentPagbankBase !== forcedRemote) localStorage.setItem(PAGBANK_API_BASE_KEY, forcedRemote);
+    return;
+  }
+
   const chosen = currentApiBase || currentPagbankBase || normalizeApiBase(unifiedDefaultApiBase());
   if (!chosen) return;
   if (currentApiBase !== chosen) localStorage.setItem(API_BASE_KEY, chosen);
@@ -471,9 +479,9 @@ async function resolveApiBase() {
 
   const configured = normalizeApiBase(localStorage.getItem(API_BASE_KEY) || localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
 
-  // Em producao, evita "pre-flight" lento: usa a base configurada direto.
+  // Na loja publicada neste dominio, sempre prioriza o backend remoto oficial.
   if (isProdStoreHost()) {
-    const chosen = configured || normalizeApiBase(DEFAULT_REMOTE_API_BASES[0]);
+    const chosen = normalizeApiBase(DEFAULT_REMOTE_API_BASES[0]);
     if (chosen) {
       resolvedApiBase = chosen;
       localStorage.setItem(API_BASE_KEY, chosen);
@@ -1366,6 +1374,3 @@ const resetTokenFromUrl = getResetTokenFromQuery();
 if (resetTokenFromUrl) {
   renderResetPasswordModal(resetTokenFromUrl);
 }
-
-
-
