@@ -832,6 +832,13 @@ button, input, select, textarea { font: inherit; }
   stroke-linejoin: round;
 }
 
+.payment-method-icon-logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .payment-method-body h3 {
   margin: 2px 0 6px;
   font-size: 1.22rem;
@@ -845,7 +852,15 @@ button, input, select, textarea { font: inherit; }
 }
 
 .payment-method-row--pix .payment-method-icon {
-  background: linear-gradient(135deg, #1fd2c2, #009f95);
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 0;
+}
+
+.payment-method-icon-logo--pix {
+  width: 78px;
+  height: 78px;
 }
 
 .payment-method-row--cards .payment-method-icon {
@@ -919,6 +934,11 @@ button, input, select, textarea { font: inherit; }
   .payment-method-icon svg {
     width: 28px;
     height: 28px;
+  }
+
+  .payment-method-icon-logo--pix {
+    width: 66px;
+    height: 66px;
   }
 
   .payment-brand-logos {
