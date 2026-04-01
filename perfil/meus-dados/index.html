@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meus dados | Stop mod</title>
+  <link rel="icon" href="../../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../style.css?v=20260401n" />
+  <link rel="stylesheet" href="/assets/site-header.css?v=1" />
+</head>
+<body>
+<div id="site-header-root"></div>
+<script src="/assets/site-header.js?v=1"></script>
+<main class="page-shell container profile-page">
+  <section class="page-card profile-summary-card profile-data-page-card">
+    <p class="eyebrow">Meus dados</p>
+    <h1 id="profile-name">Dados da conta</h1>
+    <p id="profile-text">Confira e altere os dados do cliente sempre que precisar.</p>
+    <div class="page-actions profile-actions">
+      <a class="btn secondary" href="../">Voltar ao perfil</a>
+      <a class="btn secondary" href="../../entrega/">Enderecos</a>
+    </div>
+  </section>
+
+  <section class="page-card profile-data-card">
+    <div class="profile-data-card__head">
+      <div>
+        <p class="eyebrow">Cadastro</p>
+        <h2>Dados da conta</h2>
+        <p class="profile-data-copy">Veja todos os dados do cliente e altere o que precisar dentro da loja.</p>
+      </div>
+      <p id="profile-data-status" class="profile-data-status" aria-live="polite"></p>
+    </div>
+
+    <form id="profile-data-form" class="profile-data-form">
+      <div class="profile-data-grid">
+        <label class="field-row">
+          <span>Nome completo</span>
+          <input id="data-full-name" class="page-input" type="text" placeholder="Nome completo" />
+        </label>
+        <label class="field-row">
+          <span>Nome de usuario</span>
+          <input id="data-username" class="page-input" type="text" placeholder="Nome de usuario" />
+        </label>
+        <label class="field-row">
+          <span>Data de nascimento</span>
+          <input id="data-birth" class="page-input" type="date" />
+        </label>
+        <label class="field-row">
+          <span>CPF</span>
+          <input id="data-cpf" class="page-input" type="text" inputmode="numeric" placeholder="000.000.000-00" />
+        </label>
+        <label class="field-row">
+          <span>Email</span>
+          <input id="data-email" class="page-input" type="email" placeholder="email@dominio.com" />
+        </label>
+        <label class="field-row">
+          <span>Telefone</span>
+          <input id="data-phone" class="page-input" type="tel" inputmode="tel" placeholder="(00) 00000-0000" />
+        </label>
+      </div>
+
+      <div class="profile-data-block">
+        <p class="eyebrow">Endereco</p>
+        <div class="profile-data-grid">
+          <label class="field-row">
+            <span>CEP</span>
+            <input id="data-cep" class="page-input" type="text" inputmode="numeric" placeholder="00000-000" />
+          </label>
+          <label class="field-row field-row--wide">
+            <span>Rua</span>
+            <input id="data-street" class="page-input" type="text" placeholder="Rua" />
+          </label>
+          <label class="field-row">
+            <span>Numero</span>
+            <input id="data-number" class="page-input" type="text" placeholder="Numero" />
+          </label>
+          <label class="field-row">
+            <span>Complemento</span>
+            <input id="data-complement" class="page-input" type="text" placeholder="Complemento" />
+          </label>
+          <label class="field-row">
+            <span>Bairro</span>
+            <input id="data-district" class="page-input" type="text" placeholder="Bairro" />
+          </label>
+          <label class="field-row">
+            <span>Cidade</span>
+            <input id="data-city" class="page-input" type="text" placeholder="Cidade" />
+          </label>
+          <label class="field-row">
+            <span>Estado</span>
+            <input id="data-state" class="page-input" type="text" maxlength="2" placeholder="UF" />
+          </label>
+        </div>
+      </div>
+
+      <div class="page-actions profile-data-actions">
+        <button id="profile-data-save" class="btn primary" type="submit">Salvar alteracoes</button>
+      </div>
+    </form>
+  </section>
+</main>
+<script>
+const PROFILE_KEY = "stopmod_profile";
+const PROFILE_EXTRA_KEY = "stopmod_profile_extra";
+const SHIP_KEY = "stopmod_ship_to";
+const SHIP_LIST_KEY = "stopmod_ship_list";
+const profileName = document.getElementById("profile-name");
+const profileText = document.getElementById("profile-text");
+const profileDataForm = document.getElementById("profile-data-form");
+const profileDataStatus = document.getElementById("profile-data-status");
+const dataFields = {
+  fullName: document.getElementById("data-full-name"),
+  username: document.getElementById("data-username"),
+  birthDate: document.getElementById("data-birth"),
+  cpf: document.getElementById("data-cpf"),
+  email: document.getElementById("data-email"),
+  phone: document.getElementById("data-phone"),
+  cep: document.getElementById("data-cep"),
+  street: document.getElementById("data-street"),
+  number: document.getElementById("data-number"),
+  complement: document.getElementById("data-complement"),
+  district: document.getElementById("data-district"),
+  city: document.getElementById("data-city"),
+  state: document.getElementById("data-state")
+};
+
+function loadJson(key) {
+  try {
+    return JSON.parse(localStorage.getItem(key) || "null");
+  } catch {
+    return null;
+  }
+}
+
+function saveJson(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+function digitsOnly(value) {
+  return String(value || "").replace(/\D/g, "");
+}
+
+function formatCpf(value) {
+  const cpf = digitsOnly(value).slice(0, 11);
+  if (cpf.length <= 3) return cpf;
+  if (cpf.length <= 6) return `${cpf.slice(0, 3)}.${cpf.slice(3)}`;
+  if (cpf.length <= 9) return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6)}`;
+  return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6, 9)}-${cpf.slice(9)}`;
+}
+
+function formatCep(value) {
+  const cep = digitsOnly(value).slice(0, 8);
+  if (cep.length <= 5) return cep;
+  return `${cep.slice(0, 5)}-${cep.slice(5)}`;
+}
+
+function formatPhone(value) {
+  const digits = digitsOnly(value).slice(0, 11);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
+
+function normalizeState(value) {
+  return String(value || "").replace(/[^A-Za-z]/g, "").toUpperCase().slice(0, 2);
+}
+
+function deriveUsername(fullName, fallbackEmail) {
+  const words = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+  if (words.length >= 2) return `${words[0]} ${words[1]}`.trim();
+  if (words.length === 1) return words[0];
+  return String(fallbackEmail || "cliente").split("@")[0] || "cliente";
+}
+
+function renderSummary(profile) {
+  if (profile && profile.name) {
+    profileName.textContent = `Dados de ${profile.name.split(/\s+/)[0]}`;
+    profileText.textContent = `Altere nome, cadastro e endereco de ${profile.email || "cliente"}.`;
+    return;
+  }
+  profileName.textContent = "Dados da conta";
+  profileText.textContent = "Entre ou cadastre-se para salvar os dados do cliente.";
+}
+
+function fillProfileForm() {
+  const profile = loadJson(PROFILE_KEY) || {};
+  const extra = loadJson(PROFILE_EXTRA_KEY) || {};
+  const ship = loadJson(SHIP_KEY) || {};
+  const fullName = String(extra.fullName || profile.fullName || profile.name || "").trim();
+  const email = String(extra.email || profile.email || "").trim();
+
+  renderSummary(profile);
+
+  dataFields.fullName.value = fullName;
+  dataFields.username.value = String(extra.username || deriveUsername(fullName, email));
+  dataFields.birthDate.value = String(extra.birthDate || profile.birthDate || "").trim();
+  dataFields.cpf.value = formatCpf(extra.cpf || profile.cpf || extra.cpfMasked || "");
+  dataFields.email.value = email;
+  dataFields.phone.value = formatPhone(extra.phone || profile.phone || "");
+  dataFields.cep.value = formatCep(ship.cep || "");
+  dataFields.street.value = String(ship.street || "").trim();
+  dataFields.number.value = String(ship.number || "").trim();
+  dataFields.complement.value = String(ship.complement || "").trim();
+  dataFields.district.value = String(ship.district || "").trim();
+  dataFields.city.value = String(ship.city || "").trim();
+  dataFields.state.value = normalizeState(ship.state || "");
+}
+
+function updateHeaderPreview(name, picture, address) {
+  const topName = document.getElementById("profile-top-name");
+  const topPhoto = document.getElementById("profile-top-photo");
+  const shipSummary = document.getElementById("ship-summary");
+  if (topName) topName.textContent = String(name || "Perfil").trim().split(/\s+/)[0] || "Perfil";
+  if (topPhoto) {
+    if (picture) {
+      topPhoto.hidden = false;
+      topPhoto.src = picture;
+    } else {
+      topPhoto.hidden = true;
+    }
+  }
+  if (shipSummary) {
+    const street = String(address.street || "").trim();
+    const number = String(address.number || "").trim();
+    shipSummary.textContent = street && number ? `${street}, ${number}` : (street || "Rua nao informada");
+  }
+}
+
+function setStatus(text, isError) {
+  if (!profileDataStatus) return;
+  profileDataStatus.textContent = String(text || "");
+  profileDataStatus.classList.toggle("is-error", !!isError);
+  profileDataStatus.classList.toggle("is-success", !!text && !isError);
+}
+
+dataFields.cpf?.addEventListener("input", () => {
+  dataFields.cpf.value = formatCpf(dataFields.cpf.value);
+});
+
+dataFields.cep?.addEventListener("input", () => {
+  dataFields.cep.value = formatCep(dataFields.cep.value);
+});
+
+dataFields.phone?.addEventListener("input", () => {
+  dataFields.phone.value = formatPhone(dataFields.phone.value);
+});
+
+dataFields.state?.addEventListener("input", () => {
+  dataFields.state.value = normalizeState(dataFields.state.value);
+});
+
+profileDataForm?.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const currentProfile = loadJson(PROFILE_KEY) || {};
+  const currentExtra = loadJson(PROFILE_EXTRA_KEY) || {};
+  const currentShip = loadJson(SHIP_KEY) || {};
+  const fullName = String(dataFields.fullName.value || "").trim();
+  const email = String(dataFields.email.value || "").trim().toLowerCase();
+  const username = String(dataFields.username.value || deriveUsername(fullName, email)).trim();
+  const updatedProfile = {
+    ...currentProfile,
+    name: fullName || currentProfile.name || "Cliente Stop mod",
+    email,
+    picture: String(currentProfile.picture || "").trim()
+  };
+  const updatedExtra = {
+    ...currentExtra,
+    displayName: fullName || currentExtra.displayName || currentProfile.name || "",
+    fullName: fullName || currentExtra.fullName || currentProfile.name || "",
+    birthDate: String(dataFields.birthDate.value || "").trim(),
+    cpf: digitsOnly(dataFields.cpf.value || ""),
+    cpfMasked: formatCpf(dataFields.cpf.value || ""),
+    email,
+    phone: digitsOnly(dataFields.phone.value || ""),
+    username,
+    registrationComplete: true,
+    googlePending: false,
+    loginProvider: String(currentExtra.loginProvider || "password")
+  };
+  const updatedShip = {
+    ...currentShip,
+    cep: digitsOnly(dataFields.cep.value || ""),
+    street: String(dataFields.street.value || "").trim(),
+    number: String(dataFields.number.value || "").trim(),
+    complement: String(dataFields.complement.value || "").trim(),
+    district: String(dataFields.district.value || "").trim(),
+    city: String(dataFields.city.value || "").trim(),
+    state: normalizeState(dataFields.state.value || "")
+  };
+
+  saveJson(PROFILE_KEY, updatedProfile);
+  saveJson(PROFILE_EXTRA_KEY, updatedExtra);
+  saveJson(SHIP_KEY, updatedShip);
+
+  const shipList = loadJson(SHIP_LIST_KEY);
+  if (Array.isArray(shipList) && shipList.length) {
+    shipList[0] = { ...shipList[0], ...updatedShip };
+    saveJson(SHIP_LIST_KEY, shipList);
+  }
+
+  renderSummary(updatedProfile);
+  updateHeaderPreview(updatedProfile.name, updatedProfile.picture, updatedShip);
+  setStatus("Dados alterados com sucesso.", false);
+});
+
+fillProfileForm();
+</script>
+</body>
+</html>
