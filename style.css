@@ -961,3 +961,79 @@ button, input, select, textarea { font: inherit; }
 
 
 
+
+
+.profile-data-card {
+  width: min(860px, 100%);
+}
+
+.profile-data-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.profile-data-copy {
+  max-width: 520px;
+}
+
+.profile-data-status {
+  min-height: 24px;
+  margin: 0;
+  font-weight: 700;
+  color: var(--text-soft);
+}
+
+.profile-data-status.is-success {
+  color: #1f7a44;
+}
+
+.profile-data-status.is-error {
+  color: #a3311f;
+}
+
+.profile-data-form {
+  display: grid;
+  gap: 22px;
+}
+
+.profile-data-block {
+  display: grid;
+  gap: 16px;
+}
+
+.profile-data-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.field-row--wide {
+  grid-column: span 2;
+}
+
+.field-row span {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.profile-data-actions {
+  justify-content: flex-start;
+}
+
+@media (max-width: 760px) {
+  .profile-data-card__head {
+    flex-direction: column;
+  }
+
+  .profile-data-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .field-row--wide {
+    grid-column: auto;
+  }
+}
