@@ -1174,12 +1174,12 @@ function googleSignIn() {
             if (errorCode === "google_account_not_linked") {
               try {
                 const googleProfile = await fetchGoogleProfileWithAccessToken(accessToken);
-                showRegister(true);
                 setGoogleOnboardingState(true, googleProfile);
-                setMsg(regMsg, "Google confirmado. Complete CPF e endereco para concluir o cadastro.", false);
-                regBirth?.focus();
+                setMsg(msg, "Essa conta Google ainda nao esta cadastrada. Use Criar conta para finalizar o cadastro.", true);
+                goRegister?.focus();
                 return;
               } catch {
+                setGoogleOnboardingState(false);
                 setMsg(msg, "Falha ao obter dados da conta Google para completar cadastro.", true);
                 return;
               }
@@ -1309,8 +1309,14 @@ async function handleLoginSubmit(event) {
 pwToggle?.addEventListener("click", () => togglePw(loginPass, pwToggle));
 regPwToggle?.addEventListener("click", () => togglePw(regPass, regPwToggle));
 goRegister?.addEventListener("click", () => {
-  setGoogleOnboardingState(false);
   showRegister(true);
+  if (pendingGoogleOnboarding?.email) {
+    setGoogleOnboardingState(true, pendingGoogleOnboarding);
+    setMsg(regMsg, "Google confirmado. Complete CPF, nascimento, senha e endereco para finalizar.", false);
+    regBirth?.focus();
+    return;
+  }
+  setGoogleOnboardingState(false);
 });
 goLogin?.addEventListener("click", () => showRegister(false));
 loginForm?.addEventListener("submit", handleLoginSubmit);
