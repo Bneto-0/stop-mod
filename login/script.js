@@ -885,7 +885,10 @@ function applySession(session) {
       cpfMasked: String(extra?.cpfMasked || profile?.cpfMasked || ""),
       email: String(extra?.email || profile?.email || ""),
       phone: String(extra?.phone || profile?.phone || ""),
-      username: deriveUsernameFromSession(profile, extra) || "cliente"
+      username: deriveUsernameFromSession(profile, extra) || "cliente",
+      registrationComplete: true,
+      googlePending: false,
+      loginProvider: String(extra?.loginProvider || session?.loginProvider || "password")
     })
   );
   localStorage.setItem(AUTH_LAST_SEEN_KEY, String(Date.now()));
@@ -896,6 +899,19 @@ function applySession(session) {
   if (addresses.length) {
     localStorage.setItem(SHIP_LIST_KEY, JSON.stringify(addresses.map(normalizeAddressForLocalStorage)));
   }
+}
+
+function loadPendingGoogleProfileFromStorage() {
+  const profile = loadJson(PROFILE_KEY, null);
+  const extra = loadJson(PROFILE_EXTRA_KEY, null);
+  if (!extra || extra.googlePending !== true) return null;
+  const email = String(extra?.email || profile?.email || "").trim().toLowerCase();
+  if (!email) return null;
+  return {
+    email,
+    name: String(profile?.name || extra?.fullName || extra?.displayName || "Cliente Stop mod").trim() || "Cliente Stop mod",
+    picture: String(profile?.picture || extra?.picture || "").trim()
+  };
 }
 
 function openModal(title, html) {
@@ -1059,13 +1075,16 @@ function renderResetPasswordModal(token) {
   });
 }
 
-function finishSocialLogin(user) {
+function finishSocialLogin(user, options = {}) {
   const name = String(user?.name || "Cliente Stop mod").trim() || "Cliente Stop mod";
   const email = String(user?.email || "").trim().toLowerCase();
   const picture = String(user?.picture || "").trim();
+  const pendingRegistration = !!options?.pendingRegistration;
 
   // Social login does not return backend JWT; avoid stale token reuse.
   localStorage.removeItem(AUTH_TOKEN_KEY);
+  localStorage.removeItem(SHIP_KEY);
+  localStorage.removeItem(SHIP_LIST_KEY);
   localStorage.setItem(
     PROFILE_KEY,
     JSON.stringify({
@@ -1085,7 +1104,10 @@ function finishSocialLogin(user) {
       email,
       phone: "",
       username: deriveUsernameFromSession({ name, email }, {}),
-      picture
+      picture,
+      registrationComplete: !pendingRegistration,
+      googlePending: pendingRegistration,
+      loginProvider: "google"
     })
   );
   localStorage.setItem(AUTH_LAST_SEEN_KEY, String(Date.now()));
@@ -1174,9 +1196,8 @@ function googleSignIn() {
             if (errorCode === "google_account_not_linked") {
               try {
                 const googleProfile = await fetchGoogleProfileWithAccessToken(accessToken);
-                setGoogleOnboardingState(true, googleProfile);
-                setMsg(msg, "Essa conta Google ainda nao esta cadastrada. Use Criar conta para finalizar o cadastro.", true);
-                goRegister?.focus();
+                setGoogleOnboardingState(false);
+                finishSocialLogin(googleProfile, { pendingRegistration: true });
                 return;
               } catch {
                 setGoogleOnboardingState(false);
@@ -1310,8 +1331,9 @@ pwToggle?.addEventListener("click", () => togglePw(loginPass, pwToggle));
 regPwToggle?.addEventListener("click", () => togglePw(regPass, regPwToggle));
 goRegister?.addEventListener("click", () => {
   showRegister(true);
-  if (pendingGoogleOnboarding?.email) {
-    setGoogleOnboardingState(true, pendingGoogleOnboarding);
+  const googleProfile = pendingGoogleOnboarding?.email ? pendingGoogleOnboarding : loadPendingGoogleProfileFromStorage();
+  if (googleProfile?.email) {
+    setGoogleOnboardingState(true, googleProfile);
     setMsg(regMsg, "Google confirmado. Complete CPF, nascimento, senha e endereco para finalizar.", false);
     regBirth?.focus();
     return;
@@ -1375,6 +1397,17 @@ document.addEventListener("keydown", (event) => {
 
 showRegister(false);
 ensureUnifiedApiConfig();
+
+const shouldCompleteCheckoutRegistration = String(new URLSearchParams(window.location.search).get("complete") || "") === "1";
+if (shouldCompleteCheckoutRegistration) {
+  const pendingGoogleProfile = loadPendingGoogleProfileFromStorage();
+  if (pendingGoogleProfile?.email) {
+    showRegister(true);
+    setGoogleOnboardingState(true, pendingGoogleProfile);
+    setMsg(regMsg, "Complete CPF, nascimento, senha e endereco para finalizar a compra.", false);
+    regBirth?.focus();
+  }
+}
 
 const resetTokenFromUrl = getResetTokenFromQuery();
 if (resetTokenFromUrl) {

@@ -385,6 +385,16 @@ function loadCheckoutCustomer() {
   };
 }
 
+function requiresCheckoutRegistrationCompletion() {
+  const extra = loadProfileExtra() || {};
+  return extra?.googlePending === true || extra?.registrationComplete === false;
+}
+
+function redirectToRegistrationCompletion() {
+  const nextPath = `${window.location.pathname || "/carrinho/"}${window.location.search || ""}${window.location.hash || ""}` || "/carrinho/";
+  window.location.href = `/login/?complete=1&next=${encodeURIComponent(nextPath)}`;
+}
+
 function renderTopProfile() {
   if (!profileTopLink || !profileTopName) return;
   const profile = loadProfile();
@@ -1456,6 +1466,12 @@ checkoutBtn.addEventListener("click", () => {
     return;
   }
 
+  if (requiresCheckoutRegistrationCompletion()) {
+    feedback.textContent = "Complete seu cadastro para finalizar a compra.";
+    redirectToRegistrationCompletion();
+    return;
+  }
+
   touchAuthSession(true);
   const ids = loadCartIds();
   if (!ids.length) return;
@@ -1534,6 +1550,13 @@ paymentForm?.addEventListener("submit", async (e) => {
     closeModal();
     feedback.textContent = "Sua sessao expirou. Faca login novamente para continuar.";
     redirectToLoginForCheckout();
+    return;
+  }
+
+  if (requiresCheckoutRegistrationCompletion()) {
+    closeModal();
+    feedback.textContent = "Complete seu cadastro para finalizar a compra.";
+    redirectToRegistrationCompletion();
     return;
   }
 
