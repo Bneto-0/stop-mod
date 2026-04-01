@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 140" role="img" aria-label="Visa, Mastercard, Hipercard e Elo">
+  <rect width="820" height="140" fill="none"/>
+
+  <g transform="translate(10 18)">
+    <g transform="skewX(-11)">
+      <polygon points="6,90 22,20 45,20 29,90" fill="#f7b600"/>
+      <text x="28" y="92" fill="#1a57b8" font-family="Arial Black, Arial, Helvetica, sans-serif" font-size="100" font-style="italic" font-weight="900" letter-spacing="-10">VISA</text>
+    </g>
+  </g>
+
+  <g transform="translate(250 18)">
+    <circle cx="60" cy="52" r="52" fill="#eb001b"/>
+    <circle cx="146" cy="52" r="52" fill="#f79e1b"/>
+    <path d="M103 2c13 13 21 31 21 50s-8 37-21 50C90 89 82 71 82 52S90 15 103 2z" fill="#ff5f00"/>
+    <g font-family="Arial, Helvetica, sans-serif" font-style="italic" font-weight="700" font-size="29">
+      <text x="20" y="63" fill="#ffffff">Master</text>
+      <text x="109" y="63" fill="#fff3b5">Card</text>
+    </g>
+  </g>
+
+  <g transform="translate(470 30)">
+    <rect x="0" y="0" width="202" height="64" rx="12" fill="#c71c22"/>
+    <text x="41" y="42" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="42" font-style="italic" font-weight="500">Hipercard</text>
+  </g>
+
+  <g transform="translate(710 18)">
+    <circle cx="48" cy="48" r="48" fill="#120717"/>
+    <g fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-style="italic" font-size="52">
+      <text x="14" y="64">e</text>
+      <text x="43" y="64">l</text>
+      <text x="60" y="64">o</text>
+    </g>
+    <circle cx="103" cy="28" r="8" fill="#ffd400"/>
+    <circle cx="98" cy="63" r="8" fill="#00b5e2"/>
+    <circle cx="116" cy="69" r="8" fill="#ef4123"/>
+  </g>
+</svg>
