@@ -1,7 +1,143 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
-<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Notificacoes | Stop mod</title><link rel="icon" href="../favicon.svg" type="image/svg+xml" /><link rel="stylesheet" href="../style.css" />  <link rel="stylesheet" href="/assets/site-header.css?v=1" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notificacoes | Stop mod</title>
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../style.css?v=20260401q" />
+  <link rel="stylesheet" href="/assets/site-header.css?v=1" />
 </head>
 <body>
 <div id="site-header-root"></div>
-<script src="/assets/site-header.js?v=1"></script><main class="page-shell container"><section class="page-card"><p class="eyebrow">Conta</p><h1>Notificacoes</h1><div id="notes-list" class="page-stack"></div></section></main><script>const NOTES_KEY="stopmod_notifications"; const list=document.getElementById("notes-list"); let notes=[]; try { notes=JSON.parse(localStorage.getItem(NOTES_KEY) || "[]"); } catch {} list.innerHTML = notes.length ? notes.map((note)=>`<article class="helper-card"><h3>${note.title || "Notificacao"}</h3><p>${note.text || ""}</p></article>`).join("") : "<p>Nenhuma notificacao no momento.</p>";</script></body></html>
+<script src="/assets/site-header.js?v=1"></script>
+<main class="page-shell container">
+  <section class="page-card">
+    <p class="eyebrow">Conta</p>
+    <h1>Notificacoes</h1>
+    <div id="notes-list" class="page-stack"></div>
+  </section>
+</main>
+<script>
+const NOTES_KEY = "stopmod_notifications";
+const PROFILE_KEY = "stopmod_profile";
+const PROFILE_EXTRA_KEY = "stopmod_profile_extra";
+const NOTES_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
+const list = document.getElementById("notes-list");
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function loadJson(key, fallback) {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(String(key || "")) || "null");
+    return parsed == null ? fallback : parsed;
+  } catch {
+    return fallback;
+  }
+}
+
+function saveJson(key, value) {
+  try {
+    localStorage.setItem(String(key || ""), JSON.stringify(value));
+  } catch {
+  }
+}
+
+function normalizeUserKey(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function currentUserKey() {
+  const profile = loadJson(PROFILE_KEY, {});
+  const extra = loadJson(PROFILE_EXTRA_KEY, {});
+  return normalizeUserKey(extra?.email || profile?.email || "");
+}
+
+function normalizeNote(noteLike) {
+  const note = noteLike && typeof noteLike === "object" ? noteLike : {};
+  const createdAtRaw = String(note.createdAt || note.dateIso || "").trim();
+  const createdMs = Date.parse(createdAtRaw || new Date().toISOString());
+  const safeCreatedMs = Number.isFinite(createdMs) ? createdMs : Date.now();
+  const expiresAtRaw = String(note.expiresAt || "").trim();
+  const expiresAt = expiresAtRaw || new Date(safeCreatedMs + NOTES_RETENTION_MS).toISOString();
+  return {
+    ...note,
+    id: String(note.id || `note-${safeCreatedMs}`).trim() || `note-${safeCreatedMs}`,
+    scope: String(note.scope || "individual").trim() || "individual",
+    type: String(note.type || "aviso").trim() || "aviso",
+    userKey: normalizeUserKey(note.userKey || ""),
+    title: String(note.title || "Notificacao").trim() || "Notificacao",
+    text: String(note.text || "").trim(),
+    href: String(note.href || "/perfil/").trim() || "/perfil/",
+    date: String(note.date || "Agora").trim() || "Agora",
+    createdAt: new Date(safeCreatedMs).toISOString(),
+    expiresAt,
+    readAt: String(note.readAt || "").trim()
+  };
+}
+
+function noteVisibleForUser(note, userKey) {
+  if (String(note.scope || "").toLowerCase() === "general") return true;
+  return !!userKey && normalizeUserKey(note.userKey || "") === userKey;
+}
+
+function noteIsAlive(note) {
+  const expiresMs = Date.parse(String(note.expiresAt || ""));
+  return !Number.isFinite(expiresMs) || expiresMs > Date.now();
+}
+
+function formatNoteDate(note) {
+  const createdMs = Date.parse(String(note.createdAt || ""));
+  if (!Number.isFinite(createdMs)) return String(note.date || "Agora") || "Agora";
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(new Date(createdMs));
+}
+
+const userKey = currentUserKey();
+const rawNotes = loadJson(NOTES_KEY, []);
+const normalized = (Array.isArray(rawNotes) ? rawNotes : [])
+  .map((note) => normalizeNote(note))
+  .filter((note) => noteIsAlive(note))
+  .sort((a, b) => Date.parse(String(b?.createdAt || "")) - Date.parse(String(a?.createdAt || "")));
+
+const visibleIds = new Set();
+const visibleNotes = normalized.filter((note) => {
+  const visible = noteVisibleForUser(note, userKey);
+  if (visible) visibleIds.add(String(note.id || ""));
+  return visible;
+});
+
+const readAt = new Date().toISOString();
+const persisted = normalized.map((note) => {
+  if (visibleIds.has(String(note.id || "")) && !String(note.readAt || "").trim()) {
+    return { ...note, readAt };
+  }
+  return note;
+});
+
+saveJson(NOTES_KEY, persisted.slice(0, 500));
+
+list.innerHTML = visibleNotes.length
+  ? visibleNotes.map((note) => `
+      <article class="helper-card">
+        <h3>${escapeHtml(note.title)}</h3>
+        <p>${escapeHtml(note.text)}</p>
+        <p class="muted">${escapeHtml(formatNoteDate(note))}</p>
+      </article>
+    `).join("")
+  : "<p>Nenhuma notificacao no momento.</p>";
+</script>
+</body>
+</html>

@@ -1,8 +1,9 @@
-const PROFILE_KEY = "stopmod_profile";
+﻿const PROFILE_KEY = "stopmod_profile";
 const PROFILE_EXTRA_KEY = "stopmod_profile_extra";
 const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
 const AUTH_TOKEN_KEY = "stopmod_auth_token";
 const NOTES_KEY = "stopmod_notifications";
+const NOTES_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 const GOOGLE_CLIENT_KEY = "stopmod_google_client_id";
 const DEFAULT_GOOGLE_CLIENT_ID = "887504211072-0elgoi3dbg80bb9640vvlqfl7cp8guq5.apps.googleusercontent.com";
 const SHIP_KEY = "stopmod_ship_to";
@@ -170,14 +171,47 @@ function deriveUsernameFromSession(profile, extra) {
   return normalizeUsernameValue(String(extra?.username || "").trim(), emailPrefix);
 }
 
+function normalizeNotificationEntry(noteLike) {
+  const note = noteLike && typeof noteLike === "object" ? noteLike : {};
+  const createdAt = String(note.createdAt || note.dateIso || nowIso()).trim() || nowIso();
+  const createdMs = Date.parse(createdAt);
+  const safeCreatedMs = Number.isFinite(createdMs) ? createdMs : Date.now();
+  const expiresAt = String(note.expiresAt || new Date(safeCreatedMs + NOTES_RETENTION_MS).toISOString()).trim();
+  return {
+    ...note,
+    id: String(note.id || `note-${safeCreatedMs}`).trim() || `note-${safeCreatedMs}`,
+    scope: String(note.scope || "individual").trim() || "individual",
+    type: String(note.type || "aviso").trim() || "aviso",
+    userKey: normalizeUserKey(note.userKey || ""),
+    title: String(note.title || "Notificacao").trim() || "Notificacao",
+    text: String(note.text || "").trim(),
+    href: String(note.href || "/perfil/").trim() || "/perfil/",
+    date: String(note.date || "Agora").trim() || "Agora",
+    createdAt: new Date(safeCreatedMs).toISOString(),
+    expiresAt,
+    readAt: String(note.readAt || "").trim()
+  };
+}
+
+function cleanupNotificationsList(rawList) {
+  const now = Date.now();
+  return (Array.isArray(rawList) ? rawList : [])
+    .map((note) => normalizeNotificationEntry(note))
+    .filter((note) => {
+      const expiresMs = Date.parse(String(note.expiresAt || ""));
+      return !Number.isFinite(expiresMs) || expiresMs > now;
+    })
+    .sort((a, b) => Date.parse(String(b?.createdAt || "")) - Date.parse(String(a?.createdAt || "")));
+}
+
 function addLoginSuccessNotification(profileLike) {
   const profile = profileLike && typeof profileLike === "object" ? profileLike : {};
   const email = normalizeUserKey(profile.email || "");
   const name = String(profile.name || "Cliente Stop mod").trim() || "Cliente Stop mod";
-  const list = loadJson(NOTES_KEY, []);
-  const notes = Array.isArray(list) ? list : [];
+  const createdAt = nowIso();
+  const notes = cleanupNotificationsList(loadJson(NOTES_KEY, []));
 
-  notes.push({
+  notes.unshift({
     id: `login-success-${email || "guest"}-${Date.now()}`,
     scope: email ? "individual" : "general",
     type: "aviso",
@@ -186,11 +220,12 @@ function addLoginSuccessNotification(profileLike) {
     text: `Acesso confirmado para ${name}.`,
     href: "/perfil/",
     date: "Agora",
-    createdAt: nowIso()
+    createdAt,
+    expiresAt: new Date(Date.now() + NOTES_RETENTION_MS).toISOString(),
+    readAt: ""
   });
 
-  notes.sort((a, b) => Date.parse(String(b?.createdAt || "")) - Date.parse(String(a?.createdAt || "")));
-  saveJson(NOTES_KEY, notes.slice(0, 500));
+  saveJson(NOTES_KEY, cleanupNotificationsList(notes).slice(0, 500));
 }
 
 function showLoginToast(message) {
