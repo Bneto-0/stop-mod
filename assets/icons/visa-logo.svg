@@ -1,0 +1,10 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 110" role="img" aria-label="Visa">
+  <rect width="320" height="110" fill="none"/>
+  <g transform="translate(12 18) skewX(-12)">
+    <path d="M0 70 L20 0 H54 L34 70 Z" fill="#f7b600" opacity="0.9"/>
+    <path d="M15 70 L35 0 H69 L49 70 Z" fill="#1a57b8"/>
+    <path d="M68 0 H104 L88 70 H52 Z" fill="#1a57b8"/>
+    <path d="M112 0 H148 L132 70 H96 Z" fill="#1a57b8"/>
+    <path d="M156 0 H242 C268 0 284 12 278 34 C272 56 251 70 220 70 H144 Z" fill="#1a57b8"/>
+  </g>
+</svg>

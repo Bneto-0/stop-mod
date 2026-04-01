@@ -878,45 +878,32 @@ button, input, select, textarea { font: inherit; }
 .payment-brand-logos {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 18px;
   align-items: center;
   margin-top: 18px;
 }
 
-.payment-brand-logo {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 92px;
-  min-height: 44px;
-  padding: 0 14px;
-  border-radius: 14px;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  background: #fff;
-  border: 1px solid rgba(23,20,17,0.08);
-  box-shadow: 0 10px 18px rgba(23,20,17,0.06);
+.payment-brand-image {
+  display: block;
+  width: auto;
+  max-height: 54px;
+  object-fit: contain;
 }
 
-.payment-brand-logo--visa {
-  color: #1a43b9;
-  font-size: 1rem;
+.payment-brand-image--visa {
+  height: 42px;
 }
 
-.payment-brand-logo--master {
-  color: #cf4b2d;
-  font-size: 0.94rem;
+.payment-brand-image--master {
+  height: 58px;
 }
 
-.payment-brand-logo--hiper {
-  color: #b32025;
-  font-size: 0.9rem;
+.payment-brand-image--hiper {
+  height: 48px;
 }
 
-.payment-brand-logo--elo {
-  color: #111827;
-  font-size: 1.05rem;
-  text-transform: lowercase;
+.payment-brand-image--elo {
+  height: 52px;
 }
 
 @media (max-width: 640px) {
@@ -945,10 +932,23 @@ button, input, select, textarea { font: inherit; }
     gap: 10px;
   }
 
-  .payment-brand-logo {
-    min-width: 76px;
-    min-height: 40px;
-    padding: 0 10px;
-    font-size: 0.88rem;
+  .payment-brand-image {
+    max-height: 42px;
+  }
+
+  .payment-brand-image--visa {
+    height: 32px;
+  }
+
+  .payment-brand-image--master {
+    height: 44px;
+  }
+
+  .payment-brand-image--hiper {
+    height: 36px;
+  }
+
+  .payment-brand-image--elo {
+    height: 38px;
   }
 }

@@ -1,0 +1,12 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 110" role="img" aria-label="Elo">
+  <rect width="140" height="110" fill="none"/>
+  <circle cx="55" cy="55" r="44" fill="#120717"/>
+  <g fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-style="italic" font-size="46">
+    <text x="26" y="70">e</text>
+    <text x="52" y="70">l</text>
+    <text x="68" y="70">o</text>
+  </g>
+  <circle cx="104" cy="40" r="9" fill="#ffd400"/>
+  <circle cx="94" cy="68" r="9" fill="#00b5e2"/>
+  <circle cx="112" cy="73" r="9" fill="#ef4123"/>
+</svg>
