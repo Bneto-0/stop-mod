@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Minha conta | Stop mod</title>
   <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="../style.css?v=20260401n" />
+  <link rel="stylesheet" href="../style.css?v=20260401r" />
   <link rel="stylesheet" href="/assets/site-header.css?v=1" />
 </head>
 <body>
@@ -16,10 +16,13 @@
     <p class="eyebrow">Conta</p>
     <h1 id="profile-name">Minha conta</h1>
     <p id="profile-text">Entre ou cadastre-se para salvar endereco, acompanhar pedidos e finalizar compras.</p>
-    <div class="page-actions profile-actions">
-      <a id="profile-login-action" class="btn primary" href="../login/">Entrar</a>
-      <a class="btn secondary" href="./meus-dados/">Meus dados</a>
-      <a class="btn secondary" href="../entrega/">Enderecos</a>
+    <div class="profile-summary-footer">
+      <div class="page-actions profile-actions">
+        <a id="profile-login-action" class="btn primary" href="../login/">Entrar</a>
+        <a class="btn secondary" href="./meus-dados/">Meus dados</a>
+        <a class="btn secondary" href="../entrega/">Enderecos</a>
+      </div>
+      <button id="profile-logout-action" class="btn secondary profile-logout" type="button" hidden>Sair</button>
     </div>
   </section>
 
@@ -81,6 +84,13 @@
 const profileName = document.getElementById("profile-name");
 const profileText = document.getElementById("profile-text");
 const profileLoginAction = document.getElementById("profile-login-action");
+const profileLogoutAction = document.getElementById("profile-logout-action");
+const PROFILE_KEY = "stopmod_profile";
+const PROFILE_EXTRA_KEY = "stopmod_profile_extra";
+const AUTH_TOKEN_KEY = "stopmod_auth_token";
+const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
+const SHIP_KEY = "stopmod_ship_to";
+const SHIP_LIST_KEY = "stopmod_ship_list";
 
 function loadJson(key) {
   try {
@@ -95,12 +105,24 @@ function renderSummary(profile) {
     profileName.textContent = profile.name.split(/\s+/)[0];
     profileText.textContent = `Conta ativa para ${profile.email || "cliente"}.`;
     if (profileLoginAction) profileLoginAction.remove();
+    if (profileLogoutAction) profileLogoutAction.hidden = false;
     return;
   }
   if (profileLoginAction) profileLoginAction.hidden = false;
+  if (profileLogoutAction) profileLogoutAction.hidden = true;
 }
 
-const profile = loadJson("stopmod_profile") || {};
+profileLogoutAction?.addEventListener("click", () => {
+  localStorage.removeItem(PROFILE_KEY);
+  localStorage.removeItem(PROFILE_EXTRA_KEY);
+  localStorage.removeItem(AUTH_TOKEN_KEY);
+  localStorage.removeItem(AUTH_LAST_SEEN_KEY);
+  localStorage.removeItem(SHIP_KEY);
+  localStorage.removeItem(SHIP_LIST_KEY);
+  window.location.href = "../login/";
+});
+
+const profile = loadJson(PROFILE_KEY) || {};
 renderSummary(profile);
 </script>
 </body>
