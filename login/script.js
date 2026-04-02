@@ -1178,14 +1178,11 @@ function googleSignIn() {
             if (errorCode === "google_account_not_linked") {
               try {
                 const googleProfile = await fetchGoogleProfileWithAccessToken(accessToken);
-                setGoogleOnboardingState(true, googleProfile);
-                setMsg(
-                  msg,
-                  "Essa conta Google ainda nao esta cadastrada. Use Criar conta para finalizar o cadastro.",
-                  true
-                );
+                setGoogleOnboardingState(false);
+                finishSocialLogin(googleProfile, { pendingRegistration: true });
                 return;
               } catch {
+                setGoogleOnboardingState(false);
                 setMsg(msg, "Falha ao obter dados da conta Google para completar cadastro.", true);
                 return;
               }
