@@ -1,9 +1,8 @@
-﻿const PROFILE_KEY = "stopmod_profile";
+const PROFILE_KEY = "stopmod_profile";
 const PROFILE_EXTRA_KEY = "stopmod_profile_extra";
 const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
 const AUTH_TOKEN_KEY = "stopmod_auth_token";
 const NOTES_KEY = "stopmod_notifications";
-const NOTES_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 const GOOGLE_CLIENT_KEY = "stopmod_google_client_id";
 const DEFAULT_GOOGLE_CLIENT_ID = "887504211072-0elgoi3dbg80bb9640vvlqfl7cp8guq5.apps.googleusercontent.com";
 const SHIP_KEY = "stopmod_ship_to";
@@ -78,14 +77,6 @@ function unifiedDefaultApiBase() {
 function ensureUnifiedApiConfig() {
   const currentApiBase = normalizeApiBase(localStorage.getItem(API_BASE_KEY) || "");
   const currentPagbankBase = normalizeApiBase(localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
-  const forcedRemote = normalizeApiBase(DEFAULT_REMOTE_API_BASES[0]);
-
-  if (isProdStoreHost() && forcedRemote) {
-    if (currentApiBase !== forcedRemote) localStorage.setItem(API_BASE_KEY, forcedRemote);
-    if (currentPagbankBase !== forcedRemote) localStorage.setItem(PAGBANK_API_BASE_KEY, forcedRemote);
-    return;
-  }
-
   const chosen = currentApiBase || currentPagbankBase || normalizeApiBase(unifiedDefaultApiBase());
   if (!chosen) return;
   if (currentApiBase !== chosen) localStorage.setItem(API_BASE_KEY, chosen);
@@ -171,47 +162,14 @@ function deriveUsernameFromSession(profile, extra) {
   return normalizeUsernameValue(String(extra?.username || "").trim(), emailPrefix);
 }
 
-function normalizeNotificationEntry(noteLike) {
-  const note = noteLike && typeof noteLike === "object" ? noteLike : {};
-  const createdAt = String(note.createdAt || note.dateIso || nowIso()).trim() || nowIso();
-  const createdMs = Date.parse(createdAt);
-  const safeCreatedMs = Number.isFinite(createdMs) ? createdMs : Date.now();
-  const expiresAt = String(note.expiresAt || new Date(safeCreatedMs + NOTES_RETENTION_MS).toISOString()).trim();
-  return {
-    ...note,
-    id: String(note.id || `note-${safeCreatedMs}`).trim() || `note-${safeCreatedMs}`,
-    scope: String(note.scope || "individual").trim() || "individual",
-    type: String(note.type || "aviso").trim() || "aviso",
-    userKey: normalizeUserKey(note.userKey || ""),
-    title: String(note.title || "Notificacao").trim() || "Notificacao",
-    text: String(note.text || "").trim(),
-    href: String(note.href || "/perfil/").trim() || "/perfil/",
-    date: String(note.date || "Agora").trim() || "Agora",
-    createdAt: new Date(safeCreatedMs).toISOString(),
-    expiresAt,
-    readAt: String(note.readAt || "").trim()
-  };
-}
-
-function cleanupNotificationsList(rawList) {
-  const now = Date.now();
-  return (Array.isArray(rawList) ? rawList : [])
-    .map((note) => normalizeNotificationEntry(note))
-    .filter((note) => {
-      const expiresMs = Date.parse(String(note.expiresAt || ""));
-      return !Number.isFinite(expiresMs) || expiresMs > now;
-    })
-    .sort((a, b) => Date.parse(String(b?.createdAt || "")) - Date.parse(String(a?.createdAt || "")));
-}
-
 function addLoginSuccessNotification(profileLike) {
   const profile = profileLike && typeof profileLike === "object" ? profileLike : {};
   const email = normalizeUserKey(profile.email || "");
   const name = String(profile.name || "Cliente Stop mod").trim() || "Cliente Stop mod";
-  const createdAt = nowIso();
-  const notes = cleanupNotificationsList(loadJson(NOTES_KEY, []));
+  const list = loadJson(NOTES_KEY, []);
+  const notes = Array.isArray(list) ? list : [];
 
-  notes.unshift({
+  notes.push({
     id: `login-success-${email || "guest"}-${Date.now()}`,
     scope: email ? "individual" : "general",
     type: "aviso",
@@ -220,16 +178,36 @@ function addLoginSuccessNotification(profileLike) {
     text: `Acesso confirmado para ${name}.`,
     href: "/perfil/",
     date: "Agora",
-    createdAt,
-    expiresAt: new Date(Date.now() + NOTES_RETENTION_MS).toISOString(),
-    readAt: ""
+    createdAt: nowIso()
   });
 
-  saveJson(NOTES_KEY, cleanupNotificationsList(notes).slice(0, 500));
+  notes.sort((a, b) => Date.parse(String(b?.createdAt || "")) - Date.parse(String(a?.createdAt || "")));
+  saveJson(NOTES_KEY, notes.slice(0, 500));
 }
 
 function showLoginToast(message) {
-  return;
+  const body = document.body;
+  if (!body) return;
+
+  const existing = document.getElementById("login-success-toast");
+  if (existing) existing.remove();
+
+  const toast = document.createElement("div");
+  toast.id = "login-success-toast";
+  toast.className = "login-success-toast";
+  toast.setAttribute("role", "status");
+  toast.setAttribute("aria-live", "polite");
+  toast.textContent = String(message || "Login realizado com sucesso.");
+  body.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    toast.classList.add("show");
+  });
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 260);
+  }, 2400);
 }
 
 function wait(ms) {
@@ -314,20 +292,11 @@ function normalizeNextPath(raw) {
 }
 
 function resolvePostLoginUrl() {
-  const fallbackUrl = "../index.html#top";
   try {
     const raw = String(new URLSearchParams(window.location.search).get("next") || "").trim();
-    const nextUrl = normalizeNextPath(raw);
-    if (!nextUrl) return fallbackUrl;
-
-    const normalizedNext = nextUrl.replace(/\/+$/, "").toLowerCase();
-    if (normalizedNext === "/perfil" || normalizedNext === "../perfil" || normalizedNext === "perfil") {
-      return fallbackUrl;
-    }
-
-    return nextUrl;
+    return normalizeNextPath(raw) || "../perfil/";
   } catch {
-    return fallbackUrl;
+    return "../perfil/";
   }
 }
 
@@ -514,9 +483,9 @@ async function resolveApiBase() {
 
   const configured = normalizeApiBase(localStorage.getItem(API_BASE_KEY) || localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
 
-  // Na loja publicada neste dominio, sempre prioriza o backend remoto oficial.
+  // Em producao, evita "pre-flight" lento: usa a base configurada direto.
   if (isProdStoreHost()) {
-    const chosen = normalizeApiBase(DEFAULT_REMOTE_API_BASES[0]);
+    const chosen = configured || normalizeApiBase(DEFAULT_REMOTE_API_BASES[0]);
     if (chosen) {
       resolvedApiBase = chosen;
       localStorage.setItem(API_BASE_KEY, chosen);
@@ -920,10 +889,7 @@ function applySession(session) {
       cpfMasked: String(extra?.cpfMasked || profile?.cpfMasked || ""),
       email: String(extra?.email || profile?.email || ""),
       phone: String(extra?.phone || profile?.phone || ""),
-      username: deriveUsernameFromSession(profile, extra) || "cliente",
-      registrationComplete: true,
-      googlePending: false,
-      loginProvider: String(extra?.loginProvider || session?.loginProvider || "password")
+      username: deriveUsernameFromSession(profile, extra) || "cliente"
     })
   );
   localStorage.setItem(AUTH_LAST_SEEN_KEY, String(Date.now()));
@@ -934,19 +900,6 @@ function applySession(session) {
   if (addresses.length) {
     localStorage.setItem(SHIP_LIST_KEY, JSON.stringify(addresses.map(normalizeAddressForLocalStorage)));
   }
-}
-
-function loadPendingGoogleProfileFromStorage() {
-  const profile = loadJson(PROFILE_KEY, null);
-  const extra = loadJson(PROFILE_EXTRA_KEY, null);
-  if (!extra || extra.googlePending !== true) return null;
-  const email = String(extra?.email || profile?.email || "").trim().toLowerCase();
-  if (!email) return null;
-  return {
-    email,
-    name: String(profile?.name || extra?.fullName || extra?.displayName || "Cliente Stop mod").trim() || "Cliente Stop mod",
-    picture: String(profile?.picture || extra?.picture || "").trim()
-  };
 }
 
 function openModal(title, html) {
@@ -1110,16 +1063,13 @@ function renderResetPasswordModal(token) {
   });
 }
 
-function finishSocialLogin(user, options = {}) {
+function finishSocialLogin(user) {
   const name = String(user?.name || "Cliente Stop mod").trim() || "Cliente Stop mod";
   const email = String(user?.email || "").trim().toLowerCase();
   const picture = String(user?.picture || "").trim();
-  const pendingRegistration = !!options?.pendingRegistration;
 
   // Social login does not return backend JWT; avoid stale token reuse.
   localStorage.removeItem(AUTH_TOKEN_KEY);
-  localStorage.removeItem(SHIP_KEY);
-  localStorage.removeItem(SHIP_LIST_KEY);
   localStorage.setItem(
     PROFILE_KEY,
     JSON.stringify({
@@ -1139,15 +1089,12 @@ function finishSocialLogin(user, options = {}) {
       email,
       phone: "",
       username: deriveUsernameFromSession({ name, email }, {}),
-      picture,
-      registrationComplete: !pendingRegistration,
-      googlePending: pendingRegistration,
-      loginProvider: "google"
+      picture
     })
   );
   localStorage.setItem(AUTH_LAST_SEEN_KEY, String(Date.now()));
   addLoginSuccessNotification({ name, email });
-  setMsg(msg, "Entrando...", false);
+  setMsg(msg, "Login Google realizado com sucesso.", false);
   showLoginToast("Login realizado com sucesso.");
   setTimeout(() => {
     window.location.href = resolvePostLoginUrl();
@@ -1222,7 +1169,7 @@ function googleSignIn() {
             const data = await postJson("/api/auth/google-login", { accessToken }, 16000);
             applySession(data);
             addLoginSuccessNotification(data?.profile || null);
-            setMsg(msg, "Entrando...", false);
+            setMsg(msg, "Login Google realizado com sucesso.", false);
             showLoginToast("Login realizado com sucesso.");
             await wait(900);
             window.location.href = resolvePostLoginUrl();
@@ -1231,11 +1178,14 @@ function googleSignIn() {
             if (errorCode === "google_account_not_linked") {
               try {
                 const googleProfile = await fetchGoogleProfileWithAccessToken(accessToken);
-                setGoogleOnboardingState(false);
-                finishSocialLogin(googleProfile, { pendingRegistration: true });
+                setGoogleOnboardingState(true, googleProfile);
+                setMsg(
+                  msg,
+                  "Essa conta Google ainda nao esta cadastrada. Use Criar conta para finalizar o cadastro.",
+                  true
+                );
                 return;
               } catch {
-                setGoogleOnboardingState(false);
                 setMsg(msg, "Falha ao obter dados da conta Google para completar cadastro.", true);
                 return;
               }
@@ -1321,9 +1271,9 @@ async function handleRegisterSubmit(event) {
 
     const civil = data?.civilCheck;
     if (civil?.checked && civil?.accepted === false) {
-      setMsg(regMsg, "Entrando...", false);
+      setMsg(regMsg, "Conta criada, mas verificacao civil CPF ficou pendente.", false);
     } else {
-      setMsg(regMsg, "Entrando...", false);
+      setMsg(regMsg, "Conta criada com sucesso.", false);
     }
     showLoginToast("Conta criada e login realizado com sucesso.");
     await wait(900);
@@ -1351,7 +1301,7 @@ async function handleLoginSubmit(event) {
     const data = await postJson("/api/auth/login", { identifier, password }, 14000);
     applySession(data);
     addLoginSuccessNotification(data?.profile || null);
-    setMsg(msg, "Entrando...", false);
+    setMsg(msg, "Login realizado com sucesso.", false);
     showLoginToast("Login realizado com sucesso.");
     await wait(900);
     window.location.href = resolvePostLoginUrl();
@@ -1365,15 +1315,8 @@ async function handleLoginSubmit(event) {
 pwToggle?.addEventListener("click", () => togglePw(loginPass, pwToggle));
 regPwToggle?.addEventListener("click", () => togglePw(regPass, regPwToggle));
 goRegister?.addEventListener("click", () => {
-  showRegister(true);
-  const googleProfile = pendingGoogleOnboarding?.email ? pendingGoogleOnboarding : loadPendingGoogleProfileFromStorage();
-  if (googleProfile?.email) {
-    setGoogleOnboardingState(true, googleProfile);
-    setMsg(regMsg, "Google confirmado. Complete CPF, nascimento, senha e endereco para finalizar.", false);
-    regBirth?.focus();
-    return;
-  }
   setGoogleOnboardingState(false);
+  showRegister(true);
 });
 goLogin?.addEventListener("click", () => showRegister(false));
 loginForm?.addEventListener("submit", handleLoginSubmit);
@@ -1433,18 +1376,10 @@ document.addEventListener("keydown", (event) => {
 showRegister(false);
 ensureUnifiedApiConfig();
 
-const shouldCompleteCheckoutRegistration = String(new URLSearchParams(window.location.search).get("complete") || "") === "1";
-if (shouldCompleteCheckoutRegistration) {
-  const pendingGoogleProfile = loadPendingGoogleProfileFromStorage();
-  if (pendingGoogleProfile?.email) {
-    showRegister(true);
-    setGoogleOnboardingState(true, pendingGoogleProfile);
-    setMsg(regMsg, "Complete CPF, nascimento, senha e endereco para finalizar a compra.", false);
-    regBirth?.focus();
-  }
-}
-
 const resetTokenFromUrl = getResetTokenFromQuery();
 if (resetTokenFromUrl) {
   renderResetPasswordModal(resetTokenFromUrl);
 }
+
+
+
