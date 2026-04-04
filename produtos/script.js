@@ -1,6 +1,7 @@
 ﻿(function () {
   const catalog = window.stopmodCatalog;
   const root = document.getElementById("product-detail-root");
+  const topFeatures = document.getElementById("product-detail-top-features");
 
   if (!catalog || !root) return;
 
@@ -76,7 +77,15 @@
     `;
   }
 
+  function renderTopHighlights(items) {
+    if (!topFeatures) return;
+    topFeatures.innerHTML = (Array.isArray(items) ? items : [])
+      .map((item) => `<span class="product-top-highlight">${escapeHtml(item)}</span>`)
+      .join("");
+  }
+
   function renderMissingProduct() {
+    renderTopHighlights([]);
     root.innerHTML = `
       <div class="product-empty-state">
         <h1>Produto nao encontrado</h1>
@@ -99,6 +108,7 @@
     const related = catalog.getRelatedProducts(product.id, 4);
     const isFavorite = catalog.isFavorite(product.id);
 
+    renderTopHighlights(product.highlights);
     root.innerHTML = `
       <div class="product-detail-grid">
         <section class="product-detail-media">
@@ -129,9 +139,7 @@
             <small>Pix: ${catalog.formatBRL(catalog.pixPrice(product.price))}</small>
           </div>
 
-          <ul class="product-detail-highlights">
-            ${product.highlights.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
-          </ul>
+
 
           <div class="product-quantity-box">
             <span>Adicionar mais produtos</span>
@@ -274,5 +282,7 @@
 
   renderProduct();
 })();
+
+
 
 
