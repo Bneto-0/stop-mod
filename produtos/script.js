@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
   const catalog = window.stopmodCatalog;
   const root = document.getElementById("product-detail-root");
 
@@ -37,6 +37,14 @@
     if (!feedback) return;
     feedback.textContent = message;
     feedback.hidden = !message;
+  }
+
+  function favoriteHeartMarkup(isFavorite) {
+    return isFavorite ? "&#10084;" : "&#9825;";
+  }
+
+  function favoriteHeartLabel(isFavorite) {
+    return isFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos";
   }
 
   function reviewCard(review) {
@@ -89,7 +97,7 @@
     const summary = catalog.getRatingSummary(product.id);
     const reviews = catalog.getProductReviews(product.id);
     const related = catalog.getRelatedProducts(product.id, 4);
-    const favoriteLabel = catalog.isFavorite(product.id) ? "Remover dos favoritos" : "Adicionar aos favoritos";
+    const isFavorite = catalog.isFavorite(product.id);
 
     root.innerHTML = `
       <div class="product-detail-grid">
@@ -98,9 +106,12 @@
         </section>
 
         <section class="product-detail-panel">
-          <div class="product-detail-topline">
-            <span class="badge-pill">${escapeHtml(product.badge)}</span>
-            <span>${escapeHtml(product.category)} | ${escapeHtml(product.size)}</span>
+          <div class="product-detail-headbar">
+            <div class="product-detail-topline">
+              <span class="badge-pill">${escapeHtml(product.badge)}</span>
+              <span>${escapeHtml(product.category)} | ${escapeHtml(product.size)}</span>
+            </div>
+            <button class="product-favorite-heart${isFavorite ? " is-active" : ""}" type="button" data-favorite-toggle aria-label="${favoriteHeartLabel(isFavorite)}" aria-pressed="${isFavorite ? "true" : "false"}">${favoriteHeartMarkup(isFavorite)}</button>
           </div>
           <h1>${escapeHtml(product.name)}</h1>
           <p class="product-detail-summary">${escapeHtml(product.shortDescription || product.description)}</p>
@@ -132,7 +143,6 @@
           </div>
 
           <div class="product-detail-actions">
-            <button class="btn secondary" type="button" data-favorite-toggle>${favoriteLabel}</button>
             <button class="btn secondary" type="button" data-add-cart>Adicionar ao carrinho</button>
             <button class="btn primary" type="button" data-buy-now>Comprar agora</button>
           </div>
@@ -223,7 +233,10 @@
     const favorite = event.target instanceof Element ? event.target.closest("[data-favorite-toggle]") : null;
     if (favorite) {
       const isNowFavorite = catalog.toggleFavorite(product.id);
-      favorite.textContent = isNowFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos";
+      favorite.innerHTML = favoriteHeartMarkup(isNowFavorite);
+      favorite.classList.toggle("is-active", isNowFavorite);
+      favorite.setAttribute("aria-pressed", isNowFavorite ? "true" : "false");
+      favorite.setAttribute("aria-label", favoriteHeartLabel(isNowFavorite));
       showFeedback(isNowFavorite ? "Produto salvo nos favoritos." : "Produto removido dos favoritos.");
       return;
     }
@@ -261,4 +274,5 @@
 
   renderProduct();
 })();
+
 
