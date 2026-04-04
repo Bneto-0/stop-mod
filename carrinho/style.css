@@ -1,4 +1,4 @@
-@import "../style.css";
+﻿@import "../style.css";
 body { background: radial-gradient(circle at top left, rgba(191,91,40,0.12), transparent 18%), linear-gradient(180deg, #f5eee5 0%, #ece1d5 100%); }
 .hero { padding: 20px 0 18px; }
 .menu-top, .hero-menu, .cart-shell, footer { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
@@ -52,3 +52,10 @@ footer { padding: 0 0 28px; }
 footer p { color: var(--text-soft); }
 @media (max-width: 920px) { .cart-shell { grid-template-columns: 1fr; } }
 @media (max-width: 720px) { #cart-items li { grid-template-columns: 1fr; } .menu-top, .menu-left, .menu-right, .cart-titlebar, .address-inline-main, .sum-row, .sum-total, .checkout-address-head, .modal-actions, .inline-pay-actions { align-items: flex-start; flex-direction: column; } .search-top-wrap, .search-top-wrap input, .menu-right, .menu-left { width: 100%; } }
+
+.cart-item-media { display: block; }
+.cart-item-link { color: inherit; text-decoration: none; }
+.cart-item-link:hover { text-decoration: underline; }
+.cart-item-link-inline { display: inline-flex; margin-top: 6px; color: #c7512f; font-weight: 700; text-decoration: none; }
+.cart-item-link-inline:hover { text-decoration: underline; }
+

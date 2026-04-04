@@ -1,7 +1,8 @@
-const CART_KEY = "stopmod_cart";
+﻿const sharedCatalog = window.stopmodCatalog || null;
+const CART_KEY = sharedCatalog?.storageKeys?.cart || "stopmod_cart";
 const PROFILE_KEY = "stopmod_profile";
 
-const products = [
+const products = Array.isArray(sharedCatalog?.products) && sharedCatalog.products.length ? sharedCatalog.products : [
   { id: 1, name: "Camiseta Oversized Street", category: "Camisetas", size: "P ao GG", price: 89.9, image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80", badge: "12x sem juros" },
   { id: 2, name: "Calca Cargo Urban", category: "Calcas", size: "36 ao 46", price: 159.9, image: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=900&q=80", badge: "frete verde" },
   { id: 3, name: "Jaqueta Jeans Vintage", category: "Jaquetas", size: "P ao XG", price: 219.9, image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=80", badge: "novo drop" },
@@ -119,6 +120,11 @@ function pixPrice(value) {
   return value * 0.93;
 }
 
+function productHref(id) {
+  if (sharedCatalog?.productHref) return sharedCatalog.productHref(id);
+  return `/produtos/?id=${encodeURIComponent(String(id))}`;
+}
+
 function renderCartCount() {
   if (cartCount) cartCount.textContent = String(loadCartIds().length);
 }
@@ -179,11 +185,12 @@ function getVisibleProducts() {
 
 function productCard(product) {
   return `
-    <article class="product-card">
+    <article class="product-card product-card--interactive" data-product-open-id="${product.id}" tabindex="0" role="link" aria-label="Abrir ${product.name}">
       <img src="${product.image}" alt="${product.name}" />
       <div class="product-card__body">
         <p class="product-card__meta">${product.category} | ${product.size}</p>
         <h3>${product.name}</h3>
+        <p class="product-card__summary">${product.shortDescription || product.badge}</p>
         <div class="product-card__badges">
           <span class="badge-pill">${product.badge}</span>
           <span class="badge-pill">pix ${formatBRL(pixPrice(product.price))}</span>
@@ -193,8 +200,8 @@ function productCard(product) {
           <span>${formatBRL(oldPrice(product.price))}</span>
         </div>
         <div class="product-card__actions">
-          <button class="btn primary" type="button" data-add-id="${product.id}">Comprar</button>
-          <a class="btn secondary" href="./carrinho/">Carrinho</a>
+          <a class="btn primary" href="${productHref(product.id)}" data-no-card-open>Ver detalhes</a>
+          <button class="btn secondary" type="button" data-add-id="${product.id}" data-no-card-open>Adicionar</button>
         </div>
       </div>
     </article>
@@ -203,19 +210,19 @@ function productCard(product) {
 
 function shelfCard(product) {
   return `
-    <article class="shelf-card">
+    <article class="shelf-card shelf-card--interactive" data-product-open-id="${product.id}" tabindex="0" role="link" aria-label="Abrir ${product.name}">
       <img src="${product.image}" alt="${product.name}" />
       <div class="shelf-card__body">
         <p class="product-card__meta">${product.category}</p>
         <h3>${product.name}</h3>
-        <p>${product.badge}</p>
+        <p>${product.shortDescription || product.badge}</p>
         <div class="shelf-card__price">
           <strong>${formatBRL(product.price)}</strong>
           <span>${formatBRL(oldPrice(product.price))}</span>
         </div>
         <div class="shelf-card__actions">
-          <button class="btn primary" type="button" data-add-id="${product.id}">Adicionar</button>
-          <a class="btn secondary" href="./carrinho/">Ir</a>
+          <a class="btn primary" href="${productHref(product.id)}" data-no-card-open>Detalhes</a>
+          <button class="btn secondary" type="button" data-add-id="${product.id}" data-no-card-open>Adicionar</button>
         </div>
       </div>
     </article>
@@ -224,13 +231,14 @@ function shelfCard(product) {
 
 function compactProductCard(product) {
   return `
-    <article class="compact-product-card">
+    <article class="compact-product-card compact-product-card--interactive" data-product-open-id="${product.id}" tabindex="0" role="link" aria-label="Abrir ${product.name}">
       <img src="${product.image}" alt="${product.name}" />
       <div class="compact-product-card__meta">
         <span>${product.category}</span>
         <span>${product.size}</span>
       </div>
       <h3>${product.name}</h3>
+      <p class="compact-product-card__summary">${product.shortDescription || product.badge}</p>
       <div class="compact-product-card__price">
         <strong>${formatBRL(product.price)}</strong>
         <span>${product.badge}</span>
@@ -386,6 +394,12 @@ filters.forEach((button) => {
 searchInput?.addEventListener("input", renderProducts);
 
 document.addEventListener("click", (event) => {
+  const openCard = event.target instanceof Element ? event.target.closest("[data-product-open-id]") : null;
+  if (openCard && !event.target.closest("[data-no-card-open]")) {
+    window.location.href = productHref(openCard.getAttribute("data-product-open-id"));
+    return;
+  }
+
   const addButton = event.target instanceof Element ? event.target.closest("[data-add-id]") : null;
   if (addButton) {
     addToCart(addButton.getAttribute("data-add-id"));
@@ -461,3 +475,18 @@ renderCartCount();
 renderProfileState();
 renderProducts();
 restartAnnouncementTimer();
+
+
+
+
+
+document.addEventListener("keydown", (event) => {
+  const target = event.target instanceof Element ? event.target.closest("[data-product-open-id]") : null;
+  if (!target) return;
+  if (event.key !== "Enter" && event.key !== " ") return;
+  event.preventDefault();
+  window.location.href = productHref(target.getAttribute("data-product-open-id"));
+});
+
+
+

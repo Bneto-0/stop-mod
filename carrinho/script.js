@@ -1,4 +1,5 @@
-const CART_KEY = "stopmod_cart";
+﻿const sharedCatalog = window.stopmodCatalog || null;
+const CART_KEY = sharedCatalog?.storageKeys?.cart || "stopmod_cart";
 const MAX_CART_ITEMS = 2000;
 const SHIP_KEY = "stopmod_ship_to";
 const LEGACY_SHIP_KEY = "stopmod_ship_cep";
@@ -6,8 +7,8 @@ const COUPON_KEY = "stopmod_coupons";
 const PAY_KEY = "stopmod_payment";
 const ORDERS_KEY = "stopmod_orders";
 const NOTES_KEY = "stopmod_notifications";
-const SOLD_COUNTS_KEY = "stopmod_sold_counts";
-const RATINGS_KEY = "stopmod_product_ratings";
+const SOLD_COUNTS_KEY = sharedCatalog?.storageKeys?.soldCounts || "stopmod_sold_counts";
+const RATINGS_KEY = sharedCatalog?.storageKeys?.ratingStats || "stopmod_product_ratings";
 const PROFILE_KEY = "stopmod_profile";
 const PROFILE_EXTRA_KEY = "stopmod_profile_extra";
 const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
@@ -30,7 +31,7 @@ const ORDER_STATUS_AWAITING_PAYMENT = "Aguardando finalizacao";
 const ORDER_STATUS_PROCESSING_PAYMENT = "Processando pagamento";
 const ORDER_STATUS_TIMEOUT_CANCELLED = "Cancelado por falta de finalizacao";
 
-const products = [
+const products = Array.isArray(sharedCatalog?.products) && sharedCatalog.products.length ? sharedCatalog.products : [
   { id: 1, name: "Camiseta Oversized Street", category: "Camisetas", size: "P ao GG", price: 89.9, image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80" },
   { id: 2, name: "Calca Cargo Urban", category: "Calcas", size: "36 ao 46", price: 159.9, image: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=700&q=80" },
   { id: 3, name: "Jaqueta Jeans Vintage", category: "Jaquetas", size: "P ao XG", price: 219.9, image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=700&q=80" },
@@ -102,6 +103,12 @@ let lastAuthTouchAt = 0;
 function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
+
+function productHref(id) {
+  if (sharedCatalog?.productHref) return sharedCatalog.productHref(id);
+  return `../produtos/?id=${encodeURIComponent(String(id))}`;
+}
+
 
 function parseIsoMs(value) {
   const parsed = Date.parse(String(value || ""));
@@ -1377,9 +1384,9 @@ function renderCart() {
         const meta = [item.category, item.size].filter(Boolean).join(" | ");
         return `
         <li class="cart-item">
-          <img src="${item.image}" alt="${item.name}" loading="lazy" />
+          <a class="cart-item-media" href="${productHref(item.id)}"><img src="${item.image}" alt="${item.name}" loading="lazy" /></a>
           <div class="cart-item-body">
-            <strong>${item.name}</strong>
+            <strong><a class="cart-item-link" href="${productHref(item.id)}">${item.name}</a></strong>
             ${meta ? `<div class="cart-item-meta">${meta}</div>` : ""}
             <div class="cart-item-row">
               <div class="qty-controls" aria-label="Quantidade">
@@ -1390,6 +1397,7 @@ function renderCart() {
               <span class="cart-item-price">R$ ${formatBRL(item.price)}</span>
             </div>
             <div class="cart-item-meta">Subtotal: R$ ${formatBRL(item.price * item.qty)}</div>
+            <a class="cart-item-link-inline" href="${productHref(item.id)}">Ver detalhes do produto</a>
           </div>
         </li>
       `;
@@ -1673,5 +1681,9 @@ window.addEventListener("storage", (event) => {
     renderCart();
   }
 });
+
+
+
+
 
 
