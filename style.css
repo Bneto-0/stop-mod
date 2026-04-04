@@ -1199,6 +1199,10 @@ button, input, select, textarea { font: inherit; }
   padding: 1.75rem;
 }
 
+.product-detail-shell {
+  width: min(1180px, 100%);
+}
+
 .product-detail-grid {
   display: grid;
   gap: 1.5rem;
@@ -1584,4 +1588,5 @@ button, input, select, textarea { font: inherit; }
     grid-template-columns: 1fr;
   }
 }
+
 
