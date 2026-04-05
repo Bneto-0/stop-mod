@@ -113,6 +113,12 @@
     return city || state || "";
   }
 
+  function deliverySummaryLine(to) {
+    return [deliveryAddressLine(to), deliveryCityStateLine(to)]
+      .filter(Boolean)
+      .join(" - ");
+  }
+
   function currentShippingForQty(qty) {
     const shipTo = loadShipTo();
     const safeQty = Math.max(1, Number(qty) || 1);
@@ -126,33 +132,30 @@
 
   function deliveryCardMarkup(qty = 1) {
     const { shipTo, shipping } = currentShippingForQty(qty);
-    const addressLine = deliveryAddressLine(shipTo);
-    const cityStateLine = deliveryCityStateLine(shipTo);
+    const summaryLine = deliverySummaryLine(shipTo);
 
-    if (!addressLine || !cityStateLine) {
+    if (!summaryLine) {
       return `
         <article class="product-delivery-card">
           <p class="product-delivery-card__label">Entrega no seu endereco</p>
-          <strong>Cadastre seu endereco</strong>
-          <p>Salve rua, numero e bairro para ver o frete calculado aqui.</p>
-          <a class="btn secondary" href="../entrega/">Adicionar endereco</a>
+          <strong class="product-delivery-card__summary">Cadastre seu endereco para calcular</strong>
+          <p class="product-delivery-card__freight">Frete sob consulta</p>
+          <a class="product-delivery-card__link" href="../entrega/">Adicionar endereco</a>
         </article>
       `;
     }
 
     const freightLabel = shipping === null
-      ? "Informe um CEP valido para calcular o frete."
+      ? "Informe um CEP valido"
       : shipping === 0
-        ? "Frete gratis para este endereco."
-        : `Frete: ${catalog.formatBRL(shipping)} para este endereco.`;
+        ? "Frete Gratis"
+        : `Frete ${catalog.formatBRL(shipping)}`;
 
     return `
       <article class="product-delivery-card" data-delivery-card>
         <p class="product-delivery-card__label">Entrega no seu endereco</p>
-        <strong data-delivery-address>${escapeHtml(addressLine)}</strong>
-        <span data-delivery-city>${escapeHtml(cityStateLine)}</span>
+        <strong class="product-delivery-card__summary" data-delivery-summary title="${escapeHtml(summaryLine)}">${escapeHtml(summaryLine)}</strong>
         <p class="product-delivery-card__freight${shipping === 0 ? " is-free" : ""}" data-delivery-freight>${escapeHtml(freightLabel)}</p>
-        <small data-delivery-note>Calculado para ${qty === 1 ? "1 unidade" : `${qty} unidades`} deste produto.</small>
       </article>
     `;
   }
@@ -163,23 +166,21 @@
 
     const qty = Math.max(1, Number(qtyValue) || currentQty() || 1);
     const { shipTo, shipping } = currentShippingForQty(qty);
-    const address = card.querySelector("[data-delivery-address]");
-    const city = card.querySelector("[data-delivery-city]");
+    const summary = card.querySelector("[data-delivery-summary]");
     const freight = card.querySelector("[data-delivery-freight]");
-    const note = card.querySelector("[data-delivery-note]");
+    const summaryLine = deliverySummaryLine(shipTo);
 
-    if (address) address.textContent = deliveryAddressLine(shipTo);
-    if (city) city.textContent = deliveryCityStateLine(shipTo);
+    if (summary) {
+      summary.textContent = summaryLine;
+      summary.setAttribute("title", summaryLine);
+    }
     if (freight) {
       freight.textContent = shipping === null
-        ? "Informe um CEP valido para calcular o frete."
+        ? "Informe um CEP valido"
         : shipping === 0
-          ? "Frete gratis para este endereco."
-          : `Frete: ${catalog.formatBRL(shipping)} para este endereco.`;
+          ? "Frete Gratis"
+          : `Frete ${catalog.formatBRL(shipping)}`;
       freight.classList.toggle("is-free", shipping === 0);
-    }
-    if (note) {
-      note.textContent = `Calculado para ${qty === 1 ? "1 unidade" : `${qty} unidades`} deste produto.`;
     }
   }
 
@@ -217,6 +218,31 @@
         <em>${catalog.formatBRL(item.price)}</em>
       </a>
     `;
+  }
+
+  function singularCategoryLabel(value) {
+    const map = Object.freeze({
+      Camisetas: "Camiseta",
+      Calcas: "Calca",
+      Jaquetas: "Jaqueta",
+      Moletons: "Moletom",
+      Vestidos: "Vestido",
+      Camisas: "Camisa",
+      Casacos: "Casaco",
+      Blazers: "Blazer",
+      Saias: "Saia",
+      Shorts: "Short",
+      Calcados: "Calcado",
+      Acessorios: "Acessorio"
+    });
+    return map[String(value || "").trim()] || String(value || "").trim();
+  }
+
+  function buildTopReferences() {
+    if (!product) return [];
+    return [singularCategoryLabel(product.category), ...(Array.isArray(product.highlights) ? product.highlights : [])]
+      .map((item) => String(item || "").trim())
+      .filter(Boolean);
   }
 
   function renderTopHighlights(items) {
@@ -739,7 +765,7 @@
     }
     document.body.classList.toggle("has-product-gallery", galleryOpen);
 
-    renderTopHighlights(product.highlights);
+    renderTopHighlights(buildTopReferences());
     root.innerHTML = `
       <div class="product-detail-grid">
         <section class="product-detail-media">
