@@ -20,7 +20,6 @@
   let cepLookupSuccess = false;
   let cepLookupMessage = "";
   let cepLookupResult = null;
-  let cepModalCloseTimer = 0;
   let pendingReviewPhoto = "";
   let pendingReviewPhotoName = "";
   const TEXT_SIZE_ORDER = ["PP", "P", "M", "G", "GG", "XG", "XGG"];
@@ -257,10 +256,6 @@
   }
 
   function openCepModal() {
-    if (cepModalCloseTimer) {
-      clearTimeout(cepModalCloseTimer);
-      cepModalCloseTimer = 0;
-    }
     const current = loadShipTo();
     cepModalOpen = true;
     cepDraft = String(current.cep || "");
@@ -281,10 +276,6 @@
   }
 
   function closeCepModal() {
-    if (cepModalCloseTimer) {
-      clearTimeout(cepModalCloseTimer);
-      cepModalCloseTimer = 0;
-    }
     cepModalOpen = false;
     cepLookupLoading = false;
     cepLookupError = false;
@@ -952,7 +943,6 @@
     if (!cepModalOpen) return "";
 
     const found = cepLookupResult;
-    const canSave = !!(found?.street && found?.city && found?.state && String(numberDraft || "").trim());
 
     return `
       <div class="cep-modal" role="dialog" aria-modal="true" aria-label="Informar CEP para entrega">
@@ -987,7 +977,7 @@
 
             <div class="cep-form__actions">
               <button class="btn secondary" type="button" data-cep-close>Cancelar</button>
-              <button class="btn primary" type="submit" ${canSave ? "" : "disabled"}>Salvar endereco</button>
+              <button class="btn primary" type="submit" ${cepLookupLoading ? "disabled" : ""}>Salvar endereco</button>
             </div>
           </form>
         </div>
@@ -1387,9 +1377,15 @@
     const cepForm = event.target instanceof HTMLFormElement ? event.target.closest("[data-cep-form]") : null;
     if (cepForm) {
       event.preventDefault();
+      const formData = new FormData(cepForm);
+      const cepValue = normalizeCep(String(formData.get("cep") || cepDraft));
+      const number = String(formData.get("number") || numberDraft).trim();
+      cepDraft = cepValue;
+      numberDraft = number;
+
       let found = cepLookupResult;
-      if (!found && digitsOnly(cepDraft).length === 8) {
-        found = await lookupCep(cepDraft);
+      if (!found && digitsOnly(cepValue).length === 8) {
+        found = await lookupCep(cepValue);
       }
       if (!found) {
         cepLookupError = true;
@@ -1399,7 +1395,6 @@
         return;
       }
 
-      const number = String(numberDraft || "").trim();
       if (!number) {
         cepLookupError = true;
         cepLookupSuccess = false;
@@ -1418,12 +1413,10 @@
       cepLookupSuccess = true;
       cepLookupMessage = "Endereco salvo com sucesso.";
       renderProduct();
-      if (cepModalCloseTimer) clearTimeout(cepModalCloseTimer);
-      cepModalCloseTimer = window.setTimeout(() => {
-        closeCepModal();
-        renderProduct();
-        showFeedback("Endereco atualizado pelo CEP.");
-      }, 1100);
+      await new Promise((resolve) => window.setTimeout(resolve, 1100));
+      closeCepModal();
+      renderProduct();
+      showFeedback("Endereco atualizado pelo CEP.");
       return;
     }
 
