@@ -754,6 +754,10 @@ function addToCart(id, quantity, options = {}) {
     const seeded = Array.isArray(seededReviews[key]) ? seededReviews[key] : [];
     return [...stored, ...seeded]
       .filter((review) => review && Number(review.rating) >= 1)
+      .map((review) => ({
+        ...review,
+        photo: typeof review?.photo === "string" ? review.photo : ""
+      }))
       .sort((left, right) => Date.parse(String(right.createdAt || "")) - Date.parse(String(left.createdAt || "")));
   }
 
@@ -782,6 +786,10 @@ function addToCart(id, quantity, options = {}) {
     const rating = Math.max(1, Math.min(5, Math.floor(Number(payload?.rating) || 0)));
     const name = String(payload?.name || "Cliente").trim() || "Cliente";
     const text = String(payload?.text || "").trim();
+    const rawPhoto = typeof payload?.photo === "string" && payload.photo.startsWith("data:image/")
+      ? String(payload.photo)
+      : "";
+    const photo = rawPhoto.length <= 450000 ? rawPhoto : "";
     if (!rating || !text) return null;
 
     const key = String(product.id);
@@ -791,6 +799,7 @@ function addToCart(id, quantity, options = {}) {
       name,
       rating,
       text,
+      photo,
       createdAt: new Date().toISOString()
     };
 

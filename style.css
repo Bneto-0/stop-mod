@@ -1766,7 +1766,7 @@ button, input, select, textarea { font: inherit; }
 .product-extra-grid {
   display: grid;
   gap: 1.25rem;
-  grid-template-columns: 1.1fr 1fr;
+  grid-template-columns: 1fr;
   margin-top: 2rem;
 }
 
@@ -1800,13 +1800,66 @@ button, input, select, textarea { font: inherit; }
   font-weight: 700;
 }
 
+.product-reviews-card--expanded {
+  padding: 1.4rem;
+}
+
+.product-reviews-card__copy {
+  margin: 0.4rem 0 0;
+  max-width: 640px;
+  color: #78695f;
+  line-height: 1.6;
+}
+
+.product-reviews-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  gap: 1.25rem;
+  margin-top: 1.15rem;
+}
+
+.product-reviews-stream {
+  display: grid;
+  gap: 1rem;
+}
+
+.product-reviews-overview {
+  display: grid;
+  gap: 0.6rem;
+  padding: 1rem 1.05rem;
+  border: 1px solid #efe5dc;
+  border-radius: 1.2rem;
+  background: linear-gradient(180deg, #fffaf7 0%, #fff 100%);
+}
+
+.product-reviews-overview__score {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.product-reviews-overview__score strong {
+  font-size: 1.8rem;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.product-reviews-overview p {
+  margin: 0;
+  color: #78695f;
+  line-height: 1.6;
+}
+
 .review-list {
   display: grid;
   gap: 0.9rem;
-  margin-top: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .review-card {
+  display: grid;
+  gap: 0.85rem;
   border: 1px solid #efe5dc;
   border-radius: 1rem;
   padding: 0.9rem 1rem;
@@ -1817,7 +1870,40 @@ button, input, select, textarea { font: inherit; }
   display: flex;
   justify-content: space-between;
   gap: 1rem;
-  align-items: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.review-card__author {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.review-card__author strong,
+.review-empty-card strong {
+  font-size: 1rem;
+}
+
+.review-card__author small {
+  color: #8b7467;
+}
+
+.review-card__media {
+  overflow: hidden;
+  border-radius: 0.95rem;
+}
+
+.review-card__media img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.review-card p,
+.review-empty-card p {
+  margin: 0;
+  color: #443b35;
+  line-height: 1.6;
 }
 
 .rating-stars {
@@ -1828,7 +1914,14 @@ button, input, select, textarea { font: inherit; }
 .review-form {
   display: grid;
   gap: 0.85rem;
-  margin-top: 1.25rem;
+}
+
+.review-form--panel {
+  align-content: start;
+  padding: 1rem;
+  border: 1px solid #efe5dc;
+  border-radius: 1.2rem;
+  background: #fffaf7;
 }
 
 .review-form label {
@@ -1845,6 +1938,57 @@ button, input, select, textarea { font: inherit; }
   border-radius: 1rem;
   padding: 0.85rem 1rem;
   font: inherit;
+  background: #fff;
+}
+
+.review-photo-field input {
+  padding: 0.8rem;
+}
+
+.review-photo-preview {
+  display: grid;
+  gap: 0.8rem;
+  justify-items: start;
+  padding: 1rem;
+  border: 1px dashed #d9c8bb;
+  border-radius: 1rem;
+  background: #fff;
+}
+
+.review-photo-preview p,
+.review-form-note {
+  margin: 0;
+  color: #78695f;
+  line-height: 1.6;
+}
+
+.review-photo-preview.has-photo img {
+  width: min(220px, 100%);
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 0.95rem;
+}
+
+.review-photo-preview__meta {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.review-photo-preview__meta span {
+  color: #8b7467;
+  font-size: 0.88rem;
+}
+
+.review-photo-preview__remove {
+  min-height: 42px;
+}
+
+.review-empty-card {
+  display: grid;
+  gap: 0.55rem;
+  padding: 1rem;
+  border: 1px dashed #dbc9bc;
+  border-radius: 1rem;
   background: #fff;
 }
 
@@ -1960,6 +2104,11 @@ button, input, select, textarea { font: inherit; }
     grid-template-columns: 1fr;
   }
 
+  .product-reviews-layout,
+  .review-list {
+    grid-template-columns: 1fr;
+  }
+
   .related-products-grid,
   .favorite-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1988,6 +2137,10 @@ button, input, select, textarea { font: inherit; }
   .favorites-head {
     display: grid;
     grid-template-columns: 1fr;
+  }
+
+  .product-reviews-card--expanded {
+    padding: 1.1rem;
   }
 
   .product-qty-side {

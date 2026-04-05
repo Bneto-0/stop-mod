@@ -9,6 +9,8 @@
   const productId = Number(params.get("id") || 0);
   const product = catalog.getProductById(productId);
   let selectedVariantId = String(params.get("variant") || "").trim();
+  let pendingReviewPhoto = "";
+  let pendingReviewPhotoName = "";
 
   function loadProfileName() {
     try {
@@ -58,11 +60,18 @@
     return `
       <article class="review-card">
         <div class="review-card__head">
-          <strong>${escapeHtml(review.name || "Cliente")}</strong>
+          <div class="review-card__author">
+            <strong>${escapeHtml(review.name || "Cliente")}</strong>
+            <small>${createdLabel}</small>
+          </div>
           <span class="rating-stars">${renderStars(review.rating)}</span>
         </div>
+        ${review?.photo ? `
+          <div class="review-card__media">
+            <img src="${escapeHtml(review.photo)}" alt="Foto enviada por ${escapeHtml(review.name || "Cliente")}" loading="lazy" />
+          </div>
+        ` : ""}
         <p>${escapeHtml(review.text || "")}</p>
-        <small>${createdLabel}</small>
       </article>
     `;
   }
@@ -166,6 +175,131 @@
     `;
   }
 
+  function reviewPhotoPreviewMarkup() {
+    if (!pendingReviewPhoto) {
+      return `
+        <div class="review-photo-preview" data-review-photo-preview>
+          <p>Adicione uma foto real do produto para aparecer junto do seu comentario.</p>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="review-photo-preview has-photo" data-review-photo-preview>
+        <img src="${escapeHtml(pendingReviewPhoto)}" alt="Pre-visualizacao da foto da avaliacao" />
+        <div class="review-photo-preview__meta">
+          <strong>${escapeHtml(pendingReviewPhotoName || "Foto pronta")}</strong>
+          <span>Essa imagem vai junto com sua avaliacao.</span>
+        </div>
+        <button class="btn secondary review-photo-preview__remove" type="button" data-review-photo-clear>Remover foto</button>
+      </div>
+    `;
+  }
+
+  function updateReviewPhotoPreview() {
+    const preview = root.querySelector("[data-review-photo-preview]");
+    if (!preview) return;
+
+    if (!pendingReviewPhoto) {
+      preview.className = "review-photo-preview";
+      preview.innerHTML = "<p>Adicione uma foto real do produto para aparecer junto do seu comentario.</p>";
+      return;
+    }
+
+    preview.className = "review-photo-preview has-photo";
+    preview.innerHTML = `
+      <img src="${escapeHtml(pendingReviewPhoto)}" alt="Pre-visualizacao da foto da avaliacao" />
+      <div class="review-photo-preview__meta">
+        <strong>${escapeHtml(pendingReviewPhotoName || "Foto pronta")}</strong>
+        <span>Essa imagem vai junto com sua avaliacao.</span>
+      </div>
+      <button class="btn secondary review-photo-preview__remove" type="button" data-review-photo-clear>Remover foto</button>
+    `;
+  }
+
+  function clearPendingReviewPhoto() {
+    pendingReviewPhoto = "";
+    pendingReviewPhotoName = "";
+    const input = root.querySelector("[data-review-photo-input]");
+    if (input instanceof HTMLInputElement) input.value = "";
+    updateReviewPhotoPreview();
+  }
+
+  function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(new Error("Nao foi possivel ler a foto."));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function loadImageFromDataUrl(dataUrl) {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error("Nao foi possivel processar a foto."));
+      image.src = dataUrl;
+    });
+  }
+
+  async function optimizeReviewPhoto(file) {
+    const rawDataUrl = await readFileAsDataUrl(file);
+    const image = await loadImageFromDataUrl(rawDataUrl);
+    const maxSide = 1280;
+    const sourceWidth = image.naturalWidth || image.width || 1;
+    const sourceHeight = image.naturalHeight || image.height || 1;
+    const scale = Math.min(1, maxSide / Math.max(sourceWidth, sourceHeight));
+    const width = Math.max(1, Math.round(sourceWidth * scale));
+    const height = Math.max(1, Math.round(sourceHeight * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!context) return rawDataUrl;
+    context.drawImage(image, 0, 0, width, height);
+
+    let optimized = canvas.toDataURL("image/jpeg", 0.82);
+    if (optimized.length > 420000) {
+      optimized = canvas.toDataURL("image/jpeg", 0.72);
+    }
+    return optimized;
+  }
+
+  async function handleReviewPhotoSelection(file) {
+    if (!file) {
+      clearPendingReviewPhoto();
+      return;
+    }
+
+    if (!String(file.type || "").startsWith("image/")) {
+      clearPendingReviewPhoto();
+      showFeedback("Envie uma imagem valida para a avaliacao.");
+      return;
+    }
+
+    if (Number(file.size || 0) > 8 * 1024 * 1024) {
+      clearPendingReviewPhoto();
+      showFeedback("A foto esta muito pesada. Use uma imagem com ate 8 MB.");
+      return;
+    }
+
+    try {
+      pendingReviewPhoto = await optimizeReviewPhoto(file);
+      pendingReviewPhotoName = String(file.name || "foto-produto.jpg");
+      if (!pendingReviewPhoto || pendingReviewPhoto.length > 450000) {
+        clearPendingReviewPhoto();
+        showFeedback("Nao deu para salvar essa foto. Tente uma imagem menor.");
+        return;
+      }
+      updateReviewPhotoPreview();
+      showFeedback("Foto pronta para ser enviada com a avaliacao.");
+    } catch {
+      clearPendingReviewPhoto();
+      showFeedback("Nao foi possivel carregar a foto da avaliacao.");
+    }
+  }
+
   function renderProduct() {
     if (!product) {
       renderMissingProduct();
@@ -180,6 +314,9 @@
     const selectedVariant = ensureSelectedVariant();
     const soldOut = !selectedVariant || Number(selectedVariant.stock || 0) <= 0;
     const selectedColorLabel = selectedVariant?.colorName || "Indisponivel";
+    const reviewCount = reviews.length;
+    const reviewAverage = reviewCount ? summary.average.toFixed(1) : "Novo";
+    const reviewStars = reviewCount ? renderStars(summary.average) : renderStars(0);
     const stockLabel = soldOut
       ? "Sem estoque nesta cor."
       : `${selectedVariant.stock} unidade(s) disponivel(is) em ${selectedVariant.colorName}.`;
@@ -250,40 +387,53 @@
       </div>
 
       <section class="product-extra-grid">
-        <article class="product-description-card">
-          <p class="eyebrow">Descricao</p>
-          <h2>Sobre este produto</h2>
-          <p>${escapeHtml(product.description)}</p>
-        </article>
-
-        <article class="product-reviews-card">
+        <article class="product-reviews-card product-reviews-card--expanded">
           <div class="product-reviews-card__head">
             <div>
               <p class="eyebrow">Avaliacoes</p>
               <h2>O que clientes estao dizendo</h2>
+              <p class="product-reviews-card__copy">Agora essa area fica focada em comentarios reais, estrelas e foto enviada pelos clientes.</p>
             </div>
-            <span class="review-badge">${summary.count} comentario(s)</span>
+            <span class="review-badge">${reviewCount} comentario(s)</span>
           </div>
-          <div class="review-list">
-            ${reviews.length ? reviews.slice(0, 6).map(reviewCard).join("") : '<p class="review-empty">Esse produto ainda nao recebeu avaliacao. Seja o primeiro.</p>'}
+          <div class="product-reviews-layout">
+            <div class="product-reviews-stream">
+              <div class="product-reviews-overview">
+                <div class="product-reviews-overview__score">
+                  <strong>${reviewAverage}</strong>
+                  <span class="rating-stars">${reviewStars}</span>
+                </div>
+                <p>${reviewCount ? "Avaliacoes com comentario, foto opcional e nota por estrelas." : "Seja o primeiro cliente a mandar comentario, estrelas e foto real do produto."}</p>
+              </div>
+              <div class="review-list">
+                ${reviewCount ? reviews.slice(0, 8).map(reviewCard).join("") : '<article class="review-empty-card"><strong>Nenhuma avaliacao ainda.</strong><p>Esse espaco agora fica reservado para comentarios dos clientes com foto e estrelas.</p></article>'}
+              </div>
+            </div>
+
+            <form class="review-form review-form--panel" data-review-form>
+              <label>
+                Nota
+                <select name="rating" required>
+                  <option value="5">5 estrelas</option>
+                  <option value="4">4 estrelas</option>
+                  <option value="3">3 estrelas</option>
+                  <option value="2">2 estrelas</option>
+                  <option value="1">1 estrela</option>
+                </select>
+              </label>
+              <label>
+                Sua avaliacao
+                <textarea name="text" rows="5" placeholder="Conte como foi sua experiencia com este produto." required></textarea>
+              </label>
+              <label class="review-photo-field">
+                <span>Foto do produto (opcional)</span>
+                <input type="file" name="photo" accept="image/*" data-review-photo-input />
+              </label>
+              ${reviewPhotoPreviewMarkup()}
+              <p class="review-form-note">Envie uma foto mostrando a cor real, caimento ou acabamento do produto.</p>
+              <button class="btn primary" type="submit">Enviar avaliacao</button>
+            </form>
           </div>
-          <form class="review-form" data-review-form>
-            <label>
-              Nota
-              <select name="rating" required>
-                <option value="5">5 estrelas</option>
-                <option value="4">4 estrelas</option>
-                <option value="3">3 estrelas</option>
-                <option value="2">2 estrelas</option>
-                <option value="1">1 estrela</option>
-              </select>
-            </label>
-            <label>
-              Sua avaliacao
-              <textarea name="text" rows="4" placeholder="Conte como foi sua experiencia com este produto." required></textarea>
-            </label>
-            <button class="btn primary" type="submit">Enviar avaliacao</button>
-          </form>
         </article>
       </section>
 
@@ -348,6 +498,13 @@
       return;
     }
 
+    const clearPhoto = event.target instanceof Element ? event.target.closest("[data-review-photo-clear]") : null;
+    if (clearPhoto) {
+      clearPendingReviewPhoto();
+      showFeedback("Foto removida da avaliacao.");
+      return;
+    }
+
     const favorite = event.target instanceof Element ? event.target.closest("[data-favorite-toggle]") : null;
     if (favorite) {
       const isNowFavorite = catalog.toggleFavorite(product.id);
@@ -379,6 +536,12 @@
     setQty(input.value || 1);
   });
 
+  root.addEventListener("change", async (event) => {
+    const input = event.target instanceof HTMLInputElement ? event.target.closest("[data-review-photo-input]") : null;
+    if (!input) return;
+    await handleReviewPhotoSelection(input.files?.[0] || null);
+  });
+
   root.addEventListener("submit", (event) => {
     const form = event.target instanceof HTMLFormElement ? event.target.closest("[data-review-form]") : null;
     if (!form) return;
@@ -387,12 +550,15 @@
     const review = catalog.addProductReview(product.id, {
       name: loadProfileName(),
       rating: Number(data.get("rating") || 5),
-      text: String(data.get("text") || "")
+      text: String(data.get("text") || ""),
+      photo: pendingReviewPhoto
     });
     if (!review) {
       showFeedback("Preencha a avaliacao para continuar.");
       return;
     }
+    pendingReviewPhoto = "";
+    pendingReviewPhotoName = "";
     renderProduct();
     showFeedback("Avaliacao enviada com sucesso.");
   });
