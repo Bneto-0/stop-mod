@@ -666,11 +666,11 @@
         <div class="product-gallery-modal__panel">
           <button class="product-gallery-modal__close" type="button" data-gallery-close aria-label="Fechar galeria">&times;</button>
           <div class="product-gallery-modal__main">
-            <button class="product-gallery-modal__nav" type="button" data-gallery-step="-1" aria-label="Cor anterior">&#8249;</button>
+            <button class="product-gallery-modal__nav product-gallery-modal__nav--prev" type="button" data-gallery-step="-1" aria-label="Cor anterior">&#8249;</button>
             <div class="product-gallery-modal__frame">
               <img src="${escapeHtml(active.image || product.image)}" data-fallback-src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)} na cor ${escapeHtml(active.colorName)}" />
             </div>
-            <button class="product-gallery-modal__nav" type="button" data-gallery-step="1" aria-label="Proxima cor">&#8250;</button>
+            <button class="product-gallery-modal__nav product-gallery-modal__nav--next" type="button" data-gallery-step="1" aria-label="Proxima cor">&#8250;</button>
           </div>
           <div class="product-gallery-modal__meta">
             <div>
