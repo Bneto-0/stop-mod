@@ -1060,14 +1060,10 @@
             <span>${summary.sold} vendas confirmadas</span>
           </div>
 
-          <div class="product-price-delivery-grid">
-            <div class="product-detail-price">
-              <strong>${catalog.formatBRL(product.price)}</strong>
-              <span>${catalog.formatBRL(catalog.oldPrice(product.price))}</span>
-              <small>Pix: ${catalog.formatBRL(catalog.pixPrice(product.price))}</small>
-            </div>
-
-            ${deliveryCardMarkup(1)}
+          <div class="product-detail-price">
+            <strong>${catalog.formatBRL(product.price)}</strong>
+            <span>${catalog.formatBRL(catalog.oldPrice(product.price))}</span>
+            <small>Pix: ${catalog.formatBRL(catalog.pixPrice(product.price))}</small>
           </div>
 
           <div class="product-quantity-box${soldOut ? " is-sold-out" : ""}">
@@ -1109,6 +1105,7 @@
                 <input id="product-qty" type="number" min="1" max="${Math.max(1, Number(selectedVariant?.stock || 1))}" value="1" ${soldOut ? "disabled" : ""} />
                 <button type="button" data-qty-step="1" ${soldOut ? "disabled" : ""}>+</button>
               </div>
+              ${deliveryCardMarkup(1)}
               <small class="product-stock-note">${stockLabel}</small>
             </div>
           </div>
