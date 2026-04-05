@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pedidos | Stop mod</title>
   <link rel="icon" href="../../favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="../../style.css?v=20260401p" />
+  <link rel="stylesheet" href="../../style.css?v=20260404r" />
   <link rel="stylesheet" href="/assets/site-header.css?v=1" />
 </head>
 <body>
@@ -15,6 +15,8 @@
   <section class="page-card order-history-shell">
     <p class="eyebrow">Pedidos</p>
     <h1>Historico de pedidos</h1>
+    <p class="section-note">Confirme o recebimento no rastreio do pedido para liberar a avaliacao individual dos produtos da sua conta.</p>
+    <p id="orders-message" class="order-history-note" hidden></p>
     <div id="orders-list" class="order-history-list"></div>
     <div class="page-actions">
       <a class="btn secondary" href="../../carrinho/">Abrir carrinho</a>
@@ -23,7 +25,9 @@
 </main>
 <script>
 const ORDERS_KEY = "stopmod_orders";
+const PROFILE_KEY = "stopmod_profile";
 const container = document.getElementById("orders-list");
+const message = document.getElementById("orders-message");
 
 function loadOrders() {
   try {
@@ -32,6 +36,32 @@ function loadOrders() {
   } catch {
     return [];
   }
+}
+
+function saveOrders(orders) {
+  localStorage.setItem(ORDERS_KEY, JSON.stringify(Array.isArray(orders) ? orders : []));
+}
+
+function loadProfile() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(PROFILE_KEY) || "{}");
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function normalizeUserKey(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function currentUserKey() {
+  return normalizeUserKey(loadProfile()?.email);
+}
+
+function parseIsoMs(value) {
+  const parsed = Date.parse(String(value || ""));
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function escapeHtml(value) {
@@ -45,6 +75,17 @@ function escapeHtml(value) {
 
 function money(value) {
   return `R$ ${Number(value || 0).toFixed(2).replace('.', ',')}`;
+}
+
+function formatDate(value) {
+  const date = value ? new Date(value) : null;
+  return date && Number.isFinite(date.getTime()) ? date.toLocaleDateString("pt-BR") : "";
+}
+
+function setMessage(text) {
+  if (!message) return;
+  message.textContent = String(text || "");
+  message.hidden = !text;
 }
 
 function itemCount(order) {
@@ -77,20 +118,104 @@ function isCancelled(order) {
   return !!order?.cancelled || /cancel/i.test(String(order?.status || order?.tracking?.status || ""));
 }
 
+function getTrackingStage(order) {
+  if (isCancelled(order)) {
+    return {
+      code: "cancelled",
+      label: "Cancelado",
+      note: "Pedido cancelado por falta de finalizacao.",
+      canConfirmReceipt: false
+    };
+  }
+
+  const receivedAt = String(order?.receivedConfirmedAt || "").trim();
+  if (receivedAt) {
+    return {
+      code: "received",
+      label: "Recebimento confirmado",
+      note: `Recebimento confirmado em ${formatDate(receivedAt)}. As avaliacoes desse pedido ficam vinculadas so a sua conta.`,
+      canConfirmReceipt: false
+    };
+  }
+
+  const rawStatus = String(order?.tracking?.status || order?.status || "").trim();
+  if (/aguard/i.test(rawStatus)) {
+    return {
+      code: "awaiting_payment",
+      label: rawStatus || "Aguardando finalizacao",
+      note: "O pagamento ainda nao foi finalizado.",
+      canConfirmReceipt: false
+    };
+  }
+
+  const baseMs = parseIsoMs(order?.paymentFinalizedAt || order?.createdAt);
+  const elapsed = baseMs > 0 ? Date.now() - baseMs : 0;
+
+  if (elapsed < 12 * 60 * 60 * 1000) {
+    return {
+      code: "preparing",
+      label: "Separando pedido",
+      note: "Seu pedido esta sendo separado e preparado para envio.",
+      canConfirmReceipt: false
+    };
+  }
+
+  if (elapsed < 36 * 60 * 60 * 1000) {
+    return {
+      code: "in_transit",
+      label: "Em transporte",
+      note: "Seu pedido esta em rota e ainda nao chegou no destino final.",
+      canConfirmReceipt: false
+    };
+  }
+
+  if (elapsed < 60 * 60 * 60 * 1000) {
+    return {
+      code: "out_for_delivery",
+      label: "Saiu para entrega",
+      note: "A entrega esta na etapa final. Assim que o produto chegar, a confirmacao libera a avaliacao.",
+      canConfirmReceipt: false
+    };
+  }
+
+  return {
+    code: "delivered",
+    label: "Entregue",
+    note: "Se voce ja recebeu o produto, confirme agora para liberar sua avaliacao individual.",
+    canConfirmReceipt: true
+  };
+}
+
+function reviewProgress(order) {
+  const items = Array.isArray(order?.items) ? order.items.filter((item) => Number(item?.id) > 0) : [];
+  const total = items.length;
+  const reviewed = items.filter((item) => String(item?.reviewSubmittedAt || "").trim()).length;
+  return { total, reviewed };
+}
+
 function renderOrder(order) {
   const item = primaryItem(order) || {};
   const image = String(item?.image || fallbackImage()).trim() || fallbackImage();
   const productName = String(item?.name || "Produto do pedido").trim();
   const productPrice = orderPrice(order, item);
   const cancelled = isCancelled(order);
-  const status = String(order?.status || order?.tracking?.status || "Em andamento").trim();
+  const tracking = getTrackingStage(order);
   const totalItems = itemCount(order);
   const extraItems = Math.max(0, totalItems - Math.max(1, Number(item?.qty) || 1));
   const id = String(order?.id || order?.referenceId || "Pedido").trim() || "Pedido";
   const quantityText = Number(item?.qty) > 1 ? `${Number(item.qty)}x` : "";
+  const trackingCode = String(order?.tracking?.code || "").trim();
+  const reviews = reviewProgress(order);
   const note = cancelled
     ? "Valor cancelado por falta de finalizacao."
     : `Total do pedido: ${money(productPrice)}`;
+  const reviewText = reviews.total
+    ? tracking.code === "received"
+      ? reviews.reviewed >= reviews.total
+        ? "Todas as avaliacoes liberadas neste pedido ja foram publicadas."
+        : `Avaliacoes publicadas: ${reviews.reviewed}/${reviews.total}.`
+      : "A avaliacao so aparece depois que voce confirmar o recebimento deste pedido."
+    : "";
 
   return `
     <article class="order-history-card${cancelled ? ' is-cancelled' : ''}">
@@ -101,21 +226,86 @@ function renderOrder(order) {
         <p class="order-history-id">${escapeHtml(id)}</p>
         <h3 class="order-history-title">${escapeHtml(quantityText ? `${quantityText} ${productName}` : productName)}</h3>
         ${extraItems ? `<p class="order-history-extra">+ ${extraItems} item(ns) no mesmo pedido</p>` : ''}
-        <p class="order-history-status">Status: ${escapeHtml(status)}</p>
+        <div class="order-history-meta">
+          <p class="order-history-status">Status: ${escapeHtml(tracking.label)}</p>
+          ${trackingCode ? `<span class="order-history-track-code">Rastreio ${escapeHtml(trackingCode)}</span>` : ''}
+        </div>
         <div class="order-history-price-row">
           <span class="order-history-price${cancelled ? ' is-cancelled' : ''}">${escapeHtml(money(productPrice))}</span>
           ${cancelled ? '<span class="order-history-chip">Cancelado</span>' : ''}
         </div>
         <p class="order-history-note">${escapeHtml(note)}</p>
+        <div class="order-history-tracking">
+          <strong>Rastreio do pedido</strong>
+          <p>${escapeHtml(tracking.note)}</p>
+          ${reviewText ? `<p class="order-history-review">${escapeHtml(reviewText)}</p>` : ''}
+          <div class="order-history-actions">
+            ${tracking.canConfirmReceipt ? `<button class="btn primary order-history-confirm" type="button" data-confirm-received="${escapeHtml(id)}">Confirmar que recebi</button>` : ''}
+            ${tracking.code === "received" && reviews.reviewed < reviews.total && Number(item?.id) > 0 ? `<a class="btn secondary" href="../../produtos/?id=${encodeURIComponent(String(item.id))}">Avaliar produto</a>` : ''}
+          </div>
+        </div>
       </div>
     </article>
   `;
 }
 
-const orders = loadOrders();
-container.innerHTML = orders.length
-  ? orders.map(renderOrder).join("")
-  : '<p class="order-history-empty">Nenhum pedido encontrado ainda.</p>';
+function renderOrders() {
+  const userKey = currentUserKey();
+  if (!userKey) {
+    container.innerHTML = '<article class="order-history-state"><strong>Entre na sua conta</strong><p>O rastreio e a liberacao da avaliacao funcionam por cliente. Faca login para ver seus pedidos.</p><a class="btn secondary" href="../../login/">Entrar</a></article>';
+    return;
+  }
+
+  const orders = loadOrders().filter((order) => normalizeUserKey(order?.ownerEmail) === userKey);
+  container.innerHTML = orders.length
+    ? orders.map(renderOrder).join("")
+    : '<article class="order-history-state"><strong>Nenhum pedido encontrado</strong><p>Quando voce finalizar uma compra, o rastreio e a confirmacao de recebimento vao aparecer aqui.</p></article>';
+}
+
+container.addEventListener("click", (event) => {
+  const button = event.target instanceof Element ? event.target.closest("[data-confirm-received]") : null;
+  if (!button) return;
+
+  const orderId = String(button.getAttribute("data-confirm-received") || "").trim();
+  if (!orderId) return;
+
+  const userKey = currentUserKey();
+  if (!userKey) {
+    setMessage("Entre na sua conta para confirmar recebimento.");
+    renderOrders();
+    return;
+  }
+
+  const orders = loadOrders();
+  const index = orders.findIndex((order) => {
+    const currentId = String(order?.id || order?.referenceId || "").trim();
+    return currentId && currentId === orderId && normalizeUserKey(order?.ownerEmail) === userKey;
+  });
+  if (index < 0) return;
+
+  const order = orders[index];
+  const tracking = getTrackingStage(order);
+  if (!tracking.canConfirmReceipt) {
+    setMessage("Esse pedido ainda nao esta pronto para confirmacao de recebimento.");
+    return;
+  }
+
+  const nowIso = new Date().toISOString();
+  orders[index] = {
+    ...order,
+    receivedConfirmedAt: nowIso,
+    status: "Recebimento confirmado",
+    tracking: {
+      ...(order?.tracking || {}),
+      status: "Recebimento confirmado"
+    }
+  };
+  saveOrders(orders.slice(0, 100));
+  setMessage(`Recebimento do pedido ${orderId} confirmado. A avaliacao desse pedido ja foi liberada para a sua conta.`);
+  renderOrders();
+});
+
+renderOrders();
 </script>
 </body>
 </html>

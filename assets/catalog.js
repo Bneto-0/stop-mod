@@ -5,7 +5,8 @@
     reviews: "stopmod_product_reviews",
     ratingStats: "stopmod_product_ratings",
     soldCounts: "stopmod_sold_counts",
-    profile: "stopmod_profile"
+    profile: "stopmod_profile",
+    orders: "stopmod_orders"
   });
 
   const products = Object.freeze([
@@ -747,6 +748,130 @@ function addToCart(id, quantity, options = {}) {
     return raw;
   }
 
+  function loadProfile() {
+    const raw = loadJson(STORAGE_KEYS.profile, {});
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+    return raw;
+  }
+
+  function loadOrders() {
+    const raw = loadJson(STORAGE_KEYS.orders, []);
+    return Array.isArray(raw) ? raw : [];
+  }
+
+  function saveOrders(orders) {
+    saveJson(STORAGE_KEYS.orders, Array.isArray(orders) ? orders : []);
+  }
+
+  function normalizeUserKey(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  function isCancelledOrder(order) {
+    return !!order?.cancelled || /cancel/i.test(String(order?.status || order?.tracking?.status || ""));
+  }
+
+  function getProductReviewAccess(id) {
+    const product = getProductById(id);
+    const productId = Number(product?.id || id || 0);
+    if (!product || !productId) {
+      return {
+        allowed: false,
+        reason: "product_missing",
+        productId
+      };
+    }
+
+    const userKey = normalizeUserKey(loadProfile()?.email);
+    if (!userKey) {
+      return {
+        allowed: false,
+        reason: "login_required",
+        productId
+      };
+    }
+
+    const orders = loadOrders();
+    let purchased = false;
+    let awaitingReceipt = false;
+    let alreadyReviewed = false;
+    let eligible = null;
+
+    orders.forEach((order) => {
+      if (!order || typeof order !== "object" || isCancelledOrder(order)) return;
+      if (normalizeUserKey(order?.ownerEmail) !== userKey) return;
+
+      const items = Array.isArray(order.items) ? order.items : [];
+      const itemIndex = items.findIndex((item) => Number(item?.id) === productId);
+      if (itemIndex < 0) return;
+
+      purchased = true;
+
+      const item = items[itemIndex];
+      if (String(item?.reviewSubmittedAt || "").trim()) {
+        alreadyReviewed = true;
+        return;
+      }
+
+      const receivedConfirmedAt = String(order?.receivedConfirmedAt || "").trim();
+      if (!receivedConfirmedAt) {
+        awaitingReceipt = true;
+        return;
+      }
+
+      if (!eligible) {
+        eligible = {
+          orderId: String(order?.id || order?.referenceId || "").trim(),
+          orderReference: String(order?.referenceId || order?.id || "").trim(),
+          receivedConfirmedAt,
+          itemIndex
+        };
+      }
+    });
+
+    if (eligible?.orderId) {
+      return {
+        allowed: true,
+        reason: "eligible",
+        productId,
+        orderId: eligible.orderId,
+        orderReference: eligible.orderReference,
+        receivedConfirmedAt: eligible.receivedConfirmedAt,
+        itemIndex: eligible.itemIndex
+      };
+    }
+
+    if (awaitingReceipt) {
+      return {
+        allowed: false,
+        reason: "awaiting_receipt",
+        productId
+      };
+    }
+
+    if (alreadyReviewed) {
+      return {
+        allowed: false,
+        reason: "already_reviewed",
+        productId
+      };
+    }
+
+    if (purchased) {
+      return {
+        allowed: false,
+        reason: "awaiting_receipt",
+        productId
+      };
+    }
+
+    return {
+      allowed: false,
+      reason: "no_purchase",
+      productId
+    };
+  }
+
   function getProductReviews(id) {
     const key = String(Number(id) || 0);
     const manual = loadManualReviews();
@@ -783,6 +908,10 @@ function addToCart(id, quantity, options = {}) {
     const product = getProductById(id);
     if (!product) return null;
 
+    const access = getProductReviewAccess(product.id);
+    const requestedOrderId = String(payload?.orderId || access?.orderId || "").trim();
+    if (!access.allowed || !requestedOrderId || requestedOrderId !== access.orderId) return null;
+
     const rating = Math.max(1, Math.min(5, Math.floor(Number(payload?.rating) || 0)));
     const name = String(payload?.name || "Cliente").trim() || "Cliente";
     const text = String(payload?.text || "").trim();
@@ -800,11 +929,38 @@ function addToCart(id, quantity, options = {}) {
       rating,
       text,
       photo,
+      orderId: access.orderId,
       createdAt: new Date().toISOString()
     };
 
     manual[key] = [review, ...list].slice(0, 30);
     saveManualReviews(manual);
+
+    const orders = loadOrders();
+    const orderIndex = orders.findIndex((order) => {
+      const orderId = String(order?.id || order?.referenceId || "").trim();
+      return orderId && orderId === access.orderId && normalizeUserKey(order?.ownerEmail) === normalizeUserKey(loadProfile()?.email);
+    });
+
+    if (orderIndex >= 0) {
+      const order = orders[orderIndex];
+      const items = Array.isArray(order?.items) ? [...order.items] : [];
+      const itemIndex = items.findIndex((item) => Number(item?.id) === Number(product.id) && !String(item?.reviewSubmittedAt || "").trim());
+      if (itemIndex >= 0) {
+        items[itemIndex] = {
+          ...items[itemIndex],
+          reviewSubmittedAt: review.createdAt,
+          reviewOrderId: access.orderId
+        };
+        orders[orderIndex] = {
+          ...order,
+          items,
+          lastReviewAt: review.createdAt
+        };
+        saveOrders(orders.slice(0, 100));
+      }
+    }
+
     return review;
   }
 
@@ -842,6 +998,7 @@ function addToCart(id, quantity, options = {}) {
     isFavorite,
     toggleFavorite,
     getProductReviews,
+    getProductReviewAccess,
     getRatingSummary,
     addProductReview,
     getRelatedProducts

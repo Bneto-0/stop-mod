@@ -1391,6 +1391,63 @@ button, input, select, textarea { font: inherit; }
   background: rgba(255,255,255,0.95);
 }
 
+.order-history-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.8rem;
+}
+
+.order-history-track-code {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #f6efe8;
+  color: #8a5241;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.order-history-tracking,
+.order-history-state {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 0.45rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #efe5dc;
+  border-radius: 1rem;
+  background: #fffaf7;
+}
+
+.order-history-tracking strong,
+.order-history-state strong {
+  font-size: 0.96rem;
+}
+
+.order-history-tracking p,
+.order-history-state p,
+.order-history-review {
+  margin: 0;
+  color: #6f635c;
+  line-height: 1.55;
+}
+
+.order-history-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.order-history-actions .btn {
+  min-width: 190px;
+}
+
+.order-history-confirm {
+  box-shadow: none;
+}
+
 @media (max-width: 760px) {
   .order-history-card {
     width: 100%;
@@ -1402,6 +1459,10 @@ button, input, select, textarea { font: inherit; }
   .order-history-thumb-wrap {
     width: 100%;
     height: 150px;
+  }
+
+  .order-history-actions .btn {
+    width: 100%;
   }
 }
 
@@ -1922,6 +1983,38 @@ button, input, select, textarea { font: inherit; }
   border: 1px solid #efe5dc;
   border-radius: 1.2rem;
   background: #fffaf7;
+}
+
+.review-gate-card {
+  display: grid;
+  gap: 0.9rem;
+  align-content: start;
+}
+
+.review-gate-card strong,
+.review-form-access strong {
+  font-size: 1rem;
+}
+
+.review-gate-card p,
+.review-form-access p {
+  margin: 0;
+  color: #6f635c;
+  line-height: 1.6;
+}
+
+.review-form-access {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid #eadfd6;
+  border-radius: 1rem;
+  background: #fff;
+}
+
+.review-form-access span {
+  color: #8b7467;
+  font-size: 0.88rem;
 }
 
 .review-form label {

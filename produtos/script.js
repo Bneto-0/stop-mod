@@ -300,6 +300,98 @@
     }
   }
 
+  function formatPtDate(value) {
+    const date = value ? new Date(value) : null;
+    return date && Number.isFinite(date.getTime()) ? date.toLocaleDateString("pt-BR") : "";
+  }
+
+  function reviewAccessCopy(access) {
+    const orderId = access?.orderId ? `Pedido ${access.orderId}` : "seu pedido";
+    switch (access?.reason) {
+      case "eligible":
+        return {
+          title: "Avaliacao liberada para voce",
+          text: `${orderId} ja foi confirmado como recebido. Agora voce pode enviar estrelas, comentario e foto real do produto.`,
+          linkHref: "../perfil/pedidos/",
+          linkLabel: "Ver rastreio do pedido"
+        };
+      case "login_required":
+        return {
+          title: "Entre na conta que fez a compra",
+          text: "Esse formulario so aparece para o cliente que recebeu o produto e confirmou o recebimento no pedido.",
+          linkHref: "../login/",
+          linkLabel: "Entrar agora"
+        };
+      case "already_reviewed":
+        return {
+          title: "Sua avaliacao ja foi publicada",
+          text: "Depois que o comentario do pedido e enviado, essa area some automaticamente para esse cliente.",
+          linkHref: "../perfil/pedidos/",
+          linkLabel: "Ver meus pedidos"
+        };
+      case "awaiting_receipt":
+        return {
+          title: "Avaliacao bloqueada ate confirmar recebimento",
+          text: "Assim que voce receber o produto, confirme isso em Meus pedidos. So depois dessa confirmacao o formulario aparece para voce.",
+          linkHref: "../perfil/pedidos/",
+          linkLabel: "Abrir meus pedidos"
+        };
+      default:
+        return {
+          title: "Avaliacao disponivel so para clientes",
+          text: "Esse formulario so libera para quem comprou este produto e confirmou o recebimento no proprio pedido.",
+          linkHref: "../perfil/pedidos/",
+          linkLabel: "Ir para meus pedidos"
+        };
+    }
+  }
+
+  function reviewFormPanelMarkup(access) {
+    const copy = reviewAccessCopy(access);
+    if (!access?.allowed) {
+      return `
+        <article class="review-gate-card review-form--panel">
+          <p class="eyebrow">Liberacao individual</p>
+          <strong>${escapeHtml(copy.title)}</strong>
+          <p>${escapeHtml(copy.text)}</p>
+          <a class="btn secondary" href="${copy.linkHref}">${copy.linkLabel}</a>
+        </article>
+      `;
+    }
+
+    const receivedLabel = formatPtDate(access?.receivedConfirmedAt);
+    return `
+      <form class="review-form review-form--panel" data-review-form data-review-order-id="${escapeHtml(access.orderId || "")}">
+        <div class="review-form-access">
+          <strong>${escapeHtml(copy.title)}</strong>
+          <p>${escapeHtml(copy.text)}</p>
+          ${receivedLabel ? `<span>Recebimento confirmado em ${escapeHtml(receivedLabel)}.</span>` : ""}
+        </div>
+        <label>
+          Nota
+          <select name="rating" required>
+            <option value="5">5 estrelas</option>
+            <option value="4">4 estrelas</option>
+            <option value="3">3 estrelas</option>
+            <option value="2">2 estrelas</option>
+            <option value="1">1 estrela</option>
+          </select>
+        </label>
+        <label>
+          Sua avaliacao
+          <textarea name="text" rows="5" placeholder="Conte como foi sua experiencia com este produto." required></textarea>
+        </label>
+        <label class="review-photo-field">
+          <span>Foto do produto (opcional)</span>
+          <input type="file" name="photo" accept="image/*" data-review-photo-input />
+        </label>
+        ${reviewPhotoPreviewMarkup()}
+        <p class="review-form-note">Envie uma foto mostrando a cor real, caimento ou acabamento do produto.</p>
+        <button class="btn primary" type="submit">Enviar avaliacao</button>
+      </form>
+    `;
+  }
+
   function renderProduct() {
     if (!product) {
       renderMissingProduct();
@@ -310,6 +402,7 @@
     const reviews = catalog.getProductReviews(product.id);
     const related = catalog.getRelatedProducts(product.id, 4);
     const isFavorite = catalog.isFavorite(product.id);
+    const reviewAccess = catalog.getProductReviewAccess(product.id);
     const variants = getDisplayVariants();
     const selectedVariant = ensureSelectedVariant();
     const soldOut = !selectedVariant || Number(selectedVariant.stock || 0) <= 0;
@@ -320,6 +413,10 @@
     const stockLabel = soldOut
       ? "Sem estoque nesta cor."
       : `${selectedVariant.stock} unidade(s) disponivel(is) em ${selectedVariant.colorName}.`;
+    if (!reviewAccess.allowed) {
+      pendingReviewPhoto = "";
+      pendingReviewPhotoName = "";
+    }
 
     renderTopHighlights(product.highlights);
     root.innerHTML = `
@@ -410,29 +507,7 @@
               </div>
             </div>
 
-            <form class="review-form review-form--panel" data-review-form>
-              <label>
-                Nota
-                <select name="rating" required>
-                  <option value="5">5 estrelas</option>
-                  <option value="4">4 estrelas</option>
-                  <option value="3">3 estrelas</option>
-                  <option value="2">2 estrelas</option>
-                  <option value="1">1 estrela</option>
-                </select>
-              </label>
-              <label>
-                Sua avaliacao
-                <textarea name="text" rows="5" placeholder="Conte como foi sua experiencia com este produto." required></textarea>
-              </label>
-              <label class="review-photo-field">
-                <span>Foto do produto (opcional)</span>
-                <input type="file" name="photo" accept="image/*" data-review-photo-input />
-              </label>
-              ${reviewPhotoPreviewMarkup()}
-              <p class="review-form-note">Envie uma foto mostrando a cor real, caimento ou acabamento do produto.</p>
-              <button class="btn primary" type="submit">Enviar avaliacao</button>
-            </form>
+            ${reviewFormPanelMarkup(reviewAccess)}
           </div>
         </article>
       </section>
@@ -546,15 +621,23 @@
     const form = event.target instanceof HTMLFormElement ? event.target.closest("[data-review-form]") : null;
     if (!form) return;
     event.preventDefault();
+    const access = catalog.getProductReviewAccess(product.id);
+    if (!access.allowed) {
+      clearPendingReviewPhoto();
+      renderProduct();
+      showFeedback(reviewAccessCopy(access).text);
+      return;
+    }
     const data = new FormData(form);
     const review = catalog.addProductReview(product.id, {
       name: loadProfileName(),
       rating: Number(data.get("rating") || 5),
       text: String(data.get("text") || ""),
-      photo: pendingReviewPhoto
+      photo: pendingReviewPhoto,
+      orderId: String(form.getAttribute("data-review-order-id") || access.orderId || "")
     });
     if (!review) {
-      showFeedback("Preencha a avaliacao para continuar.");
+      showFeedback("Essa avaliacao so pode ser enviada depois da confirmacao de recebimento do pedido.");
       return;
     }
     pendingReviewPhoto = "";
