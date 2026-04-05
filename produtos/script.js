@@ -9,8 +9,12 @@
   const productId = Number(params.get("id") || 0);
   const product = catalog.getProductById(productId);
   let selectedVariantId = String(params.get("variant") || "").trim();
+  let selectedSize = String(params.get("size") || "").trim().toUpperCase();
+  let galleryOpen = false;
+  let galleryIndex = 0;
   let pendingReviewPhoto = "";
   let pendingReviewPhotoName = "";
+  const TEXT_SIZE_ORDER = ["PP", "P", "M", "G", "GG", "XG", "XGG"];
 
   function loadProfileName() {
     try {
@@ -224,6 +228,7 @@
 
   function renderMissingProduct() {
     renderTopHighlights([]);
+    document.body.classList.remove("has-product-gallery");
     root.innerHTML = `
       <div class="product-empty-state">
         <h1>Produto nao encontrado</h1>
@@ -237,6 +242,74 @@
 
   function getDisplayVariants() {
     return product ? catalog.getProductVariants(product.id) : [];
+  }
+
+  function normalizeSizeToken(value) {
+    return String(value || "")
+      .trim()
+      .toUpperCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+  }
+
+  function buildNumericSizes(start, end) {
+    const from = Number(start);
+    const to = Number(end);
+    const step = product?.category === "Calcados"
+      ? 1
+      : Math.abs(to - from) >= 4 && from % 2 === to % 2
+        ? 2
+        : 1;
+    const direction = from <= to ? 1 : -1;
+    const sizes = [];
+
+    for (let value = from; direction > 0 ? value <= to : value >= to; value += step * direction) {
+      sizes.push(String(value));
+    }
+
+    return sizes;
+  }
+
+  function getProductSizes() {
+    const raw = String(product?.size || "").trim();
+    if (!raw) return [];
+
+    const normalized = normalizeSizeToken(raw).replace(/\s+/g, " ");
+    if (normalized === "UNICO") return ["Unico"];
+
+    const numericRange = normalized.match(/^(\d+)\s*(?:AO|A|ATE|-)\s*(\d+)$/);
+    if (numericRange) {
+      return buildNumericSizes(numericRange[1], numericRange[2]);
+    }
+
+    const textRange = normalized.match(/^(PP|P|M|G|GG|XG|XGG)\s*(?:AO|A|ATE|-)\s*(PP|P|M|G|GG|XG|XGG)$/);
+    if (textRange) {
+      const startIndex = TEXT_SIZE_ORDER.indexOf(textRange[1]);
+      const endIndex = TEXT_SIZE_ORDER.indexOf(textRange[2]);
+      if (startIndex >= 0 && endIndex >= 0) {
+        const from = Math.min(startIndex, endIndex);
+        const to = Math.max(startIndex, endIndex);
+        return TEXT_SIZE_ORDER.slice(from, to + 1);
+      }
+    }
+
+    return raw
+      .split(/[\/,|]+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  function getSelectedSize() {
+    const sizes = getProductSizes();
+    if (!sizes.length) return "";
+    const selected = sizes.find((size) => normalizeSizeToken(size) === normalizeSizeToken(selectedSize));
+    return selected || sizes[0];
+  }
+
+  function ensureSelectedSize() {
+    const size = getSelectedSize();
+    selectedSize = normalizeSizeToken(size);
+    return size;
   }
 
   function getSelectedVariant() {
@@ -254,6 +327,17 @@
     const next = new URL(window.location.href);
     if (variantId) next.searchParams.set("variant", variantId);
     else next.searchParams.delete("variant");
+    if (selectedSize) next.searchParams.set("size", selectedSize);
+    else next.searchParams.delete("size");
+    window.history.replaceState({}, "", next.toString());
+  }
+
+  function updateSizeInUrl(size) {
+    const next = new URL(window.location.href);
+    if (selectedVariantId) next.searchParams.set("variant", selectedVariantId);
+    else next.searchParams.delete("variant");
+    if (size) next.searchParams.set("size", normalizeSizeToken(size));
+    else next.searchParams.delete("size");
     window.history.replaceState({}, "", next.toString());
   }
 
@@ -305,6 +389,63 @@
         </span>
         <span class="product-variant-name">${escapeHtml(variant.colorName)}</span>
       </button>
+    `;
+  }
+
+  function sizeCard(size, selected) {
+    return `
+      <button
+        class="product-size-card${selected ? " is-selected" : ""}"
+        type="button"
+        data-size-select="${escapeHtml(size)}"
+        aria-pressed="${selected ? "true" : "false"}"
+        aria-label="Selecionar tamanho ${escapeHtml(size)}"
+      >
+        ${escapeHtml(size)}
+      </button>
+    `;
+  }
+
+  function galleryModalMarkup(variants) {
+    if (!galleryOpen || !variants.length) return "";
+    const safeIndex = Math.max(0, variants.findIndex((variant) => variant.id === selectedVariantId));
+    const active = variants[safeIndex] || variants[0];
+
+    return `
+      <div class="product-gallery-modal" role="dialog" aria-modal="true" aria-label="Galeria de cores do produto">
+        <button class="product-gallery-modal__backdrop" type="button" data-gallery-close aria-label="Fechar galeria"></button>
+        <div class="product-gallery-modal__panel">
+          <button class="product-gallery-modal__close" type="button" data-gallery-close aria-label="Fechar galeria">&times;</button>
+          <div class="product-gallery-modal__main">
+            <button class="product-gallery-modal__nav" type="button" data-gallery-step="-1" aria-label="Cor anterior">&#8249;</button>
+            <div class="product-gallery-modal__frame">
+              <img src="${escapeHtml(active.image || product.image)}" alt="${escapeHtml(product.name)} na cor ${escapeHtml(active.colorName)}" />
+            </div>
+            <button class="product-gallery-modal__nav" type="button" data-gallery-step="1" aria-label="Proxima cor">&#8250;</button>
+          </div>
+          <div class="product-gallery-modal__meta">
+            <div>
+              <strong>${escapeHtml(product.name)}</strong>
+              <span>Cor: ${escapeHtml(active.colorName)}</span>
+            </div>
+            <small>${safeIndex + 1} de ${variants.length} cor(es)</small>
+          </div>
+          <div class="product-gallery-modal__thumbs" role="list" aria-label="Outras cores do produto">
+            ${variants.map((variant) => `
+              <button
+                class="product-gallery-thumb${variant.id === active.id ? " is-selected" : ""}"
+                type="button"
+                data-gallery-select="${escapeHtml(variant.id)}"
+                aria-pressed="${variant.id === active.id ? "true" : "false"}"
+                aria-label="Abrir cor ${escapeHtml(variant.colorName)}"
+              >
+                <img src="${escapeHtml(variant.image || product.image)}" alt="${escapeHtml(product.name)} na cor ${escapeHtml(variant.colorName)}" loading="lazy" />
+                <span>${escapeHtml(variant.colorName)}</span>
+              </button>
+            `).join("")}
+          </div>
+        </div>
+      </div>
     `;
   }
 
@@ -582,6 +723,8 @@
     const reviewAccess = catalog.getProductReviewAccess(product.id);
     const variants = getDisplayVariants();
     const selectedVariant = ensureSelectedVariant();
+    const sizes = getProductSizes();
+    const selectedSizeLabel = ensureSelectedSize();
     const soldOut = !selectedVariant || Number(selectedVariant.stock || 0) <= 0;
     const selectedColorLabel = selectedVariant?.colorName || "Indisponivel";
     const reviewCount = reviews.length;
@@ -594,6 +737,7 @@
       pendingReviewPhoto = "";
       pendingReviewPhotoName = "";
     }
+    document.body.classList.toggle("has-product-gallery", galleryOpen);
 
     renderTopHighlights(product.highlights);
     root.innerHTML = `
@@ -639,10 +783,23 @@
                   <strong>Cor:</strong>
                   <span>${escapeHtml(selectedColorLabel)}</span>
                 </div>
-                <a class="product-media-expand" href="${escapeHtml(selectedVariant?.image || product.image)}" target="_blank" rel="noreferrer">Ampliar imagem</a>
+                <button class="product-media-expand" type="button" data-gallery-open>Ampliar imagem</button>
               </div>
               <div class="product-variant-list" role="list" aria-label="Variantes de cor disponiveis">
                 ${variants.length ? variants.map((variant) => variantCard(variant, variant.id === selectedVariant?.id)).join("") : '<span class="product-variant-empty">Produto esgotado no momento.</span>'}
+              </div>
+              <div class="product-size-panel">
+                <div class="product-size-panel__head">
+                  <span>Tamanho disponivel</span>
+                  <small>${sizes.length} opcao(oes)</small>
+                </div>
+                <div class="product-size-panel__current" aria-live="polite">
+                  <strong>Tamanho:</strong>
+                  <span>${escapeHtml(selectedSizeLabel || "Indisponivel")}</span>
+                </div>
+                <div class="product-size-list" role="list" aria-label="Tamanhos disponiveis">
+                  ${sizes.length ? sizes.map((size) => sizeCard(size, normalizeSizeToken(size) === normalizeSizeToken(selectedSizeLabel))).join("") : '<span class="product-size-empty">Sem tamanhos cadastrados.</span>'}
+                </div>
               </div>
               <span class="product-variant-status">${soldOut ? "Sem estoque nessa cor" : "Cor pronta para compra"}</span>
             </div>
@@ -709,6 +866,8 @@
           ${related.map(relatedCard).join("")}
         </div>
       </section>
+
+      ${galleryModalMarkup(variants)}
     `;
 
     syncQtyToVariant();
@@ -743,12 +902,58 @@
   }
 
   root.addEventListener("click", (event) => {
+    const galleryOpenButton = event.target instanceof Element ? event.target.closest("[data-gallery-open]") : null;
+    if (galleryOpenButton) {
+      galleryOpen = true;
+      galleryIndex = Math.max(0, getDisplayVariants().findIndex((variant) => variant.id === selectedVariantId));
+      renderProduct();
+      return;
+    }
+
+    const galleryClose = event.target instanceof Element ? event.target.closest("[data-gallery-close]") : null;
+    if (galleryClose) {
+      galleryOpen = false;
+      renderProduct();
+      return;
+    }
+
+    const galleryStep = event.target instanceof Element ? event.target.closest("[data-gallery-step]") : null;
+    if (galleryStep) {
+      const variants = getDisplayVariants();
+      if (!variants.length) return;
+      galleryIndex = Math.max(0, variants.findIndex((variant) => variant.id === selectedVariantId));
+      galleryIndex = (galleryIndex + Number(galleryStep.getAttribute("data-gallery-step") || 0) + variants.length) % variants.length;
+      selectedVariantId = String(variants[galleryIndex]?.id || selectedVariantId);
+      updateVariantInUrl(selectedVariantId);
+      galleryOpen = true;
+      renderProduct();
+      return;
+    }
+
+    const gallerySelect = event.target instanceof Element ? event.target.closest("[data-gallery-select]") : null;
+    if (gallerySelect) {
+      selectedVariantId = String(gallerySelect.getAttribute("data-gallery-select") || selectedVariantId);
+      updateVariantInUrl(selectedVariantId);
+      galleryOpen = true;
+      renderProduct();
+      return;
+    }
+
     const variantButton = event.target instanceof Element ? event.target.closest("[data-variant-select]") : null;
     if (variantButton) {
       selectedVariantId = String(variantButton.getAttribute("data-variant-select") || "");
       updateVariantInUrl(selectedVariantId);
       renderProduct();
       showFeedback(Number(getSelectedVariant()?.stock || 0) > 0 ? `Cor ${getSelectedVariant()?.colorName || "selecionada"}.` : `Cor ${getSelectedVariant()?.colorName || "selecionada"} sem estoque no momento.`);
+      return;
+    }
+
+    const sizeButton = event.target instanceof Element ? event.target.closest("[data-size-select]") : null;
+    if (sizeButton) {
+      selectedSize = normalizeSizeToken(sizeButton.getAttribute("data-size-select") || "");
+      updateSizeInUrl(selectedSize);
+      renderProduct();
+      showFeedback(`Tamanho ${getSelectedSize() || "selecionado"} selecionado.`);
       return;
     }
 
@@ -788,6 +993,27 @@
         window.location.href = `../carrinho/?buyNow=1&variant=${encodeURIComponent(selectedVariantId)}`;
       }
     }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (!galleryOpen) return;
+
+    if (event.key === "Escape") {
+      galleryOpen = false;
+      renderProduct();
+      return;
+    }
+
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    const variants = getDisplayVariants();
+    if (!variants.length) return;
+
+    galleryIndex = Math.max(0, variants.findIndex((variant) => variant.id === selectedVariantId));
+    galleryIndex = (galleryIndex + (event.key === "ArrowRight" ? 1 : -1) + variants.length) % variants.length;
+    selectedVariantId = String(variants[galleryIndex]?.id || selectedVariantId);
+    updateVariantInUrl(selectedVariantId);
+    galleryOpen = true;
+    renderProduct();
   });
 
   root.addEventListener("input", (event) => {
