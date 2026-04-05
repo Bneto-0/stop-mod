@@ -12,6 +12,13 @@
   let selectedSize = String(params.get("size") || "").trim().toUpperCase();
   let galleryOpen = false;
   let galleryIndex = 0;
+  let cepModalOpen = false;
+  let cepDraft = "";
+  let numberDraft = "";
+  let cepLookupLoading = false;
+  let cepLookupError = false;
+  let cepLookupMessage = "";
+  let cepLookupResult = null;
   let pendingReviewPhoto = "";
   let pendingReviewPhotoName = "";
   const TEXT_SIZE_ORDER = ["PP", "P", "M", "G", "GG", "XG", "XGG"];
@@ -68,6 +75,10 @@
       .toUpperCase();
   }
 
+  function digitsOnly(value) {
+    return String(value || "").replace(/\D/g, "");
+  }
+
   function isCepValid(value) {
     return String(value || "").replace(/\D/g, "").length === 8;
   }
@@ -92,6 +103,20 @@
     } catch {
       return { street: "", number: "", district: "", city: "", state: "", cep: "", complement: "" };
     }
+  }
+
+  function saveShipTo(next) {
+    const payload = {
+      street: String(next?.street || "").trim(),
+      number: String(next?.number || "").trim(),
+      district: String(next?.district || "").trim(),
+      city: String(next?.city || "").trim(),
+      state: normalizeState(next?.state || ""),
+      cep: normalizeCep(next?.cep || ""),
+      complement: String(next?.complement || "").trim()
+    };
+    localStorage.setItem("stopmod_ship_to", JSON.stringify(payload));
+    return payload;
   }
 
   function calcShipping(subtotal, itemCount, cep) {
@@ -130,6 +155,128 @@
     };
   }
 
+  async function fetchJsonWithTimeout(url, timeoutMs = 5200) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), Number(timeoutMs) || 5200);
+    try {
+      const response = await fetch(String(url || ""), {
+        method: "GET",
+        headers: { Accept: "application/json" },
+        signal: controller.signal
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      if (error?.name === "AbortError") throw new Error("timeout");
+      throw error;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  function normalizeLookupAddress(raw, fallbackCepDigits) {
+    if (!raw || typeof raw !== "object") return null;
+    const street = String(raw.street || raw.logradouro || "").trim();
+    const district = String(raw.district || raw.bairro || "").trim();
+    const city = String(raw.city || raw.localidade || "").trim();
+    const state = normalizeState(raw.state || raw.uf || "");
+    const cepDigits = digitsOnly(raw.cep || fallbackCepDigits).slice(0, 8);
+    if (!street && !district && !city && !state) return null;
+    if (cepDigits.length !== 8) return null;
+    return {
+      cep: normalizeCep(cepDigits),
+      street,
+      district,
+      city,
+      state
+    };
+  }
+
+  async function lookupCepViaCep(cepDigits) {
+    const data = await fetchJsonWithTimeout(`https://viacep.com.br/ws/${cepDigits}/json/`, 5200);
+    if (data?.erro) return null;
+    return normalizeLookupAddress(data, cepDigits);
+  }
+
+  async function lookupCepBrasilApi(cepDigits) {
+    const data = await fetchJsonWithTimeout(`https://brasilapi.com.br/api/cep/v1/${cepDigits}`, 5400);
+    return normalizeLookupAddress(data, cepDigits);
+  }
+
+  async function lookupCep(cepValue) {
+    const cepDigits = digitsOnly(cepValue).slice(0, 8);
+    if (cepDigits.length !== 8) {
+      cepLookupError = true;
+      cepLookupLoading = false;
+      cepLookupResult = null;
+      cepLookupMessage = "CEP invalido. Use 8 digitos.";
+      renderProduct();
+      return null;
+    }
+
+    cepLookupLoading = true;
+    cepLookupError = false;
+    cepLookupMessage = "Consultando CEP...";
+    renderProduct();
+
+    const providers = [lookupCepViaCep, lookupCepBrasilApi];
+    let found = null;
+    for (const provider of providers) {
+      try {
+        const value = await provider(cepDigits);
+        if (value) {
+          found = value;
+          break;
+        }
+      } catch {
+        // tenta o proximo provedor
+      }
+    }
+
+    cepLookupLoading = false;
+    if (!found) {
+      cepLookupError = true;
+      cepLookupResult = null;
+      cepLookupMessage = "CEP nao encontrado. Tente novamente.";
+      renderProduct();
+      return null;
+    }
+
+    cepLookupError = false;
+    cepLookupResult = found;
+    cepDraft = String(found.cep || normalizeCep(cepDigits));
+    cepLookupMessage = "Endereco reconhecido. Informe o numero da residencia.";
+    renderProduct();
+    return found;
+  }
+
+  function openCepModal() {
+    const current = loadShipTo();
+    cepModalOpen = true;
+    cepDraft = String(current.cep || "");
+    numberDraft = String(current.number || "");
+    cepLookupResult = current.street || current.city || current.state
+      ? {
+          cep: String(current.cep || ""),
+          street: String(current.street || ""),
+          district: String(current.district || ""),
+          city: String(current.city || ""),
+          state: String(current.state || "")
+        }
+      : null;
+    cepLookupLoading = false;
+    cepLookupError = false;
+    cepLookupMessage = cepLookupResult ? "Endereco reconhecido. Informe o numero da residencia." : "";
+  }
+
+  function closeCepModal() {
+    cepModalOpen = false;
+    cepLookupLoading = false;
+    cepLookupError = false;
+    cepLookupMessage = "";
+    cepLookupResult = null;
+  }
+
   function deliveryCardMarkup(qty = 1) {
     const { shipTo, shipping } = currentShippingForQty(qty);
     const summaryLine = deliverySummaryLine(shipTo);
@@ -140,7 +287,7 @@
           <p class="product-delivery-card__label">Entrega no seu endereco</p>
           <strong class="product-delivery-card__summary">Informe seu CEP para calcular</strong>
           <p class="product-delivery-card__freight">Frete sob consulta</p>
-          <a class="product-delivery-card__link" href="../entrega/">CEP</a>
+          <button class="product-delivery-card__link" type="button" data-cep-open>CEP</button>
         </article>
       `;
     }
@@ -156,6 +303,7 @@
         <p class="product-delivery-card__label">Entrega no seu endereco</p>
         <strong class="product-delivery-card__summary" data-delivery-summary title="${escapeHtml(summaryLine)}">${escapeHtml(summaryLine)}</strong>
         <p class="product-delivery-card__freight${shipping === 0 ? " is-free" : ""}" data-delivery-freight>${escapeHtml(freightLabel)}</p>
+        <button class="product-delivery-card__link" type="button" data-cep-open>CEP</button>
       </article>
     `;
   }
@@ -303,6 +451,7 @@
   function renderMissingProduct() {
     renderTopHighlights([]);
     document.body.classList.remove("has-product-gallery");
+    document.body.classList.remove("has-cep-modal");
     root.innerHTML = `
       <div class="product-empty-state">
         <h1>Produto nao encontrado</h1>
@@ -783,6 +932,53 @@
     `;
   }
 
+  function cepModalMarkup() {
+    if (!cepModalOpen) return "";
+
+    const found = cepLookupResult;
+    const canSave = !!(found?.street && found?.city && found?.state && String(numberDraft || "").trim());
+
+    return `
+      <div class="cep-modal" role="dialog" aria-modal="true" aria-label="Informar CEP para entrega">
+        <button class="cep-modal__backdrop" type="button" data-cep-close aria-label="Fechar"></button>
+        <div class="cep-modal__panel">
+          <button class="cep-modal__close" type="button" data-cep-close aria-label="Fechar">&times;</button>
+          <p class="eyebrow">CEP</p>
+          <h3>Calcular entrega</h3>
+          <p class="cep-modal__copy">Informe o CEP e o sistema reconhece rua, bairro, cidade e estado. Depois voce completa so o numero.</p>
+
+          <form class="cep-form" data-cep-form>
+            <div class="cep-form__row">
+              <label>
+                CEP
+                <input type="text" name="cep" inputmode="numeric" placeholder="00000-000" value="${escapeHtml(cepDraft)}" data-cep-input />
+              </label>
+              <button class="btn secondary" type="button" data-cep-lookup ${cepLookupLoading ? "disabled" : ""}>${cepLookupLoading ? "Buscando..." : "Buscar CEP"}</button>
+            </div>
+
+            <div class="cep-form__result${found ? " is-visible" : ""}">
+              <strong>${escapeHtml(found?.street || "Rua nao localizada ainda")}</strong>
+              <span>${escapeHtml(found?.district || "Bairro")}</span>
+              <span>${escapeHtml([found?.city || "", found?.state || ""].filter(Boolean).join(" - ") || "Cidade - UF")}</span>
+            </div>
+
+            <label>
+              Numero da residencia
+              <input type="text" name="number" inputmode="numeric" placeholder="Ex.: 320" value="${escapeHtml(numberDraft)}" data-address-number />
+            </label>
+
+            <p class="cep-form__message${cepLookupError ? " is-error" : ""}">${escapeHtml(cepLookupMessage || "Digite um CEP valido para continuar.")}</p>
+
+            <div class="cep-form__actions">
+              <button class="btn secondary" type="button" data-cep-close>Cancelar</button>
+              <button class="btn primary" type="submit" ${canSave ? "" : "disabled"}>Salvar endereco</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+  }
+
   function renderProduct() {
     if (!product) {
       renderMissingProduct();
@@ -812,6 +1008,7 @@
       pendingReviewPhotoName = "";
     }
     document.body.classList.toggle("has-product-gallery", galleryOpen);
+    document.body.classList.toggle("has-cep-modal", cepModalOpen);
 
     renderTopHighlights(buildTopReferences());
     root.innerHTML = `
@@ -944,6 +1141,7 @@
       </section>
 
       ${galleryModalMarkup(variants)}
+      ${cepModalMarkup()}
     `;
 
     syncQtyToVariant();
@@ -978,6 +1176,26 @@
   }
 
   root.addEventListener("click", (event) => {
+    const cepOpen = event.target instanceof Element ? event.target.closest("[data-cep-open]") : null;
+    if (cepOpen) {
+      openCepModal();
+      renderProduct();
+      return;
+    }
+
+    const cepClose = event.target instanceof Element ? event.target.closest("[data-cep-close]") : null;
+    if (cepClose) {
+      closeCepModal();
+      renderProduct();
+      return;
+    }
+
+    const cepLookup = event.target instanceof Element ? event.target.closest("[data-cep-lookup]") : null;
+    if (cepLookup) {
+      lookupCep(cepDraft);
+      return;
+    }
+
     const galleryOpenButton = event.target instanceof Element ? event.target.closest("[data-gallery-open]") : null;
     if (galleryOpenButton) {
       galleryOpen = true;
@@ -1085,6 +1303,12 @@
   }, true);
 
   document.addEventListener("keydown", (event) => {
+    if (cepModalOpen && event.key === "Escape") {
+      closeCepModal();
+      renderProduct();
+      return;
+    }
+
     if (!galleryOpen) return;
 
     if (event.key === "Escape") {
@@ -1107,17 +1331,77 @@
 
   root.addEventListener("input", (event) => {
     const input = event.target instanceof HTMLInputElement ? event.target.closest("#product-qty") : null;
-    if (!input) return;
-    setQty(input.value || 1);
+    if (input) {
+      setQty(input.value || 1);
+      return;
+    }
+
+    const cepInput = event.target instanceof HTMLInputElement ? event.target.closest("[data-cep-input]") : null;
+    if (cepInput) {
+      cepDraft = normalizeCep(cepInput.value || "");
+      cepInput.value = cepDraft;
+      if (digitsOnly(cepDraft).length !== 8) {
+        cepLookupResult = null;
+        cepLookupMessage = "";
+        cepLookupError = false;
+      }
+      return;
+    }
+
+    const numberInput = event.target instanceof HTMLInputElement ? event.target.closest("[data-address-number]") : null;
+    if (numberInput) {
+      numberDraft = String(numberInput.value || "").trim();
+    }
   });
 
   root.addEventListener("change", async (event) => {
     const input = event.target instanceof HTMLInputElement ? event.target.closest("[data-review-photo-input]") : null;
-    if (!input) return;
-    await handleReviewPhotoSelection(input.files?.[0] || null);
+    if (input) {
+      await handleReviewPhotoSelection(input.files?.[0] || null);
+      return;
+    }
+
+    const cepInput = event.target instanceof HTMLInputElement ? event.target.closest("[data-cep-input]") : null;
+    if (cepInput && digitsOnly(cepDraft).length === 8) {
+      await lookupCep(cepDraft);
+    }
   });
 
-  root.addEventListener("submit", (event) => {
+  root.addEventListener("submit", async (event) => {
+    const cepForm = event.target instanceof HTMLFormElement ? event.target.closest("[data-cep-form]") : null;
+    if (cepForm) {
+      event.preventDefault();
+      let found = cepLookupResult;
+      if (!found && digitsOnly(cepDraft).length === 8) {
+        found = await lookupCep(cepDraft);
+      }
+      if (!found) {
+        cepLookupError = true;
+        cepLookupMessage = "Nao foi possivel localizar esse CEP.";
+        renderProduct();
+        return;
+      }
+
+      const number = String(numberDraft || "").trim();
+      if (!number) {
+        cepLookupError = true;
+        cepLookupMessage = "Informe o numero da residencia.";
+        renderProduct();
+        return;
+      }
+
+      const current = loadShipTo();
+      saveShipTo({
+        ...current,
+        ...found,
+        number
+      });
+      closeCepModal();
+      renderProduct();
+      showFeedback("Endereco atualizado pelo CEP.");
+      return;
+    }
+
     const form = event.target instanceof HTMLFormElement ? event.target.closest("[data-review-form]") : null;
     if (!form) return;
     event.preventDefault();

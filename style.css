@@ -1701,14 +1701,133 @@ button, input, select, textarea { font: inherit; }
 }
 
 .product-delivery-card__link {
+  border: 0;
+  padding: 0;
+  background: transparent;
   color: #4d86e5;
   font-size: 0.82rem;
   font-weight: 600;
   text-decoration: none;
+  cursor: pointer;
 }
 
 .product-delivery-card__link:hover {
   text-decoration: underline;
+}
+
+.has-cep-modal {
+  overflow: hidden;
+}
+
+.cep-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 82;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.cep-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(17, 12, 8, 0.48);
+}
+
+.cep-modal__panel {
+  position: relative;
+  z-index: 1;
+  width: min(460px, 100%);
+  display: grid;
+  gap: 0.9rem;
+  padding: 1.15rem;
+  border-radius: 1.35rem;
+  background: #fff;
+  box-shadow: 0 30px 70px rgba(17, 12, 8, 0.2);
+}
+
+.cep-modal__close {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.7rem;
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 1px solid #eadfd6;
+  border-radius: 999px;
+  background: #fff;
+  color: #1f1713;
+  font: inherit;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.cep-modal__panel h3,
+.cep-modal__copy {
+  margin: 0;
+}
+
+.cep-modal__copy,
+.cep-form__result span,
+.cep-form__message {
+  color: #6f635c;
+  line-height: 1.6;
+}
+
+.cep-form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.cep-form label {
+  display: grid;
+  gap: 0.45rem;
+  font-weight: 600;
+  color: #443b35;
+}
+
+.cep-form input {
+  width: 100%;
+  border: 1px solid #d9c8bb;
+  border-radius: 1rem;
+  padding: 0.85rem 1rem;
+  font: inherit;
+  background: #fff;
+}
+
+.cep-form__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.cep-form__result {
+  display: none;
+  gap: 0.2rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #eadfd6;
+  border-radius: 1rem;
+  background: #fffaf7;
+}
+
+.cep-form__result.is-visible {
+  display: grid;
+}
+
+.cep-form__message {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.cep-form__message.is-error {
+  color: #c7512f;
+}
+
+.cep-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.7rem;
 }
 
 
@@ -2744,6 +2863,20 @@ button, input, select, textarea { font: inherit; }
 
   .product-seller-stats {
     grid-template-columns: 1fr;
+  }
+
+  .cep-modal__panel {
+    padding: 1rem;
+  }
+
+  .cep-form__row,
+  .cep-form__actions {
+    grid-template-columns: 1fr;
+    justify-content: stretch;
+  }
+
+  .cep-form__actions {
+    display: grid;
   }
 
   .related-products-grid,
