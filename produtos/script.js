@@ -1025,9 +1025,6 @@
     const reviewCount = reviews.length;
     const reviewAverage = reviewCount ? summary.average.toFixed(1) : "Novo";
     const reviewStars = reviewCount ? renderStars(summary.average) : renderStars(0);
-    const stockLabel = soldOut
-      ? "Sem estoque nesta cor."
-      : `${selectedVariant.stock} unidade(s) disponivel(is) em ${selectedVariant.colorName}.`;
     if (!reviewAccess.allowed) {
       pendingReviewPhoto = "";
       pendingReviewPhotoName = "";
@@ -1106,7 +1103,6 @@
                 <button type="button" data-qty-step="1" ${soldOut ? "disabled" : ""}>+</button>
               </div>
               ${deliveryCardMarkup(1)}
-              <small class="product-stock-note">${stockLabel}</small>
             </div>
           </div>
 
