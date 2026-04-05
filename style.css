@@ -1824,6 +1824,10 @@ button, input, select, textarea { font: inherit; }
   color: #c7512f;
 }
 
+.cep-form__message.is-success {
+  color: #1f7a44;
+}
+
 .cep-form__actions {
   display: flex;
   justify-content: flex-end;

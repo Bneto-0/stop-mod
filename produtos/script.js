@@ -17,8 +17,10 @@
   let numberDraft = "";
   let cepLookupLoading = false;
   let cepLookupError = false;
+  let cepLookupSuccess = false;
   let cepLookupMessage = "";
   let cepLookupResult = null;
+  let cepModalCloseTimer = 0;
   let pendingReviewPhoto = "";
   let pendingReviewPhotoName = "";
   const TEXT_SIZE_ORDER = ["PP", "P", "M", "G", "GG", "XG", "XGG"];
@@ -207,6 +209,7 @@
     const cepDigits = digitsOnly(cepValue).slice(0, 8);
     if (cepDigits.length !== 8) {
       cepLookupError = true;
+      cepLookupSuccess = false;
       cepLookupLoading = false;
       cepLookupResult = null;
       cepLookupMessage = "CEP invalido. Use 8 digitos.";
@@ -216,6 +219,7 @@
 
     cepLookupLoading = true;
     cepLookupError = false;
+    cepLookupSuccess = false;
     cepLookupMessage = "Consultando CEP...";
     renderProduct();
 
@@ -236,6 +240,7 @@
     cepLookupLoading = false;
     if (!found) {
       cepLookupError = true;
+      cepLookupSuccess = false;
       cepLookupResult = null;
       cepLookupMessage = "CEP nao encontrado. Tente novamente.";
       renderProduct();
@@ -243,6 +248,7 @@
     }
 
     cepLookupError = false;
+    cepLookupSuccess = false;
     cepLookupResult = found;
     cepDraft = String(found.cep || normalizeCep(cepDigits));
     cepLookupMessage = "Endereco reconhecido. Informe o numero da residencia.";
@@ -251,6 +257,10 @@
   }
 
   function openCepModal() {
+    if (cepModalCloseTimer) {
+      clearTimeout(cepModalCloseTimer);
+      cepModalCloseTimer = 0;
+    }
     const current = loadShipTo();
     cepModalOpen = true;
     cepDraft = String(current.cep || "");
@@ -266,13 +276,19 @@
       : null;
     cepLookupLoading = false;
     cepLookupError = false;
+    cepLookupSuccess = false;
     cepLookupMessage = cepLookupResult ? "Endereco reconhecido. Informe o numero da residencia." : "";
   }
 
   function closeCepModal() {
+    if (cepModalCloseTimer) {
+      clearTimeout(cepModalCloseTimer);
+      cepModalCloseTimer = 0;
+    }
     cepModalOpen = false;
     cepLookupLoading = false;
     cepLookupError = false;
+    cepLookupSuccess = false;
     cepLookupMessage = "";
     cepLookupResult = null;
   }
@@ -967,7 +983,7 @@
               <input type="text" name="number" inputmode="numeric" placeholder="Ex.: 320" value="${escapeHtml(numberDraft)}" data-address-number />
             </label>
 
-            <p class="cep-form__message${cepLookupError ? " is-error" : ""}">${escapeHtml(cepLookupMessage || "Digite um CEP valido para continuar.")}</p>
+            <p class="cep-form__message${cepLookupError ? " is-error" : ""}${cepLookupSuccess ? " is-success" : ""}">${escapeHtml(cepLookupMessage || "Digite um CEP valido para continuar.")}</p>
 
             <div class="cep-form__actions">
               <button class="btn secondary" type="button" data-cep-close>Cancelar</button>
@@ -1377,6 +1393,7 @@
       }
       if (!found) {
         cepLookupError = true;
+        cepLookupSuccess = false;
         cepLookupMessage = "Nao foi possivel localizar esse CEP.";
         renderProduct();
         return;
@@ -1385,6 +1402,7 @@
       const number = String(numberDraft || "").trim();
       if (!number) {
         cepLookupError = true;
+        cepLookupSuccess = false;
         cepLookupMessage = "Informe o numero da residencia.";
         renderProduct();
         return;
@@ -1396,9 +1414,16 @@
         ...found,
         number
       });
-      closeCepModal();
+      cepLookupError = false;
+      cepLookupSuccess = true;
+      cepLookupMessage = "Endereco salvo com sucesso.";
       renderProduct();
-      showFeedback("Endereco atualizado pelo CEP.");
+      if (cepModalCloseTimer) clearTimeout(cepModalCloseTimer);
+      cepModalCloseTimer = window.setTimeout(() => {
+        closeCepModal();
+        renderProduct();
+        showFeedback("Endereco atualizado pelo CEP.");
+      }, 1100);
       return;
     }
 
