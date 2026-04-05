@@ -263,6 +263,179 @@
     }
   ]);
 
+  const variantSwatches = Object.freeze({
+    branco: "linear-gradient(135deg, #ffffff 0%, #ece7df 100%)",
+    branca: "linear-gradient(135deg, #ffffff 0%, #ece7df 100%)",
+    preto: "linear-gradient(135deg, #2c2522 0%, #0c0a09 100%)",
+    preta: "linear-gradient(135deg, #2c2522 0%, #0c0a09 100%)",
+    bege: "linear-gradient(135deg, #e3cfb6 0%, #b5916f 100%)",
+    caramelo: "linear-gradient(135deg, #d09a63 0%, #8c5a32 100%)",
+    vermelho: "linear-gradient(135deg, #de625a 0%, #8c2623 100%)",
+    vermelha: "linear-gradient(135deg, #de625a 0%, #8c2623 100%)",
+    vinho: "linear-gradient(135deg, #87324d 0%, #43101f 100%)",
+    azul: "linear-gradient(135deg, #6a93e3 0%, #243a72 100%)",
+    "azul-claro": "linear-gradient(135deg, #afd7ff 0%, #5f91c4 100%)",
+    "azul-marinho": "linear-gradient(135deg, #405f98 0%, #16243f 100%)",
+    cinza: "linear-gradient(135deg, #c8cbd1 0%, #747b85 100%)",
+    caqui: "linear-gradient(135deg, #b9a279 0%, #7c694a 100%)",
+    verde: "linear-gradient(135deg, #90a675 0%, #50613d 100%)",
+    "verde-militar": "linear-gradient(135deg, #758162 0%, #3f4735 100%)",
+    telha: "linear-gradient(135deg, #d4866f 0%, #934736 100%)",
+    marrom: "linear-gradient(135deg, #9d7150 0%, #5d4028 100%)",
+    offwhite: "linear-gradient(135deg, #fef8ef 0%, #ddd2c1 100%)",
+    "off-white": "linear-gradient(135deg, #fef8ef 0%, #ddd2c1 100%)"
+  });
+
+  const categoryVariantPalettes = Object.freeze({
+    Acessorios: [
+      { id: "preto", colorName: "Preto", stock: 6 },
+      { id: "marrom", colorName: "Marrom", stock: 5 },
+      { id: "caramelo", colorName: "Caramelo", stock: 4 },
+      { id: "bege", colorName: "Bege", stock: 3 },
+      { id: "offwhite", colorName: "Off-white", stock: 2 }
+    ],
+    Blazers: [
+      { id: "preto", colorName: "Preto", stock: 5 },
+      { id: "offwhite", colorName: "Off-white", stock: 4 },
+      { id: "caramelo", colorName: "Caramelo", stock: 3 },
+      { id: "azul-marinho", colorName: "Azul marinho", stock: 2 },
+      { id: "vinho", colorName: "Vinho", stock: 1 }
+    ],
+    Calcados: [
+      { id: "branco", colorName: "Branco", stock: 5 },
+      { id: "preto", colorName: "Preto", stock: 4 },
+      { id: "cinza", colorName: "Cinza", stock: 3 },
+      { id: "azul", colorName: "Azul", stock: 2 },
+      { id: "caramelo", colorName: "Caramelo", stock: 1 }
+    ],
+    Calcas: [
+      { id: "preto", colorName: "Preto", stock: 6 },
+      { id: "cinza", colorName: "Cinza", stock: 5 },
+      { id: "caqui", colorName: "Caqui", stock: 4 },
+      { id: "azul-marinho", colorName: "Azul marinho", stock: 3 },
+      { id: "bege", colorName: "Bege", stock: 2 }
+    ],
+    Camisas: [
+      { id: "branco", colorName: "Branco", stock: 6 },
+      { id: "azul-claro", colorName: "Azul claro", stock: 5 },
+      { id: "bege", colorName: "Bege", stock: 4 },
+      { id: "preto", colorName: "Preto", stock: 3 },
+      { id: "cinza", colorName: "Cinza", stock: 2 }
+    ],
+    Camisetas: [
+      { id: "branco", colorName: "Branco", stock: 6 },
+      { id: "preto", colorName: "Preto", stock: 5 },
+      { id: "cinza", colorName: "Cinza", stock: 4 },
+      { id: "azul", colorName: "Azul", stock: 3 },
+      { id: "vermelho", colorName: "Vermelho", stock: 2 }
+    ],
+    Casacos: [
+      { id: "bege", colorName: "Bege", stock: 5 },
+      { id: "cinza", colorName: "Cinza", stock: 4 },
+      { id: "vinho", colorName: "Vinho", stock: 3 },
+      { id: "preto", colorName: "Preto", stock: 2 },
+      { id: "verde", colorName: "Verde", stock: 1 }
+    ],
+    Jaquetas: [
+      { id: "cinza", colorName: "Cinza", stock: 5 },
+      { id: "preta", colorName: "Preta", stock: 4 },
+      { id: "vermelha", colorName: "Vermelha", stock: 3 },
+      { id: "azul", colorName: "Azul", stock: 2 },
+      { id: "branca", colorName: "Branca", stock: 1 }
+    ],
+    Moletons: [
+      { id: "cinza", colorName: "Cinza", stock: 6 },
+      { id: "preto", colorName: "Preto", stock: 5 },
+      { id: "vermelho", colorName: "Vermelho", stock: 4 },
+      { id: "azul", colorName: "Azul", stock: 3 },
+      { id: "branco", colorName: "Branco", stock: 2 }
+    ],
+    Saias: [
+      { id: "preta", colorName: "Preta", stock: 5 },
+      { id: "bege", colorName: "Bege", stock: 4 },
+      { id: "vinho", colorName: "Vinho", stock: 3 },
+      { id: "verde", colorName: "Verde", stock: 2 },
+      { id: "azul", colorName: "Azul", stock: 1 }
+    ],
+    Shorts: [
+      { id: "bege", colorName: "Bege", stock: 5 },
+      { id: "preto", colorName: "Preto", stock: 4 },
+      { id: "branco", colorName: "Branco", stock: 3 },
+      { id: "azul", colorName: "Azul", stock: 2 },
+      { id: "caqui", colorName: "Caqui", stock: 1 }
+    ],
+    Vestidos: [
+      { id: "preto", colorName: "Preto", stock: 5 },
+      { id: "vermelho", colorName: "Vermelho", stock: 4 },
+      { id: "azul-marinho", colorName: "Azul marinho", stock: 3 },
+      { id: "bege", colorName: "Bege", stock: 2 },
+      { id: "branco", colorName: "Branco", stock: 1 }
+    ]
+  });
+
+  const productVariantsConfig = Object.freeze({
+    1: [
+      { id: "branco", colorName: "Branco", image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80", stock: 7 },
+      { id: "preto", colorName: "Preto", image: "https://images.unsplash.com/photo-1503341504253-dff4815485f1?auto=format&fit=crop&w=900&q=80", stock: 4 },
+      { id: "bege", colorName: "Bege", image: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=900&q=80", stock: 2 },
+      { id: "vermelho", colorName: "Vermelho", image: "https://images.unsplash.com/photo-1503342394128-c104d54dba01?auto=format&fit=crop&w=900&q=80", stock: 0 }
+    ],
+    2: [
+      { id: "preto", colorName: "Preto", image: "https://images.unsplash.com/photo-1506629905607-d9d4b5b1f1b3?auto=format&fit=crop&w=900&q=80", stock: 5 },
+      { id: "verde-militar", colorName: "Verde militar", image: "https://images.unsplash.com/photo-1523398002811-999ca8dec234?auto=format&fit=crop&w=900&q=80", stock: 3 },
+      { id: "caqui", colorName: "Caqui", image: "https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=900&q=80", stock: 1 },
+      { id: "cinza", colorName: "Cinza", image: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=900&q=80", stock: 0 }
+    ],
+    3: [
+      { id: "cinza", colorName: "Cinza", image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=80&sat=-100", stock: 5 },
+      { id: "preta", colorName: "Preta", image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=80", stock: 4 },
+      { id: "vermelha", colorName: "Vermelha", image: "https://images.unsplash.com/photo-1503342394128-c104d54dba01?auto=format&fit=crop&w=900&q=80", stock: 2 },
+      { id: "azul", colorName: "Azul", image: "https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=900&q=80", stock: 1 }
+    ],
+    4: [
+      { id: "cinza", colorName: "Cinza", image: "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=900&q=80", stock: 6 },
+      { id: "preto", colorName: "Preto", image: "https://images.unsplash.com/photo-1503341504253-dff4815485f1?auto=format&fit=crop&w=900&q=80", stock: 4 },
+      { id: "vermelho", colorName: "Vermelho", image: "https://images.unsplash.com/photo-1503342394128-c104d54dba01?auto=format&fit=crop&w=900&q=80", stock: 2 },
+      { id: "azul", colorName: "Azul", image: "https://images.unsplash.com/photo-1603252109303-2751441c6f22?auto=format&fit=crop&w=900&q=80", stock: 1 }
+    ],
+    5: [
+      { id: "preto", colorName: "Preto", image: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80", stock: 4 },
+      { id: "vermelho", colorName: "Vermelho", image: "https://images.unsplash.com/photo-1495385794356-15371f348c31?auto=format&fit=crop&w=900&q=80", stock: 2 },
+      { id: "branco", colorName: "Branco", image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80", stock: 1 }
+    ],
+    6: [
+      { id: "branco", colorName: "Branco", image: "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=900&q=80", stock: 6 },
+      { id: "azul-claro", colorName: "Azul claro", image: "https://images.unsplash.com/photo-1603252109303-2751441c6f22?auto=format&fit=crop&w=900&q=80", stock: 2 },
+      { id: "preto", colorName: "Preto", image: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=900&q=80", stock: 0 }
+    ],
+    8: [
+      { id: "preto", colorName: "Preto", image: "https://images.unsplash.com/photo-1484515991647-c5760fcecfc7?auto=format&fit=crop&w=900&q=80", stock: 3 },
+      { id: "offwhite", colorName: "Off-white", image: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=900&q=80", stock: 1 },
+      { id: "caramelo", colorName: "Caramelo", image: "https://images.unsplash.com/photo-1554412933-514a83d2f3c8?auto=format&fit=crop&w=900&q=80", stock: 0 }
+    ],
+    11: [
+      { id: "branco", colorName: "Branco", image: "https://images.unsplash.com/photo-1549298916-f52d724204b4?auto=format&fit=crop&w=900&q=80", stock: 4 },
+      { id: "preto", colorName: "Preto", image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80", stock: 3 },
+      { id: "azul", colorName: "Azul", image: "https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&w=900&q=80", stock: 0 }
+    ],
+    15: [
+      { id: "cinza", colorName: "Cinza", image: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=900&q=80&sat=-100", stock: 4 },
+      { id: "preto", colorName: "Preto", image: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=900&q=80", stock: 3 },
+      { id: "vermelho", colorName: "Vermelho", image: "https://images.unsplash.com/photo-1503342394128-c104d54dba01?auto=format&fit=crop&w=900&q=80", stock: 2 },
+      { id: "azul", colorName: "Azul", image: "https://images.unsplash.com/photo-1548126032-079a0fb0099d?auto=format&fit=crop&w=900&q=80", stock: 1 }
+    ],
+    18: [
+      { id: "bege", colorName: "Bege", image: "https://images.unsplash.com/photo-1551232864-3f0890e580d9?auto=format&fit=crop&w=900&q=80", stock: 4 },
+      { id: "cinza", colorName: "Cinza", image: "https://images.unsplash.com/photo-1551232864-3f0890e580d9?auto=format&fit=crop&w=900&q=80&sat=-100", stock: 2 },
+      { id: "preto", colorName: "Preto", image: "https://images.unsplash.com/photo-1506629905607-d9d4b5b1f1b3?auto=format&fit=crop&w=900&q=80", stock: 0 }
+    ],
+    19: [
+      { id: "preta", colorName: "Preta", image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80", stock: 2 },
+      { id: "vinho", colorName: "Vinho", image: "https://images.unsplash.com/photo-1503342394128-c104d54dba01?auto=format&fit=crop&w=900&q=80", stock: 1 },
+      { id: "marrom", colorName: "Marrom", image: "https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=900&q=80", stock: 0 }
+    ]
+  });
+
   const productMap = new Map(products.map((product) => [Number(product.id), product]));
 
   const seededReviews = Object.freeze({
@@ -286,6 +459,65 @@
       { name: "Caio", rating: 4, text: "Curti a modelagem boxy e o visual lavado.", createdAt: "2026-03-11T20:15:00.000Z" }
     ]
   });
+
+  function normalizeVariantKey(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, "-");
+  }
+
+  function getVariantSwatch(variant) {
+    const key = normalizeVariantKey(variant.id || variant.colorName);
+    return variantSwatches[key] || "linear-gradient(135deg, #e9dfd6 0%, #c9b7a9 100%)";
+  }
+
+  function buildCategoryVariants(product) {
+    const palette = categoryVariantPalettes[product.category] || [
+      { id: "branco", colorName: "Branco", stock: 5 },
+      { id: "preto", colorName: "Preto", stock: 4 },
+      { id: "cinza", colorName: "Cinza", stock: 3 },
+      { id: "azul", colorName: "Azul", stock: 2 },
+      { id: "vermelho", colorName: "Vermelho", stock: 1 }
+    ];
+
+    return palette.map((variant) => ({
+      ...variant,
+      image: product.image
+    }));
+  }
+
+  function mergeProductVariants(product) {
+    const baseVariants = buildCategoryVariants(product);
+    const configured = Array.isArray(productVariantsConfig[product.id]) ? productVariantsConfig[product.id] : [];
+    if (!configured.length) return baseVariants;
+
+    const configuredMap = new Map(
+      configured.map((variant) => [normalizeVariantKey(variant.id || variant.colorName), variant])
+    );
+
+    const merged = baseVariants.map((variant) => {
+      const key = normalizeVariantKey(variant.id || variant.colorName);
+      const override = configuredMap.get(key);
+      return override ? { ...variant, ...override } : variant;
+    });
+
+    const existingKeys = new Set(merged.map((variant) => normalizeVariantKey(variant.id || variant.colorName)));
+
+    configured.forEach((variant) => {
+      const key = normalizeVariantKey(variant.id || variant.colorName);
+      if (existingKeys.has(key)) return;
+      merged.push({
+        ...variant,
+        image: variant.image || product.image
+      });
+      existingKeys.add(key);
+    });
+
+    return merged;
+  }
 
   function loadJson(key, fallback) {
     try {
@@ -317,41 +549,149 @@
     return Number((Number(value || 0) * 0.93).toFixed(2));
   }
 
-  function productHref(id) {
-    return `/produtos/?id=${encodeURIComponent(String(id))}`;
-  }
+  function productHref(id, variantId) {
+  const params = new URLSearchParams({ id: String(id) });
+  if (variantId) params.set("variant", String(variantId));
+  return `/produtos/?${params.toString()}`;
+}
 
-  function getProductById(id) {
-    return productMap.get(Number(id)) || null;
-  }
+function getProductById(id) {
+  return productMap.get(Number(id)) || null;
+}
 
-  function loadCartIds() {
-    const raw = loadJson(STORAGE_KEYS.cart, []);
-    if (!Array.isArray(raw)) return [];
-    return raw
-      .map((item) => Number(item))
-      .filter((item) => Number.isInteger(item) && item > 0 && productMap.has(item));
-  }
+function getProductVariants(productOrId) {
+  const product = typeof productOrId === "object" && productOrId ? productOrId : getProductById(productOrId);
+  if (!product) return [];
+  const variants = mergeProductVariants(product);
 
-  function saveCartIds(ids) {
-    const clean = Array.isArray(ids)
-      ? ids.map((item) => Number(item)).filter((item) => Number.isInteger(item) && item > 0 && productMap.has(item))
-      : [];
-    saveJson(STORAGE_KEYS.cart, clean);
-    return clean;
-  }
+  return variants
+    .map((variant) => ({
+      id: String(variant.id || `default-${product.id}`),
+      colorName: String(variant.colorName || "Padrao"),
+      image: String(variant.image || product.image || ""),
+      stock: Math.max(0, Math.floor(Number(variant.stock) || 0)),
+      swatch: String(variant.swatch || getVariantSwatch(variant))
+    }))
+    .filter((variant) => variant.image);
+}
 
-  function addToCart(id, quantity) {
-    const product = getProductById(id);
-    if (!product) return 0;
-    const qty = Math.max(1, Math.floor(Number(quantity) || 1));
-    const ids = loadCartIds();
-    for (let index = 0; index < qty; index += 1) {
-      ids.push(product.id);
+function getAvailableVariants(productOrId) {
+  return getProductVariants(productOrId).filter((variant) => variant.stock > 0);
+}
+
+function getVariantById(productOrId, variantId) {
+  const variants = getProductVariants(productOrId);
+  return variants.find((variant) => variant.id === String(variantId || "")) || null;
+}
+
+function getDefaultVariant(productOrId) {
+  return getAvailableVariants(productOrId)[0] || getProductVariants(productOrId)[0] || null;
+}
+
+function resolveVariant(productOrId, variantId) {
+  return getVariantById(productOrId, variantId) || getDefaultVariant(productOrId);
+}
+
+function normalizeCartItems(raw) {
+  if (!Array.isArray(raw)) return [];
+
+  const grouped = new Map();
+
+  raw.forEach((entry) => {
+    let productId = null;
+    let variantId = "";
+    let quantity = 1;
+
+    if (Number.isInteger(Number(entry))) {
+      productId = Number(entry);
+    } else if (entry && typeof entry === "object") {
+      productId = Number(entry.productId ?? entry.id ?? entry.product ?? 0);
+      variantId = String(entry.variantId || entry.variant || "");
+      quantity = Math.max(1, Math.floor(Number(entry.quantity ?? entry.qty ?? 1) || 1));
     }
-    saveCartIds(ids);
-    return ids.length;
+
+    const product = getProductById(productId);
+    if (!product) return;
+
+    const variant = resolveVariant(product, variantId);
+    if (!variant || variant.stock <= 0) return;
+
+    const key = `${product.id}::${variant.id}`;
+    const current = grouped.get(key) || {
+      productId: product.id,
+      variantId: variant.id,
+      quantity: 0
+    };
+
+    current.quantity = Math.min(variant.stock, current.quantity + quantity);
+    grouped.set(key, current);
+  });
+
+  return Array.from(grouped.values()).filter((item) => item.quantity > 0);
+}
+
+function loadCartItems() {
+  const raw = loadJson(STORAGE_KEYS.cart, []);
+  const normalized = normalizeCartItems(raw);
+  if (JSON.stringify(raw) !== JSON.stringify(normalized)) {
+    saveJson(STORAGE_KEYS.cart, normalized);
   }
+  return normalized;
+}
+
+function saveCartItems(items) {
+  const normalized = normalizeCartItems(items);
+  saveJson(STORAGE_KEYS.cart, normalized);
+  return normalized;
+}
+
+function loadCartIds() {
+  return loadCartItems().flatMap((item) => Array.from({ length: item.quantity }, () => item.productId));
+}
+
+function saveCartIds(ids) {
+  const mapped = Array.isArray(ids)
+    ? ids.map((id) => ({ productId: Number(id), quantity: 1 }))
+    : [];
+  return saveCartItems(mapped).flatMap((item) => Array.from({ length: item.quantity }, () => item.productId));
+}
+
+function countCartItems() {
+  return loadCartItems().reduce((total, item) => total + item.quantity, 0);
+}
+
+function getCartQuantity(productId, variantId) {
+  const match = loadCartItems().find((item) => item.productId === Number(productId) && item.variantId === String(variantId || ""));
+  return match ? match.quantity : 0;
+}
+
+function addToCart(id, quantity, options = {}) {
+  const product = getProductById(id);
+  if (!product) return countCartItems();
+
+  const variant = resolveVariant(product, options.variantId);
+  if (!variant || variant.stock <= 0) return countCartItems();
+
+  const qty = Math.max(1, Math.floor(Number(quantity) || 1));
+  const items = loadCartItems();
+  const index = items.findIndex((item) => item.productId === product.id && item.variantId === variant.id);
+
+  if (index >= 0) {
+    items[index] = {
+      ...items[index],
+      quantity: Math.min(variant.stock, items[index].quantity + qty)
+    };
+  } else {
+    items.push({
+      productId: product.id,
+      variantId: variant.id,
+      quantity: Math.min(variant.stock, qty)
+    });
+  }
+
+  saveCartItems(items);
+  return countCartItems();
+}
 
   function loadFavorites() {
     const raw = loadJson(STORAGE_KEYS.favorites, []);
@@ -476,8 +816,17 @@
     pixPrice,
     productHref,
     getProductById,
+    getProductVariants,
+    getAvailableVariants,
+    getVariantById,
+    getDefaultVariant,
+    resolveVariant,
+    loadCartItems,
+    saveCartItems,
     loadCartIds,
     saveCartIds,
+    countCartItems,
+    getCartQuantity,
     addToCart,
     loadFavorites,
     saveFavorites,

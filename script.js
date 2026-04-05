@@ -74,6 +74,29 @@ const adFlowCards = [
   { style: "dark", kicker: "visual de loja", title: "Mais cara de storefront e menos cara de pagina provisoria.", text: "Mantivemos login, carrinho e backend funcionando no mesmo fluxo." }
 ];
 
+const campaignBannerData = {
+  kicker: "banner da loja",
+  title: "Drop urbano da semana com pix forte, frete verde e vitrine pronta para giro rapido.",
+  text: "Entrou um banner largo no miolo da home para reforcar campanha, puxar clique no catalogo e deixar a pagina com mais cara de loja montada.",
+  primaryLabel: "Abrir vitrine",
+  primaryHref: "#produtos",
+  secondaryLabel: "Entrar na conta",
+  secondaryHref: "./login/",
+  image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200&q=80",
+  spotlightValue: "pix -7%",
+  spotlightText: "ativo no checkout hoje",
+  chips: [
+    "frete verde acima de R$ 199",
+    "cartao em ate 12x",
+    "drop street em destaque"
+  ],
+  stats: [
+    { value: "24h", label: "campanha quente" },
+    { value: "12x", label: "sem juros" },
+    { value: "novo", label: "banner no meio da home" }
+  ]
+};
+
 const grid = document.getElementById("product-grid");
 const productShelf = document.getElementById("product-shelf");
 const compactBoard = document.getElementById("compact-product-board");
@@ -89,6 +112,7 @@ const announcementDots = document.getElementById("announcement-dots");
 const announcementMiniGrid = document.getElementById("announcement-mini-grid");
 const searchBannerList = document.getElementById("search-banner-list");
 const adFlow = document.getElementById("ad-flow");
+const campaignBanner = document.getElementById("campaign-banner");
 
 let activeAnnouncementIndex = 0;
 let announcementTimer = null;
@@ -96,6 +120,7 @@ let announcementDragStartX = null;
 let announcementDragCurrentX = null;
 
 function loadCartIds() {
+  if (sharedCatalog?.loadCartIds) return sharedCatalog.loadCartIds();
   try {
     const parsed = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
     return Array.isArray(parsed) ? parsed.map(Number).filter((item) => Number.isInteger(item) && item > 0) : [];
@@ -105,6 +130,10 @@ function loadCartIds() {
 }
 
 function saveCartIds(ids) {
+  if (sharedCatalog?.saveCartIds) {
+    sharedCatalog.saveCartIds(ids);
+    return;
+  }
   localStorage.setItem(CART_KEY, JSON.stringify(ids));
 }
 
@@ -126,7 +155,7 @@ function productHref(id) {
 }
 
 function renderCartCount() {
-  if (cartCount) cartCount.textContent = String(loadCartIds().length);
+  if (cartCount) cartCount.textContent = String(sharedCatalog?.countCartItems ? sharedCatalog.countCartItems() : loadCartIds().length);
 }
 
 function renderProfileState() {
@@ -154,6 +183,13 @@ function showToast(message) {
 }
 
 function addToCart(id) {
+  if (sharedCatalog?.addToCart) {
+    sharedCatalog.addToCart(id, 1);
+    renderCartCount();
+    showToast("Produto adicionado ao carrinho.");
+    return;
+  }
+
   const ids = loadCartIds();
   ids.push(Number(id));
   saveCartIds(ids);
@@ -383,6 +419,56 @@ function renderAdFlow() {
   `).join("");
 }
 
+function renderCampaignBanner() {
+  if (!campaignBanner) return;
+
+  let firstName = "";
+  try {
+    const profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || "null");
+    firstName = String(profile?.name || "").trim().split(/\s+/)[0];
+  } catch {
+    firstName = "";
+  }
+
+  const secondaryLabel = firstName ? `Voltar, ${firstName}` : campaignBannerData.secondaryLabel;
+  const secondaryHref = firstName ? "./perfil/" : campaignBannerData.secondaryHref;
+
+  campaignBanner.innerHTML = `
+    <article class="campaign-banner__card">
+      <div class="campaign-banner__copy">
+        <p class="campaign-banner__eyebrow">${campaignBannerData.kicker}</p>
+        <h2>${campaignBannerData.title}</h2>
+        <p>${campaignBannerData.text}</p>
+        <div class="campaign-banner__actions">
+          <a class="btn primary" href="${campaignBannerData.primaryHref}">${campaignBannerData.primaryLabel}</a>
+          <a class="btn secondary" href="${secondaryHref}">${secondaryLabel}</a>
+        </div>
+        <div class="campaign-banner__chips">
+          ${campaignBannerData.chips.map((item) => `<span class="campaign-banner__chip">${item}</span>`).join("")}
+        </div>
+      </div>
+
+      <div class="campaign-banner__media">
+        <div class="campaign-banner__visual">
+          <img src="${campaignBannerData.image}" alt="${campaignBannerData.title}" loading="lazy" />
+          <div class="campaign-banner__spotlight">
+            <strong>${campaignBannerData.spotlightValue}</strong>
+            <span>${campaignBannerData.spotlightText}</span>
+          </div>
+          <div class="campaign-banner__stats">
+            ${campaignBannerData.stats.map((item) => `
+              <article class="campaign-banner__stat">
+                <strong>${item.value}</strong>
+                <span>${item.label}</span>
+              </article>
+            `).join("")}
+          </div>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
 filters.forEach((button) => {
   button.addEventListener("click", () => {
     filters.forEach((item) => item.classList.remove("is-active"));
@@ -469,6 +555,7 @@ renderAnnouncementCarousel();
 renderMiniAnnouncements();
 renderSearchBanners();
 renderAdFlow();
+renderCampaignBanner();
 renderCompactBoard();
 renderProductShelf();
 renderCartCount();
@@ -487,6 +574,7 @@ document.addEventListener("keydown", (event) => {
   event.preventDefault();
   window.location.href = productHref(target.getAttribute("data-product-open-id"));
 });
+
 
 
 
