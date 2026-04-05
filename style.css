@@ -1627,6 +1627,45 @@ button, input, select, textarea { font: inherit; }
   text-decoration: line-through;
 }
 
+.product-delivery-card {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid #eadfd6;
+  border-radius: 1.1rem;
+  background: transparent;
+}
+
+.product-delivery-card__label {
+  margin: 0;
+  color: #8a5241;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.product-delivery-card strong {
+  font-size: 1rem;
+  letter-spacing: -0.02em;
+}
+
+.product-delivery-card span,
+.product-delivery-card p,
+.product-delivery-card small {
+  margin: 0;
+  color: #6f635c;
+  line-height: 1.55;
+}
+
+.product-delivery-card__freight {
+  font-weight: 700;
+}
+
+.product-delivery-card__freight.is-free {
+  color: #1f7a44;
+}
+
 
 
 .product-quantity-box {
@@ -1636,11 +1675,13 @@ button, input, select, textarea { font: inherit; }
   gap: 1rem;
   padding: 1rem 1.1rem;
   border-radius: 1.1rem;
-  background: #f6efe8;
+  background: transparent;
+  border: 1px solid #eadfd6;
 }
 
 .product-quantity-box.is-sold-out {
-  background: #f4ede4;
+  background: transparent;
+  opacity: 0.82;
 }
 
 .product-variant-stack {

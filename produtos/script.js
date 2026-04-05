@@ -51,6 +51,134 @@
     return isFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos";
   }
 
+  function normalizeCep(value) {
+    const digits = String(value || "").replace(/\D/g, "").slice(0, 8);
+    if (digits.length <= 5) return digits;
+    return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+  }
+
+  function normalizeState(value) {
+    return String(value || "")
+      .replace(/[^a-zA-Z]/g, "")
+      .slice(0, 2)
+      .toUpperCase();
+  }
+
+  function isCepValid(value) {
+    return String(value || "").replace(/\D/g, "").length === 8;
+  }
+
+  function loadShipTo() {
+    try {
+      const raw = localStorage.getItem("stopmod_ship_to");
+      if (!raw) return { street: "", number: "", district: "", city: "", state: "", cep: "", complement: "" };
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object") {
+        return { street: "", number: "", district: "", city: "", state: "", cep: "", complement: "" };
+      }
+      return {
+        street: String(parsed.street || "").trim(),
+        number: String(parsed.number || "").trim(),
+        district: String(parsed.district || "").trim(),
+        city: String(parsed.city || "").trim(),
+        state: normalizeState(parsed.state || ""),
+        cep: normalizeCep(parsed.cep || ""),
+        complement: String(parsed.complement || "").trim()
+      };
+    } catch {
+      return { street: "", number: "", district: "", city: "", state: "", cep: "", complement: "" };
+    }
+  }
+
+  function calcShipping(subtotal, itemCount, cep) {
+    if (!isCepValid(cep)) return null;
+    const free = Number(subtotal || 0) >= 249.9 || Number(itemCount || 0) >= 5;
+    return free ? 0 : 19.9;
+  }
+
+  function deliveryAddressLine(to) {
+    return [String(to?.street || "").trim(), String(to?.number || "").trim(), String(to?.district || "").trim()]
+      .filter(Boolean)
+      .join(", ");
+  }
+
+  function deliveryCityStateLine(to) {
+    const city = String(to?.city || "").trim();
+    const state = String(to?.state || "").trim();
+    if (city && state) return `${city} - ${state}`;
+    return city || state || "";
+  }
+
+  function currentShippingForQty(qty) {
+    const shipTo = loadShipTo();
+    const safeQty = Math.max(1, Number(qty) || 1);
+    const subtotal = Number(product?.price || 0) * safeQty;
+    return {
+      shipTo,
+      qty: safeQty,
+      shipping: calcShipping(subtotal, safeQty, shipTo.cep)
+    };
+  }
+
+  function deliveryCardMarkup(qty = 1) {
+    const { shipTo, shipping } = currentShippingForQty(qty);
+    const addressLine = deliveryAddressLine(shipTo);
+    const cityStateLine = deliveryCityStateLine(shipTo);
+
+    if (!addressLine || !cityStateLine) {
+      return `
+        <article class="product-delivery-card">
+          <p class="product-delivery-card__label">Entrega no seu endereco</p>
+          <strong>Cadastre seu endereco</strong>
+          <p>Salve rua, numero e bairro para ver o frete calculado aqui.</p>
+          <a class="btn secondary" href="../entrega/">Adicionar endereco</a>
+        </article>
+      `;
+    }
+
+    const freightLabel = shipping === null
+      ? "Informe um CEP valido para calcular o frete."
+      : shipping === 0
+        ? "Frete gratis para este endereco."
+        : `Frete: ${catalog.formatBRL(shipping)} para este endereco.`;
+
+    return `
+      <article class="product-delivery-card" data-delivery-card>
+        <p class="product-delivery-card__label">Entrega no seu endereco</p>
+        <strong data-delivery-address>${escapeHtml(addressLine)}</strong>
+        <span data-delivery-city>${escapeHtml(cityStateLine)}</span>
+        <p class="product-delivery-card__freight${shipping === 0 ? " is-free" : ""}" data-delivery-freight>${escapeHtml(freightLabel)}</p>
+        <small data-delivery-note>Calculado para ${qty === 1 ? "1 unidade" : `${qty} unidades`} deste produto.</small>
+      </article>
+    `;
+  }
+
+  function updateDeliveryPreview(qtyValue) {
+    const card = root.querySelector("[data-delivery-card]");
+    if (!card) return;
+
+    const qty = Math.max(1, Number(qtyValue) || currentQty() || 1);
+    const { shipTo, shipping } = currentShippingForQty(qty);
+    const address = card.querySelector("[data-delivery-address]");
+    const city = card.querySelector("[data-delivery-city]");
+    const freight = card.querySelector("[data-delivery-freight]");
+    const note = card.querySelector("[data-delivery-note]");
+
+    if (address) address.textContent = deliveryAddressLine(shipTo);
+    if (city) city.textContent = deliveryCityStateLine(shipTo);
+    if (freight) {
+      freight.textContent = shipping === null
+        ? "Informe um CEP valido para calcular o frete."
+        : shipping === 0
+          ? "Frete gratis para este endereco."
+          : `Frete: ${catalog.formatBRL(shipping)} para este endereco.`;
+      freight.classList.toggle("is-free", shipping === 0);
+    }
+    if (note) {
+      note.textContent = `Calculado para ${qty === 1 ? "1 unidade" : `${qty} unidades`} deste produto.`;
+    }
+  }
+
   function reviewCard(review) {
     const createdAt = review?.createdAt ? new Date(review.createdAt) : null;
     const createdLabel = createdAt && Number.isFinite(createdAt.getTime())
@@ -143,7 +271,9 @@
     const max = Math.max(1, Number(variant?.stock || 1));
     if (!input) return;
     input.max = String(max);
-    input.value = String(Math.max(1, Math.min(max, Number(next) || 1)));
+    const safeQty = Math.max(1, Math.min(max, Number(next) || 1));
+    input.value = String(safeQty);
+    updateDeliveryPreview(safeQty);
   }
 
   function syncQtyToVariant() {
@@ -441,6 +571,8 @@
             <span>${catalog.formatBRL(catalog.oldPrice(product.price))}</span>
             <small>Pix: ${catalog.formatBRL(catalog.pixPrice(product.price))}</small>
           </div>
+
+          ${deliveryCardMarkup(1)}
 
           <div class="product-quantity-box${soldOut ? " is-sold-out" : ""}">
             <div class="product-variant-stack">
