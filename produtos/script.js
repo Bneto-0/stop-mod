@@ -138,9 +138,9 @@
       return `
         <article class="product-delivery-card">
           <p class="product-delivery-card__label">Entrega no seu endereco</p>
-          <strong class="product-delivery-card__summary">Cadastre seu endereco para calcular</strong>
+          <strong class="product-delivery-card__summary">Informe seu CEP para calcular</strong>
           <p class="product-delivery-card__freight">Frete sob consulta</p>
-          <a class="product-delivery-card__link" href="../entrega/">Adicionar endereco</a>
+          <a class="product-delivery-card__link" href="../entrega/">CEP</a>
         </article>
       `;
     }
@@ -238,10 +238,58 @@
     return map[String(value || "").trim()] || String(value || "").trim();
   }
 
+  function compactReferenceLabel(value) {
+    const normalized = String(value || "")
+      .trim()
+      .replace(/\s+/g, " ");
+
+    const dictionary = new Map([
+      ["Malha premium com toque macio", "malha premium"],
+      ["Modelagem oversized", "oversized"],
+      ["Caimento reto e gola reforcada", "caimento reto"],
+      ["Boa para looks basicos e camadas", "looks em camadas"],
+      ["Lavagem vintage", "lavagem vintage"],
+      ["Jeans encorpado", "jeans encorpado"],
+      ["Botoes metalicos", "botoes metalicos"],
+      ["Facil de combinar com camisetas e vestidos", "facil de combinar"],
+      ["Bolsos cargo laterais", "bolsos cargo"],
+      ["Tecido resistente", "tecido resistente"],
+      ["Modelagem reta", "modelagem reta"],
+      ["Boa para composicoes street e utilitarias", "street e utilitaria"],
+      ["Interior macio", "interior macio"],
+      ["Punhos ajustados", "punhos ajustados"],
+      ["Capuz estruturado", "capuz estruturado"],
+      ["Visual limpo e versatil", "visual versatil"],
+      ["Caimento leve", "caimento leve"],
+      ["Modelagem minimalista", "minimalista"],
+      ["Uso casual", "uso casual"],
+      ["Combina com tenis e sandalia", "combina facil"],
+      ["Tecido com linho", "linho leve"],
+      ["Respiracao alta", "alta respiracao"],
+      ["Caimento leve", "caimento leve"],
+      ["Facil de usar aberta ou fechada", "uso aberto ou fechado"],
+      ["Visual de couro", "couro clean"],
+      ["Acabamento marcante", "acabamento forte"],
+      ["Edicao limitada", "edicao limitada"],
+      ["Peca de destaque no look", "peca destaque"]
+    ]);
+
+    if (dictionary.has(normalized)) {
+      return String(dictionary.get(normalized) || normalized);
+    }
+
+    return normalized
+      .toLowerCase()
+      .replace(/\b(com|para|de|do|da|dos|das|e|ou|no|na|em|uma|um)\b/gi, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 22);
+  }
+
   function buildTopReferences() {
     if (!product) return [];
     return [singularCategoryLabel(product.category), ...(Array.isArray(product.highlights) ? product.highlights : [])]
-      .map((item) => String(item || "").trim())
+      .map((item) => compactReferenceLabel(item))
       .filter(Boolean);
   }
 
