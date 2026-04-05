@@ -164,6 +164,51 @@
     return city || state || "";
   }
 
+  function capitalizeWord(value) {
+    const text = String(value || "").trim();
+    if (!text) return "";
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  }
+
+  function addBusinessDays(baseDate, days) {
+    const date = new Date(baseDate);
+    let remaining = Math.max(0, Number(days) || 0);
+    while (remaining > 0) {
+      date.setDate(date.getDate() + 1);
+      const day = date.getDay();
+      if (day !== 0 && day !== 6) remaining -= 1;
+    }
+    return date;
+  }
+
+  function deliveryHeaderText(shipTo) {
+    const summaryLine = deliveryCompactLine(shipTo);
+    return summaryLine ? `Entrega para ${summaryLine}` : "Informe seu CEP";
+  }
+
+  function deliveryFreightText(shipping) {
+    if (shipping === null) return "Frete sob consulta";
+    return shipping === 0 ? "Frete Gratis" : `Frete: ${catalog.formatBRL(shipping)}`;
+  }
+
+  function deliveryEstimateText(shipTo, shipping) {
+    if (!isCepValid(shipTo?.cep)) {
+      return "Informe o CEP para calcular o prazo.";
+    }
+
+    const base = new Date();
+    const start = addBusinessDays(base, shipping === 0 ? 3 : 5);
+    const end = addBusinessDays(base, shipping === 0 ? 6 : 9);
+    const startMonth = capitalizeWord(start.toLocaleDateString("pt-BR", { month: "long" }));
+    const endMonth = capitalizeWord(end.toLocaleDateString("pt-BR", { month: "long" }));
+
+    if (startMonth === endMonth) {
+      return `Chega entre ${start.getDate()} e ${end.getDate()} de ${startMonth}`;
+    }
+
+    return `Chega entre ${start.getDate()} de ${startMonth} e ${end.getDate()} de ${endMonth}`;
+  }
+
   function currentShippingForQty(qty) {
     const shipTo = loadShipTo();
     const safeQty = Math.max(1, Number(qty) || 1);
@@ -305,31 +350,19 @@
 
   function deliveryCardMarkup(qty = 1) {
     const { shipTo, shipping } = currentShippingForQty(qty);
-    const summaryLine = deliveryCompactLine(shipTo);
-
-    if (!summaryLine) {
-      return `
-        <article class="product-delivery-card">
-          <p class="product-delivery-card__label">Entrega para</p>
-          <strong class="product-delivery-card__summary">Informe seu CEP</strong>
-          <p class="product-delivery-card__freight">Frete sob consulta</p>
-          <button class="product-delivery-card__link" type="button" data-cep-open>CEP</button>
-        </article>
-      `;
-    }
-
-    const freightLabel = shipping === null
-      ? "Informe um CEP valido"
-      : shipping === 0
-        ? "Frete Gratis"
-        : `Frete ${catalog.formatBRL(shipping)}`;
+    const headerText = deliveryHeaderText(shipTo);
+    const freightText = deliveryFreightText(shipping);
+    const estimateText = deliveryEstimateText(shipTo, shipping);
 
     return `
       <article class="product-delivery-card" data-delivery-card>
-        <p class="product-delivery-card__label">Entrega para</p>
-        <strong class="product-delivery-card__summary" data-delivery-summary title="${escapeHtml(summaryLine)}">${escapeHtml(summaryLine)}</strong>
-        <p class="product-delivery-card__freight${shipping === 0 ? " is-free" : ""}" data-delivery-freight>${escapeHtml(freightLabel)}</p>
-        <button class="product-delivery-card__link" type="button" data-cep-open>CEP</button>
+        <div class="product-delivery-card__topline">
+          <p class="product-delivery-card__label" data-delivery-summary title="${escapeHtml(headerText)}">${escapeHtml(headerText)}</p>
+          <button class="product-delivery-card__link" type="button" data-cep-open>CEP</button>
+        </div>
+        <p class="product-delivery-card__freight${shipping === 0 ? " is-free" : ""}" data-delivery-freight>${escapeHtml(freightText)}</p>
+        <p class="product-delivery-card__estimate" data-delivery-estimate>${escapeHtml(estimateText)}</p>
+        <p class="product-delivery-card__note">Ao finalizar o pagamento seu pedido sera enviado em ate 12 horas.</p>
       </article>
     `;
   }
@@ -342,19 +375,19 @@
     const { shipTo, shipping } = currentShippingForQty(qty);
     const summary = card.querySelector("[data-delivery-summary]");
     const freight = card.querySelector("[data-delivery-freight]");
-    const summaryLine = deliveryCompactLine(shipTo);
+    const estimate = card.querySelector("[data-delivery-estimate]");
+    const headerText = deliveryHeaderText(shipTo);
 
     if (summary) {
-      summary.textContent = summaryLine;
-      summary.setAttribute("title", summaryLine);
+      summary.textContent = headerText;
+      summary.setAttribute("title", headerText);
     }
     if (freight) {
-      freight.textContent = shipping === null
-        ? "Informe um CEP valido"
-        : shipping === 0
-          ? "Frete Gratis"
-          : `Frete ${catalog.formatBRL(shipping)}`;
+      freight.textContent = deliveryFreightText(shipping);
       freight.classList.toggle("is-free", shipping === 0);
+    }
+    if (estimate) {
+      estimate.textContent = deliveryEstimateText(shipTo, shipping);
     }
   }
 
@@ -1025,6 +1058,10 @@
     const reviewCount = reviews.length;
     const reviewAverage = reviewCount ? summary.average.toFixed(1) : "Novo";
     const reviewStars = reviewCount ? renderStars(summary.average) : renderStars(0);
+    const soldCount = Math.max(0, Number(summary.sold || 0));
+    const soldLabel = soldCount
+      ? `+ ${soldCount} ${soldCount === 1 ? "venda confirmada" : "vendas confirmadas"}`
+      : "+ novo na vitrine";
     if (!reviewAccess.allowed) {
       pendingReviewPhoto = "";
       pendingReviewPhotoName = "";
@@ -1041,52 +1078,42 @@
 
         <section class="product-detail-panel">
           <div class="product-detail-headbar">
-            <div class="product-detail-topline">
-              <span class="badge-pill">${escapeHtml(product.badge)}</span>
-              <span>${escapeHtml(product.category)} | ${escapeHtml(product.size)}</span>
+            <p class="product-sales-copy">${escapeHtml(soldLabel)}</p>
+            <div class="product-rating-ribbon" aria-label="Nota media do produto">
+              <strong>${escapeHtml(reviewAverage)}</strong>
+              <span class="rating-stars">${reviewStars}</span>
             </div>
             <button class="product-favorite-heart${isFavorite ? " is-active" : ""}" type="button" data-favorite-toggle aria-label="${favoriteHeartLabel(isFavorite)}" aria-pressed="${isFavorite ? "true" : "false"}">${favoriteHeartMarkup(isFavorite)}</button>
+          </div>
+          <div class="product-detail-topline">
+            <span class="badge-pill">${escapeHtml(product.badge)}</span>
+            <span>${escapeHtml(product.category)} | ${escapeHtml(product.size)}</span>
           </div>
           <h1>${escapeHtml(product.name)}</h1>
           <p class="product-detail-summary">${escapeHtml(product.shortDescription || product.description)}</p>
 
-          <div class="product-detail-rating">
-            <span class="rating-stars">${renderStars(summary.average)}</span>
-            <strong>${summary.average.toFixed(1)}</strong>
-            <span>${summary.count} avaliacao(oes)</span>
-            <span>${summary.sold} vendas confirmadas</span>
-          </div>
-
-          <div class="product-detail-price">
-            <strong>${catalog.formatBRL(product.price)}</strong>
-            <span>${catalog.formatBRL(catalog.oldPrice(product.price))}</span>
-            <small>Pix: ${catalog.formatBRL(catalog.pixPrice(product.price))}</small>
-          </div>
-
           <div class="product-quantity-box${soldOut ? " is-sold-out" : ""}">
             <div class="product-variant-stack">
-              <div class="product-variant-title">
-                <span>Cores disponiveis</span>
-                <small>${variants.length} cor(es)</small>
-              </div>
               <div class="product-variant-current" aria-live="polite">
                 <div class="product-variant-current__copy">
-                  <strong>Cor:</strong>
+                  <strong>cor:</strong>
                   <span>${escapeHtml(selectedColorLabel)}</span>
                 </div>
-                <button class="product-media-expand" type="button" data-gallery-open>Ampliar imagem</button>
+                <div class="product-variant-current__tools">
+                  <small>${variants.length} cor(es)</small>
+                  <button class="product-media-expand" type="button" data-gallery-open>Ampliar imagem</button>
+                </div>
               </div>
               <div class="product-variant-list" role="list" aria-label="Variantes de cor disponiveis">
                 ${variants.length ? variants.map((variant) => variantCard(variant, variant.id === selectedVariant?.id)).join("") : '<span class="product-variant-empty">Produto esgotado no momento.</span>'}
               </div>
               <div class="product-size-panel">
                 <div class="product-size-panel__head">
-                  <span>Tamanho disponivel</span>
+                  <div class="product-size-panel__current" aria-live="polite">
+                    <strong>Tamanho:</strong>
+                    <span>${escapeHtml(selectedSizeLabel || "Indisponivel")}</span>
+                  </div>
                   <small>${sizes.length} opcao(oes)</small>
-                </div>
-                <div class="product-size-panel__current" aria-live="polite">
-                  <strong>Tamanho:</strong>
-                  <span>${escapeHtml(selectedSizeLabel || "Indisponivel")}</span>
                 </div>
                 <div class="product-size-list" role="list" aria-label="Tamanhos disponiveis">
                   ${sizes.length ? sizes.map((size) => sizeCard(size, normalizeSizeToken(size) === normalizeSizeToken(selectedSizeLabel))).join("") : '<span class="product-size-empty">Sem tamanhos cadastrados.</span>'}
@@ -1094,15 +1121,27 @@
               </div>
               <span class="product-variant-status">${soldOut ? "Sem estoque nessa cor" : "Cor pronta para compra"}</span>
             </div>
+          </div>
 
-            <div class="product-qty-side">
+          <div class="product-purchase-box${soldOut ? " is-sold-out" : ""}">
+            <div class="product-detail-price">
+              <span class="product-detail-price__compare">${catalog.formatBRL(catalog.oldPrice(product.price))}</span>
+              <div class="product-detail-price__pix">
+                <strong>${catalog.formatBRL(catalog.pixPrice(product.price))}</strong>
+                <span>no pix</span>
+              </div>
+              <small>ou ${catalog.formatBRL(product.price)}</small>
+            </div>
+
+            ${deliveryCardMarkup(1)}
+
+            <div class="product-inline-qty">
               <span>Quantidade</span>
               <div class="quantity-stepper${soldOut ? " is-disabled" : ""}">
                 <button type="button" data-qty-step="-1" ${soldOut ? "disabled" : ""}>-</button>
                 <input id="product-qty" type="number" min="1" max="${Math.max(1, Number(selectedVariant?.stock || 1))}" value="1" ${soldOut ? "disabled" : ""} />
                 <button type="button" data-qty-step="1" ${soldOut ? "disabled" : ""}>+</button>
               </div>
-              ${deliveryCardMarkup(1)}
             </div>
           </div>
 
