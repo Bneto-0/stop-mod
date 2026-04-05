@@ -491,33 +491,13 @@
   }
 
   function mergeProductVariants(product) {
-    const baseVariants = buildCategoryVariants(product);
     const configured = Array.isArray(productVariantsConfig[product.id]) ? productVariantsConfig[product.id] : [];
-    if (!configured.length) return baseVariants;
+    if (!configured.length) return buildCategoryVariants(product);
 
-    const configuredMap = new Map(
-      configured.map((variant) => [normalizeVariantKey(variant.id || variant.colorName), variant])
-    );
-
-    const merged = baseVariants.map((variant) => {
-      const key = normalizeVariantKey(variant.id || variant.colorName);
-      const override = configuredMap.get(key);
-      return override ? { ...variant, ...override } : variant;
-    });
-
-    const existingKeys = new Set(merged.map((variant) => normalizeVariantKey(variant.id || variant.colorName)));
-
-    configured.forEach((variant) => {
-      const key = normalizeVariantKey(variant.id || variant.colorName);
-      if (existingKeys.has(key)) return;
-      merged.push({
-        ...variant,
-        image: variant.image || product.image
-      });
-      existingKeys.add(key);
-    });
-
-    return merged;
+    return configured.map((variant) => ({
+      ...variant,
+      image: variant.image || product.image
+    }));
   }
 
   function loadJson(key, fallback) {
