@@ -388,7 +388,7 @@
           ${deliveryFreightRowMarkup(shipping, quotedShipping)}
         </div>
         <p class="product-delivery-card__estimate" data-delivery-estimate>${escapeHtml(estimateText)}</p>
-        <p class="product-delivery-card__note">Ao finalizar o pagamento seu pedido sera enviado em ate 12 horas.</p>
+        <p class="product-delivery-card__note">Ao finalizar o pagamento seu pedido sera enviado em ate 24 horas.</p>
       </article>
     `;
   }

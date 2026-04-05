@@ -1651,7 +1651,7 @@ button, input, select, textarea { font: inherit; }
   margin: 0;
   max-width: none;
   color: #cb5d33;
-  font-size: clamp(3rem, 4vw, 4.2rem);
+  font-size: clamp(2.7rem, 3.5vw, 3.75rem);
   line-height: 0.95;
   letter-spacing: -0.06em;
 }
@@ -3011,7 +3011,7 @@ button, input, select, textarea { font: inherit; }
   }
 
   .product-detail-panel h1 {
-    font-size: clamp(2.45rem, 11vw, 3.55rem);
+    font-size: clamp(2.2rem, 10vw, 3.15rem);
   }
 
   .product-detail-top-features {
