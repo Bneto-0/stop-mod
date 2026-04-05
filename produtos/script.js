@@ -126,6 +126,14 @@
     return free ? 0 : 19.9;
   }
 
+  function quotedShippingForCep(cep) {
+    return isCepValid(cep) ? 19.9 : null;
+  }
+
+  function formatFreightNumber(value) {
+    return catalog.formatBRL(value).replace(/^R\$\s?/, "");
+  }
+
   function deliveryAddressLine(to) {
     return [String(to?.street || "").trim(), String(to?.number || "").trim(), String(to?.district || "").trim()]
       .filter(Boolean)
@@ -191,6 +199,21 @@
     return shipping === 0 ? "Frete Gratis" : `Frete: ${catalog.formatBRL(shipping)}`;
   }
 
+  function deliveryFreightRowMarkup(shipping, quotedShipping) {
+    if (quotedShipping === null) {
+      return `<span class="product-delivery-card__freight-meta">Frete sob consulta</span>`;
+    }
+
+    if (shipping === 0) {
+      return `
+        <span class="product-delivery-card__freight is-free">Frete Gratis</span>
+        <span class="product-delivery-card__freight-meta">Frete: ${escapeHtml(formatFreightNumber(quotedShipping))}</span>
+      `;
+    }
+
+    return `<span class="product-delivery-card__freight-meta is-quoted">Frete: ${escapeHtml(formatFreightNumber(shipping))}</span>`;
+  }
+
   function deliveryEstimateText(shipTo, shipping) {
     if (!isCepValid(shipTo?.cep)) {
       return "Informe o CEP para calcular o prazo.";
@@ -213,9 +236,11 @@
     const shipTo = loadShipTo();
     const safeQty = Math.max(1, Number(qty) || 1);
     const subtotal = Number(product?.price || 0) * safeQty;
+    const quotedShipping = quotedShippingForCep(shipTo.cep);
     return {
       shipTo,
       qty: safeQty,
+      quotedShipping,
       shipping: calcShipping(subtotal, safeQty, shipTo.cep)
     };
   }
@@ -349,9 +374,8 @@
   }
 
   function deliveryCardMarkup(qty = 1) {
-    const { shipTo, shipping } = currentShippingForQty(qty);
+    const { shipTo, shipping, quotedShipping } = currentShippingForQty(qty);
     const headerText = deliveryHeaderText(shipTo);
-    const freightText = deliveryFreightText(shipping);
     const estimateText = deliveryEstimateText(shipTo, shipping);
 
     return `
@@ -360,7 +384,9 @@
           <p class="product-delivery-card__label" data-delivery-summary title="${escapeHtml(headerText)}">${escapeHtml(headerText)}</p>
           <button class="product-delivery-card__link" type="button" data-cep-open>CEP</button>
         </div>
-        <p class="product-delivery-card__freight${shipping === 0 ? " is-free" : ""}" data-delivery-freight>${escapeHtml(freightText)}</p>
+        <div class="product-delivery-card__freight-row" data-delivery-freight-row>
+          ${deliveryFreightRowMarkup(shipping, quotedShipping)}
+        </div>
         <p class="product-delivery-card__estimate" data-delivery-estimate>${escapeHtml(estimateText)}</p>
         <p class="product-delivery-card__note">Ao finalizar o pagamento seu pedido sera enviado em ate 12 horas.</p>
       </article>
@@ -372,9 +398,9 @@
     if (!card) return;
 
     const qty = Math.max(1, Number(qtyValue) || currentQty() || 1);
-    const { shipTo, shipping } = currentShippingForQty(qty);
+    const { shipTo, shipping, quotedShipping } = currentShippingForQty(qty);
     const summary = card.querySelector("[data-delivery-summary]");
-    const freight = card.querySelector("[data-delivery-freight]");
+    const freightRow = card.querySelector("[data-delivery-freight-row]");
     const estimate = card.querySelector("[data-delivery-estimate]");
     const headerText = deliveryHeaderText(shipTo);
 
@@ -382,9 +408,8 @@
       summary.textContent = headerText;
       summary.setAttribute("title", headerText);
     }
-    if (freight) {
-      freight.textContent = deliveryFreightText(shipping);
-      freight.classList.toggle("is-free", shipping === 0);
+    if (freightRow) {
+      freightRow.innerHTML = deliveryFreightRowMarkup(shipping, quotedShipping);
     }
     if (estimate) {
       estimate.textContent = deliveryEstimateText(shipTo, shipping);
@@ -1078,19 +1103,14 @@
 
         <section class="product-detail-panel">
           <div class="product-detail-headbar">
-            <p class="product-sales-copy">${escapeHtml(soldLabel)}</p>
             <div class="product-rating-ribbon" aria-label="Nota media do produto">
               <strong>${escapeHtml(reviewAverage)}</strong>
               <span class="rating-stars">${reviewStars}</span>
             </div>
             <button class="product-favorite-heart${isFavorite ? " is-active" : ""}" type="button" data-favorite-toggle aria-label="${favoriteHeartLabel(isFavorite)}" aria-pressed="${isFavorite ? "true" : "false"}">${favoriteHeartMarkup(isFavorite)}</button>
           </div>
-          <div class="product-detail-topline">
-            <span class="badge-pill">${escapeHtml(product.badge)}</span>
-            <span>${escapeHtml(product.category)} | ${escapeHtml(product.size)}</span>
-          </div>
+          <p class="product-sales-copy">${escapeHtml(soldLabel)}</p>
           <h1>${escapeHtml(product.name)}</h1>
-          <p class="product-detail-summary">${escapeHtml(product.shortDescription || product.description)}</p>
 
           <div class="product-quantity-box${soldOut ? " is-sold-out" : ""}">
             <div class="product-variant-stack">
