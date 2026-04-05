@@ -1879,6 +1879,10 @@ button, input, select, textarea { font: inherit; }
   margin-top: 1.15rem;
 }
 
+.product-reviews-layout.is-stream-only {
+  grid-template-columns: 1fr;
+}
+
 .product-reviews-stream {
   display: grid;
   gap: 1rem;

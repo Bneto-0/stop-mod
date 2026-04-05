@@ -347,17 +347,11 @@
   }
 
   function reviewFormPanelMarkup(access) {
-    const copy = reviewAccessCopy(access);
     if (!access?.allowed) {
-      return `
-        <article class="review-gate-card review-form--panel">
-          <strong>${escapeHtml(copy.title)}</strong>
-          <p>${escapeHtml(copy.text)}</p>
-          <a class="btn secondary" href="${copy.linkHref}">${copy.linkLabel}</a>
-        </article>
-      `;
+      return "";
     }
 
+    const copy = reviewAccessCopy(access);
     const receivedLabel = formatPtDate(access?.receivedConfirmedAt);
     return `
       <form class="review-form review-form--panel" data-review-form data-review-order-id="${escapeHtml(access.orderId || "")}">
@@ -492,7 +486,7 @@
             </div>
             <span class="review-badge">${reviewCount} comentario(s)</span>
           </div>
-          <div class="product-reviews-layout">
+          <div class="product-reviews-layout${reviewAccess.allowed ? "" : " is-stream-only"}">
             <div class="product-reviews-stream">
               <div class="product-reviews-overview">
                 <div class="product-reviews-overview__score">
