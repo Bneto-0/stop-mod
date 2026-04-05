@@ -1486,13 +1486,17 @@ button, input, select, textarea { font: inherit; }
   padding-block: 2rem 4rem;
 }
 
+.product-detail-page {
+  width: min(1420px, calc(100% - 20px));
+}
+
 .product-detail-shell,
 .favorites-shell {
   padding: 1.75rem;
 }
 
 .product-detail-shell {
-  width: min(1180px, 100%);
+  width: 100%;
 }
 
 .product-detail-shell-head {
