@@ -299,8 +299,11 @@
         aria-label="Selecionar cor ${escapeHtml(variant.colorName)}${soldOut ? ", sem estoque" : ""}"
         title="${escapeHtml(variant.colorName)}"
       >
-        <span class="product-variant-swatch" style="--variant-swatch:${escapeHtml(variant.swatch || "#d8c8bc")}"></span>
-        <span class="sr-only">${escapeHtml(variant.colorName)}</span>
+        <span class="product-variant-thumb-wrap">
+          <img class="product-variant-thumb" src="${escapeHtml(variant.image || product.image)}" alt="${escapeHtml(product.name)} na cor ${escapeHtml(variant.colorName)}" loading="lazy" />
+          <span class="product-variant-swatch" style="--variant-swatch:${escapeHtml(variant.swatch || "#d8c8bc")}"></span>
+        </span>
+        <span class="product-variant-name">${escapeHtml(variant.colorName)}</span>
       </button>
     `;
   }
@@ -581,12 +584,16 @@
                 <small>${variants.length} cor(es)</small>
               </div>
               <div class="product-variant-current" aria-live="polite">
-                <strong>${escapeHtml(selectedColorLabel)}</strong>
-                <span>${soldOut ? "Sem estoque nessa cor" : "Cor pronta para compra"}</span>
+                <div class="product-variant-current__copy">
+                  <strong>Cor:</strong>
+                  <span>${escapeHtml(selectedColorLabel)}</span>
+                </div>
+                <a class="product-media-expand" href="${escapeHtml(selectedVariant?.image || product.image)}" target="_blank" rel="noreferrer">Ampliar imagem</a>
               </div>
               <div class="product-variant-list" role="list" aria-label="Variantes de cor disponiveis">
                 ${variants.length ? variants.map((variant) => variantCard(variant, variant.id === selectedVariant?.id)).join("") : '<span class="product-variant-empty">Produto esgotado no momento.</span>'}
               </div>
+              <span class="product-variant-status">${soldOut ? "Sem estoque nessa cor" : "Cor pronta para compra"}</span>
             </div>
 
             <div class="product-qty-side">
