@@ -194,30 +194,24 @@
     return summaryLine ? `Entrega para ${summaryLine}` : "Informe seu CEP";
   }
 
-  function deliveryFreightText(shipping) {
-    if (shipping === null) return "Frete sob consulta";
-    return shipping === 0 ? "Frete Gratis" : `Frete: ${catalog.formatBRL(shipping)}`;
-  }
-
   function deliveryFreightRowMarkup(shipping, quotedShipping) {
     if (quotedShipping === null) {
-      return `<span class="product-delivery-card__freight-meta">Frete sob consulta</span>`;
+      return "";
     }
 
     if (shipping === 0) {
-      return `
-        <span class="product-delivery-card__freight is-free">Frete Gratis</span>
-        <span class="product-delivery-card__freight-meta">Frete: ${escapeHtml(formatFreightNumber(quotedShipping))}</span>
-      `;
+      return `<span class="product-delivery-card__freight is-free">Frete Gratis</span>`;
     }
 
     return `<span class="product-delivery-card__freight-meta is-quoted">Frete: ${escapeHtml(formatFreightNumber(shipping))}</span>`;
   }
 
+  function shouldShowDeliveryEstimate(shipTo, shipping) {
+    return isCepValid(shipTo?.cep) && shipping !== null;
+  }
+
   function deliveryEstimateText(shipTo, shipping) {
-    if (!isCepValid(shipTo?.cep)) {
-      return "Informe o CEP para calcular o prazo.";
-    }
+    if (!shouldShowDeliveryEstimate(shipTo, shipping)) return "";
 
     const base = new Date();
     const start = addBusinessDays(base, shipping === 0 ? 3 : 5);
@@ -376,7 +370,9 @@
   function deliveryCardMarkup(qty = 1) {
     const { shipTo, shipping, quotedShipping } = currentShippingForQty(qty);
     const headerText = deliveryHeaderText(shipTo);
+    const freightMarkup = deliveryFreightRowMarkup(shipping, quotedShipping);
     const estimateText = deliveryEstimateText(shipTo, shipping);
+    const showEstimate = Boolean(estimateText);
 
     return `
       <article class="product-delivery-card" data-delivery-card>
@@ -384,10 +380,10 @@
           <p class="product-delivery-card__label" data-delivery-summary title="${escapeHtml(headerText)}">${escapeHtml(headerText)}</p>
           <button class="product-delivery-card__link" type="button" data-cep-open>CEP</button>
         </div>
-        <div class="product-delivery-card__freight-row" data-delivery-freight-row>
-          ${deliveryFreightRowMarkup(shipping, quotedShipping)}
+        <div class="product-delivery-card__freight-row" data-delivery-freight-row ${freightMarkup ? "" : "hidden"}>
+          ${freightMarkup}
         </div>
-        <p class="product-delivery-card__estimate" data-delivery-estimate>${escapeHtml(estimateText)}</p>
+        <p class="product-delivery-card__estimate" data-delivery-estimate ${showEstimate ? "" : "hidden"}>${escapeHtml(estimateText)}</p>
         <p class="product-delivery-card__note">Ao finalizar o pagamento seu pedido sera enviado em ate 24 horas.</p>
       </article>
     `;
@@ -403,16 +399,20 @@
     const freightRow = card.querySelector("[data-delivery-freight-row]");
     const estimate = card.querySelector("[data-delivery-estimate]");
     const headerText = deliveryHeaderText(shipTo);
+    const freightMarkup = deliveryFreightRowMarkup(shipping, quotedShipping);
+    const estimateText = deliveryEstimateText(shipTo, shipping);
 
     if (summary) {
       summary.textContent = headerText;
       summary.setAttribute("title", headerText);
     }
     if (freightRow) {
-      freightRow.innerHTML = deliveryFreightRowMarkup(shipping, quotedShipping);
+      freightRow.innerHTML = freightMarkup;
+      freightRow.hidden = !freightMarkup;
     }
     if (estimate) {
-      estimate.textContent = deliveryEstimateText(shipTo, shipping);
+      estimate.textContent = estimateText;
+      estimate.hidden = !estimateText;
     }
   }
 

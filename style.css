@@ -1767,11 +1767,13 @@ button, input, select, textarea { font: inherit; }
 }
 
 .product-delivery-card__freight.is-free {
+  border-color: #b9e6bf;
+  color: #1ea930;
   background: #fff;
 }
 
 .product-delivery-card__freight-meta {
-  color: #26aa29;
+  color: #2a2018;
   font-size: 0.95rem;
   font-weight: 700;
 }
