@@ -384,7 +384,7 @@
         title="${escapeHtml(variant.colorName)}"
       >
         <span class="product-variant-thumb-wrap">
-          <img class="product-variant-thumb" src="${escapeHtml(variant.image || product.image)}" alt="${escapeHtml(product.name)} na cor ${escapeHtml(variant.colorName)}" loading="lazy" />
+          <img class="product-variant-thumb" src="${escapeHtml(variant.image || product.image)}" data-fallback-src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)} na cor ${escapeHtml(variant.colorName)}" loading="lazy" />
           <span class="product-variant-swatch" style="--variant-swatch:${escapeHtml(variant.swatch || "#d8c8bc")}"></span>
         </span>
         <span class="product-variant-name">${escapeHtml(variant.colorName)}</span>
@@ -419,7 +419,7 @@
           <div class="product-gallery-modal__main">
             <button class="product-gallery-modal__nav" type="button" data-gallery-step="-1" aria-label="Cor anterior">&#8249;</button>
             <div class="product-gallery-modal__frame">
-              <img src="${escapeHtml(active.image || product.image)}" alt="${escapeHtml(product.name)} na cor ${escapeHtml(active.colorName)}" />
+              <img src="${escapeHtml(active.image || product.image)}" data-fallback-src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)} na cor ${escapeHtml(active.colorName)}" />
             </div>
             <button class="product-gallery-modal__nav" type="button" data-gallery-step="1" aria-label="Proxima cor">&#8250;</button>
           </div>
@@ -439,7 +439,7 @@
                 aria-pressed="${variant.id === active.id ? "true" : "false"}"
                 aria-label="Abrir cor ${escapeHtml(variant.colorName)}"
               >
-                <img src="${escapeHtml(variant.image || product.image)}" alt="${escapeHtml(product.name)} na cor ${escapeHtml(variant.colorName)}" loading="lazy" />
+                <img src="${escapeHtml(variant.image || product.image)}" data-fallback-src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)} na cor ${escapeHtml(variant.colorName)}" loading="lazy" />
                 <span>${escapeHtml(variant.colorName)}</span>
               </button>
             `).join("")}
@@ -743,7 +743,7 @@
     root.innerHTML = `
       <div class="product-detail-grid">
         <section class="product-detail-media">
-          <img src="${selectedVariant?.image || product.image}" alt="${escapeHtml(product.name)}" />
+          <img src="${selectedVariant?.image || product.image}" data-fallback-src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}" />
         </section>
 
         <section class="product-detail-panel">
@@ -994,6 +994,19 @@
       }
     }
   });
+
+  root.addEventListener("error", (event) => {
+    const image = event.target instanceof HTMLImageElement ? event.target : null;
+    if (!image) return;
+    const fallback = String(image.getAttribute("data-fallback-src") || "").trim();
+    if (!fallback) return;
+    if (image.src === fallback) {
+      image.removeAttribute("data-fallback-src");
+      return;
+    }
+    image.src = fallback;
+    image.removeAttribute("data-fallback-src");
+  }, true);
 
   document.addEventListener("keydown", (event) => {
     if (!galleryOpen) return;
