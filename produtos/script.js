@@ -518,6 +518,56 @@
     `;
   }
 
+  function sellerCardMarkup(seller) {
+    if (!seller) return "";
+
+    return `
+      <aside class="product-seller-card">
+        <div class="product-seller-card__head">
+          <div>
+            <p class="eyebrow">Loja responsavel</p>
+            <h2>${escapeHtml(seller.name)}</h2>
+          </div>
+          <span class="review-badge">Parceiro</span>
+        </div>
+
+        <div class="product-seller-profile">
+          <img src="${escapeHtml(seller.avatar)}" alt="Perfil da loja ${escapeHtml(seller.name)}" loading="lazy" />
+          <strong>${escapeHtml(seller.name)}</strong>
+          <span>${escapeHtml(seller.headline || "Loja parceira da plataforma")}</span>
+          <small>${escapeHtml(seller.city || "")}</small>
+        </div>
+
+        <div class="product-seller-rating">
+          <span class="rating-stars">${renderStars(seller.rating)}</span>
+          <strong>${Number(seller.rating || 0).toFixed(1)}</strong>
+          <span>${Number(seller.reviewCount || 0)} avaliacao(oes) na loja</span>
+        </div>
+
+        <div class="product-seller-stats">
+          <article>
+            <strong>${Number(seller.completedSales || 0)}</strong>
+            <span>vendas da loja</span>
+          </article>
+          <article>
+            <strong>${Number(seller.productSales || 0)}</strong>
+            <span>vendas deste produto</span>
+          </article>
+          <article>
+            <strong>${Number(seller.productCount || 0)}</strong>
+            <span>produtos ativos</span>
+          </article>
+          <article>
+            <strong>${Number(seller.productReviewCount || 0)}</strong>
+            <span>comentarios no item</span>
+          </article>
+        </div>
+
+        <p class="product-seller-card__copy">Esse produto esta sendo vendido por um comerciante parceiro dentro da sua loja.</p>
+      </aside>
+    `;
+  }
+
   function renderProduct() {
     if (!product) {
       renderMissingProduct();
@@ -527,6 +577,7 @@
     const summary = catalog.getRatingSummary(product.id);
     const reviews = catalog.getProductReviews(product.id);
     const related = catalog.getRelatedProducts(product.id, 4);
+    const seller = typeof catalog.getProductSeller === "function" ? catalog.getProductSeller(product.id) : null;
     const isFavorite = catalog.isFavorite(product.id);
     const reviewAccess = catalog.getProductReviewAccess(product.id);
     const variants = getDisplayVariants();
@@ -625,7 +676,7 @@
             </div>
             <span class="review-badge">${reviewCount} comentario(s)</span>
           </div>
-          <div class="product-reviews-layout${reviewAccess.allowed ? "" : " is-stream-only"}">
+          <div class="product-reviews-body">
             <div class="product-reviews-stream">
               <div class="product-reviews-overview">
                 <div class="product-reviews-overview__score">
@@ -642,6 +693,8 @@
             ${reviewFormPanelMarkup(reviewAccess)}
           </div>
         </article>
+
+        ${sellerCardMarkup(seller)}
       </section>
 
       <section class="related-products-block">

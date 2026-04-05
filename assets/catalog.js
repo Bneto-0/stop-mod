@@ -264,6 +264,73 @@
     }
   ]);
 
+  const sellerProfiles = Object.freeze({
+    visualnorte: {
+      id: "visualnorte",
+      name: "Visual Norte",
+      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=320&q=80",
+      headline: "Loja parceira verificada",
+      city: "Sao Paulo - SP",
+      rating: 4.9,
+      reviewCount: 186,
+      completedSales: 842
+    },
+    urbanvibe: {
+      id: "urbanvibe",
+      name: "Urban Vibe",
+      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=320&q=80",
+      headline: "Especialista em moda urbana",
+      city: "Curitiba - PR",
+      rating: 4.8,
+      reviewCount: 143,
+      completedSales: 615
+    },
+    aurastore: {
+      id: "aurastore",
+      name: "Aura Store",
+      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=320&q=80",
+      headline: "Curadoria de pecas leves",
+      city: "Belo Horizonte - MG",
+      rating: 4.9,
+      reviewCount: 121,
+      completedSales: 508
+    },
+    stopatelier: {
+      id: "stopatelier",
+      name: "Stop Atelier",
+      avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=320&q=80",
+      headline: "Acabamento premium e envios rapidos",
+      city: "Rio de Janeiro - RJ",
+      rating: 4.7,
+      reviewCount: 97,
+      completedSales: 431
+    }
+  });
+
+  const productSellerMap = Object.freeze({
+    1: "stopatelier",
+    2: "urbanvibe",
+    3: "visualnorte",
+    4: "urbanvibe",
+    5: "aurastore",
+    6: "stopatelier",
+    7: "aurastore",
+    8: "visualnorte",
+    9: "aurastore",
+    10: "stopatelier",
+    11: "urbanvibe",
+    12: "visualnorte",
+    13: "stopatelier",
+    14: "urbanvibe",
+    15: "visualnorte",
+    16: "aurastore",
+    17: "stopatelier",
+    18: "urbanvibe",
+    19: "visualnorte",
+    20: "aurastore",
+    21: "stopatelier"
+  });
+
   const variantSwatches = Object.freeze({
     branco: "linear-gradient(135deg, #ffffff 0%, #ece7df 100%)",
     branca: "linear-gradient(135deg, #ffffff 0%, #ece7df 100%)",
@@ -884,6 +951,26 @@ function addToCart(id, quantity, options = {}) {
     };
   }
 
+  function getProductSeller(productOrId) {
+    const product = typeof productOrId === "object" && productOrId ? productOrId : getProductById(productOrId);
+    if (!product) return null;
+
+    const sellerId = String(productSellerMap[product.id] || "visualnorte");
+    const seller = sellerProfiles[sellerId] || sellerProfiles.visualnorte;
+    const summary = getRatingSummary(product.id);
+    const sellerProductCount = products.filter((item) => String(productSellerMap[item.id] || "visualnorte") === sellerId).length;
+
+    return {
+      ...seller,
+      productId: product.id,
+      productName: product.name,
+      productSales: summary.sold,
+      productReviewCount: summary.count,
+      productRating: summary.average,
+      productCount: sellerProductCount
+    };
+  }
+
   function addProductReview(id, payload) {
     const product = getProductById(id);
     if (!product) return null;
@@ -980,6 +1067,7 @@ function addToCart(id, quantity, options = {}) {
     getProductReviews,
     getProductReviewAccess,
     getRatingSummary,
+    getProductSeller,
     addProductReview,
     getRelatedProducts
   };
