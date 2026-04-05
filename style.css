@@ -1620,6 +1620,7 @@ button, input, select, textarea { font: inherit; }
 .product-detail-price {
   display: grid;
   gap: 0.2rem;
+  align-content: start;
 }
 
 .product-detail-price strong {
@@ -1631,9 +1632,17 @@ button, input, select, textarea { font: inherit; }
   text-decoration: line-through;
 }
 
+.product-price-delivery-grid {
+  display: grid;
+  grid-template-columns: minmax(180px, auto) minmax(280px, 1fr);
+  align-items: start;
+  gap: 1rem;
+}
+
 .product-delivery-card {
   display: grid;
   gap: 0.35rem;
+  align-content: start;
   padding: 1rem 1.1rem;
   border: 1px solid #eadfd6;
   border-radius: 1.1rem;
@@ -2629,6 +2638,7 @@ button, input, select, textarea { font: inherit; }
   }
 
   .product-quantity-box,
+  .product-price-delivery-grid,
   .product-reviews-card__head,
   .product-seller-card__head,
   .related-products-head,
