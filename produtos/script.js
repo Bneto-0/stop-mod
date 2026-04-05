@@ -351,7 +351,6 @@
     if (!access?.allowed) {
       return `
         <article class="review-gate-card review-form--panel">
-          <p class="eyebrow">Liberacao individual</p>
           <strong>${escapeHtml(copy.title)}</strong>
           <p>${escapeHtml(copy.text)}</p>
           <a class="btn secondary" href="${copy.linkHref}">${copy.linkLabel}</a>
