@@ -122,7 +122,7 @@
 
   function calcShipping(subtotal, itemCount, cep) {
     if (!isCepValid(cep)) return null;
-    const free = Number(subtotal || 0) >= 249.9 || Number(itemCount || 0) >= 5;
+    const free = Number(subtotal || 0) > 50;
     return free ? 0 : 19.9;
   }
 
@@ -143,6 +143,25 @@
     return [deliveryAddressLine(to), deliveryCityStateLine(to)]
       .filter(Boolean)
       .join(" - ");
+  }
+
+  function compactStreetName(value) {
+    const clean = String(value || "")
+      .trim()
+      .replace(/^(rua|r\.|avenida|av\.|travessa|alameda|estrada|rodovia|praca|praça)\s+/i, "");
+    const words = clean.split(/\s+/).filter(Boolean);
+    if (!words.length) return "";
+    return words.slice(0, 2).join(" ");
+  }
+
+  function deliveryCompactLine(to) {
+    const street = compactStreetName(to?.street || "");
+    const state = String(to?.state || "").trim();
+    const city = String(to?.city || "").trim();
+    if (street && state) return `${street} - ${state}`;
+    if (street) return street;
+    if (city && state) return `${city} - ${state}`;
+    return city || state || "";
   }
 
   function currentShippingForQty(qty) {
@@ -286,13 +305,13 @@
 
   function deliveryCardMarkup(qty = 1) {
     const { shipTo, shipping } = currentShippingForQty(qty);
-    const summaryLine = deliverySummaryLine(shipTo);
+    const summaryLine = deliveryCompactLine(shipTo);
 
     if (!summaryLine) {
       return `
         <article class="product-delivery-card">
-          <p class="product-delivery-card__label">Entrega no seu endereco</p>
-          <strong class="product-delivery-card__summary">Informe seu CEP para calcular</strong>
+          <p class="product-delivery-card__label">Entrega para</p>
+          <strong class="product-delivery-card__summary">Informe seu CEP</strong>
           <p class="product-delivery-card__freight">Frete sob consulta</p>
           <button class="product-delivery-card__link" type="button" data-cep-open>CEP</button>
         </article>
@@ -307,7 +326,7 @@
 
     return `
       <article class="product-delivery-card" data-delivery-card>
-        <p class="product-delivery-card__label">Entrega no seu endereco</p>
+        <p class="product-delivery-card__label">Entrega para</p>
         <strong class="product-delivery-card__summary" data-delivery-summary title="${escapeHtml(summaryLine)}">${escapeHtml(summaryLine)}</strong>
         <p class="product-delivery-card__freight${shipping === 0 ? " is-free" : ""}" data-delivery-freight>${escapeHtml(freightLabel)}</p>
         <button class="product-delivery-card__link" type="button" data-cep-open>CEP</button>
@@ -323,7 +342,7 @@
     const { shipTo, shipping } = currentShippingForQty(qty);
     const summary = card.querySelector("[data-delivery-summary]");
     const freight = card.querySelector("[data-delivery-freight]");
-    const summaryLine = deliverySummaryLine(shipTo);
+    const summaryLine = deliveryCompactLine(shipTo);
 
     if (summary) {
       summary.textContent = summaryLine;

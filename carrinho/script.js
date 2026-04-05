@@ -827,7 +827,7 @@ function removeOne(id) {
 
 function calcShipping(subtotal, itemCount, cep) {
   if (!isCepValid(cep)) return null;
-  const free = subtotal >= 249.9 || itemCount >= 5;
+  const free = subtotal > 50;
   return free ? 0 : 19.9;
 }
 

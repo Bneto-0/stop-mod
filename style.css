@@ -1666,17 +1666,17 @@ button, input, select, textarea { font: inherit; }
 .product-delivery-card__label {
   margin: 0;
   color: #7d736b;
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-style: italic;
   font-weight: 700;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
 .product-delivery-card__summary {
-  width: min(100%, 360px);
+  width: min(100%, 240px);
   overflow: hidden;
-  font-size: 0.98rem;
+  font-size: 0.92rem;
   letter-spacing: -0.02em;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1691,7 +1691,7 @@ button, input, select, textarea { font: inherit; }
 
 .product-delivery-card__freight {
   color: #d06b45;
-  font-size: 0.96rem;
+  font-size: 0.92rem;
   font-weight: 700;
   line-height: 1.2;
 }
