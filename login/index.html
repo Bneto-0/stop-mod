@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=12" />
+  <link rel="stylesheet" href="style.css?v=13" />
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6485539380158983" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="/assets/site-header.css?v=12" />
 </head>
@@ -19,14 +19,15 @@
   <script src="/assets/site-header.js?v=6"></script>
   <main class="page">
     <section class="card login-card" aria-label="Login">
-      <header class="head">
+      <header class="head login-head">
         <a class="shared-brand login-brand" href="/#top" aria-label="Voltar para a loja">UZU<em>U</em></a>
-        <h1>Entrar</h1>
+        <h1 class="sr-only">Entrar</h1>
+        <p class="login-intro">Bem-vindo a sua loja</p>
       </header>
 
       <form id="login-form" class="form">
         <label class="sr-only" for="login-id">Email, CPF ou usuario</label>
-        <input id="login-id" type="text" placeholder="Email, CPF ou usuario" autocomplete="username" maxlength="90" />
+        <input id="login-id" type="text" placeholder="Usuario" autocomplete="username" maxlength="90" />
 
         <div class="pw-wrap">
           <label class="sr-only" for="login-pass">Senha</label>
@@ -34,18 +35,20 @@
           <button id="pw-toggle" class="pw-toggle" type="button" aria-label="Mostrar senha">ver</button>
         </div>
 
-        <button id="login-btn" class="btn primary" type="submit">ENTRAR</button>
+        <button id="login-btn" class="btn primary login-primary-btn" type="submit">Entrar</button>
       </form>
 
-      <div class="help-row">
-        <button id="go-register" class="link strong" type="button">Criar conta</button>
-        <button id="forgot" class="link" type="button">Esqueci minha senha</button>
+      <div class="help-row login-actions">
+        <button id="go-register" class="btn secondary login-secondary-btn" type="button">Criar Conta</button>
+        <button id="forgot" class="link login-forgot-link" type="button">Esqueceu a senha?</button>
       </div>
 
+      <div class="login-divider" aria-hidden="true"><span>ou</span></div>
+
       <div class="social">
-        <button id="google" class="btn ghost" type="button">
+        <button id="google" class="btn ghost login-google-btn" type="button">
           <span class="soc-ic g">G</span>
-          Google
+          Continuar com Google
         </button>
       </div>
 
