@@ -16,6 +16,7 @@ const ADDRESS_CONFIRM_FINGERPRINT_KEY = "stopmod_address_confirmed_fp";
 const AUTH_TIMEOUT_MS = 2 * 60 * 60 * 1000;
 const AUTH_TOUCH_MIN_GAP_MS = 15 * 1000;
 const PAGBANK_API_BASE_KEY = "stopmod_pagbank_api_base";
+const DEFAULT_REMOTE_PAGBANK_BASE = "https://stop-mod-api.onrender.com";
 const PAGBANK_RETURN_URL_KEY = "stopmod_pagbank_return_url";
 const PAGBANK_REDIRECT_URL_KEY = "stopmod_pagbank_redirect_url";
 const PAGBANK_NOTIFICATION_URL_KEY = "stopmod_pagbank_notification_url";
@@ -184,8 +185,24 @@ function buildPagBankInlineEndpointFromBase(raw) {
   return `${base}/api/pagbank/inline-payment`;
 }
 
+function normalizeApiBase(raw) {
+  const base = String(raw || "").trim().replace(/\/+$/, "");
+  if (!base) return "";
+  if (/^https?:\/\//i.test(base)) return base;
+  if (base.startsWith("/")) return base;
+  return "";
+}
+
+function isProdStoreHost() {
+  const host = String(window.location.hostname || "").toLowerCase();
+  return host !== "localhost" && host !== "127.0.0.1" && !host.endsWith(".onrender.com");
+}
+
 function hasConfiguredPagBankApiBase() {
-  return !!String(localStorage.getItem(PAGBANK_API_BASE_KEY) || "").trim();
+  const configured = normalizeApiBase(localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
+  if (!configured) return false;
+  if (isProdStoreHost() && configured === DEFAULT_REMOTE_PAGBANK_BASE) return false;
+  return true;
 }
 
 function resolvePagBankInlineEndpoint() {
@@ -219,7 +236,10 @@ async function resolveWorkingPagBankInlineEndpoint() {
   }
 
   const sameOriginHealthy = await isBackendHealthy("/api/health", 2600);
-  if (sameOriginHealthy) return "/api/pagbank/inline-payment";
+  if (sameOriginHealthy) {
+    localStorage.removeItem(PAGBANK_API_BASE_KEY);
+    return "/api/pagbank/inline-payment";
+  }
 
   const localBase = "http://localhost:8787";
   const localHealthy = await isBackendHealthy(`${localBase}/api/health`, 3200);
@@ -245,11 +265,11 @@ function buildOrderAlertEndpointFromPaymentEndpoint(paymentEndpoint) {
 function resolveOrderAlertEndpoint(preferredPaymentEndpoint) {
   const fromPreferred = buildOrderAlertEndpointFromPaymentEndpoint(preferredPaymentEndpoint);
   if (fromPreferred) return fromPreferred;
-  const rawBase = String(localStorage.getItem(PAGBANK_API_BASE_KEY) || "").trim().replace(/\/+$/, "");
+  const rawBase = normalizeApiBase(localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
   if (!rawBase) {
     const host = String(window.location.hostname || "").toLowerCase();
     if (host === "localhost" || host === "127.0.0.1") return "http://localhost:8787/api/alerts/order-event";
-    return "https://stop-mod-api.onrender.com/api/alerts/order-event";
+    return "/api/alerts/order-event";
   }
   if (/\/api$/i.test(rawBase)) return `${rawBase}/alerts/order-event`;
   return `${rawBase}/api/alerts/order-event`;

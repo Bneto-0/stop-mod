@@ -80,6 +80,11 @@ function unifiedDefaultApiBase() {
 function ensureUnifiedApiConfig() {
   const currentApiBase = normalizeApiBase(localStorage.getItem(API_BASE_KEY) || "");
   const currentPagbankBase = normalizeApiBase(localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
+  if (isProdStoreHost()) {
+    if (!currentApiBase || DEFAULT_REMOTE_API_BASES.includes(currentApiBase)) localStorage.removeItem(API_BASE_KEY);
+    if (!currentPagbankBase || DEFAULT_REMOTE_API_BASES.includes(currentPagbankBase)) localStorage.removeItem(PAGBANK_API_BASE_KEY);
+    return;
+  }
   const chosen = currentApiBase || currentPagbankBase || normalizeApiBase(unifiedDefaultApiBase());
   if (!chosen) return;
   if (currentApiBase !== chosen) localStorage.setItem(API_BASE_KEY, chosen);
@@ -486,13 +491,25 @@ async function resolveApiBase() {
 
   const configured = normalizeApiBase(localStorage.getItem(API_BASE_KEY) || localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
 
-  // Em producao, evita "pre-flight" lento: usa a base configurada direto.
+  // Na loja publicada, preferimos mesma origem para evitar erro de CORS no dominio novo.
   if (isProdStoreHost()) {
-    const chosen = configured || normalizeApiBase(DEFAULT_REMOTE_API_BASES[0]);
-    if (chosen) {
-      resolvedApiBase = chosen;
-      localStorage.setItem(API_BASE_KEY, chosen);
-      localStorage.setItem(PAGBANK_API_BASE_KEY, chosen);
+    if (await isHealthy("", 2800)) {
+      localStorage.removeItem(API_BASE_KEY);
+      localStorage.removeItem(PAGBANK_API_BASE_KEY);
+      resolvedApiBase = "";
+      return resolvedApiBase;
+    }
+    if (configured && !DEFAULT_REMOTE_API_BASES.includes(configured)) {
+      resolvedApiBase = configured;
+      localStorage.setItem(API_BASE_KEY, configured);
+      localStorage.setItem(PAGBANK_API_BASE_KEY, configured);
+      return resolvedApiBase;
+    }
+    const fallbackRemote = normalizeApiBase(DEFAULT_REMOTE_API_BASES[0]);
+    if (fallbackRemote) {
+      resolvedApiBase = fallbackRemote;
+      localStorage.setItem(API_BASE_KEY, fallbackRemote);
+      localStorage.setItem(PAGBANK_API_BASE_KEY, fallbackRemote);
       return resolvedApiBase;
     }
   }
