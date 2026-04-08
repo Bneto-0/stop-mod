@@ -3,9 +3,9 @@
   --text: #1f1f1f;
   --muted: #6e6761;
   --line: #e6ded6;
-  --accent: #c7512f;
-  --accent-hover: #af4124;
-  --soft: #fff7f2;
+  --accent: #7a4e38;
+  --accent-hover: #5a3829;
+  --soft: #f4ebe3;
 }
 
 * {
@@ -27,8 +27,8 @@ body {
   place-items: center;
   padding: 1.2rem;
   background:
-    radial-gradient(circle at 15% 10%, #fce9d8 0%, transparent 34%),
-    radial-gradient(circle at 85% 0%, #f7d8c8 0%, transparent 34%),
+    radial-gradient(circle at 15% 10%, #efe2d7 0%, transparent 34%),
+    radial-gradient(circle at 85% 0%, #ead7c8 0%, transparent 34%),
     #fff;
 }
 
@@ -60,11 +60,11 @@ body {
   font-weight: 900;
   font-size: 1.05rem;
   letter-spacing: 0.3px;
-  color: var(--text);
+  color: var(--accent);
 }
 
 .brand .b2 {
-  color: #ff7f4e;
+  color: inherit;
 }
 
 h1 {
@@ -108,7 +108,7 @@ input {
 }
 
 input:focus {
-  outline: 3px solid #ffb08055;
+  outline: 3px solid #b0897255;
   outline-offset: 2px;
 }
 
@@ -132,7 +132,7 @@ input:focus {
 }
 
 .pw-toggle:hover {
-  background: #ffe3d2;
+  background: #ead7c8;
 }
 
 .btn {
@@ -345,7 +345,7 @@ input:focus {
 }
 
 .x:hover {
-  background: #ffe3d2;
+  background: #ead7c8;
 }
 
 .modal-body {
@@ -359,8 +359,8 @@ input:focus {
 }
 
 .codebox {
-  border: 1px dashed #eac8bb;
-  background: #fff7f2;
+  border: 1px dashed #d9c4b4;
+  background: #f4ebe3;
   border-radius: 14px;
   padding: 0.75rem;
   font-weight: 900;
