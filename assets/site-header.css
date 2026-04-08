@@ -106,8 +106,8 @@
 }
 
 .shared-search input:focus {
-  outline: 3px solid rgba(255, 186, 130, 0.2);
-  border-color: rgba(255, 186, 130, 0.42);
+  outline: 3px solid rgba(139, 98, 76, 0.2);
+  border-color: rgba(139, 98, 76, 0.38);
 }
 
 .shared-header__actions {
@@ -161,7 +161,7 @@
   height: 24px;
   padding: 0 6px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #cb7c4c 0%, #eb9b61 100%);
+  background: linear-gradient(135deg, #8b624c 0%, #6f4632 100%);
   color: #fff;
   font-size: 0.82rem;
 }
