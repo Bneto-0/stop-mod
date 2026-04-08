@@ -43,7 +43,7 @@
         <div class="favorite-empty-state">
           <h1>Favoritos</h1>
           <p>Quando voce salvar um produto, ele aparece aqui para comparar, revisar e comprar depois.</p>
-          <a class="btn primary" href="../../index.html#produtos">Explorar produtos</a>
+          <a class="btn primary" href="/#produtos">Explorar produtos</a>
         </div>
       `;
       return;
@@ -55,7 +55,7 @@
           <h1>Favoritos</h1>
           <p>${items.length} produto(s) salvo(s) para acompanhar depois.</p>
         </div>
-        <a class="btn secondary" href="../../index.html#produtos">Voltar para vitrine</a>
+        <a class="btn secondary" href="/#produtos">Voltar para vitrine</a>
       </header>
       <div class="favorite-grid">
         ${items.map(card).join("")}

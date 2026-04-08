@@ -22,7 +22,7 @@
   root.innerHTML = isHome ? `
     <header class="shared-header shared-header--home" aria-label="Cabecalho da loja">
       <div class="shared-header__container shared-header__top-row">
-        <a class="shared-brand" href="/index.html#top" aria-label="UZUU">UZU<em>U</em></a>
+        <a class="shared-brand" href="/#top" aria-label="UZUU">UZU<em>U</em></a>
 
         <label class="shared-search" for="search-input">
           <span class="sr-only">Pesquisar produto</span>
@@ -52,10 +52,10 @@
       <div class="shared-header__bottom">
         <div class="shared-header__container shared-header__bottom-row">
           <nav class="shared-nav shared-nav--home" aria-label="Navegacao da loja">
-            <a href="/index.html?cat=Camisetas#produtos">Masculino</a>
-            <a href="/index.html?cat=Vestidos#produtos">Feminino</a>
-            <a href="/index.html?cat=Calcados#produtos">Calcados</a>
-            <a href="/index.html?cat=Acessorios#produtos">Acessorios</a>
+            <a href="/?cat=Camisetas#produtos">Masculino</a>
+            <a href="/?cat=Vestidos#produtos">Feminino</a>
+            <a href="/?cat=Calcados#produtos">Calcados</a>
+            <a href="/?cat=Acessorios#produtos">Acessorios</a>
             <a href="/cupons/">Promocoes</a>
           </nav>
         </div>
@@ -64,7 +64,7 @@
   ` : `
     <header class="shared-header" aria-label="Cabecalho da loja">
       <div class="shared-header__container shared-header__top-row">
-        <a class="shared-brand" href="/index.html#top" aria-label="UZUU">UZU<em>U</em></a>
+        <a class="shared-brand" href="/#top" aria-label="UZUU">UZU<em>U</em></a>
 
         <a class="shared-location" href="/entrega/" aria-label="Selecionar endereco de entrega">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c3.87 0 7 3.09 7 6.9 0 4.71-5.2 10.35-6.45 11.65a.8.8 0 0 1-1.1 0C10.2 19.25 5 13.61 5 8.9 5 5.09 8.13 2 12 2zm0 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"></path></svg>
@@ -112,11 +112,11 @@
               </button>
               <div class="shared-cat-panel" role="menu" aria-label="Categorias">
                 <a href="/categorias/" role="menuitem">Ver todas</a>
-                <a href="/index.html?cat=Camisetas#produtos" role="menuitem">Camisetas</a>
-                <a href="/index.html?cat=Calcas#produtos" role="menuitem">Calcas</a>
-                <a href="/index.html?cat=Jaquetas#produtos" role="menuitem">Jaquetas</a>
-                <a href="/index.html?cat=Moletons#produtos" role="menuitem">Moletons</a>
-                <a href="/index.html?cat=Vestidos#produtos" role="menuitem">Vestidos</a>
+                <a href="/?cat=Camisetas#produtos" role="menuitem">Camisetas</a>
+                <a href="/?cat=Calcas#produtos" role="menuitem">Calcas</a>
+                <a href="/?cat=Jaquetas#produtos" role="menuitem">Jaquetas</a>
+                <a href="/?cat=Moletons#produtos" role="menuitem">Moletons</a>
+                <a href="/?cat=Vestidos#produtos" role="menuitem">Vestidos</a>
               </div>
             </div>
           </nav>

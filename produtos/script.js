@@ -541,7 +541,7 @@
         <h1>Produto nao encontrado</h1>
         <p>Esse item nao esta mais na vitrine ou o link ficou incompleto.</p>
         <div class="product-detail-actions">
-          <a class="btn primary" href="../index.html#produtos">Voltar para vitrine</a>
+          <a class="btn primary" href="/#produtos">Voltar para vitrine</a>
         </div>
       </div>
     `;
@@ -1197,7 +1197,7 @@
             <p class="eyebrow">Relacionados</p>
             <h2>Adicionar mais produtos</h2>
           </div>
-          <a class="btn secondary" href="../index.html#produtos">Ver vitrine completa</a>
+          <a class="btn secondary" href="/#produtos">Ver vitrine completa</a>
         </div>
         <div class="related-products-grid">
           ${related.map(relatedCard).join("")}

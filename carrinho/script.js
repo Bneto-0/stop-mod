@@ -783,7 +783,7 @@ function updateCartCount() {
 
 function openStoreProductSearch() {
   const query = String(searchInput?.value || "").trim();
-  const target = query ? `../index.html?q=${encodeURIComponent(query)}#produtos` : "../index.html#produtos";
+  const target = query ? `/?q=${encodeURIComponent(query)}#produtos` : "/#produtos";
   window.location.href = target;
 }
 
