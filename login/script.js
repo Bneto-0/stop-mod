@@ -4,7 +4,10 @@ const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
 const AUTH_TOKEN_KEY = "stopmod_auth_token";
 const NOTES_KEY = "stopmod_notifications";
 const GOOGLE_CLIENT_KEY = "stopmod_google_client_id";
-const DEFAULT_GOOGLE_CLIENT_ID = "887504211072-0elgoi3dbg80bb9640vvlqfl7cp8guq5.apps.googleusercontent.com";
+const DEFAULT_GOOGLE_CLIENT_ID = "1011108644137-5lu465kf1eel4dugla11rseaf947du9i.apps.googleusercontent.com";
+const LEGACY_GOOGLE_CLIENT_IDS = Object.freeze([
+  "887504211072-0elgoi3dbg80bb9640vvlqfl7cp8guq5.apps.googleusercontent.com"
+]);
 const SHIP_KEY = "stopmod_ship_to";
 const SHIP_LIST_KEY = "stopmod_ship_list";
 const API_BASE_KEY = "stopmod_api_base";
@@ -1137,13 +1140,14 @@ function ensureGoogleScript(callback) {
 }
 
 function googleSignIn() {
-  const clientId = String(localStorage.getItem(GOOGLE_CLIENT_KEY) || DEFAULT_GOOGLE_CLIENT_ID || "").trim();
+  const storedClientId = String(localStorage.getItem(GOOGLE_CLIENT_KEY) || "").trim();
+  const clientId = (!storedClientId || LEGACY_GOOGLE_CLIENT_IDS.includes(storedClientId) ? DEFAULT_GOOGLE_CLIENT_ID : storedClientId).trim();
   if (!clientId) {
     setMsg(msg, "Login Google indisponivel: Client ID nao configurado.", true);
     return;
   }
 
-  if (!String(localStorage.getItem(GOOGLE_CLIENT_KEY) || "").trim()) {
+  if (storedClientId !== clientId) {
     localStorage.setItem(GOOGLE_CLIENT_KEY, clientId);
   }
 
