@@ -43,6 +43,9 @@ body {
 
 .login-card {
   width: min(390px, 100%);
+  background: linear-gradient(180deg, #6a4330 0%, #523628 100%);
+  border-color: rgba(82, 54, 40, 0.88);
+  box-shadow: 0 24px 56px rgba(45, 28, 20, 0.28);
 }
 
 .register-card {
@@ -59,7 +62,53 @@ body {
   display: inline-flex;
   width: fit-content;
   line-height: 1;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55), 0 6px 14px rgba(82, 54, 40, 0.18);
+  color: #f4dfc6;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.12), 0 8px 18px rgba(20, 10, 6, 0.22);
+}
+
+.login-card h1 {
+  color: #fff4e6;
+}
+
+.login-card input {
+  border-color: rgba(244, 223, 198, 0.3);
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.login-card input::placeholder {
+  color: #826d60;
+}
+
+.login-card .pw-toggle {
+  border-color: rgba(236, 214, 188, 0.42);
+  background: #f4ebe3;
+}
+
+.login-card .btn.primary {
+  background: #f4dfc6;
+  color: #523628;
+}
+
+.login-card .btn.primary:hover {
+  background: #fff1df;
+}
+
+.login-card .btn.ghost {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(244, 223, 198, 0.3);
+}
+
+.login-card .link {
+  color: #f2ddc5;
+}
+
+.login-card .link.strong {
+  color: #fff4e6;
+}
+
+.login-card .legal a,
+.login-card .legal {
+  color: #ead3b8;
 }
 
 h1 {
