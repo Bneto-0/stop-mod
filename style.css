@@ -1147,8 +1147,8 @@ body.home-page .home-stage {
 }
 
 body.home-page .home-stage__hero {
-  width: min(1248px, calc(100% - 40px));
-  margin: 0 auto 22px;
+  width: min(1392px, calc(100% - 8px));
+  margin: 0 auto 20px;
   border-radius: 0;
   overflow: hidden;
   box-shadow: none;
@@ -1159,9 +1159,13 @@ body.home-page .home-stage__stack {
 }
 
 body.home-page .announcement-carousel {
-  min-height: 430px;
+  min-height: 438px;
   border-radius: 0 0 26px 26px;
   background: linear-gradient(120deg, #7a4e38 0%, #946b53 55%, #b08972 100%);
+}
+
+body.home-page .announcement-track {
+  min-height: 438px;
 }
 
 body.home-page .announcement-carousel::after {
