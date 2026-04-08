@@ -165,7 +165,7 @@ function deriveUsernameFromSession(profile, extra) {
 function addLoginSuccessNotification(profileLike) {
   const profile = profileLike && typeof profileLike === "object" ? profileLike : {};
   const email = normalizeUserKey(profile.email || "");
-  const name = String(profile.name || "Cliente Stop mod").trim() || "Cliente Stop mod";
+  const name = String(profile.name || "Cliente Uzuu").trim() || "Cliente Uzuu";
   const list = loadJson(NOTES_KEY, []);
   const notes = Array.isArray(list) ? list : [];
 
@@ -249,7 +249,7 @@ function setGoogleOnboardingState(enabled, profile = null) {
 
   const safeProfile = profile && typeof profile === "object" ? profile : {};
   const email = String(safeProfile.email || "").trim().toLowerCase();
-  const name = String(safeProfile.name || "Cliente Stop mod").trim() || "Cliente Stop mod";
+  const name = String(safeProfile.name || "Cliente Uzuu").trim() || "Cliente Uzuu";
   const picture = String(safeProfile.picture || "").trim();
 
   pendingGoogleOnboarding = { email, name, picture };
@@ -873,7 +873,7 @@ function applySession(session) {
   localStorage.setItem(
     PROFILE_KEY,
     JSON.stringify({
-      name: String(profile?.name || profile?.fullName || "Cliente Stop mod"),
+      name: String(profile?.name || profile?.fullName || "Cliente Uzuu"),
       email: String(profile?.email || ""),
       picture: String(profile?.picture || "")
     })
@@ -1064,7 +1064,7 @@ function renderResetPasswordModal(token) {
 }
 
 function finishSocialLogin(user) {
-  const name = String(user?.name || "Cliente Stop mod").trim() || "Cliente Stop mod";
+  const name = String(user?.name || "Cliente Uzuu").trim() || "Cliente Uzuu";
   const email = String(user?.email || "").trim().toLowerCase();
   const picture = String(user?.picture || "").trim();
 
@@ -1115,7 +1115,7 @@ async function fetchGoogleProfileWithAccessToken(accessToken) {
   const email = String(profile?.email || "").trim().toLowerCase();
   if (!email) throw new Error("google_email_missing");
   return {
-    name: String(profile?.name || profile?.given_name || "Cliente Stop mod").trim() || "Cliente Stop mod",
+    name: String(profile?.name || profile?.given_name || "Cliente Uzuu").trim() || "Cliente Uzuu",
     email,
     picture: String(profile?.picture || "").trim()
   };

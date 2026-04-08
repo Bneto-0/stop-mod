@@ -22,7 +22,7 @@
   root.innerHTML = `
     <header class="shared-header" aria-label="Cabecalho da loja">
       <div class="shared-header__container shared-header__top-row">
-        <a class="shared-brand" href="/index.html#top" aria-label="Stop mod">Stop <em>mod</em></a>
+        <a class="shared-brand" href="/index.html#top" aria-label="UZUU">UZU<em>U</em></a>
 
         <a class="shared-location" href="/entrega/" aria-label="Selecionar endereco de entrega">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c3.87 0 7 3.09 7 6.9 0 4.71-5.2 10.35-6.45 11.65a.8.8 0 0 1-1.1 0C10.2 19.25 5 13.61 5 8.9 5 5.09 8.13 2 12 2zm0 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"></path></svg>
@@ -101,9 +101,17 @@
     }
   }
 
-  function loadCartIds() {
+  function countCartItemsFromStorage() {
     const parsed = loadJson(CART_KEY);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return 0;
+
+    return parsed.reduce((total, item) => {
+      if (Number.isInteger(Number(item))) return total + 1;
+      if (item && typeof item === "object") {
+        return total + Math.max(1, Math.floor(Number(item.quantity ?? item.qty ?? 1) || 1));
+      }
+      return total;
+    }, 0);
   }
 
   function loadShipTo() {
@@ -176,7 +184,7 @@
 
   function renderHeaderCart() {
     if (!cartCount) return;
-    cartCount.textContent = String(loadCartIds().length);
+    cartCount.textContent = String(countCartItemsFromStorage());
   }
 
   function renderHeaderAddress() {
@@ -246,3 +254,4 @@
   syncSearchFromQuery();
   renderHeaderState();
 })();
+

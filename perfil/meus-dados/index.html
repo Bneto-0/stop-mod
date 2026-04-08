@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Meus dados | Stop mod</title>
+  <title>Meus dados | Uzuu</title>
   <link rel="icon" href="../../favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="../../style.css?v=20260401n" />
+  <link rel="stylesheet" href="../../style.css?v=20260408u" />
   <link rel="stylesheet" href="/assets/site-header.css?v=1" />
 </head>
 <body>
 <div id="site-header-root"></div>
-<script src="/assets/site-header.js?v=1"></script>
+<script src="/assets/site-header.js?v=2"></script>
 <main class="page-shell container profile-page">
   <section class="page-card profile-summary-card profile-data-page-card">
     <p class="eyebrow">Meus dados</p>
@@ -261,7 +261,7 @@ profileDataForm?.addEventListener("submit", (event) => {
   const username = String(dataFields.username.value || deriveUsername(fullName, email)).trim();
   const updatedProfile = {
     ...currentProfile,
-    name: fullName || currentProfile.name || "Cliente Stop mod",
+    name: fullName || currentProfile.name || "Cliente Uzuu",
     email,
     picture: String(currentProfile.picture || "").trim()
   };

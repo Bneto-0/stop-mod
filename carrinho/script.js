@@ -1,4 +1,4 @@
-﻿const sharedCatalog = window.stopmodCatalog || null;
+const sharedCatalog = window.stopmodCatalog || null;
 const CART_KEY = sharedCatalog?.storageKeys?.cart || "stopmod_cart";
 const MAX_CART_ITEMS = 2000;
 const SHIP_KEY = "stopmod_ship_to";
@@ -1224,7 +1224,7 @@ function renderInlinePaymentContent(data) {
     inlinePayContent.innerHTML = `
       <h3 class="inline-pay-title">Pix gerado com sucesso</h3>
       <p class="inline-pay-text">Escaneie o QR Code ou copie o codigo Pix.</p>
-      <p class="inline-pay-line"><strong>Recebedor:</strong> Stop mod</p>
+      <p class="inline-pay-line"><strong>Recebedor:</strong> Uzuu</p>
       ${qrImage ? `<img src="${escapeHtml(qrImage)}" alt="QR Code Pix" />` : ""}
       ${referenceId ? `<p class="inline-pay-line"><strong>Pedido:</strong> ${referenceId}</p>` : ""}
       ${expiryText ? `<p class="inline-pay-line"><strong>Validade:</strong> ${escapeHtml(expiryText)}</p>` : ""}

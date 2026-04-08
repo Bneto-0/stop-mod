@@ -723,20 +723,7 @@
         <button class="product-gallery-modal__backdrop" type="button" data-gallery-close aria-label="Fechar galeria"></button>
         <div class="product-gallery-modal__panel">
           <button class="product-gallery-modal__close" type="button" data-gallery-close aria-label="Fechar galeria">&times;</button>
-          <div class="product-gallery-modal__main">
-            <button class="product-gallery-modal__nav product-gallery-modal__nav--prev" type="button" data-gallery-step="-1" aria-label="Cor anterior">&#8249;</button>
-            <div class="product-gallery-modal__frame">
-              <img src="${escapeHtml(active.image || product.image)}" data-fallback-src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)} na cor ${escapeHtml(active.colorName)}" />
-            </div>
-            <button class="product-gallery-modal__nav product-gallery-modal__nav--next" type="button" data-gallery-step="1" aria-label="Proxima cor">&#8250;</button>
-          </div>
-          <div class="product-gallery-modal__meta">
-            <div>
-              <strong>${escapeHtml(product.name)}</strong>
-              <span>Cor: ${escapeHtml(active.colorName)}</span>
-            </div>
-            <small>${safeIndex + 1} de ${variants.length} cor(es)</small>
-          </div>
+          <p class="sr-only">${escapeHtml(product.name)} na cor ${escapeHtml(active.colorName)}. ${safeIndex + 1} de ${variants.length} cores.</p>
           <div class="product-gallery-modal__thumbs" role="list" aria-label="Outras cores do produto">
             ${variants.map((variant) => `
               <button
@@ -1305,7 +1292,7 @@
     if (gallerySelect) {
       selectedVariantId = String(gallerySelect.getAttribute("data-gallery-select") || selectedVariantId);
       updateVariantInUrl(selectedVariantId);
-      galleryOpen = true;
+      galleryOpen = false;
       renderProduct();
       return;
     }
