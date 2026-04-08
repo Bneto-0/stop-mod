@@ -72,8 +72,21 @@
 }
 
 .shared-search {
+  position: relative;
   flex: 1 1 440px;
   max-width: 520px;
+}
+
+.shared-search__icon {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  color: #8c715f;
+  transform: translateY(-50%);
+  pointer-events: none;
 }
 
 .shared-search input {
@@ -82,7 +95,7 @@
   border-radius: 999px;
   background: rgba(255,255,255,0.92);
   color: #2b231d;
-  padding: 14px 18px;
+  padding: 14px 18px 14px 46px;
   font: inherit;
 }
 
@@ -277,7 +290,7 @@ body.home-page .shared-search input {
   border-color: rgba(255,104,38,0.14);
   background: #fff8f4;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.82), 0 12px 24px rgba(242, 104, 35, 0.06);
-  padding: 16px 22px;
+  padding: 16px 22px 16px 50px;
 }
 
 body.home-page .shared-search input::placeholder {

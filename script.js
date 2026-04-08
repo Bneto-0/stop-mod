@@ -28,55 +28,32 @@ const products = Array.isArray(sharedCatalog?.products) && sharedCatalog.product
 
 const announcements = [
   {
-    kicker: "uzuu seleciona",
+    kicker: "UZUU seleciona",
     title: "ESTILO SEM PAGAR CARO",
-    text: "Moda, calcados e acessorios em um so lugar com os melhores achados da semana e visual mais forte na vitrine.",
-    badge: "comprar agora",
-    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1400&q=80",
-    ctaLabel: "Ver produtos",
-    ctaHref: "#produtos"
-  },
-  {
-    kicker: "frete rapido",
-    title: "OFERTAS QUE GIRAM RAPIDO",
-    text: "Hero laranja, precos em destaque e uma home com mais cara de loja pronta para vender todo dia.",
-    badge: "pix e cartao",
-    image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1400&q=80",
-    ctaLabel: "Ir para vitrine",
-    ctaHref: "#produtos"
-  },
-  {
-    kicker: "compra segura",
-    title: "MODA E ACESSORIOS COM MAIS PRESENCA",
-    text: "Blocos de destaque, produtos mais claros e uma paleta laranja para deixar a marca Uzuu mais marcante.",
-    badge: "layout renovado",
-    image: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1400&q=80",
-    ctaLabel: "Entrar na conta",
-    ctaHref: "./login/"
+    text: "Moda, calcados e acessorios em um so lugar com os melhores achados da semana, leitura mais limpa e cara forte de marketplace.",
+    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1600&q=80",
+    ctaLabel: "Comprar agora",
+    ctaHref: "#produtos",
+    secondaryLabel: "Ver produtos",
+    secondaryHref: "#produtos"
   }
 ];
 
 const campaignBannerData = {
   kicker: "moda e calcados com estilo e preco justo",
   title: "Descubra as ultimas tendencias da moda e calcados.",
-  text: "Selecao com bons precos, entrega rapida e uma vitrine mais limpa para deixar a marca Uzuu mais proxima do modelo que voce quer.",
-  primaryLabel: "Abrir vitrine",
+  text: "Descubra as ultimas tendencias da moda e calcados, sempre com otimos precos e entrega rapida para todo Brasil.",
+  primaryLabel: "Ver todos os produtos",
   primaryHref: "#produtos",
-  secondaryLabel: "Entrar na conta",
-  secondaryHref: "./login/",
   image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200&q=80",
-  spotlightValue: "UZUU",
-  spotlightText: "nova vitrine da marca",
-  chips: [
-    "frete gratis acima de R$ 99",
-    "cartao em ate 12x",
-    "compra segura"
+  payments: [
+    { label: "Pix", icon: "/assets/icons/pix-logo.svg" },
+    { label: "Boleto", text: "Boleto" },
+    { label: "Visa", icon: "/assets/icons/visa-logo-real.svg" },
+    { label: "Elo", icon: "/assets/icons/elo-logo-real.png" }
   ],
-  stats: [
-    { value: "PIX", label: "pagamento rapido" },
-    { value: "12x", label: "sem juros" },
-    { value: "BR", label: "entrega nacional" }
-  ]
+  previewMenu: ["Masculino", "Feminino", "Calcados", "Acessorios"],
+  previewBenefits: ["Frete Gratis", "Entrega Rapida", "Compra Segura", "12x sem juros"]
 };
 
 const grid = document.getElementById("product-grid");
@@ -249,15 +226,16 @@ function compactProductCard(product) {
   return `
     <article class="compact-product-card compact-product-card--interactive" data-product-open-id="${product.id}" tabindex="0" role="link" aria-label="Abrir ${product.name}">
       <img src="${product.image}" alt="${product.name}" />
-      <div class="compact-product-card__meta">
-        <span>${product.category}</span>
-        <span>${product.size}</span>
-      </div>
-      <h3>${product.name}</h3>
-      <p class="compact-product-card__summary">${product.shortDescription || product.badge}</p>
-      <div class="compact-product-card__price">
-        <strong>${formatBRL(product.price)}</strong>
-        <span>${product.badge}</span>
+      <div class="compact-product-card__body">
+        <div class="compact-product-card__meta">
+          <span>${product.category}</span>
+          <span>${product.size}</span>
+        </div>
+        <h3>${product.name}</h3>
+        <div class="compact-product-card__price">
+          <strong>${formatBRL(product.price)}</strong>
+          <span>${product.badge}</span>
+        </div>
       </div>
     </article>
   `;
@@ -283,12 +261,17 @@ function renderProductShelf() {
 
 function renderCompactBoard() {
   if (!compactBoard) return;
-  const boardItems = products.slice(0, 21);
+  const boardItems = products.slice(0, 5);
   compactBoard.innerHTML = boardItems.map(compactProductCard).join("");
 }
 
 function renderAnnouncementCarousel() {
   if (!announcementTrack || !announcementDots) return;
+
+  const navButtons = Array.from(document.querySelectorAll("[data-announcement-nav]"));
+  navButtons.forEach((button) => {
+    button.hidden = announcements.length <= 1;
+  });
 
   announcementTrack.innerHTML = announcements.map((item, index) => `
     <article class="announcement-slide${index === 0 ? " is-active" : ""}" data-announcement-slide="${index}">
@@ -302,15 +285,15 @@ function renderAnnouncementCarousel() {
         <p>${item.text}</p>
         <div class="announcement-slide__footer">
           <a class="btn primary" href="${item.ctaHref}">${item.ctaLabel}</a>
-          <span class="announcement-slide__badge">${item.badge}</span>
+          ${item.secondaryLabel ? `<a class="btn secondary announcement-slide__ghost" href="${item.secondaryHref || item.ctaHref}">${item.secondaryLabel}</a>` : ""}
         </div>
       </div>
     </article>
   `).join("");
 
-  announcementDots.innerHTML = announcements.map((_, index) => `
+  announcementDots.innerHTML = announcements.length > 1 ? announcements.map((_, index) => `
     <button type="button" aria-label="Ir para anuncio ${index + 1}" data-announcement-dot="${index}" class="${index === 0 ? "is-active" : ""}"></button>
-  `).join("");
+  `).join("") : "";
 }
 
 function activateAnnouncement(index) {
@@ -325,6 +308,7 @@ function activateAnnouncement(index) {
 
 function restartAnnouncementTimer() {
   if (announcementTimer) clearInterval(announcementTimer);
+  if (announcements.length <= 1) return;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   announcementTimer = setInterval(() => {
     activateAnnouncement(activeAnnouncementIndex + 1);
@@ -387,17 +371,6 @@ function renderAdFlow() {
 function renderCampaignBanner() {
   if (!campaignBanner) return;
 
-  let firstName = "";
-  try {
-    const profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || "null");
-    firstName = String(profile?.name || "").trim().split(/\s+/)[0];
-  } catch {
-    firstName = "";
-  }
-
-  const secondaryLabel = firstName ? `Voltar, ${firstName}` : campaignBannerData.secondaryLabel;
-  const secondaryHref = firstName ? "./perfil/" : campaignBannerData.secondaryHref;
-
   campaignBanner.innerHTML = `
     <article class="campaign-banner__card">
       <div class="campaign-banner__copy">
@@ -406,28 +379,40 @@ function renderCampaignBanner() {
         <p>${campaignBannerData.text}</p>
         <div class="campaign-banner__actions">
           <a class="btn primary" href="${campaignBannerData.primaryHref}">${campaignBannerData.primaryLabel}</a>
-          <a class="btn secondary" href="${secondaryHref}">${secondaryLabel}</a>
         </div>
-        <div class="campaign-banner__chips">
-          ${campaignBannerData.chips.map((item) => `<span class="campaign-banner__chip">${item}</span>`).join("")}
+        <div class="campaign-banner__payments" aria-label="Pagamentos aceitos">
+          ${campaignBannerData.payments.map((item) => `
+            <span class="campaign-banner__payment" aria-label="${item.label}">
+              ${item.icon ? `<img src="${item.icon}" alt="${item.label}" loading="lazy" />` : `<strong>${item.text}</strong>`}
+            </span>
+          `).join("")}
         </div>
       </div>
 
       <div class="campaign-banner__media">
-        <div class="campaign-banner__visual">
-          <img src="${campaignBannerData.image}" alt="${campaignBannerData.title}" loading="lazy" />
-          <div class="campaign-banner__spotlight">
-            <strong>${campaignBannerData.spotlightValue}</strong>
-            <span>${campaignBannerData.spotlightText}</span>
+        <div class="campaign-banner__device">
+          <div class="campaign-banner__device-top">
+            <strong>UZUU</strong>
+            <span>Nova vitrine</span>
           </div>
-          <div class="campaign-banner__stats">
-            ${campaignBannerData.stats.map((item) => `
-              <article class="campaign-banner__stat">
-                <strong>${item.value}</strong>
-                <span>${item.label}</span>
-              </article>
-            `).join("")}
+          <div class="campaign-banner__device-nav">
+            ${campaignBannerData.previewMenu.map((item) => `<span>${item}</span>`).join("")}
           </div>
+          <div class="campaign-banner__visual">
+            <img src="${campaignBannerData.image}" alt="${campaignBannerData.title}" loading="lazy" />
+            <div class="campaign-banner__device-copy">
+              <span class="campaign-banner__spotlight">ESTILO SEM PAGAR CARO</span>
+              <p>Tendencias, calcados e preco justo em um so lugar.</p>
+            </div>
+            <div class="campaign-banner__stats">
+              ${campaignBannerData.previewBenefits.map((item) => `
+                <article class="campaign-banner__stat">
+                  <strong>${item}</strong>
+                </article>
+              `).join("")}
+            </div>
+          </div>
+          <div class="campaign-banner__device-base" aria-hidden="true"></div>
         </div>
       </div>
     </article>

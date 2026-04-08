@@ -26,6 +26,7 @@
 
         <label class="shared-search" for="search-input">
           <span class="sr-only">Pesquisar produto</span>
+          <svg class="shared-search__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 4a6.5 6.5 0 1 0 4.03 11.6l4.43 4.44 1.41-1.42-4.44-4.43A6.5 6.5 0 0 0 10.5 4zm0 2a4.5 4.5 0 1 1 0 9.001A4.5 4.5 0 0 1 10.5 6z"></path></svg>
           <input id="search-input" type="search" placeholder="Buscar produtos..." />
         </label>
 
@@ -75,6 +76,7 @@
 
         <label class="shared-search" for="search-input">
           <span class="sr-only">Pesquisar produto</span>
+          <svg class="shared-search__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 4a6.5 6.5 0 1 0 4.03 11.6l4.43 4.44 1.41-1.42-4.44-4.43A6.5 6.5 0 0 0 10.5 4zm0 2a4.5 4.5 0 1 1 0 9.001A4.5 4.5 0 0 1 10.5 6z"></path></svg>
           <input id="search-input" type="search" placeholder="Pesquisar produto" />
         </label>
 

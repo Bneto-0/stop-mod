@@ -11,12 +11,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./style.css?v=20260408x" />
-  <link rel="stylesheet" href="/assets/site-header.css?v=3" />
+  <link rel="stylesheet" href="./style.css?v=20260408y" />
+  <link rel="stylesheet" href="/assets/site-header.css?v=4" />
 </head>
 <body id="top" class="home-page">
   <div id="site-header-root"></div>
-  <script src="/assets/site-header.js?v=3"></script>
+  <script src="/assets/site-header.js?v=4"></script>
   <script src="/assets/catalog.js?v=9"></script>
 
   <main>
@@ -33,20 +33,40 @@
       <div class="container home-stage__stack">
         <section class="home-benefits" aria-label="Vantagens da Uzuu">
           <article class="home-benefits__item">
-            <span class="home-benefits__label">Frete Gratis</span>
-            <strong class="home-benefits__text">acima de R$ 99</strong>
+            <span class="home-benefits__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M3 7h10v8H3zm11 3h3l3 3v2h-6zm-9 7a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm11 0a2 2 0 1 0 .001 4A2 2 0 0 0 16 17zM5 19h7m4 0h2"></path></svg>
+            </span>
+            <span class="home-benefits__copy">
+              <span class="home-benefits__label">Frete Gratis</span>
+              <strong class="home-benefits__text">acima de R$ 99</strong>
+            </span>
           </article>
           <article class="home-benefits__item">
-            <span class="home-benefits__label">Entrega Rapida</span>
-            <strong class="home-benefits__text">para todo Brasil</strong>
+            <span class="home-benefits__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M3 13l7 2 2 6 2-5 7-7-8 1-2-7-3 8z"></path></svg>
+            </span>
+            <span class="home-benefits__copy">
+              <span class="home-benefits__label">Entrega Rapida</span>
+              <strong class="home-benefits__text">para todo Brasil</strong>
+            </span>
           </article>
           <article class="home-benefits__item">
-            <span class="home-benefits__label">Compra Segura</span>
-            <strong class="home-benefits__text">ambiente protegido</strong>
+            <span class="home-benefits__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.6-2.7 8.8-7 10-4.3-1.2-7-5.4-7-10V6zm-3 9 2 2 4-4"></path></svg>
+            </span>
+            <span class="home-benefits__copy">
+              <span class="home-benefits__label">Compra Segura</span>
+              <strong class="home-benefits__text">ambiente protegido</strong>
+            </span>
           </article>
           <article class="home-benefits__item">
-            <span class="home-benefits__label">Ate 12x Sem Juros</span>
-            <strong class="home-benefits__text">no cartao de credito</strong>
+            <span class="home-benefits__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M3 6h18v12H3zm0 4h18M7 15h3"></path></svg>
+            </span>
+            <span class="home-benefits__copy">
+              <span class="home-benefits__label">Ate 12x Sem Juros</span>
+              <strong class="home-benefits__text">no cartao de credito</strong>
+            </span>
           </article>
         </section>
       </div>
@@ -76,6 +96,44 @@
         <p class="section-note">Uma faixa mais enxuta para dar sequencia de produto logo abaixo da campanha.</p>
       </div>
       <div id="compact-product-board" class="compact-product-board"></div>
+      <section class="home-benefits home-benefits--secondary" aria-label="Diferenciais da Uzuu">
+        <article class="home-benefits__item">
+          <span class="home-benefits__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M3 7h10v8H3zm11 3h3l3 3v2h-6zm-9 7a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm11 0a2 2 0 1 0 .001 4A2 2 0 0 0 16 17zM5 19h7m4 0h2"></path></svg>
+          </span>
+          <span class="home-benefits__copy">
+            <span class="home-benefits__label">Frete Gratis</span>
+            <strong class="home-benefits__text">acima de R$ 99</strong>
+          </span>
+        </article>
+        <article class="home-benefits__item">
+          <span class="home-benefits__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M3 13l7 2 2 6 2-5 7-7-8 1-2-7-3 8z"></path></svg>
+          </span>
+          <span class="home-benefits__copy">
+            <span class="home-benefits__label">Entrega Rapida</span>
+            <strong class="home-benefits__text">postagem em ate 24h</strong>
+          </span>
+        </article>
+        <article class="home-benefits__item">
+          <span class="home-benefits__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.6-2.7 8.8-7 10-4.3-1.2-7-5.4-7-10V6zm-3 9 2 2 4-4"></path></svg>
+          </span>
+          <span class="home-benefits__copy">
+            <span class="home-benefits__label">Compra Segura</span>
+            <strong class="home-benefits__text">ambiente protegido</strong>
+          </span>
+        </article>
+        <article class="home-benefits__item">
+          <span class="home-benefits__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M3 6h18v12H3zm0 4h18M7 15h3"></path></svg>
+          </span>
+          <span class="home-benefits__copy">
+            <span class="home-benefits__label">Ate 12x Sem Juros</span>
+            <strong class="home-benefits__text">no cartao de credito</strong>
+          </span>
+        </article>
+      </section>
     </section>
 
     <section class="container shelf-shell" id="produtos">
@@ -123,7 +181,7 @@
     </div>
   </footer>
 
-  <script src="./script.js?v=6"></script>
+  <script src="./script.js?v=7"></script>
 </body>
 </html>
 
