@@ -56,44 +56,26 @@ const announcements = [
   }
 ];
 
-const miniAnnouncements = [
-  { kicker: "lancamento", title: "Oferta relampago com pix em destaque", text: "Visual curto e direto para chamar clique rapido.", actionLabel: "Pix ativo" },
-  { kicker: "checkout", title: "Cartao, boleto e login no mesmo fluxo", text: "Tudo dentro da mesma loja, sem perder o ritmo da compra.", actionLabel: "Compra real" },
-  { kicker: "uzuu vibe", title: "Vitrine menor para reforcar o hero da home", text: "Mais branco, mais laranja da marca e mais cara de marketplace.", actionLabel: "Home forte" }
-];
-
-const searchBanners = [
-  { kicker: "pesquisa", title: "Vestidos em alta", text: "Toque para filtrar vestidos na vitrine.", searchTerm: "Vestidos", filter: "Vestidos" },
-  { kicker: "pesquisa", title: "Jaquetas e inverno", text: "Leva voce direto para as pecas mais pesadas.", searchTerm: "Jaquetas", filter: "Jaquetas" },
-  { kicker: "pesquisa", title: "Camisetas street", text: "Filtro rapido da parte mais buscada da loja.", searchTerm: "Camisetas", filter: "Camisetas" }
-];
-
-const adFlowCards = [
-  { style: "accent", kicker: "destaque da semana", title: "Hero forte, cards claros e vitrine mais viva.", text: "A Uzuu ganhou uma home mais alinhada ao laranja da marca." },
-  { style: "neutral", kicker: "rolagem de produto", title: "Produtos com leitura mais limpa e mais espaco visual.", text: "Preco, badge e imagem aparecem com mais respiro." },
-  { style: "dark", kicker: "visual de loja", title: "Mais cara de storefront e menos cara de pagina provisoria.", text: "Login, carrinho e backend continuam ligados no mesmo fluxo." }
-];
-
 const campaignBannerData = {
-  kicker: "banner da loja",
-  title: "Moda e calcados com estilo e preco justo.",
-  text: "Uma faixa mais limpa para manter o laranja da Uzuu vivo na home e puxar a vitrine com mais cara de loja montada.",
+  kicker: "moda e calcados com estilo e preco justo",
+  title: "Descubra as ultimas tendencias da moda e calcados.",
+  text: "Selecao com bons precos, entrega rapida e uma vitrine mais limpa para deixar a marca Uzuu mais proxima do modelo que voce quer.",
   primaryLabel: "Abrir vitrine",
   primaryHref: "#produtos",
   secondaryLabel: "Entrar na conta",
   secondaryHref: "./login/",
   image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200&q=80",
-  spotlightValue: "pix -7%",
-  spotlightText: "ativo no checkout",
+  spotlightValue: "UZUU",
+  spotlightText: "nova vitrine da marca",
   chips: [
     "frete gratis acima de R$ 99",
     "cartao em ate 12x",
     "compra segura"
   ],
   stats: [
-    { value: "24h", label: "postagem rapida" },
+    { value: "PIX", label: "pagamento rapido" },
     { value: "12x", label: "sem juros" },
-    { value: "uzuu", label: "hero em destaque" }
+    { value: "BR", label: "entrega nacional" }
   ]
 };
 
@@ -109,8 +91,6 @@ const filters = Array.from(document.querySelectorAll("[data-filter]"));
 const announcementTrack = document.getElementById("announcement-track");
 const announcementCarousel = document.querySelector(".announcement-carousel");
 const announcementDots = document.getElementById("announcement-dots");
-const announcementMiniGrid = document.getElementById("announcement-mini-grid");
-const searchBannerList = document.getElementById("search-banner-list");
 const adFlow = document.getElementById("ad-flow");
 const campaignBanner = document.getElementById("campaign-banner");
 
@@ -381,40 +361,25 @@ function endAnnouncementDrag() {
   announcementDragCurrentX = null;
   announcementCarousel?.classList.remove("is-dragging");
 }
-function renderMiniAnnouncements() {
-  if (!announcementMiniGrid) return;
-  announcementMiniGrid.innerHTML = miniAnnouncements.map((item) => `
-    <article class="announcement-mini">
-      <div>
-        <p class="announcement-mini__kicker">${item.kicker}</p>
-        <h3>${item.title}</h3>
-      </div>
-      <p>${item.text}</p>
-      <div class="announcement-mini__foot">
-        <span class="badge-pill">${item.actionLabel}</span>
-      </div>
-    </article>
-  `).join("");
-}
-
-function renderSearchBanners() {
-  if (!searchBannerList) return;
-  searchBannerList.innerHTML = searchBanners.map((item) => `
-    <button class="search-chip" type="button" data-search-term="${item.searchTerm}" data-filter-set="${item.filter}">
-      <p class="search-chip__kicker">${item.kicker}</p>
-      <strong>${item.title}</strong>
-      <p>${item.text}</p>
-    </button>
-  `).join("");
-}
-
 function renderAdFlow() {
   if (!adFlow) return;
-  adFlow.innerHTML = adFlowCards.map((item) => `
-    <article class="ad-card ad-card--${item.style}">
-      <p class="ad-card__kicker">${item.kicker}</p>
-      <h3>${item.title}</h3>
-      <p>${item.text}</p>
+  const featuredItems = products.slice(0, 4);
+  adFlow.innerHTML = featuredItems.map((product, index) => `
+    <article class="feature-product-card feature-product-card--${index === 1 ? "spotlight" : "default"}" data-product-open-id="${product.id}" tabindex="0" role="link" aria-label="Abrir ${product.name}">
+      <div class="feature-product-card__media">
+        <img src="${product.image}" alt="${product.name}" loading="lazy" />
+        <button class="feature-product-card__favorite" type="button" aria-label="Salvar ${product.name}" data-no-card-open>&#9825;</button>
+        ${index === 1 ? '<span class="feature-product-card__badge">-30%</span>' : `<span class="feature-product-card__tag">${index === 0 ? "Lancamento" : product.badge}</span>`}
+      </div>
+      <div class="feature-product-card__body">
+        <strong>${product.name}</strong>
+        <span>${product.shortDescription || product.category}</span>
+        <div class="feature-product-card__price">
+          <em>${formatBRL(product.price)}</em>
+          ${index === 1 ? `<small>${formatBRL(oldPrice(product.price))}</small>` : ""}
+        </div>
+      </div>
+      ${index === 3 ? '<a class="feature-product-card__cta" href="#produtos" data-no-card-open>Ver todos os produtos</a>' : ""}
     </article>
   `).join("");
 }
@@ -552,8 +517,6 @@ announcementCarousel?.addEventListener("touchcancel", () => {
   endAnnouncementDrag();
 }, { passive: true });
 renderAnnouncementCarousel();
-renderMiniAnnouncements();
-renderSearchBanners();
 renderAdFlow();
 renderCampaignBanner();
 renderCompactBoard();

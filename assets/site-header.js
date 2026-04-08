@@ -19,7 +19,48 @@
     categorias: /\/categorias\//i.test(path)
   };
 
-  root.innerHTML = `
+  root.innerHTML = isHome ? `
+    <header class="shared-header shared-header--home" aria-label="Cabecalho da loja">
+      <div class="shared-header__container shared-header__top-row">
+        <a class="shared-brand" href="/index.html#top" aria-label="UZUU">UZU<em>U</em></a>
+
+        <label class="shared-search" for="search-input">
+          <span class="sr-only">Pesquisar produto</span>
+          <input id="search-input" type="search" placeholder="Buscar produtos..." />
+        </label>
+
+        <div class="shared-header__actions">
+          <a id="profile-top-link" class="shared-profile shared-profile--icon" href="/login/" aria-label="Perfil">
+            <img id="profile-top-photo" class="shared-profile-photo" alt="" hidden />
+            <svg class="shared-profile-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"></path></svg>
+            <span id="profile-top-name" class="sr-only">Perfil</span>
+          </a>
+
+          <a class="shared-icon-link" href="/notificacoes/" aria-label="Notificacoes">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 1 0-14 0v5l-2 2v1h18v-1l-2-2z"></path></svg>
+          </a>
+
+          <a class="shared-cart shared-cart--icon" href="/carrinho/" aria-label="Carrinho">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 19a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm9 0a2 2 0 1 0 .001 4A2 2 0 0 0 17 19zM6.2 5l.6 3h11.6l-1.2 6H8.1L6.2 5zM3 2h2l2.2 11.2A2 2 0 0 0 9.2 15H18v-2H9.2l-.2-1h9.1A2 2 0 0 0 20 10.4l1-5A2 2 0 0 0 19 3H6.4l-.3-1.6A2 2 0 0 0 4.1 0H3v2z"></path></svg>
+            <span class="sr-only">Carrinho</span>
+            <strong id="cart-count">0</strong>
+          </a>
+        </div>
+      </div>
+
+      <div class="shared-header__bottom">
+        <div class="shared-header__container shared-header__bottom-row">
+          <nav class="shared-nav shared-nav--home" aria-label="Navegacao da loja">
+            <a href="/index.html?cat=Camisetas#produtos">Masculino</a>
+            <a href="/index.html?cat=Vestidos#produtos">Feminino</a>
+            <a href="/index.html?cat=Calcados#produtos">Calcados</a>
+            <a href="/index.html?cat=Acessorios#produtos">Acessorios</a>
+            <a href="/cupons/">Promocoes</a>
+          </nav>
+        </div>
+      </div>
+    </header>
+  ` : `
     <header class="shared-header" aria-label="Cabecalho da loja">
       <div class="shared-header__container shared-header__top-row">
         <a class="shared-brand" href="/index.html#top" aria-label="UZUU">UZU<em>U</em></a>
