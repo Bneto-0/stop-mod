@@ -1160,7 +1160,7 @@ body.home-page .home-stage__stack {
 
 body.home-page .announcement-carousel {
   min-height: 438px;
-  border-radius: 0 0 26px 26px;
+  border-radius: 0;
   background: linear-gradient(120deg, #7a4e38 0%, #946b53 55%, #b08972 100%);
 }
 
@@ -1480,7 +1480,7 @@ body.home-page .footer-links a {
 
   body.home-page .announcement-carousel {
     min-height: 460px;
-    border-radius: 28px;
+    border-radius: 0;
   }
 
   body.home-page .announcement-slide__content {
