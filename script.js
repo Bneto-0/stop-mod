@@ -28,27 +28,27 @@ const products = Array.isArray(sharedCatalog?.products) && sharedCatalog.product
 
 const announcements = [
   {
-    kicker: "drop principal",
-    title: "Anuncios grandes de volta na home da loja.",
-    text: "Banner principal passando sozinho, mais destaques laterais e uma pagina inicial com mais impacto visual.",
-    badge: "campanha automatica",
+    kicker: "uzuu seleciona",
+    title: "ESTILO SEM PAGAR CARO",
+    text: "Moda, calcados e acessorios em um so lugar com os melhores achados da semana e visual mais forte na vitrine.",
+    badge: "comprar agora",
     image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1400&q=80",
     ctaLabel: "Ver produtos",
     ctaHref: "#produtos"
   },
   {
-    kicker: "frete + pix",
-    title: "Colecao com pix em destaque, frete e giro de anuncios.",
-    text: "Os anuncios passam sozinhos e deixam a home com mais cara de loja pronta para vender.",
-    badge: "frete promocional",
+    kicker: "frete rapido",
+    title: "OFERTAS QUE GIRAM RAPIDO",
+    text: "Hero laranja, precos em destaque e uma home com mais cara de loja pronta para vender todo dia.",
+    badge: "pix e cartao",
     image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1400&q=80",
     ctaLabel: "Ir para vitrine",
     ctaHref: "#produtos"
   },
   {
-    kicker: "pesquisa em alta",
-    title: "Blocos de anuncio e prateleiras mais cheias logo abaixo.",
-    text: "Deixamos a pagina inicial menos simples e mais parecida com a estrutura de marketplace que voce vinha pedindo.",
+    kicker: "compra segura",
+    title: "MODA E ACESSORIOS COM MAIS PRESENCA",
+    text: "Blocos de destaque, produtos mais claros e uma paleta laranja para deixar a marca Uzuu mais marcante.",
     badge: "layout renovado",
     image: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1400&q=80",
     ctaLabel: "Entrar na conta",
@@ -57,9 +57,9 @@ const announcements = [
 ];
 
 const miniAnnouncements = [
-  { kicker: "banner 01", title: "Oferta relampago com pix em destaque", text: "Visual curto e direto para chamar clique rapido.", actionLabel: "Pix ativo" },
-  { kicker: "banner 02", title: "Boleto, cartao e login no mesmo fluxo", text: "Sem quebrar a navegacao da loja.", actionLabel: "Checkout real" },
-  { kicker: "banner 03", title: "Vitrine menor para reforcar a area de anuncios", text: "Mais blocos, mais leitura visual, mais cara de loja.", actionLabel: "Home charmosa" }
+  { kicker: "lancamento", title: "Oferta relampago com pix em destaque", text: "Visual curto e direto para chamar clique rapido.", actionLabel: "Pix ativo" },
+  { kicker: "checkout", title: "Cartao, boleto e login no mesmo fluxo", text: "Tudo dentro da mesma loja, sem perder o ritmo da compra.", actionLabel: "Compra real" },
+  { kicker: "uzuu vibe", title: "Vitrine menor para reforcar o hero da home", text: "Mais branco, mais laranja da marca e mais cara de marketplace.", actionLabel: "Home forte" }
 ];
 
 const searchBanners = [
@@ -69,31 +69,31 @@ const searchBanners = [
 ];
 
 const adFlowCards = [
-  { style: "accent", kicker: "sequencia de anuncios", title: "Banner principal + banner lateral + prateleira compacta.", text: "A home ficou mais carregada visualmente, como voce vinha pedindo." },
-  { style: "neutral", kicker: "rolagem de produto", title: "Produtos com scroll horizontal sem poluir a pagina.", text: "A seta nao aparece e a prateleira continua mais elegante." },
-  { style: "dark", kicker: "visual de loja", title: "Mais cara de storefront e menos cara de pagina provisoria.", text: "Mantivemos login, carrinho e backend funcionando no mesmo fluxo." }
+  { style: "accent", kicker: "destaque da semana", title: "Hero forte, cards claros e vitrine mais viva.", text: "A Uzuu ganhou uma home mais alinhada ao laranja da marca." },
+  { style: "neutral", kicker: "rolagem de produto", title: "Produtos com leitura mais limpa e mais espaco visual.", text: "Preco, badge e imagem aparecem com mais respiro." },
+  { style: "dark", kicker: "visual de loja", title: "Mais cara de storefront e menos cara de pagina provisoria.", text: "Login, carrinho e backend continuam ligados no mesmo fluxo." }
 ];
 
 const campaignBannerData = {
   kicker: "banner da loja",
-  title: "Drop urbano da semana com pix forte, frete verde e vitrine pronta para giro rapido.",
-  text: "Entrou um banner largo no miolo da home para reforcar campanha, puxar clique no catalogo e deixar a pagina com mais cara de loja montada.",
+  title: "Moda e calcados com estilo e preco justo.",
+  text: "Uma faixa mais limpa para manter o laranja da Uzuu vivo na home e puxar a vitrine com mais cara de loja montada.",
   primaryLabel: "Abrir vitrine",
   primaryHref: "#produtos",
   secondaryLabel: "Entrar na conta",
   secondaryHref: "./login/",
   image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200&q=80",
   spotlightValue: "pix -7%",
-  spotlightText: "ativo no checkout hoje",
+  spotlightText: "ativo no checkout",
   chips: [
-    "frete verde acima de R$ 199",
+    "frete gratis acima de R$ 99",
     "cartao em ate 12x",
-    "drop street em destaque"
+    "compra segura"
   ],
   stats: [
-    { value: "24h", label: "campanha quente" },
+    { value: "24h", label: "postagem rapida" },
     { value: "12x", label: "sem juros" },
-    { value: "novo", label: "banner no meio da home" }
+    { value: "uzuu", label: "hero em destaque" }
   ]
 };
 

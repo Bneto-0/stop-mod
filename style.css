@@ -199,6 +199,39 @@ button, input, select, textarea { font: inherit; }
   white-space: nowrap;
 }
 
+.home-benefits {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  background: #fff;
+  border: 1px solid rgba(244, 93, 34, 0.12);
+  border-radius: 28px;
+  box-shadow: 0 18px 34px rgba(177, 95, 35, 0.1);
+  overflow: hidden;
+}
+
+.home-benefits__item {
+  display: grid;
+  gap: 6px;
+  padding: 22px 24px;
+}
+
+.home-benefits__item + .home-benefits__item {
+  border-left: 1px solid rgba(244, 93, 34, 0.1);
+}
+
+.home-benefits__label {
+  color: #f45d22;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.home-benefits__text {
+  color: #5e4739;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
 .announcement-board,
 .promo-card,
 .search-banners,
@@ -908,6 +941,233 @@ button, input, select, textarea { font: inherit; }
 }
 .pill.is-active { background: var(--surface-alt); color: #fff; border-color: var(--surface-alt); }
 
+body.home-page {
+  background:
+    radial-gradient(circle at top left, rgba(255,124,54,0.14), transparent 26%),
+    radial-gradient(circle at top right, rgba(255,164,98,0.18), transparent 28%),
+    linear-gradient(180deg, #fffdfb 0%, #fff7f1 36%, #fffaf6 100%);
+}
+
+body.home-page .container {
+  width: min(1248px, calc(100% - 40px));
+}
+
+body.home-page .btn.primary {
+  background: linear-gradient(135deg, #f45d22 0%, #ff7d2f 100%);
+  color: #fff;
+  box-shadow: 0 18px 28px rgba(244, 93, 34, 0.22);
+}
+
+body.home-page .btn.secondary {
+  background: #fff7f1;
+  border-color: rgba(244, 93, 34, 0.16);
+  color: #e35319;
+}
+
+body.home-page .eyebrow {
+  color: #f45d22;
+}
+
+body.home-page .section-head h2 {
+  color: #291d16;
+  letter-spacing: -0.06em;
+}
+
+body.home-page .section-note,
+body.home-page .catalog-feedback {
+  color: #7b5c49;
+}
+
+body.home-page .home-stage {
+  padding: 18px 0 56px;
+}
+
+body.home-page .home-stage__hero {
+  width: min(1248px, calc(100% - 40px));
+  margin: 0 auto 26px;
+  border-radius: 34px;
+  overflow: hidden;
+  box-shadow: 0 28px 56px rgba(223, 110, 42, 0.18);
+}
+
+body.home-page .home-stage__stack {
+  gap: 22px;
+}
+
+body.home-page .announcement-carousel {
+  min-height: 520px;
+  border-radius: 34px;
+  background: linear-gradient(120deg, #f45d22 0%, #ff7d2f 55%, #ff9647 100%);
+}
+
+body.home-page .announcement-carousel::after {
+  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,247,241,0.12) 34%, rgba(255,247,241,0.82) 84%, rgba(255,247,241,1) 100%);
+}
+
+body.home-page .announcement-slide__overlay {
+  background:
+    linear-gradient(90deg, rgba(130, 34, 0, 0.22) 0%, rgba(244, 93, 34, 0.08) 46%, rgba(255, 146, 74, 0.16) 100%),
+    linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 32%, rgba(84, 26, 4, 0.24) 100%);
+}
+
+body.home-page .announcement-slide__content {
+  max-width: 46%;
+  align-content: center;
+  padding: 48px 42px;
+}
+
+body.home-page .announcement-slide__tag {
+  background: rgba(255,255,255,0.92);
+  border-color: transparent;
+  color: #e35319;
+  font-weight: 800;
+}
+
+body.home-page .announcement-slide h1,
+body.home-page .announcement-slide h2 {
+  font-size: clamp(2.8rem, 5vw, 5rem);
+  line-height: 0.9;
+  letter-spacing: -0.08em;
+}
+
+body.home-page .announcement-slide p {
+  max-width: 470px;
+  color: rgba(255,255,255,0.92);
+  font-size: 1.08rem;
+}
+
+body.home-page .announcement-slide__badge {
+  background: rgba(255,255,255,0.16);
+  border-color: rgba(255,255,255,0.18);
+}
+
+body.home-page .promo-card,
+body.home-page .search-banners,
+body.home-page .announcement-mini,
+body.home-page .ad-card,
+body.home-page .compact-product-card,
+body.home-page .shelf-card,
+body.home-page .product-card,
+body.home-page .campaign-banner__card {
+  background: #fff;
+  border: 1px solid rgba(244, 93, 34, 0.1);
+  box-shadow: 0 18px 36px rgba(177, 95, 35, 0.08);
+}
+
+body.home-page .announcement-mini {
+  background: linear-gradient(180deg, #fffaf7 0%, #fff2ea 100%);
+}
+
+body.home-page .announcement-mini::after {
+  background: rgba(244, 93, 34, 0.12);
+}
+
+body.home-page .promo-card--warm {
+  background: linear-gradient(180deg, #fffaf7 0%, #fff2ea 100%);
+}
+
+body.home-page .promo-card--dark {
+  background: linear-gradient(135deg, #f45d22 0%, #ff7d2f 100%);
+}
+
+body.home-page .promo-card--dark p,
+body.home-page .promo-card--dark li {
+  color: rgba(255,255,255,0.88);
+}
+
+body.home-page .promo-card--dark .promo-card__kicker {
+  color: rgba(255,255,255,0.8);
+}
+
+body.home-page .search-chip {
+  background: #fff;
+  border-color: rgba(244, 93, 34, 0.1);
+}
+
+body.home-page .search-chip:hover {
+  border-color: rgba(244, 93, 34, 0.26);
+  box-shadow: 0 14px 24px rgba(177, 95, 35, 0.08);
+}
+
+body.home-page .ad-card--accent {
+  background: linear-gradient(180deg, #fff4ec 0%, #ffe5d5 100%);
+}
+
+body.home-page .ad-card--neutral {
+  background: linear-gradient(180deg, #fffdfb 0%, #fff4ed 100%);
+}
+
+body.home-page .ad-card--dark {
+  background: linear-gradient(135deg, #f45d22 0%, #da4f1e 100%);
+}
+
+body.home-page .campaign-banner__card {
+  background: linear-gradient(135deg, #f45d22 0%, #ff8131 100%);
+  border-color: rgba(255,255,255,0.16);
+  box-shadow: 0 28px 56px rgba(225, 97, 36, 0.18);
+}
+
+body.home-page .campaign-banner__visual {
+  background: #fff1e6;
+}
+
+body.home-page .campaign-banner__spotlight,
+body.home-page .campaign-banner__stat {
+  background: rgba(255,255,255,0.16);
+}
+
+body.home-page .badge-pill {
+  background: #fff0e8;
+  color: #e35319;
+}
+
+body.home-page .compact-product-card img,
+body.home-page .shelf-card img,
+body.home-page .product-card img {
+  background: #fff7f2;
+}
+
+body.home-page .compact-product-card__price strong,
+body.home-page .shelf-card__price strong,
+body.home-page .product-card__price strong {
+  color: #f45d22;
+}
+
+body.home-page .product-card__meta,
+body.home-page .compact-product-card__meta,
+body.home-page .shelf-card p,
+body.home-page .product-card p {
+  color: #7c5b47;
+}
+
+body.home-page .pill {
+  background: #fff;
+  border-color: rgba(244, 93, 34, 0.12);
+  color: #7b5c49;
+}
+
+body.home-page .pill.is-active {
+  background: #f45d22;
+  border-color: #f45d22;
+  color: #fff;
+}
+
+body.home-page .site-footer {
+  margin-top: 18px;
+  padding: 24px 0 48px;
+  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, #fff6ee 28%, #fff0e4 100%);
+}
+
+body.home-page .site-footer__row {
+  padding: 28px 0 0;
+  border-top: 1px solid rgba(244, 93, 34, 0.12);
+}
+
+body.home-page .site-footer p,
+body.home-page .footer-links a {
+  color: #6b5040;
+}
+
 @media (max-width: 1220px) {
   .home-stage__support { grid-template-columns: 1fr; }
   .home-stage__slogan { grid-template-columns: 1fr; }
@@ -915,6 +1175,19 @@ button, input, select, textarea { font: inherit; }
   .campaign-banner__copy h2 { max-width: none; }
   .compact-product-board { grid-template-columns: repeat(5, minmax(0, 1fr)); }
   .product-grid--dense { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+  .home-benefits {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-benefits__item:nth-child(3),
+  .home-benefits__item:nth-child(4) {
+    border-top: 1px solid rgba(244, 93, 34, 0.1);
+  }
+
+  .home-benefits__item:nth-child(3) {
+    border-left: 0;
+  }
 }
 
 @media (max-width: 1100px) {
@@ -987,6 +1260,35 @@ button, input, select, textarea { font: inherit; }
   .product-shelf { grid-auto-columns: minmax(240px, 82vw); }
   .profile-summary-footer { align-items: stretch; }
   .profile-logout { width: 100%; }
+
+  body.home-page .container,
+  body.home-page .home-stage__hero {
+    width: min(100% - 24px, 1248px);
+  }
+
+  body.home-page .announcement-carousel {
+    min-height: 460px;
+    border-radius: 28px;
+  }
+
+  body.home-page .announcement-slide__content {
+    align-content: end;
+    padding: 30px 24px 96px;
+  }
+
+  .home-benefits {
+    grid-template-columns: 1fr;
+  }
+
+  .home-benefits__item + .home-benefits__item {
+    border-left: 0;
+    border-top: 1px solid rgba(244, 93, 34, 0.1);
+  }
+
+  .home-benefits__item:nth-child(3),
+  .home-benefits__item:nth-child(4) {
+    border-top: 1px solid rgba(244, 93, 34, 0.1);
+  }
 }
 
 .announcement-carousel.is-dragging {
