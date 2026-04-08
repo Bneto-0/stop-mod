@@ -1147,8 +1147,8 @@ body.home-page .home-stage {
 }
 
 body.home-page .home-stage__hero {
-  width: min(1392px, calc(100% - 8px));
-  margin: 0 auto 20px;
+  width: 100%;
+  margin: 0 0 20px;
   border-radius: 0;
   overflow: hidden;
   box-shadow: none;
