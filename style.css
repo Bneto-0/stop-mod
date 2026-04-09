@@ -1143,19 +1143,28 @@ body.home-page .catalog-feedback {
 }
 
 body.home-page .home-stage {
-  padding: 0 0 6px;
+  padding: 0 0 14px;
 }
 
 body.home-page .home-stage__hero {
   width: 100%;
   margin: 0;
   border-radius: 0;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: none;
 }
 
 body.home-page .home-stage__hero::after {
-  display: none;
+  content: "";
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  bottom: -34px;
+  height: 92px;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.84) 42%, rgba(255, 255, 255, 0) 78%);
+  filter: blur(16px);
+  z-index: 4;
 }
 
 body.home-page .home-stage__stack {
@@ -1174,17 +1183,7 @@ body.home-page .announcement-track {
 }
 
 body.home-page .announcement-carousel::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 82px;
-  display: block;
-  pointer-events: none;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.5) 44%, rgba(255, 255, 255, 0.96) 100%);
-  filter: blur(6px);
-  z-index: 2;
+  display: none;
 }
 
 body.home-page .home-benefits {
@@ -1192,7 +1191,7 @@ body.home-page .home-benefits {
 }
 
 body.home-page .ad-gallery {
-  padding-top: 8px;
+  padding-top: 2px;
 }
 
 body.home-page .announcement-slide__overlay {
@@ -1499,6 +1498,14 @@ body.home-page .footer-links a {
   body.home-page .container,
   body.home-page .home-stage__hero {
     width: min(100% - 24px, 1248px);
+  }
+
+  body.home-page .home-stage__hero::after {
+    left: 3%;
+    right: 3%;
+    bottom: -26px;
+    height: 72px;
+    filter: blur(12px);
   }
 
   body.home-page .announcement-carousel {
