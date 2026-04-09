@@ -1148,7 +1148,7 @@ body.home-page .home-stage {
 
 body.home-page .home-stage__hero {
   width: 100%;
-  margin: 0 0 10px;
+  margin: 0;
   border-radius: 0;
   overflow: visible;
   box-shadow: none;
@@ -1159,15 +1159,19 @@ body.home-page .home-stage__hero::after {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -14px;
-  height: 26px;
+  bottom: -34px;
+  height: 108px;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(43, 26, 17, 0.2) 0%, rgba(43, 26, 17, 0.1) 38%, rgba(43, 26, 17, 0) 100%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.58) 46%, rgba(255, 255, 255, 0.96) 100%);
+  filter: blur(10px);
   z-index: 4;
 }
 
 body.home-page .home-stage__stack {
-  gap: 12px;
+  position: relative;
+  z-index: 5;
+  gap: 0;
+  margin-top: -54px;
 }
 
 body.home-page .announcement-carousel {
@@ -1190,8 +1194,14 @@ body.home-page .announcement-carousel::after {
   height: 42px;
   display: block;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(58, 35, 24, 0) 0%, rgba(58, 35, 24, 0.22) 52%, rgba(58, 35, 24, 0.38) 100%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.16) 50%, rgba(255, 255, 255, 0.34) 100%);
   z-index: 2;
+}
+
+body.home-page .home-benefits {
+  position: relative;
+  z-index: 6;
+  box-shadow: 0 18px 36px rgba(66, 43, 30, 0.12);
 }
 
 body.home-page .announcement-slide__overlay {
@@ -1498,6 +1508,15 @@ body.home-page .footer-links a {
   body.home-page .container,
   body.home-page .home-stage__hero {
     width: min(100% - 24px, 1248px);
+  }
+
+  body.home-page .home-stage__hero::after {
+    bottom: -24px;
+    height: 78px;
+  }
+
+  body.home-page .home-stage__stack {
+    margin-top: -34px;
   }
 
   body.home-page .announcement-carousel {
