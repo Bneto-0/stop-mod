@@ -1143,7 +1143,7 @@ body.home-page .catalog-feedback {
 }
 
 body.home-page .home-stage {
-  padding: 0 0 42px;
+  padding: 0 0 16px;
 }
 
 body.home-page .home-stage__hero {
@@ -1159,11 +1159,11 @@ body.home-page .home-stage__hero::after {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -34px;
-  height: 108px;
+  bottom: -20px;
+  height: 62px;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.58) 46%, rgba(255, 255, 255, 0.96) 100%);
-  filter: blur(10px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.4) 46%, rgba(255, 255, 255, 0.88) 100%);
+  filter: blur(6px);
   z-index: 4;
 }
 
@@ -1171,7 +1171,7 @@ body.home-page .home-stage__stack {
   position: relative;
   z-index: 5;
   gap: 0;
-  margin-top: -54px;
+  margin-top: -42px;
 }
 
 body.home-page .announcement-carousel {
@@ -1191,10 +1191,10 @@ body.home-page .announcement-carousel::after {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 42px;
+  height: 26px;
   display: block;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.16) 50%, rgba(255, 255, 255, 0.34) 100%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.12) 52%, rgba(255, 255, 255, 0.24) 100%);
   z-index: 2;
 }
 
@@ -1202,6 +1202,10 @@ body.home-page .home-benefits {
   position: relative;
   z-index: 6;
   box-shadow: 0 18px 36px rgba(66, 43, 30, 0.12);
+}
+
+body.home-page .ad-gallery {
+  padding-top: 6px;
 }
 
 body.home-page .announcement-slide__overlay {
