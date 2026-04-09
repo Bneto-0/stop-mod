@@ -1165,7 +1165,7 @@ body.home-page .home-stage__stack {
 body.home-page .announcement-carousel {
   min-height: 438px;
   border-radius: 0;
-  background: linear-gradient(120deg, #7a4e38 0%, #946b53 55%, #b08972 100%);
+  background: #151515;
   box-shadow: none;
 }
 
@@ -1187,8 +1187,8 @@ body.home-page .ad-gallery {
 
 body.home-page .announcement-slide__overlay {
   background:
-    linear-gradient(90deg, rgba(82, 54, 40, 0.96) 0%, rgba(82, 54, 40, 0.9) 34%, rgba(82, 54, 40, 0.28) 60%, rgba(82, 54, 40, 0) 100%),
-    linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 34%, rgba(84, 26, 4, 0.14) 100%);
+    linear-gradient(90deg, rgba(16, 16, 16, 0.44) 0%, rgba(16, 16, 16, 0.28) 34%, rgba(16, 16, 16, 0.08) 60%, rgba(16, 16, 16, 0) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.06) 0%, rgba(0, 0, 0, 0) 44%, rgba(255, 255, 255, 0.03) 100%);
 }
 
 body.home-page .announcement-slide__content {
