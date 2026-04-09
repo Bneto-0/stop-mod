@@ -1075,6 +1075,205 @@ button, input, select, textarea { font: inherit; }
 .page-shell { min-height: calc(100vh - 180px); }
 .page-card { width: min(820px, 100%); margin: 0 auto; }
 .field-row { display: grid; gap: 8px; }
+.marketplace-page,
+.seller-page {
+  display: grid;
+  gap: 24px;
+}
+
+.marketplace-hero-card {
+  width: min(1120px, 100%);
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
+  gap: 22px;
+  background:
+    radial-gradient(circle at top right, rgba(255,255,255,0.12), transparent 26%),
+    linear-gradient(135deg, #4d3225 0%, #2e1d16 100%);
+  color: #fff5e8;
+  border-color: rgba(255,255,255,0.08);
+}
+
+.marketplace-hero-card .eyebrow,
+.marketplace-pillar .eyebrow {
+  color: #f3d8bf;
+}
+
+.marketplace-hero-card p {
+  color: rgba(255,245,232,0.82);
+}
+
+.marketplace-hero-card__copy,
+.marketplace-hero-card__stats,
+.marketplace-columns,
+.marketplace-link-row,
+.marketplace-steps,
+.marketplace-list,
+.marketplace-card-grid,
+.marketplace-spotlight,
+.marketplace-spotlight__actions,
+.marketplace-spotlight__stats,
+.marketplace-pillars {
+  display: grid;
+  gap: 18px;
+}
+
+.marketplace-hero-card__copy h1,
+.marketplace-spotlight h2 {
+  margin: 0;
+  font-size: clamp(2.2rem, 3.5vw, 4rem);
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+}
+
+.marketplace-link-row {
+  grid-auto-flow: column;
+  justify-content: start;
+  align-items: center;
+}
+
+.marketplace-hero-card__stats {
+  align-content: start;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.marketplace-hero-stat,
+.marketplace-stat-card,
+.marketplace-pillar {
+  border-radius: 24px;
+  border: 1px solid rgba(122, 78, 56, 0.12);
+  background: linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(248,241,234,0.96) 100%);
+  padding: 18px;
+  box-shadow: 0 18px 36px rgba(23,20,17,0.08);
+}
+
+.marketplace-hero-stat {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.1);
+  box-shadow: none;
+}
+
+.marketplace-hero-stat strong,
+.marketplace-stat-card strong,
+.marketplace-pillar h3,
+.marketplace-card h3 {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 1.02rem;
+  letter-spacing: -0.03em;
+}
+
+.marketplace-hero-stat span,
+.marketplace-stat-card span,
+.marketplace-card p,
+.marketplace-pillar p {
+  color: var(--text-soft);
+  line-height: 1.65;
+}
+
+.marketplace-hero-stat span {
+  color: rgba(255,245,232,0.78);
+}
+
+.marketplace-card-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.marketplace-columns {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.marketplace-column h2,
+.marketplace-cta-card h2 {
+  margin: 0;
+  font-size: clamp(1.7rem, 2.5vw, 2.6rem);
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.marketplace-list,
+.marketplace-steps {
+  margin: 0;
+  padding-left: 1.15rem;
+}
+
+.marketplace-list li,
+.marketplace-steps li {
+  color: var(--text-soft);
+  line-height: 1.72;
+  padding-left: 0.15rem;
+}
+
+.marketplace-cta-card {
+  width: min(1120px, 100%);
+  background: linear-gradient(180deg, #f8f3ee 0%, #fff 100%);
+}
+
+.marketplace-spotlight {
+  grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
+  align-items: stretch;
+  padding: 20px 0 8px;
+}
+
+.marketplace-spotlight__copy {
+  display: grid;
+  gap: 18px;
+  padding: 28px 30px;
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at top right, rgba(255,255,255,0.16), transparent 28%),
+    linear-gradient(145deg, #4c3024 0%, #2b1c16 100%);
+  color: #fff4e4;
+  box-shadow: 0 24px 40px rgba(36, 23, 17, 0.16);
+}
+
+.marketplace-spotlight__copy p:last-of-type {
+  margin: 0;
+  color: rgba(255,245,232,0.82);
+  line-height: 1.75;
+}
+
+.marketplace-spotlight__stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: stretch;
+}
+
+.marketplace-pillars {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 8px 0 10px;
+}
+
+.marketplace-pillar h3 {
+  margin: 0 0 10px;
+  font-size: 1.28rem;
+}
+
+.marketplace-card h3 {
+  margin: 0 0 10px;
+  font-size: 1.14rem;
+}
+
+@media (max-width: 1080px) {
+  .marketplace-hero-card,
+  .marketplace-spotlight,
+  .marketplace-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .marketplace-link-row {
+    grid-auto-flow: row;
+  }
+}
+
+@media (max-width: 820px) {
+  .marketplace-card-grid,
+  .marketplace-pillars,
+  .marketplace-hero-card__stats,
+  .marketplace-spotlight__stats {
+    grid-template-columns: 1fr;
+  }
+}
 .toast {
   position: fixed;
   right: 18px;

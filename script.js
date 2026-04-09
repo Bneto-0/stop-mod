@@ -30,7 +30,7 @@ const announcements = [
   {
     kicker: "UZUU seleciona",
     title: "ESTILO SEM PAGAR CARO",
-    text: "Moda, calcados e acessorios em um so lugar com os melhores achados da semana, leitura mais limpa e cara forte de marketplace.",
+    text: "Moda, calcados e acessorios em um so lugar, com vitrine mais forte, curadoria comercial e cara de marketplace em expansao.",
     image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1600&q=80",
     ctaLabel: "Comprar agora",
     ctaHref: "#produtos",
@@ -40,11 +40,11 @@ const announcements = [
 ];
 
 const campaignBannerData = {
-  kicker: "moda e calcados com estilo e preco justo",
-  title: "Descubra as ultimas tendencias da moda e calcados.",
-  text: "Descubra as ultimas tendencias da moda e calcados, sempre com otimos precos e entrega rapida para todo Brasil.",
-  primaryLabel: "Ver todos os produtos",
-  primaryHref: "#produtos",
+  kicker: "marketplace de moda com curadoria comercial",
+  title: "Descubra marcas, colecoes e lojas em um so fluxo.",
+  text: "A Uzuu cresce para unir vitrine, campanha, checkout e lojistas parceiros em uma experiencia mais profissional para comprar e vender.",
+  primaryLabel: "Explorar marketplace",
+  primaryHref: "/marketplace/",
   image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200&q=80",
   payments: [
     { label: "Pix", icon: "/assets/icons/pix-logo.svg" },
@@ -52,8 +52,8 @@ const campaignBannerData = {
     { label: "Visa", icon: "/assets/icons/visa-logo-real.svg" },
     { label: "Elo", icon: "/assets/icons/elo-logo-real.png" }
   ],
-  previewMenu: ["Masculino", "Feminino", "Calcados", "Acessorios"],
-  previewBenefits: ["Frete Gratis", "Entrega Rapida", "Compra Segura", "12x sem juros"]
+  previewMenu: ["Masculino", "Feminino", "Calcados", "Marketplace"],
+  previewBenefits: ["Frete Gratis", "Seller onboard", "Compra Segura", "12x sem juros"]
 };
 
 const grid = document.getElementById("product-grid");

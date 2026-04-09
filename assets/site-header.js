@@ -16,7 +16,9 @@
     favoritos: /\/perfil\/favoritos\//i.test(path),
     processando: /\/perfil\/processando\//i.test(path),
     cupons: /\/cupons\//i.test(path),
-    categorias: /\/categorias\//i.test(path)
+    categorias: /\/categorias\//i.test(path),
+    marketplace: /\/marketplace\//i.test(path),
+    vender: /\/vender\//i.test(path)
   };
 
   root.innerHTML = `
@@ -37,6 +39,8 @@
           <svg class="shared-search__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 4a6.5 6.5 0 1 0 4.03 11.6l4.43 4.44 1.41-1.42-4.44-4.43A6.5 6.5 0 0 0 10.5 4zm0 2a4.5 4.5 0 1 1 0 9.001A4.5 4.5 0 0 1 10.5 6z"></path></svg>
           <input id="search-input" type="search" placeholder="Pesquisar produto" />
         </label>
+
+        <a class="shared-seller-link ${navState.vender ? "is-current" : ""}" href="/vender/" aria-label="Vender na Uzuu">Vender na Uzuu</a>
 
         <div class="shared-header__actions">
           <a id="profile-top-link" class="shared-profile" href="/login/" aria-label="Perfil">
@@ -64,6 +68,7 @@
             <a href="/perfil/favoritos/" class="${navState.favoritos ? "is-current" : ""}">Favoritos</a>
             <a href="/perfil/processando/" class="${navState.processando ? "is-current" : ""}">Processando</a>
             <a href="/cupons/" class="${navState.cupons ? "is-current" : ""}">Cupons</a>
+            <a href="/marketplace/" class="${navState.marketplace ? "is-current" : ""}">Marketplace</a>
             <div class="shared-cat">
               <button class="shared-cat-btn ${navState.categorias ? "is-current" : ""}" type="button" aria-haspopup="true" aria-expanded="false">
                 Categorias <span aria-hidden="true">&#9662;</span>
@@ -219,7 +224,7 @@
       searchInput.dispatchEvent(new Event("input", { bubbles: true }));
       return;
     }
-    window.location.href = q ? `/index.html?q=${encodeURIComponent(q)}#produtos` : "/index.html#produtos";
+    window.location.href = q ? `/?q=${encodeURIComponent(q)}#produtos` : "/#produtos";
   }
 
   searchInput?.addEventListener("keydown", (event) => {
