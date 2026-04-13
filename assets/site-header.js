@@ -17,22 +17,23 @@
     processando: /\/perfil\/processando\//i.test(path),
     cupons: /\/cupons\//i.test(path),
     categorias: /\/categorias\//i.test(path),
-    marketplace: /\/marketplace\//i.test(path),
-    vender: /\/vender\//i.test(path)
+    marketplace: /\/marketplace\//i.test(path)
   };
 
   root.innerHTML = `
     <header class="shared-header" aria-label="Cabecalho da loja">
       <div class="shared-header__container shared-header__top-row">
-        <a class="shared-brand" href="/#top" aria-label="UZUU">UZU<em>U</em></a>
+        <div class="shared-header__identity">
+          <a class="shared-brand" href="/#top" aria-label="UZUU">UZU<em>U</em></a>
 
-        <a class="shared-location" href="/entrega/" aria-label="Selecionar endereco de entrega">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c3.87 0 7 3.09 7 6.9 0 4.71-5.2 10.35-6.45 11.65a.8.8 0 0 1-1.1 0C10.2 19.25 5 13.61 5 8.9 5 5.09 8.13 2 12 2zm0 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"></path></svg>
-          <span class="shared-location__text">
-            <small>Enviar para</small>
-            <strong id="ship-summary">Rua nao informada</strong>
-          </span>
-        </a>
+          <a class="shared-location" href="/entrega/" aria-label="Selecionar endereco de entrega">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c3.87 0 7 3.09 7 6.9 0 4.71-5.2 10.35-6.45 11.65a.8.8 0 0 1-1.1 0C10.2 19.25 5 13.61 5 8.9 5 5.09 8.13 2 12 2zm0 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"></path></svg>
+            <span class="shared-location__text">
+              <small>Enviar para</small>
+              <strong id="ship-summary">Rua nao informada</strong>
+            </span>
+          </a>
+        </div>
 
         <label class="shared-search" for="search-input">
           <span class="sr-only">Pesquisar produto</span>
@@ -40,18 +41,18 @@
           <input id="search-input" type="search" placeholder="Pesquisar produto" />
         </label>
 
-        <a class="shared-seller-link ${navState.vender ? "is-current" : ""}" href="/vender/" aria-label="Vender na Uzuu">Vender na Uzuu</a>
-
         <div class="shared-header__actions">
-          <a id="profile-top-link" class="shared-profile" href="/login/" aria-label="Perfil">
-            <img id="profile-top-photo" class="shared-profile-photo" alt="" hidden />
-            <svg class="shared-profile-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"></path></svg>
-            <span id="profile-top-name">Perfil</span>
-          </a>
+          <div class="shared-account">
+            <a id="profile-top-link" class="shared-profile" href="/login/" aria-label="Perfil">
+              <img id="profile-top-photo" class="shared-profile-photo" alt="" hidden />
+              <svg class="shared-profile-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"></path></svg>
+              <span id="profile-top-name">Perfil</span>
+            </a>
 
-          <a class="shared-icon-link" href="/notificacoes/" aria-label="Notificacoes">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 1 0-14 0v5l-2 2v1h18v-1l-2-2z"></path></svg>
-          </a>
+            <a class="shared-icon-link" href="/notificacoes/" aria-label="Notificacoes">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 1 0-14 0v5l-2 2v1h18v-1l-2-2z"></path></svg>
+            </a>
+          </div>
 
           <a class="shared-cart" href="/carrinho/" aria-label="Carrinho">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 19a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm9 0a2 2 0 1 0 .001 4A2 2 0 0 0 17 19zM6.2 5l.6 3h11.6l-1.2 6H8.1L6.2 5zM3 2h2l2.2 11.2A2 2 0 0 0 9.2 15H18v-2H9.2l-.2-1h9.1A2 2 0 0 0 20 10.4l1-5A2 2 0 0 0 19 3H6.4l-.3-1.6A2 2 0 0 0 4.1 0H3v2z"></path></svg>
@@ -98,6 +99,21 @@
   const profilePhoto = document.getElementById("profile-top-photo");
   const categoryDropdown = root.querySelector(".shared-cat");
   const categoryButton = root.querySelector(".shared-cat-btn");
+
+  function purgeLegacySellerLinks() {
+    const legacyLinks = document.querySelectorAll(
+      '.shared-header .shared-seller-link, .shared-header a[href*="/vender/"], .shared-header a[href*="/marketplace/cadastro/"]'
+    );
+
+    legacyLinks.forEach((link) => {
+      if (!(link instanceof HTMLElement)) return;
+      const text = String(link.textContent || "").trim().toLowerCase();
+      const href = String(link.getAttribute("href") || "").trim().toLowerCase();
+      if (text.includes("vender na uzuu") || href.includes("/vender/") || href.includes("/marketplace/cadastro/")) {
+        link.remove();
+      }
+    });
+  }
 
   function loadJson(key) {
     try {
@@ -257,6 +273,7 @@
     }
   });
 
+  purgeLegacySellerLinks();
   syncSearchFromQuery();
   renderHeaderState();
 })();
