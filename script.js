@@ -1,5 +1,6 @@
 ﻿const sharedCatalog = window.stopmodCatalog || null;
 const CART_KEY = sharedCatalog?.storageKeys?.cart || "stopmod_cart";
+const FAVORITES_KEY = sharedCatalog?.storageKeys?.favorites || "stopmod_favorites";
 const PROFILE_KEY = "stopmod_profile";
 
 const products = Array.isArray(sharedCatalog?.products) && sharedCatalog.products.length ? sharedCatalog.products : [
@@ -154,6 +155,49 @@ function addToCart(id) {
   showToast("Produto adicionado ao carrinho.");
 }
 
+function loadFavoriteIds() {
+  if (sharedCatalog?.loadFavorites) return sharedCatalog.loadFavorites();
+  try {
+    const parsed = JSON.parse(localStorage.getItem(FAVORITES_KEY) || "[]");
+    return Array.isArray(parsed) ? parsed.map(Number).filter((item) => Number.isInteger(item) && item > 0) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveFavoriteIds(ids) {
+  const clean = Array.from(new Set((Array.isArray(ids) ? ids : []).map(Number).filter((item) => Number.isInteger(item) && item > 0)));
+  if (sharedCatalog?.saveFavorites) {
+    sharedCatalog.saveFavorites(clean);
+    return;
+  }
+  localStorage.setItem(FAVORITES_KEY, JSON.stringify(clean));
+}
+
+function isFavorite(id) {
+  if (sharedCatalog?.isFavorite) return sharedCatalog.isFavorite(id);
+  return loadFavoriteIds().includes(Number(id));
+}
+
+function toggleFavorite(id) {
+  if (sharedCatalog?.toggleFavorite) return sharedCatalog.toggleFavorite(id);
+  const numericId = Number(id);
+  const favorites = loadFavoriteIds();
+  const next = favorites.includes(numericId)
+    ? favorites.filter((item) => item !== numericId)
+    : [...favorites, numericId];
+  saveFavoriteIds(next);
+  return next.includes(numericId);
+}
+
+function favoriteHeartMarkup(favorite) {
+  return favorite ? "&#10084;" : "&#9825;";
+}
+
+function favoriteHeartLabel(name, favorite) {
+  return favorite ? `Remover ${name} dos favoritos` : `Adicionar ${name} aos favoritos`;
+}
+
 function getQueryCategory() {
   const params = new URLSearchParams(window.location.search);
   return String(params.get("cat") || "").trim();
@@ -177,9 +221,13 @@ function getVisibleProducts() {
 }
 
 function compactProductCard(product, extraClass = "") {
+  const favorite = isFavorite(product.id);
   return `
     <article class="${`compact-product-card compact-product-card--interactive ${extraClass}`.trim()}" data-product-open-id="${product.id}" tabindex="0" role="link" aria-label="Abrir ${product.name}">
-      <img src="${product.image}" alt="${product.name}" />
+      <div class="compact-product-card__media">
+        <img src="${product.image}" alt="${product.name}" />
+        <button class="compact-product-card__favorite${favorite ? " is-active" : ""}" type="button" data-product-favorite="${product.id}" data-no-card-open aria-label="${favoriteHeartLabel(product.name, favorite)}" aria-pressed="${favorite ? "true" : "false"}">${favoriteHeartMarkup(favorite)}</button>
+      </div>
       <div class="compact-product-card__body">
         <div class="compact-product-card__meta">
           <span>${product.category}</span>
@@ -306,7 +354,7 @@ function renderAdFlow() {
     <article class="feature-product-card feature-product-card--${index === 1 ? "spotlight" : "default"}" data-product-open-id="${product.id}" tabindex="0" role="link" aria-label="Abrir ${product.name}">
       <div class="feature-product-card__media">
         <img src="${product.image}" alt="${product.name}" loading="lazy" />
-        <button class="feature-product-card__favorite" type="button" aria-label="Salvar ${product.name}" data-no-card-open>&#9825;</button>
+        <button class="feature-product-card__favorite${isFavorite(product.id) ? " is-active" : ""}" type="button" data-product-favorite="${product.id}" data-no-card-open aria-label="${favoriteHeartLabel(product.name, isFavorite(product.id))}" aria-pressed="${isFavorite(product.id) ? "true" : "false"}">${favoriteHeartMarkup(isFavorite(product.id))}</button>
         ${index === 1 ? '<span class="feature-product-card__badge">-30%</span>' : `<span class="feature-product-card__tag">${index === 0 ? "Lancamento" : product.badge}</span>`}
       </div>
       <div class="feature-product-card__body">
@@ -384,6 +432,19 @@ filters.forEach((button) => {
 searchInput?.addEventListener("input", renderProducts);
 
 document.addEventListener("click", (event) => {
+  const favoriteButton = event.target instanceof Element ? event.target.closest("[data-product-favorite]") : null;
+  if (favoriteButton) {
+    const favoriteId = favoriteButton.getAttribute("data-product-favorite");
+    const product = products.find((item) => String(item.id) === String(favoriteId));
+    const isNowFavorite = toggleFavorite(favoriteId);
+    renderAdFlow();
+    renderCompactBoard();
+    renderProductShelf();
+    renderProducts();
+    showToast(isNowFavorite ? `${product?.name || "Produto"} salvo nos favoritos.` : `${product?.name || "Produto"} removido dos favoritos.`);
+    return;
+  }
+
   const openCard = event.target instanceof Element ? event.target.closest("[data-product-open-id]") : null;
   if (openCard && !event.target.closest("[data-no-card-open]")) {
     window.location.href = productHref(openCard.getAttribute("data-product-open-id"));
@@ -458,6 +519,14 @@ renderCartCount();
 renderProfileState();
 renderProducts();
 restartAnnouncementTimer();
+
+window.addEventListener("storage", (event) => {
+  if (event.key && event.key !== FAVORITES_KEY) return;
+  renderAdFlow();
+  renderCompactBoard();
+  renderProductShelf();
+  renderProducts();
+});
 
 
 
