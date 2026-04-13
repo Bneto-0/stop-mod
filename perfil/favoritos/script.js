@@ -25,9 +25,7 @@
           <p>${escapeHtml(product.shortDescription || product.description)}</p>
           <strong>${catalog.formatBRL(product.price)}</strong>
           <div class="favorite-card__actions">
-            <a class="btn secondary" href="${catalog.productHref(product.id)}">Ver detalhes</a>
             <button class="btn secondary" type="button" data-favorite-remove="${product.id}">Remover</button>
-            <button class="btn primary" type="button" data-favorite-cart="${product.id}">Adicionar ao carrinho</button>
           </div>
         </div>
       </article>
@@ -69,15 +67,6 @@
       catalog.toggleFavorite(removeButton.getAttribute("data-favorite-remove"));
       renderFavorites();
       return;
-    }
-
-    const cartButton = event.target instanceof Element ? event.target.closest("[data-favorite-cart]") : null;
-    if (cartButton) {
-      catalog.addToCart(cartButton.getAttribute("data-favorite-cart"));
-      cartButton.textContent = "Adicionado";
-      setTimeout(() => {
-        cartButton.textContent = "Adicionar ao carrinho";
-      }, 1200);
     }
   });
 

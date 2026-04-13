@@ -176,55 +176,9 @@ function getVisibleProducts() {
   });
 }
 
-function productCard(product) {
+function compactProductCard(product, extraClass = "") {
   return `
-    <article class="product-card product-card--interactive" data-product-open-id="${product.id}" tabindex="0" role="link" aria-label="Abrir ${product.name}">
-      <img src="${product.image}" alt="${product.name}" />
-      <div class="product-card__body">
-        <p class="product-card__meta">${product.category} | ${product.size}</p>
-        <h3>${product.name}</h3>
-        <p class="product-card__summary">${product.shortDescription || product.badge}</p>
-        <div class="product-card__badges">
-          <span class="badge-pill">${product.badge}</span>
-          <span class="badge-pill">pix ${formatBRL(pixPrice(product.price))}</span>
-        </div>
-        <div class="product-card__price">
-          <strong>${formatBRL(product.price)}</strong>
-          <span>${formatBRL(oldPrice(product.price))}</span>
-        </div>
-        <div class="product-card__actions">
-          <a class="btn primary" href="${productHref(product.id)}" data-no-card-open>Ver detalhes</a>
-          <button class="btn secondary" type="button" data-add-id="${product.id}" data-no-card-open>Adicionar</button>
-        </div>
-      </div>
-    </article>
-  `;
-}
-
-function shelfCard(product) {
-  return `
-    <article class="shelf-card shelf-card--interactive" data-product-open-id="${product.id}" tabindex="0" role="link" aria-label="Abrir ${product.name}">
-      <img src="${product.image}" alt="${product.name}" />
-      <div class="shelf-card__body">
-        <p class="product-card__meta">${product.category}</p>
-        <h3>${product.name}</h3>
-        <p>${product.shortDescription || product.badge}</p>
-        <div class="shelf-card__price">
-          <strong>${formatBRL(product.price)}</strong>
-          <span>${formatBRL(oldPrice(product.price))}</span>
-        </div>
-        <div class="shelf-card__actions">
-          <a class="btn primary" href="${productHref(product.id)}" data-no-card-open>Detalhes</a>
-          <button class="btn secondary" type="button" data-add-id="${product.id}" data-no-card-open>Adicionar</button>
-        </div>
-      </div>
-    </article>
-  `;
-}
-
-function compactProductCard(product) {
-  return `
-    <article class="compact-product-card compact-product-card--interactive" data-product-open-id="${product.id}" tabindex="0" role="link" aria-label="Abrir ${product.name}">
+    <article class="${`compact-product-card compact-product-card--interactive ${extraClass}`.trim()}" data-product-open-id="${product.id}" tabindex="0" role="link" aria-label="Abrir ${product.name}">
       <img src="${product.image}" alt="${product.name}" />
       <div class="compact-product-card__body">
         <div class="compact-product-card__meta">
@@ -244,7 +198,7 @@ function compactProductCard(product) {
 function renderProducts() {
   if (!grid) return;
   const visible = getVisibleProducts();
-  grid.innerHTML = visible.map(productCard).join("");
+  grid.innerHTML = visible.map((product) => compactProductCard(product, "compact-product-card--catalog")).join("");
   if (feedback) feedback.hidden = visible.length > 0;
   if (catalogSummary) {
     catalogSummary.textContent = visible.length
@@ -256,13 +210,13 @@ function renderProducts() {
 function renderProductShelf() {
   if (!productShelf) return;
   const featured = products.slice(0, 12);
-  productShelf.innerHTML = featured.map(shelfCard).join("");
+  productShelf.innerHTML = featured.map((product) => compactProductCard(product, "compact-product-card--shelf")).join("");
 }
 
 function renderCompactBoard() {
   if (!compactBoard) return;
   const boardItems = products.slice(0, 5);
-  compactBoard.innerHTML = boardItems.map(compactProductCard).join("");
+  compactBoard.innerHTML = boardItems.map((product) => compactProductCard(product, "compact-product-card--board")).join("");
 }
 
 function renderAnnouncementCarousel() {
@@ -433,12 +387,6 @@ document.addEventListener("click", (event) => {
   const openCard = event.target instanceof Element ? event.target.closest("[data-product-open-id]") : null;
   if (openCard && !event.target.closest("[data-no-card-open]")) {
     window.location.href = productHref(openCard.getAttribute("data-product-open-id"));
-    return;
-  }
-
-  const addButton = event.target instanceof Element ? event.target.closest("[data-add-id]") : null;
-  if (addButton) {
-    addToCart(addButton.getAttribute("data-add-id"));
     return;
   }
 
