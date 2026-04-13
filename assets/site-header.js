@@ -17,7 +17,8 @@
     processando: /\/perfil\/processando\//i.test(path),
     cupons: /\/cupons\//i.test(path),
     categorias: /\/categorias\//i.test(path),
-    marketplace: /\/marketplace\//i.test(path)
+    marketplace: /\/marketplace\//i.test(path),
+    vender: /\/vender\/|\/marketplace\/cadastro\//i.test(path)
   };
 
   root.innerHTML = `
@@ -42,6 +43,8 @@
         </label>
 
         <div class="shared-header__actions">
+          <a class="shared-seller-link ${navState.vender ? "is-current" : ""}" href="/marketplace/cadastro/" aria-label="Vender na Uzuu">Vender na Uzuu</a>
+
           <div class="shared-account">
             <a id="profile-top-link" class="shared-profile" href="/login/" aria-label="Perfil">
               <img id="profile-top-photo" class="shared-profile-photo" alt="" hidden />
@@ -99,21 +102,6 @@
   const profilePhoto = document.getElementById("profile-top-photo");
   const categoryDropdown = root.querySelector(".shared-cat");
   const categoryButton = root.querySelector(".shared-cat-btn");
-
-  function purgeLegacySellerLinks() {
-    const legacyLinks = document.querySelectorAll(
-      '.shared-header .shared-seller-link, .shared-header a[href*="/vender/"], .shared-header a[href*="/marketplace/cadastro/"]'
-    );
-
-    legacyLinks.forEach((link) => {
-      if (!(link instanceof HTMLElement)) return;
-      const text = String(link.textContent || "").trim().toLowerCase();
-      const href = String(link.getAttribute("href") || "").trim().toLowerCase();
-      if (text.includes("vender na uzuu") || href.includes("/vender/") || href.includes("/marketplace/cadastro/")) {
-        link.remove();
-      }
-    });
-  }
 
   function loadJson(key) {
     try {
@@ -273,7 +261,6 @@
     }
   });
 
-  purgeLegacySellerLinks();
   syncSearchFromQuery();
   renderHeaderState();
 })();
