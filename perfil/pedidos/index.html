@@ -1,16 +1,17 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pedidos | Uzuu</title>
-  <link rel="icon" href="../../favicon.svg?v=20260409c" type="image/svg+xml" />
-  <link rel="stylesheet" href="../../style.css?v=20260409d" />
-  <link rel="stylesheet" href="/assets/site-header.css?v=23" />
+  <link rel="icon" href="../../favicon.svg?v=20260409g" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../style.css?v=20260412c" />
+<link rel="stylesheet" href="/assets/site-header.css?v=24" />
 </head>
 <body>
 <div id="site-header-root"></div>
 <script src="/assets/site-header.js?v=13"></script>
+<script src="../../assets/catalog.js?v=11"></script>
 <main class="page-shell container">
   <section class="page-card order-history-shell">
     <p class="eyebrow">Pedidos</p>
@@ -24,12 +25,16 @@
   </section>
 </main>
 <script>
+const catalog = window.stopmodCatalog || null;
 const ORDERS_KEY = "stopmod_orders";
 const PROFILE_KEY = "stopmod_profile";
 const container = document.getElementById("orders-list");
 const message = document.getElementById("orders-message");
 
 function loadOrders() {
+  if (typeof catalog?.loadOrders === "function") {
+    return catalog.loadOrders();
+  }
   try {
     const parsed = JSON.parse(localStorage.getItem(ORDERS_KEY) || "[]");
     return Array.isArray(parsed) ? parsed : [];
@@ -39,10 +44,17 @@ function loadOrders() {
 }
 
 function saveOrders(orders) {
+  if (typeof catalog?.saveOrders === "function") {
+    catalog.saveOrders(orders);
+    return;
+  }
   localStorage.setItem(ORDERS_KEY, JSON.stringify(Array.isArray(orders) ? orders : []));
 }
 
 function loadProfile() {
+  if (typeof catalog?.loadProfile === "function") {
+    return catalog.loadProfile();
+  }
   try {
     const parsed = JSON.parse(localStorage.getItem(PROFILE_KEY) || "{}");
     return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
@@ -135,6 +147,52 @@ function getTrackingStage(order) {
       label: "Recebimento confirmado",
       note: `Recebimento confirmado em ${formatDate(receivedAt)}. As avaliacoes desse pedido ficam vinculadas so a sua conta.`,
       canConfirmReceipt: false
+    };
+  }
+
+  const apiStatus = String(order?.apiStatus || "").trim().toLowerCase();
+  if (apiStatus === "awaiting_payment") {
+    return {
+      code: "awaiting_payment",
+      label: "Aguardando finalizacao",
+      note: "O pagamento ainda nao foi finalizado.",
+      canConfirmReceipt: false
+    };
+  }
+
+  if (apiStatus === "paid") {
+    return {
+      code: "paid",
+      label: "Pagamento confirmado",
+      note: "Seu pedido ja foi pago e aguarda avancar para separacao da loja.",
+      canConfirmReceipt: false
+    };
+  }
+
+  if (apiStatus === "preparing") {
+    return {
+      code: "preparing",
+      label: "Em preparo",
+      note: "A loja esta separando e preparando o pedido para envio.",
+      canConfirmReceipt: false
+    };
+  }
+
+  if (apiStatus === "shipped") {
+    return {
+      code: "shipped",
+      label: "Em transporte",
+      note: "Seu pedido foi enviado. Quando ele chegar, voce pode confirmar o recebimento por aqui.",
+      canConfirmReceipt: true
+    };
+  }
+
+  if (apiStatus === "delivered") {
+    return {
+      code: "delivered",
+      label: "Entregue",
+      note: "Se voce ja recebeu o produto, confirme agora para liberar sua avaliacao individual.",
+      canConfirmReceipt: true
     };
   }
 
@@ -262,7 +320,7 @@ function renderOrders() {
     : '<article class="order-history-state"><strong>Nenhum pedido encontrado</strong><p>Quando voce finalizar uma compra, o rastreio e a confirmacao de recebimento vao aparecer aqui.</p></article>';
 }
 
-container.addEventListener("click", (event) => {
+container.addEventListener("click", async (event) => {
   const button = event.target instanceof Element ? event.target.closest("[data-confirm-received]") : null;
   if (!button) return;
 
@@ -290,6 +348,22 @@ container.addEventListener("click", (event) => {
     return;
   }
 
+  if (typeof catalog?.confirmOrderReceipt === "function") {
+    const originalLabel = button.textContent || "Confirmar que recebi";
+    button.disabled = true;
+    button.textContent = "Confirmando...";
+    try {
+      await catalog.confirmOrderReceipt(orderId);
+      setMessage(`Recebimento do pedido ${orderId} confirmado. A avaliacao desse pedido ja foi liberada para a sua conta.`);
+      renderOrders();
+    } catch (error) {
+      setMessage(String(error?.message || "Nao foi possivel confirmar o recebimento agora."));
+      button.disabled = false;
+      button.textContent = originalLabel;
+    }
+    return;
+  }
+
   const nowIso = new Date().toISOString();
   orders[index] = {
     ...order,
@@ -305,7 +379,15 @@ container.addEventListener("click", (event) => {
   renderOrders();
 });
 
-renderOrders();
+async function bootstrapOrders() {
+  if (typeof catalog?.syncOrdersFromApi === "function") {
+    await catalog.syncOrdersFromApi();
+  }
+  renderOrders();
+}
+
+document.addEventListener(catalog?.events?.ordersUpdated || "uzuu:orders-updated", renderOrders);
+bootstrapOrders();
 </script>
 </body>
 </html>

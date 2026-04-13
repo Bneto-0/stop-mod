@@ -1,19 +1,137 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
-<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Endereco de entrega | Uzuu</title><link rel="icon" href="../favicon.svg?v=20260409c" type="image/svg+xml" /><link rel="stylesheet" href="../style.css?v=20260409d" />  <link rel="stylesheet" href="/assets/site-header.css?v=23" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Endereco de entrega | Uzuu</title>
+  <link rel="icon" href="../favicon.svg?v=20260409g" type="image/svg+xml" />
+  <link rel="stylesheet" href="../style.css?v=20260412c" />
+<link rel="stylesheet" href="/assets/site-header.css?v=24" />
 </head>
 <body>
 <div id="site-header-root"></div>
 <script src="/assets/site-header.js?v=13"></script>
-<main class="page-shell container"><section class="page-card"><p class="eyebrow">Entrega</p><h1>Endereco de entrega</h1><p>Preencha e salve o endereco padrao. O carrinho usa esses dados na finalizacao do pedido.</p><form id="ship-form" class="page-stack"><div class="page-grid"><label class="field-row"><span>CEP</span><input class="page-input" id="cep" type="text" /></label><label class="field-row"><span>Estado</span><input class="page-input" id="state" type="text" /></label><label class="field-row"><span>Cidade</span><input class="page-input" id="city" type="text" /></label><label class="field-row"><span>Bairro</span><input class="page-input" id="district" type="text" /></label><label class="field-row"><span>Rua</span><input class="page-input" id="street" type="text" /></label><label class="field-row"><span>Numero</span><input class="page-input" id="number" type="text" /></label></div><label class="field-row"><span>Complemento</span><input class="page-input" id="complement" type="text" /></label><div class="page-actions"><button class="btn primary" type="submit">Salvar endereco</button><a class="btn secondary" href="../carrinho/">Ir para o carrinho</a></div><p id="ship-message" class="message"></p></form></section></main>
+<main class="page-shell container">
+  <section class="page-card">
+    <p class="eyebrow">Entrega</p>
+    <h1>Endereco de entrega</h1>
+    <p>Preencha e salve o endereco padrao. O carrinho usa esses dados na finalizacao do pedido.</p>
+    <form id="ship-form" class="page-stack">
+      <div class="page-grid">
+        <label class="field-row"><span>CEP</span><input class="page-input" id="cep" type="text" /></label>
+        <label class="field-row"><span>Estado</span><input class="page-input" id="state" type="text" /></label>
+        <label class="field-row"><span>Cidade</span><input class="page-input" id="city" type="text" /></label>
+        <label class="field-row"><span>Bairro</span><input class="page-input" id="district" type="text" /></label>
+        <label class="field-row"><span>Rua</span><input class="page-input" id="street" type="text" /></label>
+        <label class="field-row"><span>Numero</span><input class="page-input" id="number" type="text" /></label>
+      </div>
+      <label class="field-row"><span>Complemento</span><input class="page-input" id="complement" type="text" /></label>
+      <div class="page-actions">
+        <button id="ship-save-button" class="btn primary" type="submit">Salvar endereco</button>
+        <a class="btn secondary" href="../carrinho/">Ir para o carrinho</a>
+      </div>
+      <p id="ship-message" class="message"></p>
+    </form>
+  </section>
+</main>
+<script src="/assets/api-client.js?v=2"></script>
+<script src="/assets/account-client.js?v=1"></script>
 <script>
-const SHIP_KEY = "stopmod_ship_to";
 const form = document.getElementById("ship-form");
 const message = document.getElementById("ship-message");
-const fields = ["cep","state","city","district","street","number","complement"];
-function loadAddress(){ try { return JSON.parse(localStorage.getItem(SHIP_KEY) || "null"); } catch { return null; } }
-const current = loadAddress();
-if (current) { fields.forEach((id) => { const el = document.getElementById(id); if (el) el.value = current[id] || ""; }); }
-form.addEventListener("submit", (event) => { event.preventDefault(); const payload = Object.fromEntries(fields.map((id) => [id, document.getElementById(id).value.trim()])); localStorage.setItem(SHIP_KEY, JSON.stringify(payload)); message.textContent = "Endereco salvo com sucesso."; });
+const saveButton = document.getElementById("ship-save-button");
+const fields = ["cep", "state", "city", "district", "street", "number", "complement"];
+
+function setMessage(text, isError = false) {
+  if (!message) return;
+  message.textContent = String(text || "");
+  message.classList.toggle("is-error", !!isError);
+  message.classList.toggle("is-success", !!text && !isError);
+}
+
+function readAddressFromForm() {
+  return {
+    cep: window.UzuuAccount.digitsOnly(document.getElementById("cep")?.value || ""),
+    state: window.UzuuAccount.normalizeState(document.getElementById("state")?.value || ""),
+    city: String(document.getElementById("city")?.value || "").trim(),
+    district: String(document.getElementById("district")?.value || "").trim(),
+    street: String(document.getElementById("street")?.value || "").trim(),
+    number: String(document.getElementById("number")?.value || "").trim(),
+    complement: String(document.getElementById("complement")?.value || "").trim()
+  };
+}
+
+function fillAddressForm(address) {
+  const current = address && typeof address === "object" ? address : {};
+  document.getElementById("cep").value = window.UzuuAccount.formatCep(current.cep || "");
+  document.getElementById("state").value = window.UzuuAccount.normalizeState(current.state || "");
+  document.getElementById("city").value = String(current.city || "").trim();
+  document.getElementById("district").value = String(current.district || "").trim();
+  document.getElementById("street").value = String(current.street || "").trim();
+  document.getElementById("number").value = String(current.number || "").trim();
+  document.getElementById("complement").value = String(current.complement || "").trim();
+}
+
+document.getElementById("cep")?.addEventListener("input", () => {
+  document.getElementById("cep").value = window.UzuuAccount.formatCep(document.getElementById("cep").value);
+});
+
+document.getElementById("state")?.addEventListener("input", () => {
+  document.getElementById("state").value = window.UzuuAccount.normalizeState(document.getElementById("state").value);
+});
+
+async function bootAddress() {
+  const localAddress = window.UzuuAccount.loadJson(window.UzuuAccount.keys.shipTo, {}) || {};
+  fillAddressForm(localAddress);
+
+  if (!window.UzuuAccount.getAuthToken()) return;
+
+  try {
+    const session = await window.UzuuAccount.fetchCurrentSession();
+    fillAddressForm(session?.defaultAddress || localAddress);
+  } catch {
+    fillAddressForm(localAddress);
+  }
+}
+
+form?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const payload = readAddressFromForm();
+  const previousLabel = saveButton?.textContent || "Salvar endereco";
+
+  if (saveButton) {
+    saveButton.disabled = true;
+    saveButton.textContent = "Salvando...";
+  }
+  setMessage("");
+
+  try {
+    if (window.UzuuAccount.getAuthToken()) {
+      const session = await window.UzuuAccount.updateCurrentAddress(payload);
+      fillAddressForm(session?.defaultAddress || payload);
+    } else {
+      const currentList = window.UzuuAccount.loadJson(window.UzuuAccount.keys.shipList, []);
+      window.UzuuAccount.saveJson(window.UzuuAccount.keys.shipTo, payload);
+      if (Array.isArray(currentList) && currentList.length) {
+        currentList[0] = { ...currentList[0], ...payload };
+        window.UzuuAccount.saveJson(window.UzuuAccount.keys.shipList, currentList);
+      } else {
+        window.UzuuAccount.saveJson(window.UzuuAccount.keys.shipList, [payload]);
+      }
+    }
+
+    setMessage("Endereco salvo com sucesso.");
+  } catch (error) {
+    setMessage(`Falha ao salvar endereco: ${String(error?.message || "tente novamente.")}`, true);
+  } finally {
+    if (saveButton) {
+      saveButton.disabled = false;
+      saveButton.textContent = previousLabel;
+    }
+  }
+});
+
+bootAddress();
 </script>
-</body></html>
+</body>
+</html>

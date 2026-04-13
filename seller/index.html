@@ -1,0 +1,179 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel do Lojista | Uzuu</title>
+  <meta name="description" content="Area inicial do lojista parceiro da Uzuu para acompanhar status da loja, pedidos e operacao basica do marketplace." />
+  <link rel="canonical" href="https://uzuu.com.br/seller/" />
+  <link rel="icon" href="../favicon.svg?v=20260409i" type="image/svg+xml" />
+  <link rel="stylesheet" href="../style.css?v=20260409i" />
+<link rel="stylesheet" href="/assets/site-header.css?v=24" />
+</head>
+<body>
+  <div id="site-header-root"></div>
+  <script src="/assets/site-header.js?v=13"></script>
+
+  <main class="page-shell container seller-portal-page">
+    <section class="page-card seller-portal-hero">
+      <div>
+        <p class="eyebrow">Seller center</p>
+        <h1>Painel do lojista parceiro</h1>
+        <p>Area inicial da Uzuu para sellers acompanharem status da loja, comissao, pedidos vinculados e primeiros indicadores da operacao.</p>
+      </div>
+      <div class="marketplace-link-row">
+        <a class="btn primary" href="/marketplace/cadastro/">Entrada de seller</a>
+        <a class="btn secondary" href="/marketplace/">Ver visao do marketplace</a>
+      </div>
+    </section>
+
+    <section class="page-card seller-portal-access-card">
+      <div class="seller-portal-access-card__copy">
+        <p class="eyebrow">Acesso do parceiro</p>
+        <h2>Entrar no painel da sua loja</h2>
+        <p>Use o email da sua loja e a senha criada no cadastro do marketplace. Se a entrada precisar de revisao manual, a operacao da Uzuu libera o acesso depois.</p>
+      </div>
+
+      <form id="seller-portal-access-form" class="seller-form seller-portal-access-form">
+        <div class="seller-form__grid">
+          <label>
+            <span>Email da loja</span>
+            <input type="email" name="identifier" placeholder="contato@sualoja.com" />
+          </label>
+          <label>
+            <span>Senha</span>
+            <input type="password" name="password" placeholder="Sua senha inicial" />
+          </label>
+        </div>
+
+        <div class="seller-form__actions">
+          <button class="btn primary" type="submit">Entrar no painel</button>
+          <button id="seller-portal-logout-button" class="btn secondary" type="button">Sair</button>
+        </div>
+        <p id="seller-portal-access-message" class="seller-form__message" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section class="seller-portal-grid" aria-label="Indicadores do seller">
+      <article class="seller-portal-stat page-card">
+        <span>Status da loja</span>
+        <strong id="seller-portal-status">--</strong>
+      </article>
+      <article class="seller-portal-stat page-card">
+        <span>Pedidos vinculados</span>
+        <strong id="seller-portal-orders-total">--</strong>
+      </article>
+      <article class="seller-portal-stat page-card">
+        <span>GMV da loja</span>
+        <strong id="seller-portal-gross-sales">--</strong>
+      </article>
+      <article class="seller-portal-stat page-card">
+        <span>Comissao estimada</span>
+        <strong id="seller-portal-commission">--</strong>
+      </article>
+      <article class="seller-portal-stat page-card">
+        <span>Produtos cadastrados</span>
+        <strong id="seller-portal-products-total">--</strong>
+      </article>
+    </section>
+
+    <section class="page-card seller-portal-columns">
+      <article class="seller-portal-panel">
+        <div class="seller-portal-panel__head">
+          <div>
+            <p class="eyebrow">Loja conectada</p>
+            <h2>Resumo da loja</h2>
+          </div>
+        </div>
+        <div id="seller-portal-store-card" class="seller-portal-store-card">
+          <p class="admin-empty">Entre para carregar os dados da loja.</p>
+        </div>
+      </article>
+
+      <article class="seller-portal-panel">
+        <div class="seller-portal-panel__head">
+          <div>
+            <p class="eyebrow">Operacao</p>
+            <h2>Status da conexao</h2>
+          </div>
+        </div>
+        <div class="admin-health-box">
+          <p><strong>Base:</strong> <span id="seller-portal-api-base">--</span></p>
+          <p><strong>Ultima atualizacao:</strong> <span id="seller-portal-last-sync">--</span></p>
+          <p id="seller-portal-sync-message" class="admin-sync-message">Aguardando autenticacao...</p>
+        </div>
+      </article>
+    </section>
+
+    <section class="page-card seller-portal-panel">
+      <div class="seller-portal-panel__head">
+        <div>
+          <p class="eyebrow">Pedidos da loja</p>
+          <h2>Pedidos vinculados ao seller</h2>
+        </div>
+      </div>
+      <div id="seller-portal-orders-list" class="admin-list seller-portal-orders-list">
+        <p class="admin-empty">Quando houver pedidos ligados a sua loja, eles aparecerao aqui.</p>
+      </div>
+    </section>
+
+    <section class="page-card seller-portal-panel">
+      <div class="seller-portal-panel__head">
+        <div>
+          <p class="eyebrow">Catalogo da loja</p>
+          <h2>Produtos operacionais do seller</h2>
+        </div>
+      </div>
+
+      <form id="seller-product-form" class="seller-form seller-product-form">
+        <div class="seller-form__grid">
+          <label>
+            <span>Nome do produto</span>
+            <input type="text" name="name" placeholder="Ex.: Jaqueta Uzuu Partner" />
+          </label>
+          <label>
+            <span>Categoria</span>
+            <input type="text" name="category" placeholder="Ex.: Jaquetas" />
+          </label>
+          <label>
+            <span>Preco (R$)</span>
+            <input type="number" step="0.01" min="0" name="price" placeholder="199.90" />
+          </label>
+          <label>
+            <span>Estoque</span>
+            <input type="number" step="1" min="0" name="stock" placeholder="12" />
+          </label>
+          <label>
+            <span>Tamanho / faixa</span>
+            <input type="text" name="sizeLabel" placeholder="Ex.: P ao GG" />
+          </label>
+          <label>
+            <span>Selo da vitrine</span>
+            <input type="text" name="badge" placeholder="Ex.: novo drop" />
+          </label>
+          <label>
+            <span>URL da imagem</span>
+            <input type="url" name="image" placeholder="https://..." />
+          </label>
+        </div>
+        <label>
+          <span>Descricao</span>
+          <textarea name="description" rows="3" placeholder="Resumo rapido do produto, caimento e acabamento."></textarea>
+        </label>
+        <div class="seller-form__actions">
+          <button class="btn primary" type="submit">Enviar produto para revisao</button>
+        </div>
+        <p id="seller-product-message" class="seller-form__message" aria-live="polite"></p>
+      </form>
+
+      <div id="seller-portal-products-list" class="admin-list seller-portal-products-list">
+        <p class="admin-empty">Quando a loja cadastrar produtos, eles aparecem aqui.</p>
+      </div>
+    </section>
+  </main>
+
+  <script>window.__UZUU_API_BASE__ = "/ops-api";</script>
+  <script src="/assets/api-client.js?v=2"></script>
+  <script src="./script.js?v=5"></script>
+</body>
+</html>

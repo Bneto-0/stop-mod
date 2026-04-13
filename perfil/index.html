@@ -1,12 +1,12 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Minha conta | Uzuu</title>
-  <link rel="icon" href="../favicon.svg?v=20260409c" type="image/svg+xml" />
-  <link rel="stylesheet" href="../style.css?v=20260409d" />
-  <link rel="stylesheet" href="/assets/site-header.css?v=23" />
+  <link rel="icon" href="../favicon.svg?v=20260409g" type="image/svg+xml" />
+  <link rel="stylesheet" href="../style.css?v=20260412c" />
+<link rel="stylesheet" href="/assets/site-header.css?v=24" />
 </head>
 <body>
 <div id="site-header-root"></div>
@@ -80,25 +80,13 @@
     </div>
   </section>
 </main>
+<script src="/assets/api-client.js?v=2"></script>
+<script src="/assets/account-client.js?v=1"></script>
 <script>
 const profileName = document.getElementById("profile-name");
 const profileText = document.getElementById("profile-text");
 const profileLoginAction = document.getElementById("profile-login-action");
 const profileLogoutAction = document.getElementById("profile-logout-action");
-const PROFILE_KEY = "stopmod_profile";
-const PROFILE_EXTRA_KEY = "stopmod_profile_extra";
-const AUTH_TOKEN_KEY = "stopmod_auth_token";
-const AUTH_LAST_SEEN_KEY = "stopmod_auth_last_seen";
-const SHIP_KEY = "stopmod_ship_to";
-const SHIP_LIST_KEY = "stopmod_ship_list";
-
-function loadJson(key) {
-  try {
-    return JSON.parse(localStorage.getItem(key) || "null");
-  } catch {
-    return null;
-  }
-}
 
 function renderSummary(profile) {
   if (profile && profile.name) {
@@ -113,17 +101,27 @@ function renderSummary(profile) {
 }
 
 profileLogoutAction?.addEventListener("click", () => {
-  localStorage.removeItem(PROFILE_KEY);
-  localStorage.removeItem(PROFILE_EXTRA_KEY);
-  localStorage.removeItem(AUTH_TOKEN_KEY);
-  localStorage.removeItem(AUTH_LAST_SEEN_KEY);
-  localStorage.removeItem(SHIP_KEY);
-  localStorage.removeItem(SHIP_LIST_KEY);
+  if (window.UzuuAccount?.clearSession) {
+    window.UzuuAccount.clearSession();
+  }
   window.location.href = "../login/";
 });
 
-const profile = loadJson(PROFILE_KEY) || {};
-renderSummary(profile);
+(async () => {
+  const localProfile = window.UzuuAccount?.loadJson?.(window.UzuuAccount.keys.profile, {}) || {};
+  renderSummary(localProfile);
+
+  if (!window.UzuuAccount?.getAuthToken?.()) {
+    return;
+  }
+
+  try {
+    const session = await window.UzuuAccount.fetchCurrentSession();
+    renderSummary(session?.profile || localProfile);
+  } catch {
+    renderSummary(localProfile);
+  }
+})();
 </script>
 </body>
 </html>

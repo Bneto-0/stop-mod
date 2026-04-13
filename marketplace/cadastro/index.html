@@ -1,0 +1,262 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cadastro Marketplace | Uzuu</title>
+  <meta name="description" content="Abra sua candidatura como seller no marketplace da Uzuu em uma pagina separada, com fluxo proprio de entrada para parceiros." />
+  <link rel="canonical" href="https://uzuu.com.br/marketplace/cadastro/" />
+  <link rel="icon" href="../../favicon.svg?v=20260409g" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../style.css?v=20260412c" />
+<link rel="stylesheet" href="/assets/site-header.css?v=24" />
+</head>
+<body>
+  <div id="site-header-root"></div>
+  <script src="/assets/site-header.js?v=13"></script>
+
+  <main class="page-shell container seller-page">
+    <section class="page-card marketplace-hero-card">
+      <div class="marketplace-hero-card__copy">
+        <p class="eyebrow">Cadastro marketplace</p>
+        <h1>Abra sua loja parceira em uma pagina propria.</h1>
+        <p>
+          Esse espaco foi separado da apresentacao institucional para deixar o onboarding mais direto.
+          Aqui a Uzuu recebe os dados da operacao, categorias iniciais e capacidade da sua loja para entrar no marketplace.
+        </p>
+        <div class="marketplace-link-row">
+          <a class="btn primary" href="#seller-onboarding-form">Comecar cadastro</a>
+          <a class="btn secondary" href="/vender/">Entender como funciona</a>
+        </div>
+      </div>
+
+      <div class="marketplace-hero-card__stats">
+        <article class="marketplace-hero-stat">
+          <strong>Pagina separada</strong>
+          <span>O fluxo de candidatura fica isolado da pagina comercial e mais proximo de um onboarding real.</span>
+        </article>
+        <article class="marketplace-hero-stat">
+          <strong>Entrada organizada</strong>
+          <span>A Uzuu recebe dados da loja, categorias e resumo operacional em uma trilha propria.</span>
+        </article>
+        <article class="marketplace-hero-stat">
+          <strong>Analise interna</strong>
+          <span>Quando os criterios do onboarding forem atendidos, a loja pode ser aprovada automaticamente.</span>
+        </article>
+        <article class="marketplace-hero-stat">
+          <strong>Escala futura</strong>
+          <span>Essa rota ja prepara o projeto para virar onboarding mais completo, com documentos e conta financeira.</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="page-card marketplace-columns">
+      <article class="marketplace-column">
+        <p class="eyebrow">Antes de enviar</p>
+        <h2>O que a Uzuu espera do parceiro</h2>
+        <ul class="marketplace-list">
+          <li>Catalogo com apresentacao clara e fotos consistentes.</li>
+          <li>Preco, estoque e variacoes organizados para operar com regularidade.</li>
+          <li>Capacidade real de separar, postar e acompanhar pedidos.</li>
+          <li>Atendimento alinhado com troca, suporte e reputacao do marketplace.</li>
+        </ul>
+      </article>
+
+      <article class="marketplace-column">
+        <p class="eyebrow">Depois do envio</p>
+        <h2>Como a aprovacao funciona</h2>
+        <ol class="marketplace-steps">
+          <li>Se o cadastro vier completo e dentro dos criterios, a loja ja entra aprovada.</li>
+          <li>Se faltar algum criterio importante, a entrada segue para revisao manual da operacao.</li>
+          <li>Com aprovacao imediata, o seller ja pode usar email e senha para entrar no painel.</li>
+          <li>Com boa performance, a loja pode ganhar mais catalogo, campanhas e destaque.</li>
+        </ol>
+      </article>
+    </section>
+
+    <section class="helper-strip marketplace-card-grid" aria-label="Perfil de lojas parceiras">
+      <article class="helper-card marketplace-card">
+        <p class="eyebrow">Marca autoral</p>
+        <h3>Catalogo com identidade e consistencia</h3>
+        <p>Lojas com imagem forte, grade clara e curadoria visual entram melhor no fluxo da plataforma.</p>
+      </article>
+      <article class="helper-card marketplace-card">
+        <p class="eyebrow">Operacao pronta</p>
+        <h3>Separacao, envio e atendimento organizados</h3>
+        <p>O marketplace funciona melhor com parceiros que ja conseguem operar estoque, postagem e troca com previsibilidade.</p>
+      </article>
+      <article class="helper-card marketplace-card">
+        <p class="eyebrow">Crescimento</p>
+        <h3>Espaco para virar loja destaque</h3>
+        <p>Com boa performance, a loja pode ganhar mais vitrine, colecoes, campanhas e presenca dentro da Uzuu.</p>
+      </article>
+    </section>
+
+    <section class="page-card seller-form-card">
+      <div class="seller-form-card__copy">
+        <p class="eyebrow">Candidatura de seller</p>
+        <h2>Preencha o cadastro da sua loja parceira</h2>
+        <p>
+          Essa pagina ja funciona como entrada de lojas parceiras no marketplace. Se todos os criterios estiverem certos, a aprovacao acontece na hora, em um fluxo mais parecido com grandes marketplaces.
+        </p>
+      </div>
+
+      <form id="seller-onboarding-form" class="seller-form">
+        <div class="seller-form-card__copy">
+          <p class="eyebrow">Loja</p>
+          <h3>Identificacao da empresa</h3>
+        </div>
+        <div class="seller-form__grid">
+          <label>
+            <span>Nome da loja</span>
+            <input type="text" name="storeName" placeholder="Ex.: Atelie Uzuu Parceiro" />
+          </label>
+          <label>
+            <span>Razao social ou nome da empresa</span>
+            <input type="text" name="legalName" placeholder="Ex.: Atelie Uzuu Comercio de Moda" />
+          </label>
+          <label>
+            <span>Tipo de negocio</span>
+            <select name="businessType">
+              <option value="">Selecione</option>
+              <option value="marca">Marca propria</option>
+              <option value="lojista">Lojista multimarcas</option>
+              <option value="fabricante">Fabricante</option>
+              <option value="distribuidor">Distribuidor</option>
+            </select>
+          </label>
+          <label>
+            <span>Documento principal</span>
+            <select name="documentType">
+              <option value="">Selecione</option>
+              <option value="cnpj">CNPJ</option>
+              <option value="cpf">CPF</option>
+            </select>
+          </label>
+          <label>
+            <span>Numero do documento</span>
+            <input type="text" name="documentNumber" placeholder="00.000.000/0001-00" />
+          </label>
+          <label>
+            <span>Responsavel</span>
+            <input type="text" name="contactName" placeholder="Seu nome" />
+          </label>
+          <label>
+            <span>Email</span>
+            <input type="email" name="email" placeholder="contato@sualoja.com" />
+          </label>
+          <label>
+            <span>Telefone</span>
+            <input type="text" name="phone" placeholder="(11) 99999-9999" />
+          </label>
+          <label>
+            <span>Cidade</span>
+            <input type="text" name="city" placeholder="Sao Paulo" />
+          </label>
+          <label>
+            <span>Estado</span>
+            <input type="text" name="state" placeholder="SP" maxlength="2" />
+          </label>
+        </div>
+
+        <div class="seller-form-card__copy">
+          <p class="eyebrow">Acesso</p>
+          <h3>Crie a senha do painel da loja</h3>
+        </div>
+        <div class="seller-form__grid">
+          <label>
+            <span>Senha da loja</span>
+            <input type="password" name="sellerPassword" placeholder="Minimo de 6 caracteres" />
+          </label>
+          <label>
+            <span>Confirmar senha</span>
+            <input type="password" name="sellerPasswordConfirm" placeholder="Repita a senha" />
+          </label>
+        </div>
+
+        <div class="seller-form-card__copy">
+          <p class="eyebrow">Presenca</p>
+          <h3>Como a loja se apresenta</h3>
+        </div>
+        <div class="seller-form__grid">
+          <label>
+            <span>Site ou loja online</span>
+            <input type="url" name="website" placeholder="https://sualoja.com.br" />
+          </label>
+          <label>
+            <span>Instagram da marca</span>
+            <input type="text" name="instagram" placeholder="@sualoja" />
+          </label>
+        </div>
+
+        <div class="seller-form-card__copy">
+          <p class="eyebrow">Operacao</p>
+          <h3>Capacidade da loja</h3>
+        </div>
+        <div class="seller-form__grid">
+          <label>
+            <span>Quantidade de produtos ativos</span>
+            <input type="number" name="catalogSize" min="0" placeholder="Ex.: 120" />
+          </label>
+          <label>
+            <span>Pedidos por mes</span>
+            <input type="number" name="monthlyOrders" min="0" placeholder="Ex.: 80" />
+          </label>
+          <label>
+            <span>Faixa de ticket medio</span>
+            <select name="averageTicketRange">
+              <option value="">Selecione</option>
+              <option value="ate_100">Ate R$ 100</option>
+              <option value="100_200">R$ 100 a R$ 200</option>
+              <option value="200_400">R$ 200 a R$ 400</option>
+              <option value="acima_400">Acima de R$ 400</option>
+            </select>
+          </label>
+          <label>
+            <span>Prazo medio para postagem</span>
+            <select name="shippingLeadTime">
+              <option value="">Selecione</option>
+              <option value="24h">Ate 24h</option>
+              <option value="48h">Ate 48h</option>
+              <option value="72h">Ate 72h</option>
+              <option value="mais_72h">Mais de 72h</option>
+            </select>
+          </label>
+        </div>
+
+        <fieldset class="seller-form__categories">
+          <legend>Categorias iniciais</legend>
+          <label><input type="checkbox" name="seller-categories" value="Moda" /> Moda</label>
+          <label><input type="checkbox" name="seller-categories" value="Calcados" /> Calcados</label>
+          <label><input type="checkbox" name="seller-categories" value="Acessorios" /> Acessorios</label>
+          <label><input type="checkbox" name="seller-categories" value="Lifestyle" /> Lifestyle</label>
+        </fieldset>
+
+        <label>
+          <span>Resumo da operacao</span>
+          <textarea name="message" rows="5" placeholder="Conte sobre catalogo, ticket medio, estoque, fotos e capacidade de envio."></textarea>
+        </label>
+
+        <label class="seller-form__consent">
+          <input type="checkbox" name="termsAccepted" value="true" />
+          <span>Confirmo que a loja consegue operar atendimento, troca e envio dentro das regras iniciais do marketplace.</span>
+        </label>
+
+        <div class="admin-health-box">
+          <p><strong>Aprovacao imediata:</strong> acontece quando os dados da loja, documento, contato, operacao, presenca digital, senha e aceite estiverem completos.</p>
+          <p><strong>Revisao manual:</strong> entra em acao somente quando faltar algum criterio importante para liberar a loja com seguranca.</p>
+        </div>
+
+        <div class="seller-form__actions">
+          <button class="btn primary" type="submit">Cadastrar loja parceira</button>
+          <a class="btn secondary" href="/seller/">Abrir painel do lojista</a>
+        </div>
+        <p id="seller-form-message" class="seller-form__message" aria-live="polite"></p>
+      </form>
+    </section>
+  </main>
+
+  <script>window.__UZUU_API_BASE__ = "/ops-api";</script>
+  <script src="/assets/api-client.js?v=2"></script>
+  <script src="./script.js?v=1"></script>
+</body>
+</html>

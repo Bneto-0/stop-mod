@@ -1,12 +1,12 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Meus dados | Uzuu</title>
-  <link rel="icon" href="../../favicon.svg?v=20260409c" type="image/svg+xml" />
-  <link rel="stylesheet" href="../../style.css?v=20260409d" />
-  <link rel="stylesheet" href="/assets/site-header.css?v=23" />
+  <link rel="icon" href="../../favicon.svg?v=20260409g" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../style.css?v=20260412c" />
+<link rel="stylesheet" href="/assets/site-header.css?v=24" />
 </head>
 <body>
 <div id="site-header-root"></div>
@@ -100,11 +100,9 @@
     </form>
   </section>
 </main>
+<script src="/assets/api-client.js?v=2"></script>
+<script src="/assets/account-client.js?v=1"></script>
 <script>
-const PROFILE_KEY = "stopmod_profile";
-const PROFILE_EXTRA_KEY = "stopmod_profile_extra";
-const SHIP_KEY = "stopmod_ship_to";
-const SHIP_LIST_KEY = "stopmod_ship_list";
 const profileName = document.getElementById("profile-name");
 const profileText = document.getElementById("profile-text");
 const profileDataForm = document.getElementById("profile-data-form");
@@ -125,48 +123,6 @@ const dataFields = {
   state: document.getElementById("data-state")
 };
 
-function loadJson(key) {
-  try {
-    return JSON.parse(localStorage.getItem(key) || "null");
-  } catch {
-    return null;
-  }
-}
-
-function saveJson(key, value) {
-  localStorage.setItem(key, JSON.stringify(value));
-}
-
-function digitsOnly(value) {
-  return String(value || "").replace(/\D/g, "");
-}
-
-function formatCpf(value) {
-  const cpf = digitsOnly(value).slice(0, 11);
-  if (cpf.length <= 3) return cpf;
-  if (cpf.length <= 6) return `${cpf.slice(0, 3)}.${cpf.slice(3)}`;
-  if (cpf.length <= 9) return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6)}`;
-  return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6, 9)}-${cpf.slice(9)}`;
-}
-
-function formatCep(value) {
-  const cep = digitsOnly(value).slice(0, 8);
-  if (cep.length <= 5) return cep;
-  return `${cep.slice(0, 5)}-${cep.slice(5)}`;
-}
-
-function formatPhone(value) {
-  const digits = digitsOnly(value).slice(0, 11);
-  if (digits.length <= 2) return digits;
-  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-  if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
-  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-}
-
-function normalizeState(value) {
-  return String(value || "").replace(/[^A-Za-z]/g, "").toUpperCase().slice(0, 2);
-}
-
 function deriveUsername(fullName, fallbackEmail) {
   const words = String(fullName || "").trim().split(/\s+/).filter(Boolean);
   if (words.length >= 2) return `${words[0]} ${words[1]}`.trim();
@@ -184,10 +140,7 @@ function renderSummary(profile) {
   profileText.textContent = "Entre ou cadastre-se para salvar os dados do cliente.";
 }
 
-function fillProfileForm() {
-  const profile = loadJson(PROFILE_KEY) || {};
-  const extra = loadJson(PROFILE_EXTRA_KEY) || {};
-  const ship = loadJson(SHIP_KEY) || {};
+function fillProfileForm(profile, extra, ship) {
   const fullName = String(extra.fullName || profile.fullName || profile.name || "").trim();
   const email = String(extra.email || profile.email || "").trim();
 
@@ -196,16 +149,16 @@ function fillProfileForm() {
   dataFields.fullName.value = fullName;
   dataFields.username.value = String(extra.username || deriveUsername(fullName, email));
   dataFields.birthDate.value = String(extra.birthDate || profile.birthDate || "").trim();
-  dataFields.cpf.value = formatCpf(extra.cpf || profile.cpf || extra.cpfMasked || "");
+  dataFields.cpf.value = window.UzuuAccount.formatCpf(extra.cpf || profile.cpf || extra.cpfMasked || "");
   dataFields.email.value = email;
-  dataFields.phone.value = formatPhone(extra.phone || profile.phone || "");
-  dataFields.cep.value = formatCep(ship.cep || "");
+  dataFields.phone.value = window.UzuuAccount.formatPhone(extra.phone || profile.phone || "");
+  dataFields.cep.value = window.UzuuAccount.formatCep(ship.cep || "");
   dataFields.street.value = String(ship.street || "").trim();
   dataFields.number.value = String(ship.number || "").trim();
   dataFields.complement.value = String(ship.complement || "").trim();
   dataFields.district.value = String(ship.district || "").trim();
   dataFields.city.value = String(ship.city || "").trim();
-  dataFields.state.value = normalizeState(ship.state || "");
+  dataFields.state.value = window.UzuuAccount.normalizeState(ship.state || "");
 }
 
 function updateHeaderPreview(name, picture, address) {
@@ -236,76 +189,131 @@ function setStatus(text, isError) {
 }
 
 dataFields.cpf?.addEventListener("input", () => {
-  dataFields.cpf.value = formatCpf(dataFields.cpf.value);
+  dataFields.cpf.value = window.UzuuAccount.formatCpf(dataFields.cpf.value);
 });
 
 dataFields.cep?.addEventListener("input", () => {
-  dataFields.cep.value = formatCep(dataFields.cep.value);
+  dataFields.cep.value = window.UzuuAccount.formatCep(dataFields.cep.value);
 });
 
 dataFields.phone?.addEventListener("input", () => {
-  dataFields.phone.value = formatPhone(dataFields.phone.value);
+  dataFields.phone.value = window.UzuuAccount.formatPhone(dataFields.phone.value);
 });
 
 dataFields.state?.addEventListener("input", () => {
-  dataFields.state.value = normalizeState(dataFields.state.value);
+  dataFields.state.value = window.UzuuAccount.normalizeState(dataFields.state.value);
 });
 
-profileDataForm?.addEventListener("submit", (event) => {
+async function loadAccountState() {
+  const localProfile = window.UzuuAccount.loadJson(window.UzuuAccount.keys.profile, {}) || {};
+  const localExtra = window.UzuuAccount.loadJson(window.UzuuAccount.keys.profileExtra, {}) || {};
+  const localShip = window.UzuuAccount.loadJson(window.UzuuAccount.keys.shipTo, {}) || {};
+  fillProfileForm(localProfile, localExtra, localShip);
+
+  if (!window.UzuuAccount.getAuthToken()) {
+    return { profile: localProfile, extra: localExtra, ship: localShip };
+  }
+
+  try {
+    const session = await window.UzuuAccount.fetchCurrentSession();
+    const sessionProfile = session?.profile || localProfile;
+    const sessionExtra = session?.extra || localExtra;
+    const sessionShip = session?.defaultAddress || localShip;
+    fillProfileForm(sessionProfile, sessionExtra, sessionShip);
+    return { profile: sessionProfile, extra: sessionExtra, ship: sessionShip };
+  } catch {
+    return { profile: localProfile, extra: localExtra, ship: localShip };
+  }
+}
+
+profileDataForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const currentProfile = loadJson(PROFILE_KEY) || {};
-  const currentExtra = loadJson(PROFILE_EXTRA_KEY) || {};
-  const currentShip = loadJson(SHIP_KEY) || {};
+  const currentProfile = window.UzuuAccount.loadJson(window.UzuuAccount.keys.profile, {}) || {};
+  const currentExtra = window.UzuuAccount.loadJson(window.UzuuAccount.keys.profileExtra, {}) || {};
+  const currentShip = window.UzuuAccount.loadJson(window.UzuuAccount.keys.shipTo, {}) || {};
   const fullName = String(dataFields.fullName.value || "").trim();
   const email = String(dataFields.email.value || "").trim().toLowerCase();
   const username = String(dataFields.username.value || deriveUsername(fullName, email)).trim();
-  const updatedProfile = {
-    ...currentProfile,
-    name: fullName || currentProfile.name || "Cliente Uzuu",
-    email,
-    picture: String(currentProfile.picture || "").trim()
-  };
-  const updatedExtra = {
-    ...currentExtra,
-    displayName: fullName || currentExtra.displayName || currentProfile.name || "",
-    fullName: fullName || currentExtra.fullName || currentProfile.name || "",
-    birthDate: String(dataFields.birthDate.value || "").trim(),
-    cpf: digitsOnly(dataFields.cpf.value || ""),
-    cpfMasked: formatCpf(dataFields.cpf.value || ""),
-    email,
-    phone: digitsOnly(dataFields.phone.value || ""),
+  const profilePayload = {
+    fullName,
     username,
-    registrationComplete: true,
-    googlePending: false,
-    loginProvider: String(currentExtra.loginProvider || "password")
+    birthDate: String(dataFields.birthDate.value || "").trim(),
+    cpf: window.UzuuAccount.digitsOnly(dataFields.cpf.value || ""),
+    email,
+    phone: window.UzuuAccount.digitsOnly(dataFields.phone.value || "")
   };
-  const updatedShip = {
+  const addressPayload = {
     ...currentShip,
-    cep: digitsOnly(dataFields.cep.value || ""),
+    cep: window.UzuuAccount.digitsOnly(dataFields.cep.value || ""),
     street: String(dataFields.street.value || "").trim(),
     number: String(dataFields.number.value || "").trim(),
     complement: String(dataFields.complement.value || "").trim(),
     district: String(dataFields.district.value || "").trim(),
     city: String(dataFields.city.value || "").trim(),
-    state: normalizeState(dataFields.state.value || "")
+    state: window.UzuuAccount.normalizeState(dataFields.state.value || "")
   };
 
-  saveJson(PROFILE_KEY, updatedProfile);
-  saveJson(PROFILE_EXTRA_KEY, updatedExtra);
-  saveJson(SHIP_KEY, updatedShip);
-
-  const shipList = loadJson(SHIP_LIST_KEY);
-  if (Array.isArray(shipList) && shipList.length) {
-    shipList[0] = { ...shipList[0], ...updatedShip };
-    saveJson(SHIP_LIST_KEY, shipList);
+  const saveButton = document.getElementById("profile-data-save");
+  const previousLabel = saveButton?.textContent || "Salvar alteracoes";
+  if (saveButton) {
+    saveButton.disabled = true;
+    saveButton.textContent = "Salvando...";
   }
+  setStatus("");
 
-  renderSummary(updatedProfile);
-  updateHeaderPreview(updatedProfile.name, updatedProfile.picture, updatedShip);
-  setStatus("Dados alterados com sucesso.", false);
+  try {
+    if (window.UzuuAccount.getAuthToken()) {
+      await window.UzuuAccount.updateCurrentProfile(profilePayload);
+      const session = await window.UzuuAccount.updateCurrentAddress(addressPayload);
+      fillProfileForm(session?.profile || currentProfile, session?.extra || currentExtra, session?.defaultAddress || addressPayload);
+      updateHeaderPreview(session?.profile?.name || fullName, session?.profile?.picture || currentProfile.picture, session?.defaultAddress || addressPayload);
+    } else {
+      const updatedProfile = {
+        ...currentProfile,
+        name: fullName || currentProfile.name || "Cliente Uzuu",
+        email,
+        picture: String(currentProfile.picture || "").trim()
+      };
+      const updatedExtra = {
+        ...currentExtra,
+        displayName: fullName || currentExtra.displayName || currentProfile.name || "",
+        fullName: fullName || currentExtra.fullName || currentProfile.name || "",
+        birthDate: profilePayload.birthDate,
+        cpf: profilePayload.cpf,
+        cpfMasked: window.UzuuAccount.formatCpf(profilePayload.cpf),
+        email,
+        phone: profilePayload.phone,
+        username,
+        registrationComplete: true,
+        googlePending: false,
+        loginProvider: String(currentExtra.loginProvider || "password")
+      };
+      window.UzuuAccount.saveJson(window.UzuuAccount.keys.profile, updatedProfile);
+      window.UzuuAccount.saveJson(window.UzuuAccount.keys.profileExtra, updatedExtra);
+      window.UzuuAccount.saveJson(window.UzuuAccount.keys.shipTo, addressPayload);
+      const shipList = window.UzuuAccount.loadJson(window.UzuuAccount.keys.shipList, []);
+      if (Array.isArray(shipList) && shipList.length) {
+        shipList[0] = { ...shipList[0], ...addressPayload };
+        window.UzuuAccount.saveJson(window.UzuuAccount.keys.shipList, shipList);
+      }
+      fillProfileForm(updatedProfile, updatedExtra, addressPayload);
+      updateHeaderPreview(updatedProfile.name, updatedProfile.picture, addressPayload);
+    }
+
+    setStatus("Dados alterados com sucesso.", false);
+  } catch (error) {
+    setStatus(`Falha ao salvar dados: ${String(error?.message || "tente novamente.")}`, true);
+  } finally {
+    if (saveButton) {
+      saveButton.disabled = false;
+      saveButton.textContent = previousLabel;
+    }
+  }
 });
 
-fillProfileForm();
+loadAccountState().then(({ profile, ship }) => {
+  updateHeaderPreview(profile?.name, profile?.picture, ship || {});
+});
 </script>
 </body>
 </html>
