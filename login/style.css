@@ -1,14 +1,14 @@
 :root {
   --bg: #ffffff;
-  --text: #241914;
-  --muted: #7c685d;
-  --line: #e8ddd2;
-  --line-strong: #d4c3b6;
-  --accent: #b67d4b;
-  --accent-hover: #a36b3c;
-  --accent-deep: #5e3d2c;
-  --soft: #f7efe7;
-  --card-shadow: 0 26px 60px rgba(79, 54, 40, 0.12);
+  --text: #111111;
+  --muted: #666666;
+  --line: #dddddd;
+  --line-strong: #cfcfcf;
+  --accent: #121212;
+  --accent-hover: #000000;
+  --accent-deep: #050505;
+  --soft: #f2f2f2;
+  --card-shadow: 0 26px 60px rgba(0, 0, 0, 0.12);
 }
 
 * {
@@ -30,15 +30,15 @@ body {
   place-items: center;
   padding: clamp(1.5rem, 4vw, 2.4rem);
   background:
-    radial-gradient(circle at 14% 8%, #f1e3d7 0%, transparent 30%),
-    radial-gradient(circle at 86% 0%, #ead8cb 0%, transparent 34%),
-    linear-gradient(180deg, #fdf8f4 0%, #f6eee7 100%);
+    radial-gradient(circle at 14% 8%, #ededed 0%, transparent 30%),
+    radial-gradient(circle at 86% 0%, #e3e3e3 0%, transparent 34%),
+    linear-gradient(180deg, #fafafa 0%, #f0f0f0 100%);
 }
 
 .card {
   width: min(560px, 100%);
-  background: linear-gradient(180deg, #fffdfa 0%, #fbf5ef 100%);
-  border: 1px solid rgba(109, 77, 58, 0.14);
+  background: linear-gradient(180deg, #ffffff 0%, #f7f7f7 100%);
+  border: 1px solid rgba(17, 17, 17, 0.1);
   border-radius: 24px;
   padding: 1.55rem;
   box-shadow: var(--card-shadow);
@@ -144,7 +144,7 @@ input:focus {
   transform: translateY(-50%);
   border: none;
   background: transparent;
-  color: #6f5a4d;
+  color: #5f5f5f;
   padding: 0.25rem 0.35rem;
   font-weight: 700;
   font-size: 0.8rem;
@@ -171,13 +171,13 @@ input:focus {
 }
 
 .btn.primary {
-  background: linear-gradient(135deg, #cd985a 0%, #aa6f3f 100%);
+  background: linear-gradient(135deg, #050505 0%, #1b1b1b 100%);
   color: #fff;
-  box-shadow: 0 14px 24px rgba(120, 79, 47, 0.18);
+  box-shadow: 0 14px 24px rgba(0, 0, 0, 0.18);
 }
 
 .btn.primary:hover {
-  background: linear-gradient(135deg, #d9a86f 0%, #b67c49 100%);
+  background: linear-gradient(135deg, #111111 0%, #252525 100%);
 }
 
 .btn.secondary {

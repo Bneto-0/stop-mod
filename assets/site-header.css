@@ -2,9 +2,9 @@
   position: sticky;
   top: 0;
   z-index: 40;
-  background: linear-gradient(180deg, rgba(96, 62, 44, 0.985) 0%, rgba(87, 56, 40, 0.985) 100%);
+  background: linear-gradient(180deg, rgba(7, 7, 7, 0.985) 0%, rgba(19, 19, 19, 0.985) 100%);
   border-bottom: none;
-  box-shadow: 0 14px 28px rgba(28, 16, 12, 0.16);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.22);
   backdrop-filter: blur(16px);
 }
 
@@ -41,7 +41,7 @@
 }
 
 .shared-brand {
-  color: #fff2df;
+  color: #fafafa;
   text-decoration: none;
   font-size: 1.82rem;
   font-weight: 900;
@@ -61,7 +61,7 @@
   max-width: 310px;
   padding-left: 0;
   border-left: none;
-  color: #f0dcc6;
+  color: #d9d9d9;
   text-decoration: none;
 }
 
@@ -84,14 +84,14 @@
   margin-bottom: 2px;
   font-size: 0.82rem;
   line-height: 1;
-  color: #d8b89c;
+  color: #acacac;
 }
 
 .shared-location strong {
   display: block;
   font-size: 0.96rem;
   line-height: 1.1;
-  color: #fff4e6;
+  color: #f5f5f5;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -110,7 +110,7 @@
   width: 18px;
   height: 18px;
   fill: currentColor;
-  color: #d7b797;
+  color: #b8b8b8;
   transform: translateY(-50%);
   pointer-events: none;
 }
@@ -119,21 +119,21 @@
   width: 100%;
   height: 50px;
   padding: 0 20px 0 50px;
-  border: 1px solid rgba(248, 227, 201, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.07);
-  color: #fff1df;
+  color: #f4f4f4;
   font: inherit;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .shared-search input::placeholder {
-  color: #d6b798;
+  color: #adadad;
 }
 
 .shared-search input:focus {
-  outline: 3px solid rgba(139, 98, 76, 0.2);
-  border-color: rgba(255, 230, 204, 0.26);
+  outline: 3px solid rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.26);
 }
 
 .shared-profile,
@@ -149,7 +149,7 @@
 .shared-header__actions {
   justify-self: end;
   gap: 14px;
-  color: #f3ddc7;
+  color: #ececec;
   white-space: nowrap;
 }
 
@@ -159,10 +159,10 @@
   justify-content: center;
   min-height: 46px;
   padding: 0 20px;
-  border: 1px solid rgba(248, 227, 201, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.07);
-  color: #fff3e0;
+  color: #f8f8f8;
   text-decoration: none;
   font-weight: 700;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -171,8 +171,8 @@
 
 .shared-seller-link:hover,
 .shared-seller-link.is-current {
-  color: #fffaf1;
-  border-color: rgba(255, 239, 219, 0.28);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.28);
   background: rgba(255, 255, 255, 0.1);
 }
 
@@ -331,12 +331,12 @@
 .shared-cat-panel a {
   padding: 10px 12px;
   border-radius: 12px;
-  color: #55382a;
+  color: #161616;
 }
 
 .shared-cat-panel a:hover {
-  background: #f0dcc7;
-  color: #4a2f22;
+  background: #ececec;
+  color: #050505;
 }
 
 .shared-header-spacer {
