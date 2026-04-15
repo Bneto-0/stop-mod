@@ -194,7 +194,7 @@
 .shared-location,
 .shared-nav a,
 .shared-cat-btn {
-  color: #f3ddc7;
+  color: #ececec;
   transition: color 0.18s ease, opacity 0.18s ease;
 }
 
@@ -244,7 +244,7 @@
   margin-left: 0;
   padding-left: 0;
   border-left: none;
-  color: #f1dcc7;
+  color: #dcdcdc;
 }
 
 .shared-cart {
@@ -297,7 +297,7 @@
 .shared-icon-link:hover,
 .shared-cart:hover,
 .shared-location:hover {
-  color: #fffaf2;
+  color: #ffffff;
 }
 
 .shared-cat {
@@ -317,10 +317,10 @@
   display: none;
   flex-direction: column;
   gap: 4px;
-  background: #f9f1e7;
-  border: 1px solid rgba(120, 75, 48, 0.18);
+  background: #f5f5f5;
+  border: 1px solid rgba(17, 17, 17, 0.12);
   border-radius: 18px;
-  box-shadow: 0 18px 38px rgba(28, 16, 12, 0.22);
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.16);
   z-index: 25;
 }
 

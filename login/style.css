@@ -70,7 +70,7 @@ body {
   line-height: 1;
   font-size: 2.25rem;
   color: var(--accent-deep);
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.88), 0 10px 22px rgba(94, 61, 44, 0.08);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.88), 0 10px 22px rgba(0, 0, 0, 0.08);
 }
 
 .login-intro {
@@ -124,11 +124,11 @@ input {
 }
 
 input::placeholder {
-  color: #8a776b;
+  color: #8a8a8a;
 }
 
 input:focus {
-  outline: 3px solid rgba(182, 125, 75, 0.18);
+  outline: 3px solid rgba(17, 17, 17, 0.12);
   outline-offset: 2px;
 }
 
@@ -187,13 +187,13 @@ input:focus {
 }
 
 .btn.secondary:hover {
-  background: #faf3ed;
+  background: #f5f5f5;
 }
 
 .btn.ghost {
   background: #fff;
   border: 1px solid var(--line-strong);
-  color: #3d291f;
+  color: #222222;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -220,7 +220,7 @@ input:focus {
 .link {
   border: none;
   background: transparent;
-  color: #7f6a5c;
+  color: #666666;
   cursor: pointer;
   font-weight: 700;
   padding: 0;
@@ -246,7 +246,7 @@ input:focus {
   align-items: center;
   gap: 0.75rem;
   margin: 0.15rem 0 0.1rem;
-  color: #8b776a;
+  color: #7a7a7a;
   font-weight: 700;
 }
 
@@ -254,7 +254,7 @@ input:focus {
 .login-divider::after {
   content: "";
   height: 1px;
-  background: #e5d8cd;
+  background: #e0e0e0;
 }
 
 .social {
@@ -281,8 +281,8 @@ input:focus {
 
 .soc-ic.g {
   background: #fff;
-  color: #5d3c2c;
-  border: 1px solid rgba(94, 61, 44, 0.14);
+  color: #444444;
+  border: 1px solid rgba(17, 17, 17, 0.12);
 }
 
 .register-block-title {
@@ -311,7 +311,7 @@ input:focus {
 }
 
 .msg.err {
-  color: #a45536;
+  color: #8c2623;
 }
 
 .foot {
@@ -329,7 +329,7 @@ input:focus {
   text-align: center;
   font-weight: 700;
   font-size: 0.9rem;
-  color: #7f6a5c;
+  color: #666666;
 }
 
 .legal a {
@@ -386,7 +386,7 @@ input:focus {
 .x {
   border: 1px solid var(--line);
   background: var(--soft);
-  color: #2f2824;
+  color: #222222;
   border-radius: 10px;
   padding: 0.35rem 0.55rem;
   font-weight: 900;
@@ -394,7 +394,7 @@ input:focus {
 }
 
 .x:hover {
-  background: #ead7c8;
+  background: #e6e6e6;
 }
 
 .modal-body {
@@ -408,12 +408,12 @@ input:focus {
 }
 
 .codebox {
-  border: 1px dashed #d9c4b4;
-  background: #f4ebe3;
+  border: 1px dashed #d5d5d5;
+  background: #f1f1f1;
   border-radius: 14px;
   padding: 0.75rem;
   font-weight: 900;
-  color: #2f2824;
+  color: #222222;
 }
 
 .actions {
