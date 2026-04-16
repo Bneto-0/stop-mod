@@ -347,17 +347,6 @@ button, input, select, textarea { font: inherit; }
   filter: saturate(1) contrast(1.02);
 }
 
-.announcement-slide__media--artwork {
-  background: #000;
-}
-
-.announcement-slide--artwork .announcement-slide__media img {
-  object-fit: contain;
-  object-position: center center;
-  padding: 34px 0;
-  filter: none;
-}
-
 .announcement-slide__overlay {
   position: absolute;
   inset: 0;
@@ -867,16 +856,6 @@ button, input, select, textarea { font: inherit; }
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-.campaign-banner__visual--artwork {
-  background: #000;
-}
-
-.campaign-banner__visual--artwork img {
-  object-fit: contain;
-  object-position: center center;
-  padding: 20px;
 }
 
 .campaign-banner__device-copy {
