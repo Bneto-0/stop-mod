@@ -17,8 +17,7 @@
     processando: /\/perfil\/processando\//i.test(path),
     cupons: /\/cupons\//i.test(path),
     categorias: /\/categorias\//i.test(path),
-    marketplace: /\/marketplace\//i.test(path),
-    vender: /\/vender\/|\/marketplace\/cadastro\//i.test(path)
+    marketplace: /\/marketplace\//i.test(path)
   };
 
   root.innerHTML = `
@@ -43,8 +42,6 @@
         </label>
 
         <div class="shared-header__actions">
-          <a class="shared-seller-link ${navState.vender ? "is-current" : ""}" href="/marketplace/cadastro/" aria-label="Vender na Uzuu">Vender na Uzuu</a>
-
           <div class="shared-account">
             <a id="profile-top-link" class="shared-profile" href="/login/" aria-label="Perfil">
               <img id="profile-top-photo" class="shared-profile-photo" alt="" hidden />
