@@ -32,7 +32,8 @@ const announcements = [
     kicker: "UZUU seleciona",
     title: "ESTILO SEM PAGAR CARO",
     text: "Moda, calcados e acessorios em um so lugar, com vitrine mais forte, curadoria comercial e cara de marketplace em expansao.",
-    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1600&q=80",
+    image: "/assets/banners/uzuu-u-banner.png",
+    mediaMode: "artwork",
     ctaLabel: "Comprar agora",
     ctaHref: "#produtos",
     secondaryLabel: "Ver produtos",
@@ -46,7 +47,8 @@ const campaignBannerData = {
   text: "A Uzuu cresce para unir vitrine, campanha, checkout e lojistas parceiros em uma experiencia mais profissional para comprar e vender.",
   primaryLabel: "Explorar marketplace",
   primaryHref: "/marketplace/",
-  image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200&q=80",
+  image: "/assets/banners/uzuu-u-banner.png",
+  mediaMode: "artwork",
   payments: [
     { label: "Pix", icon: "/assets/icons/pix-logo.svg" },
     { label: "Boleto", text: "Boleto" },
@@ -276,8 +278,8 @@ function renderAnnouncementCarousel() {
   });
 
   announcementTrack.innerHTML = announcements.map((item, index) => `
-    <article class="announcement-slide${index === 0 ? " is-active" : ""}" data-announcement-slide="${index}">
-      <div class="announcement-slide__media">
+    <article class="announcement-slide${index === 0 ? " is-active" : ""}${item.mediaMode === "artwork" ? " announcement-slide--artwork" : ""}" data-announcement-slide="${index}">
+      <div class="announcement-slide__media${item.mediaMode === "artwork" ? " announcement-slide__media--artwork" : ""}">
         <img src="${item.image}" alt="${item.title}" />
         <div class="announcement-slide__overlay"></div>
       </div>
@@ -400,7 +402,7 @@ function renderCampaignBanner() {
           <div class="campaign-banner__device-nav">
             ${campaignBannerData.previewMenu.map((item) => `<span>${item}</span>`).join("")}
           </div>
-          <div class="campaign-banner__visual">
+          <div class="campaign-banner__visual${campaignBannerData.mediaMode === "artwork" ? " campaign-banner__visual--artwork" : ""}">
             <img src="${campaignBannerData.image}" alt="${campaignBannerData.title}" loading="lazy" />
             <div class="campaign-banner__device-copy">
               <span class="campaign-banner__spotlight">ESTILO SEM PAGAR CARO</span>
