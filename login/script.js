@@ -12,6 +12,7 @@ const SHIP_KEY = "stopmod_ship_to";
 const SHIP_LIST_KEY = "stopmod_ship_list";
 const API_BASE_KEY = "stopmod_api_base";
 const PAGBANK_API_BASE_KEY = "stopmod_pagbank_api_base";
+const STORE_AUTH_API_BASE = "/ops-api";
 const DEFAULT_REMOTE_API_BASES = Object.freeze([
   "/ops-api",
   "https://uzuu-backend.onrender.com",
@@ -404,6 +405,9 @@ function uniqueApiBases(list) {
 
 function authFallbackBases(currentBase) {
   const current = normalizeApiBase(currentBase);
+  if (isProdStoreHost()) {
+    return uniqueApiBases([STORE_AUTH_API_BASE]).filter((base) => base !== current);
+  }
   const local = "http://localhost:8787";
   const configuredApiBase = normalizeApiBase(localStorage.getItem(API_BASE_KEY) || "");
   const configuredPagbankBase = normalizeApiBase(localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
@@ -411,6 +415,11 @@ function authFallbackBases(currentBase) {
     ? [local, configuredApiBase, configuredPagbankBase, ...DEFAULT_REMOTE_API_BASES]
     : [configuredApiBase, configuredPagbankBase, ...DEFAULT_REMOTE_API_BASES, local];
   return uniqueApiBases(prioritized).filter((base) => base !== current);
+}
+
+function resolvePreferredAuthBase() {
+  if (isProdStoreHost()) return STORE_AUTH_API_BASE;
+  return "";
 }
 
 function normalizeAuthErrorMessage(rawMessage) {
@@ -556,6 +565,7 @@ async function postJson(endpoint, payload, timeoutMs = 12000) {
   const base = await resolveApiBase();
   const endpointNormalized = String(endpoint || "").replace(/^\/+/, "");
   const endpointIsAuth = /^api\/auth\//i.test(endpointNormalized);
+  const strictAuthBase = normalizeApiBase(resolvePreferredAuthBase());
   const timeout = endpointIsAuth
     ? Math.max(6500, Math.min(10000, Number(timeoutMs) || 12000))
     : (Number(timeoutMs) || 12000);
@@ -588,7 +598,7 @@ async function postJson(endpoint, payload, timeoutMs = 12000) {
     };
 
   try {
-    let currentBase = base;
+    let currentBase = endpointIsAuth && strictAuthBase ? strictAuthBase : base;
     let url = buildApiUrl(currentBase, endpoint);
     let response = null;
     let text = "";
@@ -634,22 +644,16 @@ async function postJson(endpoint, payload, timeoutMs = 12000) {
     if (!response.ok) {
       const rawMessage = String(data?.message || data?.error || text || `HTTP ${response.status}`);
       const hasHtmlPayload = /<html/i.test(String(rawMessage || ""));
-      const endpointIsLogin = /^\/?api\/auth\/login$/i.test(String(endpoint || "").replace(/^\/+/, ""));
-      const shouldTryAuthFallbackOnInvalidCredentials =
-        endpointIsLogin &&
-        Number(response.status) === 401 &&
-        String(data?.error || "").trim().toLowerCase() === "invalid_credentials";
-
       const shouldTryAuthFallback =
         endpointIsAuth &&
+        !strictAuthBase &&
         (
           isCannotPostAuthRoute(rawMessage) ||
           is405NotAllowedHtml(rawMessage) ||
           hasHtmlPayload ||
           Number(response.status) === 404 ||
           Number(response.status) === 405 ||
-          Number(response.status) >= 500 ||
-          shouldTryAuthFallbackOnInvalidCredentials
+          Number(response.status) >= 500
         );
 
       if (shouldTryAuthFallback) {
@@ -697,7 +701,8 @@ async function postJson(endpoint, payload, timeoutMs = 12000) {
 }
 
 async function lookupCpfByBackend(cpfDigits, timeoutMs = 12000) {
-  const base = await resolveApiBase();
+  const preferredAuthBase = normalizeApiBase(resolvePreferredAuthBase());
+  const base = preferredAuthBase || await resolveApiBase();
   const url = buildApiUrl(base, "/api/auth/cpf/lookup");
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), Number(timeoutMs) || 12000);
@@ -1089,39 +1094,15 @@ function renderResetPasswordModal(token) {
 function finishSocialLogin(user) {
   const name = String(user?.name || "Cliente Uzuu").trim() || "Cliente Uzuu";
   const email = String(user?.email || "").trim().toLowerCase();
-  const picture = String(user?.picture || "").trim();
-
-  // Social login does not return backend JWT; avoid stale token reuse.
   localStorage.removeItem(AUTH_TOKEN_KEY);
-  localStorage.setItem(
-    PROFILE_KEY,
-    JSON.stringify({
-      name,
-      email,
-      picture
-    })
-  );
-  localStorage.setItem(
-    PROFILE_EXTRA_KEY,
-    JSON.stringify({
-      displayName: name,
-      fullName: name,
-      birthDate: "",
-      cpf: "",
-      cpfMasked: "",
-      email,
-      phone: "",
-      username: deriveUsernameFromSession({ name, email }, {}),
-      picture
-    })
-  );
-  localStorage.setItem(AUTH_LAST_SEEN_KEY, String(Date.now()));
-  addLoginSuccessNotification({ name, email });
-  setMsg(msg, "Login Google realizado com sucesso.", false);
-  showLoginToast("Login realizado com sucesso.");
-  setTimeout(() => {
-    window.location.href = resolvePostLoginUrl();
-  }, 900);
+  localStorage.removeItem(PROFILE_KEY);
+  localStorage.removeItem(PROFILE_EXTRA_KEY);
+  localStorage.removeItem(AUTH_LAST_SEEN_KEY);
+  setGoogleOnboardingState(true, user);
+  showRegister(true);
+  setMsg(regMsg, `Conta Google confirmada para ${name}. Complete o cadastro para salvar seu acesso.`, false);
+  setMsg(msg, "");
+  regBirth?.focus();
 }
 
 async function fetchGoogleProfileWithAccessToken(accessToken) {
