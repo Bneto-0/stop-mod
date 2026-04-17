@@ -16,7 +16,9 @@ const ADDRESS_CONFIRM_FINGERPRINT_KEY = "stopmod_address_confirmed_fp";
 const AUTH_TIMEOUT_MS = 2 * 60 * 60 * 1000;
 const AUTH_TOUCH_MIN_GAP_MS = 15 * 1000;
 const PAGBANK_API_BASE_KEY = "stopmod_pagbank_api_base";
-const DEFAULT_REMOTE_PAGBANK_BASE = "https://stop-mod-api.onrender.com";
+const DEFAULT_STORE_PAGBANK_BASE = "/ops-api";
+const DEFAULT_REMOTE_PAGBANK_BASE = "https://uzuu-backend.onrender.com";
+const LEGACY_REMOTE_PAGBANK_BASES = Object.freeze(["https://stop-mod-api.onrender.com"]);
 const PAGBANK_RETURN_URL_KEY = "stopmod_pagbank_return_url";
 const PAGBANK_REDIRECT_URL_KEY = "stopmod_pagbank_redirect_url";
 const PAGBANK_NOTIFICATION_URL_KEY = "stopmod_pagbank_notification_url";
@@ -177,14 +179,6 @@ function optionalHttpUrlFromStorage(key) {
   return /^https?:\/\//i.test(value) ? value : "";
 }
 
-function buildPagBankInlineEndpointFromBase(raw) {
-  const base = String(raw || "").trim().replace(/\/+$/, "");
-  if (!base) return "/api/pagbank/inline-payment";
-  if (/\/api\/pagbank\/inline-payment$/i.test(base)) return base;
-  if (/\/api$/i.test(base)) return `${base}/pagbank/inline-payment`;
-  return `${base}/api/pagbank/inline-payment`;
-}
-
 function normalizeApiBase(raw) {
   const base = String(raw || "").trim().replace(/\/+$/, "");
   if (!base) return "";
@@ -193,92 +187,114 @@ function normalizeApiBase(raw) {
   return "";
 }
 
+function resolveForcedApiBase() {
+  const fromWindow = normalizeApiBase(window.__UZUU_API_BASE__ || "");
+  if (fromWindow) return fromWindow;
+  const fromDocument = normalizeApiBase(document.documentElement?.getAttribute("data-api-base") || "");
+  if (fromDocument) return fromDocument;
+  return "";
+}
+
+function buildApiUrlFromBase(rawBase, rawPath) {
+  const cleanPath = String(rawPath || "").startsWith("/") ? String(rawPath || "") : `/${String(rawPath || "")}`;
+  const base = normalizeApiBase(rawBase);
+  if (!base) return cleanPath;
+  if (base.startsWith("/") && /^\/api(\/|$)/i.test(cleanPath)) {
+    return `${base}${cleanPath.replace(/^\/api/i, "")}`;
+  }
+  if (/\/api$/i.test(base) && /^\/api(\/|$)/i.test(cleanPath)) {
+    return `${base}${cleanPath.replace(/^\/api/i, "")}`;
+  }
+  return `${base}${cleanPath}`;
+}
+
+function buildPagBankInlineEndpointFromBase(raw) {
+  return buildApiUrlFromBase(raw, "/api/pagbank/inline-payment");
+}
+
 function isProdStoreHost() {
   const host = String(window.location.hostname || "").toLowerCase();
   return host !== "localhost" && host !== "127.0.0.1" && !host.endsWith(".onrender.com");
 }
 
-function hasConfiguredPagBankApiBase() {
+function readConfiguredPagBankApiBase() {
   const configured = normalizeApiBase(localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
-  if (!configured) return false;
-  if (isProdStoreHost() && configured === DEFAULT_REMOTE_PAGBANK_BASE) return false;
-  return true;
+  if (!configured) return "";
+  if (LEGACY_REMOTE_PAGBANK_BASES.includes(configured)) {
+    localStorage.removeItem(PAGBANK_API_BASE_KEY);
+    return "";
+  }
+  return configured;
+}
+
+function rememberPagBankApiBase(rawBase) {
+  const base = normalizeApiBase(rawBase);
+  if (!base) {
+    localStorage.removeItem(PAGBANK_API_BASE_KEY);
+    return;
+  }
+  localStorage.setItem(PAGBANK_API_BASE_KEY, base);
 }
 
 function resolvePagBankInlineEndpoint() {
-  const raw = String(localStorage.getItem(PAGBANK_API_BASE_KEY) || "").trim();
-  return buildPagBankInlineEndpointFromBase(raw);
+  const forced = resolveForcedApiBase();
+  if (forced) return buildPagBankInlineEndpointFromBase(forced);
+  return buildPagBankInlineEndpointFromBase(readConfiguredPagBankApiBase());
 }
 
-async function isBackendHealthy(url, timeoutMs) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), Number(timeoutMs) || 4500);
-  try {
-    const response = await fetch(url, {
-      method: "GET",
-      headers: { Accept: "application/json" },
-      signal: controller.signal
-    });
-    if (!response.ok) return false;
-    const data = await response.json().catch(() => null);
-    return !!data?.ok;
-  } catch {
-    return false;
-  } finally {
-    clearTimeout(timeout);
-  }
+function buildOrderAlertEndpointFromBase(raw) {
+  return buildApiUrlFromBase(raw, "/api/alerts/order-event");
 }
 
-async function resolveWorkingPagBankInlineEndpoint() {
-  const configuredEndpoint = resolvePagBankInlineEndpoint();
-  if (hasConfiguredPagBankApiBase()) {
-    return configuredEndpoint;
-  }
-
-  const sameOriginHealthy = await isBackendHealthy("/api/health", 2600);
-  if (sameOriginHealthy) {
-    localStorage.removeItem(PAGBANK_API_BASE_KEY);
-    return "/api/pagbank/inline-payment";
-  }
-
-  const localBase = "http://localhost:8787";
-  const localHealthy = await isBackendHealthy(`${localBase}/api/health`, 3200);
-  if (localHealthy) {
-    localStorage.setItem(PAGBANK_API_BASE_KEY, localBase);
-    return `${localBase}/api/pagbank/inline-payment`;
-  }
-
-  const remoteBase = "https://stop-mod-api.onrender.com";
-  localStorage.setItem(PAGBANK_API_BASE_KEY, remoteBase);
-  return `${remoteBase}/api/pagbank/inline-payment`;
-}
-
-function buildOrderAlertEndpointFromPaymentEndpoint(paymentEndpoint) {
+function deriveApiBaseFromPaymentEndpoint(paymentEndpoint) {
   const endpoint = String(paymentEndpoint || "").trim().replace(/\/+$/, "");
   if (!endpoint) return "";
-  if (/\/api\/pagbank\/inline-payment$/i.test(endpoint)) {
-    return endpoint.replace(/\/api\/pagbank\/inline-payment$/i, "/api/alerts/order-event");
+  if (/\/(?:ops-api|api)\/pagbank\/inline-payment$/i.test(endpoint)) {
+    return endpoint.replace(/\/pagbank\/inline-payment$/i, "");
   }
   return "";
 }
 
-function resolveOrderAlertEndpoint(preferredPaymentEndpoint) {
-  const fromPreferred = buildOrderAlertEndpointFromPaymentEndpoint(preferredPaymentEndpoint);
-  if (fromPreferred) return fromPreferred;
-  const rawBase = normalizeApiBase(localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
-  if (!rawBase) {
-    const host = String(window.location.hostname || "").toLowerCase();
-    if (host === "localhost" || host === "127.0.0.1") return "http://localhost:8787/api/alerts/order-event";
-    return "/api/alerts/order-event";
+function resolvePagBankEndpointCandidates() {
+  const configured = readConfiguredPagBankApiBase();
+  const forced = resolveForcedApiBase();
+  const candidates = [];
+  const pushUnique = (value) => {
+    const normalized = normalizeApiBase(value);
+    if (!normalized || candidates.includes(normalized)) return;
+    candidates.push(normalized);
+  };
+
+  pushUnique(forced);
+  pushUnique(configured);
+
+  if (isProdStoreHost()) {
+    pushUnique(DEFAULT_STORE_PAGBANK_BASE);
+  } else {
+    pushUnique("http://localhost:8787");
   }
-  if (/\/api$/i.test(rawBase)) return `${rawBase}/alerts/order-event`;
-  return `${rawBase}/api/alerts/order-event`;
+
+  pushUnique(DEFAULT_REMOTE_PAGBANK_BASE);
+
+  return candidates.map((base) => ({
+    base,
+    endpoint: buildPagBankInlineEndpointFromBase(base)
+  }));
+}
+
+function resolveOrderAlertEndpoint(options = {}) {
+  const fromBase = buildOrderAlertEndpointFromBase(options?.apiBase || "");
+  if (fromBase) return fromBase;
+  const fromEndpoint = buildOrderAlertEndpointFromBase(deriveApiBaseFromPaymentEndpoint(options?.paymentEndpoint || ""));
+  if (fromEndpoint) return fromEndpoint;
+  if (isProdStoreHost()) return buildOrderAlertEndpointFromBase(DEFAULT_STORE_PAGBANK_BASE);
+  return buildOrderAlertEndpointFromBase("http://localhost:8787");
 }
 
 function sendOrderLifecycleEmailAlert(eventType, order, options = {}) {
   const event = String(eventType || "").trim().toLowerCase();
   if (!event || !order || typeof order !== "object") return;
-  const endpoint = resolveOrderAlertEndpoint(options.paymentEndpoint || "");
+  const endpoint = resolveOrderAlertEndpoint(options);
   const payload = {
     eventType: event,
     occurredAt: new Date().toISOString(),
@@ -322,10 +338,10 @@ function normalizeCheckoutErrorMessage(error) {
   const lower = raw.toLowerCase();
 
   if (isNotAllowedHtmlError(raw)) {
-    return "Backend de pagamento nao esta ativo neste dominio. Inicie o backend local (porta 8787) ou configure stopmod_pagbank_api_base.";
+    return "A rota de pagamento nao esta disponivel neste ambiente agora.";
   }
   if (lower.includes("failed to fetch") || lower.includes("connection refused")) {
-    return "Nao foi possivel conectar ao backend de pagamento. Verifique se ele esta ligado.";
+    return "Nao foi possivel conectar ao gateway de pagamento no momento.";
   }
   return raw || "tente novamente.";
 }
@@ -1206,6 +1222,18 @@ function setInlinePayStatus(text, isError) {
   inlinePayStatus.classList.toggle("error", !!isError);
 }
 
+function hasHostedCheckoutLink(data) {
+  const paymentUrl = String(data?.paymentUrl || data?.checkout?.payUrl || data?.checkoutUrl || "").trim();
+  const mode = String(data?.mode || "").trim().toLowerCase();
+  const lifecycleMode = String(data?.lifecycleMode || "").trim().toLowerCase();
+  return !!paymentUrl && (mode === "checkout" || lifecycleMode === "provider_webhook");
+}
+
+function setInlinePayDoneVisible(visible) {
+  if (!inlinePayDoneBtn) return;
+  inlinePayDoneBtn.hidden = !visible;
+}
+
 function hideInlinePayOpenLink() {
   if (!inlinePayOpenLink) return;
   inlinePayOpenLink.hidden = true;
@@ -1225,10 +1253,32 @@ function showInlinePayOpenLink(text, href) {
   inlinePayOpenLink.textContent = String(text || "Abrir");
 }
 
-function renderInlinePaymentContent(data) {
+function renderInlinePaymentContent(data, method) {
   if (!inlinePayContent) return;
   const mode = String(data?.mode || "").trim().toLowerCase();
   const referenceId = escapeHtml(String(data?.referenceId || ""));
+  const checkoutUrl = String(data?.paymentUrl || data?.checkout?.payUrl || data?.checkoutUrl || "").trim();
+  const expiresAt = String(data?.pix?.expiresAt || data?.expiresAt || "").trim();
+  const expiryText = expiresAt ? new Date(expiresAt).toLocaleString("pt-BR") : "";
+
+  if (hasHostedCheckoutLink(data)) {
+    const label = paymentLabel(method) || "PagBank";
+    const guidance = method === "pix"
+      ? "Abra o checkout seguro do PagBank para gerar o Pix e concluir o pagamento."
+      : method === "boleto"
+        ? "Abra o checkout seguro do PagBank para visualizar o boleto e concluir o pagamento."
+        : "Abra o checkout seguro do PagBank para concluir o pagamento com cartao.";
+    inlinePayContent.innerHTML = `
+      <h3 class="inline-pay-title">Checkout seguro pronto</h3>
+      <p class="inline-pay-text">${escapeHtml(guidance)}</p>
+      <p class="inline-pay-line"><strong>Forma:</strong> ${escapeHtml(label)}</p>
+      ${referenceId ? `<p class="inline-pay-line"><strong>Pedido:</strong> ${referenceId}</p>` : ""}
+      ${expiryText ? `<p class="inline-pay-line"><strong>Validade:</strong> ${escapeHtml(expiryText)}</p>` : ""}
+      <p class="inline-pay-line">Assim que o PagBank confirmar o pagamento, o status sera atualizado automaticamente na sua conta.</p>
+    `;
+    showInlinePayOpenLink("Abrir checkout PagBank", checkoutUrl);
+    return;
+  }
 
   if (mode === "pix") {
     const qrText = String(data?.pix?.qrText || "").trim();
@@ -1239,8 +1289,6 @@ function renderInlinePaymentContent(data) {
         data?.pix?.qrLink ||
         ""
     ).trim();
-    const expiresAt = String(data?.pix?.expiresAt || data?.expiresAt || "").trim();
-    const expiryText = expiresAt ? new Date(expiresAt).toLocaleString("pt-BR") : "";
     inlinePayContent.innerHTML = `
       <h3 class="inline-pay-title">Pix gerado com sucesso</h3>
       <p class="inline-pay-text">Escaneie o QR Code ou copie o codigo Pix.</p>
@@ -1306,11 +1354,15 @@ function renderInlinePaymentContent(data) {
 
 function openInlinePayModal(data, method) {
   if (!inlinePayModal || !inlinePayContent) return;
+  const hostedCheckout = hasHostedCheckoutLink(data);
+  setInlinePayDoneVisible(!hostedCheckout);
   setInlinePayStatus(
-    `Pagamento com ${paymentLabel(method) || "PagBank"} iniciado sem redirecionamento.`,
+    hostedCheckout
+      ? `Pagamento com ${paymentLabel(method) || "PagBank"} pronto no checkout seguro do PagBank.`
+      : `Pagamento com ${paymentLabel(method) || "PagBank"} iniciado em ambiente de teste.`,
     false
   );
-  renderInlinePaymentContent(data || {});
+  renderInlinePaymentContent(data || {}, method);
   inlinePayModal.hidden = false;
 }
 
@@ -1318,6 +1370,7 @@ function closeInlinePayModal() {
   if (!inlinePayModal) return;
   inlinePayModal.hidden = true;
   if (inlinePayContent) inlinePayContent.innerHTML = "";
+  setInlinePayDoneVisible(true);
   hideInlinePayOpenLink();
 }
 
@@ -1627,35 +1680,36 @@ paymentForm?.addEventListener("submit", async (e) => {
   updatePaymentUI(method);
 
   try {
-    const endpoint = await resolveWorkingPagBankInlineEndpoint();
-    let effectiveEndpoint = endpoint;
-    let data;
+    const endpointCandidates = resolvePagBankEndpointCandidates();
+    let effectiveEndpoint = "";
+    let effectiveApiBase = "";
+    let data = null;
+    let lastError = null;
 
-    try {
-      data = await postJson(endpoint, payload, 22000);
-    } catch (firstError) {
-      const shouldTryLocalFallback =
-        isNotAllowedHtmlError(firstError?.message) &&
-        !/^https?:\/\/localhost:8787\/api\/pagbank\/inline-payment$/i.test(String(endpoint || ""));
-
-      if (!shouldTryLocalFallback) throw firstError;
-
-      const localBase = "http://localhost:8787";
-      const localEndpoint = `${localBase}/api/pagbank/inline-payment`;
-      data = await postJson(localEndpoint, payload, 22000);
-      localStorage.setItem(PAGBANK_API_BASE_KEY, localBase);
-      effectiveEndpoint = localEndpoint;
+    for (const candidate of endpointCandidates) {
+      try {
+        data = await postJson(candidate.endpoint, payload, 22000);
+        effectiveEndpoint = candidate.endpoint;
+        effectiveApiBase = candidate.base;
+        rememberPagBankApiBase(candidate.base);
+        break;
+      } catch (candidateError) {
+        lastError = candidateError;
+      }
     }
 
     if (!data || typeof data !== "object") {
-      throw new Error("PagBank nao retornou dados de pagamento.");
+      throw lastError || new Error("PagBank nao retornou dados de pagamento.");
     }
 
     registerSoldItemsFromCheckout(payload.items);
     registerRatingFromCheckout(payload.items);
 
     const referenceId = String(data?.referenceId || payload.referenceId || "").trim();
-    createPendingOrderFromCheckout(payload, method, referenceId, { paymentEndpoint: effectiveEndpoint });
+    createPendingOrderFromCheckout(payload, method, referenceId, {
+      paymentEndpoint: effectiveEndpoint,
+      apiBase: effectiveApiBase
+    });
     localStorage.setItem(
       "stopmod_pending_checkout",
       JSON.stringify({
@@ -1666,7 +1720,9 @@ paymentForm?.addEventListener("submit", async (e) => {
     );
 
     closeModal();
-    feedback.textContent = "Pagamento iniciado. Finalize no quadro seguro abaixo.";
+    feedback.textContent = hasHostedCheckoutLink(data)
+      ? "Pagamento criado. Abra o checkout seguro do PagBank para concluir."
+      : "Pagamento iniciado. Finalize no quadro seguro abaixo.";
     openInlinePayModal(data, method);
   } catch (error) {
     feedback.textContent = `Falha ao iniciar pagamento real: ${normalizeCheckoutErrorMessage(error)}`;
