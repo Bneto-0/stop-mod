@@ -60,6 +60,25 @@ const products = Array.isArray(sharedCatalog?.products) && sharedCatalog.product
 
 const productById = new Map(products.map((p) => [p.id, p]));
 
+function resolveCanonicalProductId(value) {
+  const numericId = Number(value);
+  if (!Number.isInteger(numericId) || numericId <= 0) return 0;
+  if (productById.has(numericId)) return numericId;
+
+  const legacyAlias = numericId - 1000;
+  if (Number.isInteger(legacyAlias) && productById.has(legacyAlias)) {
+    return legacyAlias;
+  }
+
+  return 0;
+}
+
+function resolveProductById(value) {
+  const canonicalId = resolveCanonicalProductId(value);
+  if (!canonicalId) return null;
+  return productById.get(canonicalId) || null;
+}
+
 const cartItems = document.getElementById("cart-items");
 const productsBeforeWrap = document.getElementById("products-before-wrap");
 const productsBeforeMain = document.getElementById("products-before-main");
@@ -386,7 +405,14 @@ async function postJson(url, payload, timeoutMs) {
 
 function loadCartIds() {
   if (sharedCatalog?.loadCartIds) {
-    return sharedCatalog.loadCartIds();
+    const normalized = sharedCatalog
+      .loadCartIds()
+      .map((item) => resolveCanonicalProductId(item))
+      .filter((item) => Number.isInteger(item) && item > 0);
+
+    if (normalized.length) {
+      return normalized;
+    }
   }
   try {
     const raw = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
@@ -395,7 +421,7 @@ function loadCartIds() {
       .map((item) => {
         if (Number.isInteger(Number(item))) return Number(item);
         if (item && typeof item === "object") {
-          return Number(item.productId ?? item.id ?? item.product ?? 0);
+          return resolveCanonicalProductId(item.productId ?? item.id ?? item.product ?? 0);
         }
         return Number.NaN;
       })
@@ -844,30 +870,33 @@ function redirectToLoginForCheckout() {
 function groupedCart(ids) {
   const map = new Map();
   ids.forEach((id) => {
-    const p = productById.get(id);
+    const p = resolveProductById(id);
     if (!p) return;
-    const cur = map.get(id) || { ...p, qty: 0 };
+    const cur = map.get(p.id) || { ...p, qty: 0 };
     cur.qty += 1;
-    map.set(id, cur);
+    map.set(p.id, cur);
   });
   return Array.from(map.values());
 }
 
 function addOne(id) {
-  if (!productById.has(id)) return;
+  const canonicalId = resolveCanonicalProductId(id);
+  if (!canonicalId) return;
   const ids = loadCartIds();
   if (ids.length >= MAX_CART_ITEMS) {
     feedback.textContent = "Limite de 2000 itens no carrinho atingido.";
     return;
   }
-  ids.push(id);
+  ids.push(canonicalId);
   saveCartIds(ids);
   renderCart();
 }
 
 function removeOne(id) {
+  const canonicalId = resolveCanonicalProductId(id);
+  if (!canonicalId) return;
   const ids = loadCartIds();
-  const idx = ids.indexOf(id);
+  const idx = ids.indexOf(canonicalId);
   if (idx === -1) return;
   ids.splice(idx, 1);
   saveCartIds(ids);
