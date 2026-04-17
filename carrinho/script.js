@@ -385,11 +385,20 @@ async function postJson(url, payload, timeoutMs) {
 }
 
 function loadCartIds() {
+  if (sharedCatalog?.loadCartIds) {
+    return sharedCatalog.loadCartIds();
+  }
   try {
     const raw = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
     if (!Array.isArray(raw)) return [];
     const normalized = raw
-      .map((item) => Number(item))
+      .map((item) => {
+        if (Number.isInteger(Number(item))) return Number(item);
+        if (item && typeof item === "object") {
+          return Number(item.productId ?? item.id ?? item.product ?? 0);
+        }
+        return Number.NaN;
+      })
       .filter((item) => Number.isInteger(item) && item > 0 && productById.has(item));
     if (normalized.length !== raw.length) {
       saveCartIds(normalized);
@@ -507,6 +516,10 @@ function bindAuthActivity() {
 }
 
 function saveCartIds(ids) {
+  if (sharedCatalog?.saveCartIds) {
+    sharedCatalog.saveCartIds(ids);
+    return;
+  }
   localStorage.setItem(CART_KEY, JSON.stringify(ids));
 }
 
