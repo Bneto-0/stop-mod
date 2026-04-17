@@ -1186,16 +1186,14 @@ function googleSignIn() {
           } catch (error) {
             const errorCode = String(error?.code || "").trim().toLowerCase();
             if (errorCode === "google_account_not_linked") {
-              try {
-                const googleProfile = await fetchGoogleProfileWithAccessToken(accessToken);
-                setGoogleOnboardingState(false);
-                finishSocialLogin(googleProfile, { pendingRegistration: true });
-                return;
-              } catch {
-                setGoogleOnboardingState(false);
-                setMsg(msg, "Falha ao obter dados da conta Google para completar cadastro.", true);
-                return;
-              }
+              setGoogleOnboardingState(false);
+              showRegister(false);
+              setMsg(
+                msg,
+                "Essa conta Google ainda nao esta vinculada a uma conta da loja. Use Criar Conta para fazer o cadastro primeiro.",
+                true
+              );
+              return;
             }
             setMsg(msg, `Falha no login Google: ${String(error?.message || "tente novamente.")}`, true);
           }
