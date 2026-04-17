@@ -13,6 +13,8 @@ const SHIP_LIST_KEY = "stopmod_ship_list";
 const API_BASE_KEY = "stopmod_api_base";
 const PAGBANK_API_BASE_KEY = "stopmod_pagbank_api_base";
 const DEFAULT_REMOTE_API_BASES = Object.freeze([
+  "/ops-api",
+  "https://uzuu-backend.onrender.com",
   "https://stop-mod-api.onrender.com"
 ]);
 const DEFAULT_LOCAL_API_BASE = "http://localhost:8787";
@@ -491,25 +493,26 @@ async function resolveApiBase() {
 
   const configured = normalizeApiBase(localStorage.getItem(API_BASE_KEY) || localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
 
-  // Na loja publicada, preferimos mesma origem para evitar erro de CORS no dominio novo.
+  // Na loja publicada, priorizamos o backend novo da Uzuu em /ops-api.
   if (isProdStoreHost()) {
+    const preferredBases = uniqueApiBases([
+      ...DEFAULT_REMOTE_API_BASES,
+      configured
+    ]);
+
+    for (const preferredBase of preferredBases) {
+      if (await isHealthy(preferredBase, 2800)) {
+        resolvedApiBase = preferredBase;
+        localStorage.setItem(API_BASE_KEY, preferredBase);
+        localStorage.setItem(PAGBANK_API_BASE_KEY, preferredBase);
+        return resolvedApiBase;
+      }
+    }
+
     if (await isHealthy("", 2800)) {
       localStorage.removeItem(API_BASE_KEY);
       localStorage.removeItem(PAGBANK_API_BASE_KEY);
       resolvedApiBase = "";
-      return resolvedApiBase;
-    }
-    if (configured && !DEFAULT_REMOTE_API_BASES.includes(configured)) {
-      resolvedApiBase = configured;
-      localStorage.setItem(API_BASE_KEY, configured);
-      localStorage.setItem(PAGBANK_API_BASE_KEY, configured);
-      return resolvedApiBase;
-    }
-    const fallbackRemote = normalizeApiBase(DEFAULT_REMOTE_API_BASES[0]);
-    if (fallbackRemote) {
-      resolvedApiBase = fallbackRemote;
-      localStorage.setItem(API_BASE_KEY, fallbackRemote);
-      localStorage.setItem(PAGBANK_API_BASE_KEY, fallbackRemote);
       return resolvedApiBase;
     }
   }
