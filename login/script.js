@@ -372,6 +372,11 @@ function normalizeApiBase(raw) {
 function buildApiUrl(base, endpoint) {
   const root = normalizeApiBase(base);
   let path = `/${String(endpoint || "").replace(/^\/+/, "")}`;
+
+  // Same-origin storefront proxies such as /ops-api already map to backend /api.
+  if (root && root.startsWith("/") && /^\/api(\/|$)/i.test(path)) {
+    path = path.replace(/^\/api/i, "");
+  }
   if (root && /\/api$/i.test(root) && /^\/api(\/|$)/i.test(path)) {
     path = path.replace(/^\/api/i, "");
   }
