@@ -115,6 +115,13 @@ function saveJson(key, value) {
   }
 }
 
+function clearLocalAuthSession() {
+  localStorage.removeItem(AUTH_TOKEN_KEY);
+  localStorage.removeItem(PROFILE_KEY);
+  localStorage.removeItem(PROFILE_EXTRA_KEY);
+  localStorage.removeItem(AUTH_LAST_SEEN_KEY);
+}
+
 function normalizeUserKey(value) {
   return String(value || "").trim().toLowerCase();
 }
@@ -302,12 +309,28 @@ function normalizeNextPath(raw) {
   return "";
 }
 
-function resolvePostLoginUrl() {
+function requestedNextPath() {
   try {
     const raw = String(new URLSearchParams(window.location.search).get("next") || "").trim();
-    return normalizeNextPath(raw) || "../perfil/";
+    return normalizeNextPath(raw);
   } catch {
-    return "../perfil/";
+    return "";
+  }
+}
+
+function resolvePostLoginUrl() {
+  return requestedNextPath() || "../perfil/";
+}
+
+function resolvePostGooglePendingUrl() {
+  return requestedNextPath() || "/";
+}
+
+function shouldCompleteRegistrationFromQuery() {
+  try {
+    return String(new URLSearchParams(window.location.search).get("complete") || "").trim() === "1";
+  } catch {
+    return false;
   }
 }
 
@@ -935,6 +958,65 @@ function applySession(session) {
   }
 }
 
+function readStoredGooglePendingProfile() {
+  const profile = loadJson(PROFILE_KEY, null);
+  const extra = loadJson(PROFILE_EXTRA_KEY, null);
+  if (!extra || typeof extra !== "object" || extra.googlePending !== true) return null;
+  return {
+    name: String(extra?.fullName || extra?.displayName || profile?.name || "Cliente Uzuu").trim() || "Cliente Uzuu",
+    email: String(extra?.email || profile?.email || "").trim().toLowerCase(),
+    picture: String(profile?.picture || "").trim()
+  };
+}
+
+function applyPendingGoogleSession(user) {
+  const name = String(user?.name || "Cliente Uzuu").trim() || "Cliente Uzuu";
+  const email = String(user?.email || "").trim().toLowerCase();
+  const picture = String(user?.picture || "").trim();
+  const emailPrefix = email.split("@")[0] || "cliente";
+
+  clearLocalAuthSession();
+  localStorage.setItem(
+    PROFILE_KEY,
+    JSON.stringify({
+      name,
+      email,
+      picture
+    })
+  );
+  localStorage.setItem(
+    PROFILE_EXTRA_KEY,
+    JSON.stringify({
+      displayName: name,
+      fullName: name,
+      birthDate: "",
+      cpf: "",
+      cpfMasked: "",
+      email,
+      phone: "",
+      username: normalizeUsernameValue(extractNameAndSurname(name), emailPrefix) || "cliente",
+      googlePending: true,
+      registrationComplete: false
+    })
+  );
+  localStorage.setItem(AUTH_LAST_SEEN_KEY, String(Date.now()));
+}
+
+function openGoogleRegistrationCompletion(message) {
+  const pendingProfile = readStoredGooglePendingProfile();
+  if (!pendingProfile) {
+    showRegister(true);
+    if (message) setMsg(regMsg, String(message), false);
+    return;
+  }
+
+  setGoogleOnboardingState(true, pendingProfile);
+  showRegister(true);
+  if (message) setMsg(regMsg, String(message), false);
+  setMsg(msg, "");
+  regBirth?.focus();
+}
+
 function openModal(title, html) {
   if (!modal || !modalTitle || !modalBody) return;
   modalTitle.textContent = title;
@@ -1098,16 +1180,13 @@ function renderResetPasswordModal(token) {
 
 function finishSocialLogin(user) {
   const name = String(user?.name || "Cliente Uzuu").trim() || "Cliente Uzuu";
-  const email = String(user?.email || "").trim().toLowerCase();
-  localStorage.removeItem(AUTH_TOKEN_KEY);
-  localStorage.removeItem(PROFILE_KEY);
-  localStorage.removeItem(PROFILE_EXTRA_KEY);
-  localStorage.removeItem(AUTH_LAST_SEEN_KEY);
-  setGoogleOnboardingState(true, user);
-  showRegister(true);
-  setMsg(regMsg, `Conta Google confirmada para ${name}. Complete o cadastro para salvar seu acesso.`, false);
-  setMsg(msg, "");
-  regBirth?.focus();
+  applyPendingGoogleSession(user);
+  setGoogleOnboardingState(false);
+  setMsg(msg, `Login Google realizado para ${name}. Complete seu cadastro apenas quando for finalizar um pedido.`, false);
+  showLoginToast("Login Google realizado com sucesso.");
+  setTimeout(() => {
+    window.location.href = resolvePostGooglePendingUrl();
+  }, 900);
 }
 
 async function fetchGoogleProfileWithAccessToken(accessToken) {
@@ -1186,14 +1265,15 @@ function googleSignIn() {
           } catch (error) {
             const errorCode = String(error?.code || "").trim().toLowerCase();
             if (errorCode === "google_account_not_linked") {
-              setGoogleOnboardingState(false);
-              showRegister(false);
-              setMsg(
-                msg,
-                "Essa conta Google ainda nao esta vinculada a uma conta da loja. Use Criar Conta para fazer o cadastro primeiro.",
-                true
-              );
-              return;
+              try {
+                const googleProfile = await fetchGoogleProfileWithAccessToken(accessToken);
+                finishSocialLogin(googleProfile);
+                return;
+              } catch {
+                setGoogleOnboardingState(false);
+                setMsg(msg, "Falha ao obter dados da conta Google para concluir o login.", true);
+                return;
+              }
             }
             setMsg(msg, `Falha no login Google: ${String(error?.message || "tente novamente.")}`, true);
           }
@@ -1320,6 +1400,11 @@ async function handleLoginSubmit(event) {
 pwToggle?.addEventListener("click", () => togglePw(loginPass, pwToggle));
 regPwToggle?.addEventListener("click", () => togglePw(regPass, regPwToggle));
 goRegister?.addEventListener("click", () => {
+  const pendingProfile = readStoredGooglePendingProfile();
+  if (pendingProfile) {
+    openGoogleRegistrationCompletion("Complete seu cadastro para salvar CPF, telefone e endereco.");
+    return;
+  }
   setGoogleOnboardingState(false);
   showRegister(true);
 });
@@ -1380,6 +1465,10 @@ document.addEventListener("keydown", (event) => {
 
 showRegister(false);
 ensureUnifiedApiConfig();
+
+if (shouldCompleteRegistrationFromQuery()) {
+  openGoogleRegistrationCompletion("Complete CPF, nascimento, senha e endereco para finalizar seu pedido.");
+}
 
 const resetTokenFromUrl = getResetTokenFromQuery();
 if (resetTokenFromUrl) {
