@@ -1150,6 +1150,15 @@ footer p { color: var(--text-soft); }
   font-size: 0.95rem;
 }
 
+#checkout-modal .checkout-result__warning {
+  padding: 12px 14px;
+  border: 1px solid #f0d6a8;
+  border-radius: 8px;
+  background: #fff7e8;
+  color: #6d4b12;
+  font-size: 0.92rem;
+}
+
 #checkout-modal .checkout-result__actions {
   display: flex;
   align-items: center;

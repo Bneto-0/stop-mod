@@ -1568,8 +1568,9 @@ function renderCheckoutPaymentResult(data = {}, method = "") {
       <div class="checkout-result checkout-result--card">
         <span class="checkout-result__badge">${escapeHtml(outcome.statusLabel)}</span>
         <h3>${escapeHtml(outcome.title)}</h3>
-        <p>${escapeHtml(outcome.isError ? outcome.summary : "Seu pedido foi recebido e o pagamento foi confirmado dentro da Uzuu.")}</p>
+        <p>${escapeHtml(outcome.isSandbox ? outcome.summary : outcome.isError ? outcome.summary : "Seu pedido foi recebido e o pagamento foi confirmado dentro da Uzuu.")}</p>
         ${referenceId ? `<p class="checkout-result__line"><strong>Pedido:</strong> ${referenceId}</p>` : ""}
+        ${outcome.isSandbox ? "<p class=\"checkout-result__warning\"><strong>Ambiente de teste:</strong> para cobrar de verdade, precisamos trocar o PagBank para producao.</p>" : ""}
         <div class="checkout-result__actions">
           <a class="checkout-result__button" href="../perfil/pedidos/">Ver meu pedido</a>
           <a class="checkout-result__link" href="../">Continuar comprando</a>
@@ -1578,7 +1579,7 @@ function renderCheckoutPaymentResult(data = {}, method = "") {
     `;
     if (confirmPaymentBtn) {
       confirmPaymentBtn.disabled = !outcome.isError;
-      confirmPaymentBtn.textContent = outcome.isError ? "Tentar novamente" : "Pagamento aprovado";
+      confirmPaymentBtn.textContent = outcome.isError ? "Tentar novamente" : outcome.isSandbox ? "Teste aprovado" : "Pagamento aprovado";
     }
     return true;
   }
@@ -1813,14 +1814,20 @@ function buildTransparentCardOutcome(data = {}) {
     .trim()
     .toUpperCase();
   const gatewayMessage = String(data?.paymentResponse?.message || "").trim();
+  const isSandbox = data?.sandbox === true;
 
   if (chargeStatus === "PAID" || chargeStatus === "AUTHORIZED") {
     return {
-      title: "Cartao aprovado",
-      summary: "O PagBank aprovou o pagamento do cartao sem redirecionar voce para fora da Uzuu.",
-      feedback: "Cartao aprovado com confirmacao automatica pelo PagBank.",
-      statusLabel: formatGatewayCardStatus(chargeStatus),
+      title: isSandbox ? "Teste aprovado" : "Cartao aprovado",
+      summary: isSandbox
+        ? "Este pagamento foi aprovado no ambiente de testes do PagBank. Nenhuma cobranca real foi feita no cartao."
+        : "O PagBank aprovou o pagamento do cartao sem redirecionar voce para fora da Uzuu.",
+      feedback: isSandbox
+        ? "Teste de cartao aprovado no sandbox do PagBank. Nenhuma cobranca real foi feita."
+        : "Cartao aprovado com confirmacao automatica pelo PagBank.",
+      statusLabel: isSandbox ? "Teste aprovado" : formatGatewayCardStatus(chargeStatus),
       isError: false,
+      isSandbox,
       gatewayMessage
     };
   }
@@ -1832,6 +1839,7 @@ function buildTransparentCardOutcome(data = {}) {
       feedback: "Pagamento enviado e aguardando a analise automatica do PagBank.",
       statusLabel: formatGatewayCardStatus(chargeStatus),
       isError: false,
+      isSandbox,
       gatewayMessage
     };
   }
@@ -1848,6 +1856,7 @@ function buildTransparentCardOutcome(data = {}) {
           : "O pagamento com cartao foi cancelado pelo gateway.",
       statusLabel: formatGatewayCardStatus(chargeStatus),
       isError: true,
+      isSandbox,
       gatewayMessage
     };
   }
@@ -1860,6 +1869,7 @@ function buildTransparentCardOutcome(data = {}) {
     feedback: "Cartao enviado com sucesso para o PagBank.",
     statusLabel: formatGatewayCardStatus(chargeStatus),
     isError: false,
+    isSandbox,
     gatewayMessage
   };
 }
