@@ -1296,6 +1296,7 @@ function isProviderManagedPayment(data) {
 function setInlinePayDoneVisible(visible) {
   if (!inlinePayDoneBtn) return;
   inlinePayDoneBtn.hidden = !visible;
+  inlinePayDoneBtn.style.display = visible ? "" : "none";
 }
 
 function hideInlinePayOpenLink() {
@@ -1315,6 +1316,69 @@ function showInlinePayOpenLink(text, href) {
   inlinePayOpenLink.hidden = false;
   inlinePayOpenLink.href = targetHref;
   inlinePayOpenLink.textContent = String(text || "Abrir");
+}
+
+function resolvePixQrSources(pix = {}) {
+  const qrImageDataUrl = String(pix?.qrImageDataUrl || "").trim();
+  const qrImageBase64 = String(pix?.qrImageBase64 || "").trim();
+  const qrImageUrl = String(pix?.qrImageUrl || pix?.qrLink || "").trim();
+  const sources = [];
+
+  if (qrImageDataUrl) {
+    sources.push(qrImageDataUrl);
+  }
+
+  if (qrImageBase64) {
+    sources.push(
+      qrImageBase64.startsWith("data:image/")
+        ? qrImageBase64
+        : `data:image/png;base64,${qrImageBase64}`
+    );
+  }
+
+  if (qrImageUrl) {
+    sources.push(qrImageUrl);
+  }
+
+  return Array.from(new Set(sources.filter(Boolean)));
+}
+
+function attachPixQrImage(qrSources = [], fallbackMessage = "") {
+  const qrSlot = document.getElementById("inline-pay-qr-slot");
+  if (!qrSlot) return false;
+  qrSlot.innerHTML = "";
+
+  const sources = Array.isArray(qrSources) ? qrSources.filter(Boolean) : [];
+  if (!sources.length) {
+    if (fallbackMessage) {
+      qrSlot.innerHTML = `<p class="inline-pay-line">${escapeHtml(fallbackMessage)}</p>`;
+    }
+    return false;
+  }
+
+  const image = document.createElement("img");
+  image.alt = "QR Code Pix";
+  image.loading = "eager";
+  image.decoding = "async";
+  image.referrerPolicy = "no-referrer";
+
+  let index = 0;
+  const tryLoad = () => {
+    if (index >= sources.length) {
+      qrSlot.innerHTML = `<p class="inline-pay-line">${escapeHtml(
+        fallbackMessage || "Nao foi possivel carregar o QR Code automaticamente. Use o codigo Pix abaixo."
+      )}</p>`;
+      return;
+    }
+
+    image.src = String(sources[index] || "").trim();
+    index += 1;
+  };
+
+  image.addEventListener("error", tryLoad);
+  qrSlot.appendChild(image);
+  tryLoad();
+  return true;
 }
 
 function renderInlinePaymentContent(data, method) {
@@ -1346,23 +1410,18 @@ function renderInlinePaymentContent(data, method) {
 
   if (mode === "pix") {
     const qrText = String(data?.pix?.qrText || "").trim();
-    const qrImage = String(
-      data?.pix?.qrImageBase64 ||
-        data?.pix?.qrImageDataUrl ||
-        data?.pix?.qrImageUrl ||
-        data?.pix?.qrLink ||
-        ""
-    ).trim();
+    const qrSources = resolvePixQrSources(data?.pix || {});
     inlinePayContent.innerHTML = `
       <h3 class="inline-pay-title">Pix gerado com sucesso</h3>
       <p class="inline-pay-text">Escaneie o QR Code ou copie o codigo Pix.</p>
       <p class="inline-pay-line"><strong>Recebedor:</strong> Uzuu</p>
-      ${qrImage ? `<img src="${escapeHtml(qrImage)}" alt="QR Code Pix" />` : ""}
+      <div id="inline-pay-qr-slot" class="inline-pay-qr-slot"></div>
       ${referenceId ? `<p class="inline-pay-line"><strong>Pedido:</strong> ${referenceId}</p>` : ""}
       ${expiryText ? `<p class="inline-pay-line"><strong>Validade:</strong> ${escapeHtml(expiryText)}</p>` : ""}
       ${qrText ? "<button id=\"inline-pay-copy\" class=\"inline-pay-copy\" type=\"button\">Copiar codigo Pix</button>" : ""}
       ${!qrText ? "<p class=\"inline-pay-line\">Codigo Pix indisponivel.</p>" : ""}
     `;
+    attachPixQrImage(qrSources, "Nao foi possivel carregar o QR Code automaticamente. Use o codigo Pix abaixo.");
     const copyBtn = document.getElementById("inline-pay-copy");
     copyBtn?.addEventListener("click", async () => {
       const value = String(qrText || "");

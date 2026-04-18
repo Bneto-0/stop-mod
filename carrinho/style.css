@@ -48,6 +48,9 @@ body { background: radial-gradient(circle at top left, rgba(0,0,0,0.08), transpa
 #card-kind-select { border-radius: 999px; border: 1px solid var(--line); background: #fff; padding: 6px 10px; }
 .confirm-address-check { display: inline-flex; gap: 8px; align-items: center; }
 .inline-pay-content img { max-width: 260px; }
+.inline-pay-qr-slot { min-height: 80px; display: grid; justify-content: start; }
+.inline-pay-qr-slot img { width: min(260px, 100%); height: auto; border-radius: 16px; background: #ffffff; }
+.inline-pay-actions [hidden] { display: none !important; }
 footer { padding: 0 0 28px; }
 footer p { color: var(--text-soft); }
 @media (max-width: 920px) { .cart-shell { grid-template-columns: 1fr; } }
