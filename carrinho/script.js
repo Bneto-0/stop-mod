@@ -1318,6 +1318,47 @@ function showInlinePayOpenLink(text, href) {
   inlinePayOpenLink.textContent = String(text || "Abrir");
 }
 
+function buildInstallmentPreviewLabel(total) {
+  const safeTotal = Math.max(0, Number(total) || 0);
+  if (safeTotal <= 0) return "1x sem juros";
+  const count = safeTotal >= 180 ? 3 : safeTotal >= 120 ? 2 : 1;
+  if (count <= 1) {
+    return `1x de R$ ${formatBRL(safeTotal)} sem juros`;
+  }
+  return `${count}x de R$ ${formatBRL(safeTotal / count)} sem juros`;
+}
+
+function buildHostedCardPreviewModel(data, method) {
+  const snapshot = checkoutSnapshot();
+  const customer = loadCheckoutCustomer();
+  const grouped = Array.isArray(snapshot?.grouped) ? snapshot.grouped : [];
+  const primaryItem = grouped[0] || null;
+  const itemCount = grouped.reduce((sum, item) => sum + Math.max(1, Number(item?.qty || 1) || 1), 0);
+  const subtotal = Number(snapshot?.subtotal || 0);
+  const shipping = Number(snapshot?.shipping || 0);
+  const total = Number(snapshot?.total || 0);
+  const expiryText = String(data?.expiresAt || "").trim()
+    ? new Date(String(data.expiresAt)).toLocaleString("pt-BR")
+    : "";
+
+  return {
+    methodLabel: paymentLabel(method) || "Cartao",
+    customerName: String(customer?.name || "Nome do titular").trim() || "Nome do titular",
+    customerCpf: String(customer?.cpf || "").trim(),
+    productName: String(primaryItem?.name || "Produto Uzuu").trim() || "Produto Uzuu",
+    productMeta: [primaryItem?.category, primaryItem?.size].filter(Boolean).join(" • "),
+    productImage: String(primaryItem?.image || "").trim(),
+    itemCount,
+    subtotal,
+    shipping,
+    total,
+    installmentLabel: buildInstallmentPreviewLabel(total),
+    referenceId: String(data?.referenceId || "").trim(),
+    expiresAt: expiryText,
+    checkoutUrl: String(data?.paymentUrl || data?.checkout?.payUrl || data?.checkoutUrl || "").trim()
+  };
+}
+
 function resolvePixQrSources(pix = {}) {
   const qrImageDataUrl = String(pix?.qrImageDataUrl || "").trim();
   const qrImageBase64 = String(pix?.qrImageBase64 || "").trim();
@@ -1390,6 +1431,96 @@ function renderInlinePaymentContent(data, method) {
   const expiryText = expiresAt ? new Date(expiresAt).toLocaleString("pt-BR") : "";
 
   if (hasHostedCheckoutLink(data)) {
+    if (method === "credito" || method === "debito") {
+      const preview = buildHostedCardPreviewModel(data, method);
+      inlinePayContent.innerHTML = `
+        <section class="inline-card-preview" aria-label="Pagamento com cartao na Uzuu">
+          <div class="inline-card-preview__status">
+            <span class="inline-card-preview__dot"></span>
+            Visual do cartao dentro da Uzuu. Nesta etapa, a finalizacao segue no ambiente seguro do PagBank.
+          </div>
+          <div class="inline-card-preview__grid">
+            <div class="inline-card-preview__panel">
+              <h3 class="inline-card-preview__title">Dados do cartao</h3>
+              <p class="inline-card-preview__text">Fluxo visual dentro da Uzuu para voce analisar. O PagBank continua protegido por tras enquanto finalizamos o cartao transparente.</p>
+              <div class="inline-card-preview__chips">
+                <span class="inline-card-preview__chip is-active">${escapeHtml(preview.methodLabel)}</span>
+                <span class="inline-card-preview__chip">Pix</span>
+              </div>
+              <div class="inline-card-preview__brands">
+                <span class="inline-card-preview__brand">Visa</span>
+                <span class="inline-card-preview__brand">Mastercard</span>
+                <span class="inline-card-preview__brand">Elo</span>
+                <span class="inline-card-preview__brand">Hipercard</span>
+              </div>
+              <div class="inline-card-preview__form">
+                <label class="inline-card-preview__field inline-card-preview__field--full">
+                  <span>Numero do cartao</span>
+                  <input type="text" value="4111 1111 1111 1111" readonly />
+                </label>
+                <label class="inline-card-preview__field inline-card-preview__field--full">
+                  <span>Nome no cartao</span>
+                  <input type="text" value="${escapeHtml(preview.customerName)}" readonly />
+                </label>
+                <label class="inline-card-preview__field">
+                  <span>Validade</span>
+                  <input type="text" value="12 / 2028" readonly />
+                </label>
+                <label class="inline-card-preview__field">
+                  <span>CVV</span>
+                  <input type="text" value="***" readonly />
+                </label>
+                <label class="inline-card-preview__field">
+                  <span>CPF do titular</span>
+                  <input type="text" value="${escapeHtml(
+                    preview.customerCpf ? preview.customerCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") : "123.456.789-00"
+                  )}" readonly />
+                </label>
+                <label class="inline-card-preview__field">
+                  <span>Parcelamento</span>
+                  <div class="inline-card-preview__select">${escapeHtml(preview.installmentLabel)} <strong>▾</strong></div>
+                </label>
+              </div>
+              <div class="inline-card-preview__note">
+                <strong>Pedido:</strong> ${escapeHtml(preview.referenceId)}
+                ${preview.expiresAt ? `<br /><strong>Validade:</strong> ${escapeHtml(preview.expiresAt)}` : ""}
+                <br />Ao clicar em pagar agora, a etapa final ainda abre no PagBank enquanto fechamos a integracao completa do cartao dentro da Uzuu.
+              </div>
+              <div class="inline-card-preview__actions">
+                <span class="inline-card-preview__mini">Confirmacao automatica via PagBank</span>
+                <a class="inline-card-preview__cta" href="${escapeHtml(preview.checkoutUrl)}" target="_blank" rel="noopener noreferrer">Pagar agora</a>
+              </div>
+            </div>
+            <aside class="inline-card-preview__summary">
+              <div class="inline-card-preview__product">
+                ${
+                  preview.productImage
+                    ? `<img class="inline-card-preview__image" src="${escapeHtml(preview.productImage)}" alt="${escapeHtml(preview.productName)}" />`
+                    : `<div class="inline-card-preview__image inline-card-preview__image--placeholder" aria-hidden="true"></div>`
+                }
+                <div>
+                  <strong>${escapeHtml(preview.productName)}</strong>
+                  <small>${escapeHtml(preview.productMeta || "Produto selecionado na Uzuu")}</small>
+                  <small>${preview.itemCount > 1 ? `${preview.itemCount} itens no pedido` : "1 item no pedido"}</small>
+                </div>
+              </div>
+              <div class="inline-card-preview__totals">
+                <div><span>Subtotal</span><strong>R$ ${escapeHtml(formatBRL(preview.subtotal))}</strong></div>
+                <div><span>Frete</span><strong>${preview.shipping > 0 ? `R$ ${escapeHtml(formatBRL(preview.shipping))}` : "Gratis"}</strong></div>
+                <div><span>Parcelas</span><strong>${escapeHtml(preview.installmentLabel.replace(/^(\d+x de )?/, ""))}</strong></div>
+                <div class="is-total"><span>Total</span><strong>R$ ${escapeHtml(formatBRL(preview.total))}</strong></div>
+              </div>
+              <div class="inline-card-preview__foot">
+                Depois do pagamento, a confirmacao volta para a Uzuu automaticamente por webhook e o cliente acompanha tudo em Meus pedidos.
+              </div>
+            </aside>
+          </div>
+        </section>
+      `;
+      hideInlinePayOpenLink();
+      return;
+    }
+
     const label = paymentLabel(method) || "PagBank";
     const guidance = method === "pix"
       ? "Abra o checkout seguro do PagBank para gerar o Pix e concluir o pagamento."
