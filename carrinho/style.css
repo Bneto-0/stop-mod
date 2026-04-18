@@ -95,3 +95,308 @@ footer p { color: var(--text-soft); }
 .cart-item-link-inline { display: inline-flex; margin-top: 6px; color: #111111; font-weight: 700; text-decoration: none; }
 .cart-item-link-inline:hover { text-decoration: underline; }
 
+.inline-card-preview {
+  display: grid;
+  gap: 22px;
+}
+
+.inline-card-preview__topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.inline-card-preview__page-title {
+  margin: 0;
+  font-size: 1.9rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.inline-card-preview__secure {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #666666;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.inline-card-preview__tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.inline-card-preview__tab {
+  min-height: 54px;
+  border: 1px solid #ddd6cf;
+  background: #faf9f7;
+  color: #222222;
+  border-radius: 18px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.inline-card-preview__tab:not([disabled]):hover {
+  border-color: #111111;
+  transform: translateY(-1px);
+}
+
+.inline-card-preview__tab.is-active {
+  background: #111111;
+  color: #ffffff;
+  border-color: #111111;
+}
+
+.inline-card-preview__tab[disabled] {
+  cursor: default;
+  opacity: 0.75;
+}
+
+.inline-card-preview__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.9fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.inline-card-preview__panel,
+.inline-card-preview__summary {
+  background: #ffffff;
+  border: 1px solid #e7e3dd;
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+}
+
+.inline-card-preview__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  margin-bottom: 18px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #edf8ef;
+  border: 1px solid #cde8d2;
+  color: #1f7a38;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.inline-card-preview__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.inline-card-preview__title {
+  margin: 0 0 10px;
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.inline-card-preview__text {
+  margin: 0 0 18px;
+  color: #666666;
+  line-height: 1.6;
+}
+
+.inline-card-preview__brands {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.inline-card-preview__brands-image {
+  max-width: 210px;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.inline-card-preview__form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.inline-card-preview__field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inline-card-preview__field--full {
+  grid-column: 1 / -1;
+}
+
+.inline-card-preview__field span {
+  color: #555555;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.inline-card-preview__field input,
+.inline-card-preview__select,
+.inline-card-preview__native-select {
+  width: 100%;
+  min-height: 52px;
+  padding: 0 16px;
+  border: 1px solid #ddd6cf;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #111111;
+  font: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.inline-card-preview__field input:focus,
+.inline-card-preview__native-select:focus {
+  border-color: #111111;
+  box-shadow: 0 0 0 4px rgba(17, 17, 17, 0.08);
+  outline: none;
+}
+
+.inline-card-preview__field input[readonly] {
+  background: #faf9f7;
+}
+
+.inline-card-preview__select {
+  display: flex;
+  align-items: center;
+}
+
+.inline-card-preview__native-select {
+  appearance: auto;
+}
+
+.inline-card-preview__billing-note,
+.inline-card-preview__foot {
+  margin-top: 18px;
+  color: #666666;
+  line-height: 1.55;
+  font-size: 0.92rem;
+}
+
+.inline-card-preview__summary-title {
+  margin: 0 0 22px;
+  font-size: 1.65rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.inline-card-preview__product {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #ebe5df;
+}
+
+.inline-card-preview__product-copy strong,
+.inline-card-preview__product-copy small {
+  display: block;
+}
+
+.inline-card-preview__product-copy strong {
+  margin-bottom: 6px;
+}
+
+.inline-card-preview__product-copy small {
+  color: #777777;
+  line-height: 1.5;
+}
+
+.inline-card-preview__image {
+  width: 76px;
+  height: 76px;
+  border-radius: 16px;
+  object-fit: cover;
+  background: #f1ece7;
+}
+
+.inline-card-preview__image--placeholder {
+  display: grid;
+  place-items: center;
+  color: #111111;
+  font-weight: 800;
+}
+
+.inline-card-preview__totals {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.inline-card-preview__totals div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #444444;
+  font-size: 1rem;
+}
+
+.inline-card-preview__totals .is-total {
+  padding-top: 18px;
+  margin-top: 8px;
+  border-top: 1px solid #ebe5df;
+  color: #111111;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.inline-card-preview__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 58px;
+  border: none;
+  border-radius: 16px;
+  background: #111111;
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.inline-card-preview__cta:hover {
+  transform: translateY(-1px);
+  opacity: 0.96;
+}
+
+@media (max-width: 860px) {
+  .inline-card-preview__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .inline-card-preview__topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .inline-card-preview__tabs,
+  .inline-card-preview__form {
+    grid-template-columns: 1fr;
+  }
+
+  .inline-card-preview__cta {
+    width: 100%;
+  }
+}
+
