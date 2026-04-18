@@ -70,10 +70,11 @@ body { background: radial-gradient(circle at top left, rgba(0,0,0,0.08), transpa
 .inline-card-preview__field input, .inline-card-preview__select { width: 100%; min-height: 54px; padding: 0 16px; border: 1px solid rgba(17,17,17,0.1); border-radius: 18px; background: #ffffff; color: #1b1b1b; font: inherit; }
 .inline-card-preview__field input[readonly] { cursor: default; }
 .inline-card-preview__select { display: flex; align-items: center; justify-content: space-between; }
+.inline-card-preview__native-select { width: 100%; min-height: 54px; padding: 0 16px; border: 1px solid rgba(17,17,17,0.1); border-radius: 18px; background: #ffffff; color: #1b1b1b; font: inherit; appearance: none; }
 .inline-card-preview__note, .inline-card-preview__foot { margin-top: 16px; padding: 14px 16px; border-radius: 18px; background: rgba(17,17,17,0.04); color: var(--text-soft); line-height: 1.55; }
 .inline-card-preview__actions { justify-content: space-between; margin-top: 18px; }
 .inline-card-preview__mini { color: var(--text-soft); font-size: 0.92rem; }
-.inline-card-preview__cta { display: inline-flex; align-items: center; justify-content: center; min-width: 184px; min-height: 54px; padding: 0 22px; border-radius: 999px; background: #111111; color: #ffffff; text-decoration: none; font-weight: 800; box-shadow: 0 18px 28px rgba(17,17,17,0.18); }
+.inline-card-preview__cta { display: inline-flex; align-items: center; justify-content: center; min-width: 184px; min-height: 54px; padding: 0 22px; border-radius: 999px; border: none; cursor: pointer; background: #111111; color: #ffffff; text-decoration: none; font-weight: 800; box-shadow: 0 18px 28px rgba(17,17,17,0.18); }
 .inline-card-preview__product { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 14px; align-items: center; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid rgba(17,17,17,0.08); }
 .inline-card-preview__product strong, .inline-card-preview__product small { display: block; }
 .inline-card-preview__product small { color: var(--text-soft); }

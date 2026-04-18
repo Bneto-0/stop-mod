@@ -23,6 +23,7 @@ const PAGBANK_RETURN_URL_KEY = "stopmod_pagbank_return_url";
 const PAGBANK_REDIRECT_URL_KEY = "stopmod_pagbank_redirect_url";
 const PAGBANK_NOTIFICATION_URL_KEY = "stopmod_pagbank_notification_url";
 const PAGBANK_PAYMENT_NOTIFICATION_URL_KEY = "stopmod_pagbank_payment_notification_url";
+const PAGBANK_SDK_URL = "https://assets.pagseguro.com.br/checkout-sdk-js/rc/dist/browser/pagseguro.min.js";
 const PAYMENT_METHOD_LABELS = Object.freeze({
   pix: "Pix",
   credito: "Cartao de credito",
@@ -121,6 +122,9 @@ const addressInlineConfirm = document.getElementById("address-inline-confirm");
 const confirmPaymentDefaultLabel = String(confirmPaymentBtn?.textContent || "Continuar");
 
 let lastAuthTouchAt = 0;
+let pagBankSdkPromise = null;
+let pagBankPublicKeyCache = "";
+let transparentCardContext = null;
 
 function formatBRL(value) {
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -231,6 +235,10 @@ function buildPagBankInlineEndpointFromBase(raw) {
   return buildApiUrlFromBase(raw, "/api/pagbank/inline-payment");
 }
 
+function buildPagBankPublicKeyEndpointFromBase(raw) {
+  return buildApiUrlFromBase(raw, "/api/pagbank/public-key");
+}
+
 function isProdStoreHost() {
   const host = String(window.location.hostname || "").toLowerCase();
   return host !== "localhost" && host !== "127.0.0.1" && !host.endsWith(".onrender.com");
@@ -298,6 +306,33 @@ function resolvePagBankEndpointCandidates() {
   return candidates.map((base) => ({
     base,
     endpoint: buildPagBankInlineEndpointFromBase(base)
+  }));
+}
+
+function resolvePagBankPublicKeyEndpointCandidates() {
+  const configured = readConfiguredPagBankApiBase();
+  const forced = resolveForcedApiBase();
+  const candidates = [];
+  const pushUnique = (value) => {
+    const normalized = normalizeApiBase(value);
+    if (!normalized || candidates.includes(normalized)) return;
+    candidates.push(normalized);
+  };
+
+  pushUnique(forced);
+  pushUnique(configured);
+
+  if (isProdStoreHost()) {
+    pushUnique(DEFAULT_STORE_PAGBANK_BASE);
+  } else {
+    pushUnique("http://localhost:8787");
+  }
+
+  pushUnique(DEFAULT_REMOTE_PAGBANK_BASE);
+
+  return candidates.map((base) => ({
+    base,
+    endpoint: buildPagBankPublicKeyEndpointFromBase(base)
   }));
 }
 
@@ -418,6 +453,128 @@ async function postJson(url, payload, timeoutMs) {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+async function getJson(url, timeoutMs) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), Number(timeoutMs) || 15000);
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Accept: "application/json"
+      },
+      signal: controller.signal
+    });
+
+    const text = await response.text();
+    let data = null;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      data = null;
+    }
+
+    if (!response.ok) {
+      throw new Error(String(data?.message || data?.error || text || `HTTP ${response.status}`));
+    }
+
+    return data || {};
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error("Tempo esgotado ao consultar o PagBank.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function loadPagBankSdk() {
+  if (window.PagSeguro?.encryptCard) {
+    return Promise.resolve(window.PagSeguro);
+  }
+  if (pagBankSdkPromise) {
+    return pagBankSdkPromise;
+  }
+
+  pagBankSdkPromise = new Promise((resolve, reject) => {
+    const existing = document.querySelector(`script[src="${PAGBANK_SDK_URL}"]`);
+    if (existing) {
+      existing.addEventListener("load", () => resolve(window.PagSeguro), { once: true });
+      existing.addEventListener("error", () => reject(new Error("Nao foi possivel carregar o SDK do PagBank.")), { once: true });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = PAGBANK_SDK_URL;
+    script.async = true;
+    script.onload = () => {
+      if (window.PagSeguro?.encryptCard) {
+        resolve(window.PagSeguro);
+        return;
+      }
+      reject(new Error("SDK do PagBank carregado sem o recurso de criptografia."));
+    };
+    script.onerror = () => reject(new Error("Nao foi possivel carregar o SDK do PagBank."));
+    document.body.appendChild(script);
+  });
+
+  return pagBankSdkPromise;
+}
+
+async function fetchPagBankPublicKey() {
+  if (pagBankPublicKeyCache) {
+    return {
+      publicKey: pagBankPublicKeyCache,
+      apiBase: readConfiguredPagBankApiBase() || resolveForcedApiBase() || DEFAULT_STORE_PAGBANK_BASE
+    };
+  }
+
+  const candidates = resolvePagBankPublicKeyEndpointCandidates();
+  let lastError = null;
+  for (const candidate of candidates) {
+    try {
+      const data = await getJson(candidate.endpoint, 15000);
+      const publicKey = String(data?.publicKey || "").trim();
+      if (!publicKey) {
+        throw new Error("Chave publica do PagBank indisponivel.");
+      }
+      pagBankPublicKeyCache = publicKey;
+      rememberPagBankApiBase(candidate.base);
+      return {
+        publicKey,
+        apiBase: candidate.base
+      };
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError || new Error("Nao foi possivel consultar a chave publica do PagBank.");
+}
+
+function normalizeCardNumber(value) {
+  return digitsOnly(value).slice(0, 19);
+}
+
+function formatCardNumber(value) {
+  return normalizeCardNumber(value).replace(/(.{4})/g, "$1 ").trim();
+}
+
+function normalizeCardExpiry(raw) {
+  const digits = digitsOnly(raw).slice(0, 6);
+  if (digits.length <= 2) return digits;
+  return `${digits.slice(0, 2)} / ${digits.slice(2)}`;
+}
+
+function parseCardExpiry(raw) {
+  const digits = digitsOnly(raw);
+  if (digits.length < 4) return { expMonth: "", expYear: "" };
+  const expMonth = digits.slice(0, 2);
+  const yearPart = digits.slice(2);
+  const expYear = yearPart.length === 2 ? `20${yearPart}` : yearPart.slice(0, 4);
+  return { expMonth, expYear };
 }
 
 function loadCartIds() {
@@ -1359,6 +1516,208 @@ function buildHostedCardPreviewModel(data, method) {
   };
 }
 
+function buildTransparentCardViewModel(method = "credito") {
+  const snapshot = checkoutSnapshot();
+  const customer = loadCheckoutCustomer();
+  const grouped = Array.isArray(snapshot?.grouped) ? snapshot.grouped : [];
+  const primaryItem = grouped[0] || null;
+  const itemCount = grouped.reduce((sum, item) => sum + Math.max(1, Number(item?.qty || 1) || 1), 0);
+  const subtotal = Number(snapshot?.subtotal || 0);
+  const shipping = Number(snapshot?.shipping || 0);
+  const total = Number(snapshot?.total || 0);
+
+  return {
+    methodLabel: paymentLabel(method) || "Cartao de credito",
+    customerName: String(customer?.name || "").trim(),
+    customerCpf: String(customer?.cpf || "").trim(),
+    productName: String(primaryItem?.name || "Produto Uzuu").trim() || "Produto Uzuu",
+    productMeta: [primaryItem?.category, primaryItem?.size].filter(Boolean).join(" • "),
+    productImage: String(primaryItem?.image || "").trim(),
+    itemCount,
+    subtotal,
+    shipping,
+    total,
+    installmentLabel: buildInstallmentPreviewLabel(total)
+  };
+}
+
+function formatGatewayCardStatus(value) {
+  const status = String(value || "").trim().toUpperCase();
+  switch (status) {
+    case "PAID":
+      return "Pago";
+    case "AUTHORIZED":
+      return "Autorizado";
+    case "IN_ANALYSIS":
+      return "Em analise";
+    case "DECLINED":
+      return "Recusado";
+    case "CANCELED":
+    case "CANCELLED":
+      return "Cancelado";
+    case "WAITING":
+      return "Aguardando confirmacao";
+    default:
+      return status || "Processando";
+  }
+}
+
+function buildTransparentCardOutcome(data = {}) {
+  const chargeStatus = String(data?.chargeStatus || data?.gatewayStatus || data?.order?.status || "")
+    .trim()
+    .toUpperCase();
+  const gatewayMessage = String(data?.paymentResponse?.message || "").trim();
+
+  if (chargeStatus === "PAID" || chargeStatus === "AUTHORIZED") {
+    return {
+      title: "Cartao aprovado",
+      summary: "O PagBank aprovou o pagamento do cartao sem redirecionar voce para fora da Uzuu.",
+      feedback: "Cartao aprovado com confirmacao automatica pelo PagBank.",
+      statusLabel: formatGatewayCardStatus(chargeStatus),
+      isError: false,
+      gatewayMessage
+    };
+  }
+
+  if (chargeStatus === "IN_ANALYSIS") {
+    return {
+      title: "Pagamento em analise",
+      summary: "O pagamento foi recebido e esta em analise pelo PagBank. A Uzuu atualiza o pedido automaticamente assim que houver retorno.",
+      feedback: "Pagamento enviado e aguardando a analise automatica do PagBank.",
+      statusLabel: formatGatewayCardStatus(chargeStatus),
+      isError: false,
+      gatewayMessage
+    };
+  }
+
+  if (["DECLINED", "CANCELED", "CANCELLED"].includes(chargeStatus)) {
+    return {
+      title: chargeStatus === "DECLINED" ? "Cartao recusado" : "Pagamento cancelado",
+      summary:
+        gatewayMessage ||
+        "O PagBank nao conseguiu confirmar o pagamento deste cartao. Revise os dados e tente novamente.",
+      feedback:
+        chargeStatus === "DECLINED"
+          ? "O PagBank recusou o pagamento do cartao."
+          : "O pagamento com cartao foi cancelado pelo gateway.",
+      statusLabel: formatGatewayCardStatus(chargeStatus),
+      isError: true,
+      gatewayMessage
+    };
+  }
+
+  return {
+    title: "Pagamento enviado com sucesso",
+    summary:
+      gatewayMessage ||
+      "A Uzuu enviou o cartao criptografado ao PagBank e agora aguarda a confirmacao automatica do gateway.",
+    feedback: "Cartao enviado com sucesso para o PagBank.",
+    statusLabel: formatGatewayCardStatus(chargeStatus),
+    isError: false,
+    gatewayMessage
+  };
+}
+
+function renderTransparentCardModal(method = "credito") {
+  if (!inlinePayContent || !inlinePayModal) return;
+  const view = buildTransparentCardViewModel(method);
+  transparentCardContext = { method };
+  hideInlinePayOpenLink();
+  setInlinePayDoneVisible(false);
+  setInlinePayStatus("Preencha os dados do cartao para pagar sem sair da Uzuu.", false);
+  inlinePayContent.innerHTML = `
+    <form id="inline-card-transparent-form" class="inline-card-preview" novalidate>
+      <div class="inline-card-preview__status">
+        <span class="inline-card-preview__dot"></span>
+        Cartao transparente com criptografia do PagBank dentro da Uzuu
+      </div>
+      <div class="inline-card-preview__grid">
+        <div class="inline-card-preview__panel">
+          <h3 class="inline-card-preview__title">Dados do cartao</h3>
+          <p class="inline-card-preview__text">Seu cartao sera criptografado no navegador antes do envio. O backend da Uzuu recebe apenas o cartao criptografado.</p>
+          <div class="inline-card-preview__chips">
+            <span class="inline-card-preview__chip is-active">${escapeHtml(view.methodLabel)}</span>
+            <span class="inline-card-preview__chip">Pix</span>
+          </div>
+          <div class="inline-card-preview__brands">
+            <span class="inline-card-preview__brand">Visa</span>
+            <span class="inline-card-preview__brand">Mastercard</span>
+            <span class="inline-card-preview__brand">Elo</span>
+            <span class="inline-card-preview__brand">Hipercard</span>
+          </div>
+          <div class="inline-card-preview__form">
+            <label class="inline-card-preview__field inline-card-preview__field--full">
+              <span>Numero do cartao</span>
+              <input id="inline-card-number" type="text" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" required />
+            </label>
+            <label class="inline-card-preview__field inline-card-preview__field--full">
+              <span>Nome no cartao</span>
+              <input id="inline-card-holder" type="text" autocomplete="cc-name" placeholder="Nome igual ao cartao" value="${escapeHtml(view.customerName)}" required />
+            </label>
+            <label class="inline-card-preview__field">
+              <span>Validade</span>
+              <input id="inline-card-expiry" type="text" inputmode="numeric" autocomplete="cc-exp" placeholder="MM / AAAA" required />
+            </label>
+            <label class="inline-card-preview__field">
+              <span>CVV</span>
+              <input id="inline-card-cvv" type="password" inputmode="numeric" autocomplete="cc-csc" placeholder="123" maxlength="4" required />
+            </label>
+            <label class="inline-card-preview__field">
+              <span>CPF do titular</span>
+              <input id="inline-card-tax-id" type="text" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" value="${escapeHtml(
+                view.customerCpf ? view.customerCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") : ""
+              )}" required />
+            </label>
+            <label class="inline-card-preview__field">
+              <span>Parcelamento</span>
+              <select id="inline-card-installments" class="inline-card-preview__native-select">
+                ${Array.from({ length: Math.max(1, Math.min(6, Math.floor((view.total || 0) / 60) || 1)) }, (_, index) => {
+                  const installment = index + 1;
+                  const label = installment === 1
+                    ? `1x de R$ ${formatBRL(view.total)} sem juros`
+                    : `${installment}x de R$ ${formatBRL(view.total / installment)} sem juros`;
+                  return `<option value="${installment}">${escapeHtml(label)}</option>`;
+                }).join("")}
+              </select>
+            </label>
+          </div>
+          <div class="inline-card-preview__note">
+            Ao confirmar, a Uzuu vai criptografar os dados com a chave publica do PagBank e enviar apenas o cartao criptografado para o backend.
+          </div>
+          <div class="inline-card-preview__actions">
+            <span class="inline-card-preview__mini">Aprovacao automatica e atualizacao via webhook</span>
+            <button id="inline-card-submit" class="inline-card-preview__cta" type="submit">Pagar agora</button>
+          </div>
+        </div>
+        <aside class="inline-card-preview__summary">
+          <div class="inline-card-preview__product">
+            ${
+              view.productImage
+                ? `<img class="inline-card-preview__image" src="${escapeHtml(view.productImage)}" alt="${escapeHtml(view.productName)}" />`
+                : `<div class="inline-card-preview__image inline-card-preview__image--placeholder" aria-hidden="true"></div>`
+            }
+            <div>
+              <strong>${escapeHtml(view.productName)}</strong>
+              <small>${escapeHtml(view.productMeta || "Produto selecionado na Uzuu")}</small>
+              <small>${view.itemCount > 1 ? `${view.itemCount} itens no pedido` : "1 item no pedido"}</small>
+            </div>
+          </div>
+          <div class="inline-card-preview__totals">
+            <div><span>Subtotal</span><strong>R$ ${escapeHtml(formatBRL(view.subtotal))}</strong></div>
+            <div><span>Frete</span><strong>${view.shipping > 0 ? `R$ ${escapeHtml(formatBRL(view.shipping))}` : "Gratis"}</strong></div>
+            <div><span>Parcelamento</span><strong>${escapeHtml(view.installmentLabel.replace(/^(\d+x de )?/, ""))}</strong></div>
+            <div class="is-total"><span>Total</span><strong>R$ ${escapeHtml(formatBRL(view.total))}</strong></div>
+          </div>
+          <div class="inline-card-preview__foot">
+            Depois do pagamento, a confirmacao volta para a Uzuu automaticamente por webhook e voce acompanha tudo em Meus pedidos.
+          </div>
+        </aside>
+      </div>
+    </form>
+  `;
+  inlinePayModal.hidden = false;
+}
+
 function resolvePixQrSources(pix = {}) {
   const qrImageDataUrl = String(pix?.qrImageDataUrl || "").trim();
   const qrImageBase64 = String(pix?.qrImageBase64 || "").trim();
@@ -1539,6 +1898,24 @@ function renderInlinePaymentContent(data, method) {
     return;
   }
 
+  if (mode === "card") {
+    const outcome = buildTransparentCardOutcome(data);
+    const orderId = escapeHtml(String(data?.order?.id || ""));
+    const gatewayStatus = escapeHtml(outcome.statusLabel);
+    const gatewayMessage = escapeHtml(String(outcome.gatewayMessage || "").trim());
+    inlinePayContent.innerHTML = `
+      <h3 class="inline-pay-title">${escapeHtml(outcome.title)}</h3>
+      <p class="inline-pay-text">${escapeHtml(outcome.summary)}</p>
+      ${referenceId ? `<p class="inline-pay-line"><strong>Pedido:</strong> ${referenceId}</p>` : ""}
+      ${orderId ? `<p class="inline-pay-line"><strong>Ordem PagBank:</strong> ${orderId}</p>` : ""}
+      <p class="inline-pay-line"><strong>Status:</strong> ${gatewayStatus}</p>
+      ${gatewayMessage ? `<p class="inline-pay-line"><strong>Gateway:</strong> ${gatewayMessage}</p>` : ""}
+      <p class="inline-pay-line">Voce continua na Uzuu enquanto o PagBank confirma e sincroniza o pedido automaticamente.</p>
+    `;
+    hideInlinePayOpenLink();
+    return;
+  }
+
   if (mode === "pix") {
     const qrText = String(data?.pix?.qrText || "").trim();
     const qrSources = resolvePixQrSources(data?.pix || {});
@@ -1610,6 +1987,7 @@ function openInlinePayModal(data, method) {
   if (!inlinePayModal || !inlinePayContent) return;
   const hostedCheckout = hasHostedCheckoutLink(data);
   const providerManaged = isProviderManagedPayment(data);
+  const cardOutcome = String(data?.mode || "").trim().toLowerCase() === "card" ? buildTransparentCardOutcome(data) : null;
   setInlinePayDoneVisible(!providerManaged && !hostedCheckout);
   setInlinePayStatus(
     hostedCheckout
@@ -1617,9 +1995,11 @@ function openInlinePayModal(data, method) {
       : providerManaged
         ? String(data?.mode || "").trim().toLowerCase() === "pix"
           ? "Pix gerado com sucesso. Assim que o PagBank confirmar o pagamento, o pedido sera atualizado automaticamente."
-          : `Pagamento com ${paymentLabel(method) || "PagBank"} criado com confirmacao automatica pelo PagBank.`
+          : cardOutcome
+            ? cardOutcome.feedback
+            : `Pagamento com ${paymentLabel(method) || "PagBank"} criado com confirmacao automatica pelo PagBank.`
         : `Pagamento com ${paymentLabel(method) || "PagBank"} iniciado em ambiente de teste.`,
-    false
+    !!cardOutcome?.isError
   );
   renderInlinePaymentContent(data || {}, method);
   inlinePayModal.hidden = false;
@@ -1628,9 +2008,138 @@ function openInlinePayModal(data, method) {
 function closeInlinePayModal() {
   if (!inlinePayModal) return;
   inlinePayModal.hidden = true;
+  transparentCardContext = null;
   if (inlinePayContent) inlinePayContent.innerHTML = "";
   setInlinePayDoneVisible(true);
   hideInlinePayOpenLink();
+}
+
+async function requestInlinePayment(payload, method, options = {}) {
+  const endpointCandidates = resolvePagBankEndpointCandidates();
+  let effectiveEndpoint = "";
+  let effectiveApiBase = "";
+  let data = null;
+  let lastError = null;
+
+  for (const candidate of endpointCandidates) {
+    try {
+      data = await postJson(candidate.endpoint, payload, 22000);
+      effectiveEndpoint = candidate.endpoint;
+      effectiveApiBase = candidate.base;
+      rememberPagBankApiBase(candidate.base);
+      break;
+    } catch (candidateError) {
+      lastError = candidateError;
+    }
+  }
+
+  if (!data || typeof data !== "object") {
+    throw lastError || new Error("PagBank nao retornou dados de pagamento.");
+  }
+
+  registerSoldItemsFromCheckout(payload.items);
+  registerRatingFromCheckout(payload.items);
+
+  const referenceId = String(data?.referenceId || payload.referenceId || "").trim();
+  createPendingOrderFromCheckout(payload, method, referenceId, {
+    paymentEndpoint: effectiveEndpoint,
+    apiBase: effectiveApiBase
+  });
+  localStorage.setItem(
+    "stopmod_pending_checkout",
+    JSON.stringify({
+      referenceId,
+      method,
+      createdAt: new Date().toISOString()
+    })
+  );
+
+  if (!options.keepCheckoutModalOpen) {
+    closeModal();
+  }
+  feedback.textContent = hasHostedCheckoutLink(data)
+    ? "Pagamento criado. Abra o checkout seguro do PagBank para concluir."
+    : isProviderManagedPayment(data)
+      ? String(data?.mode || "").trim().toLowerCase() === "pix"
+        ? "Pix gerado. Pague com o QR Code e aguarde a confirmacao automatica."
+        : buildTransparentCardOutcome(data).feedback
+      : "Pagamento iniciado. Finalize no quadro seguro abaixo.";
+  openInlinePayModal(data, method);
+  return data;
+}
+
+async function submitTransparentCardPayment() {
+  if (!transparentCardContext) {
+    throw new Error("Fluxo transparente do cartao nao foi iniciado.");
+  }
+
+  const numberInput = document.getElementById("inline-card-number");
+  const holderInput = document.getElementById("inline-card-holder");
+  const expiryInput = document.getElementById("inline-card-expiry");
+  const cvvInput = document.getElementById("inline-card-cvv");
+  const taxIdInput = document.getElementById("inline-card-tax-id");
+  const installmentsInput = document.getElementById("inline-card-installments");
+  const submitBtn = document.getElementById("inline-card-submit");
+
+  const cardNumber = normalizeCardNumber(numberInput?.value || "");
+  const holderName = String(holderInput?.value || "").trim();
+  const { expMonth, expYear } = parseCardExpiry(expiryInput?.value || "");
+  const securityCode = digitsOnly(cvvInput?.value || "").slice(0, 4);
+  const holderTaxId = digitsOnly(taxIdInput?.value || "").slice(0, 11);
+  const installments = Math.max(1, Math.min(12, Number(installmentsInput?.value || 1) || 1));
+
+  if (cardNumber.length < 13) {
+    throw new Error("Preencha um numero de cartao valido.");
+  }
+  if (!holderName) {
+    throw new Error("Informe o nome do titular.");
+  }
+  if (!expMonth || !expYear || Number(expMonth) < 1 || Number(expMonth) > 12 || String(expYear).length !== 4) {
+    throw new Error("Informe a validade do cartao no formato MM / AAAA.");
+  }
+  if (securityCode.length < 3) {
+    throw new Error("Informe um CVV valido.");
+  }
+  if (holderTaxId.length !== 11) {
+    throw new Error("Informe o CPF completo do titular.");
+  }
+
+  setInlinePayStatus("Protegendo os dados do cartao com o PagBank...", false);
+  submitBtn && (submitBtn.disabled = true);
+
+  try {
+    await loadPagBankSdk();
+    const keyData = await fetchPagBankPublicKey();
+    const card = window.PagSeguro.encryptCard({
+      publicKey: keyData.publicKey,
+      holder: holderName,
+      number: cardNumber,
+      expMonth,
+      expYear,
+      securityCode
+    });
+
+    if (card?.hasErrors) {
+      const firstError = Array.isArray(card.errors) ? card.errors[0] : null;
+      throw new Error(String(firstError?.message || "Nao foi possivel criptografar os dados do cartao."));
+    }
+
+    const payload = buildPagBankCheckoutPayload("credito");
+    if (!payload) {
+      throw new Error("Seu carrinho esta vazio.");
+    }
+    payload.card = {
+      encryptedCard: String(card?.encryptedCard || "").trim(),
+      holderName,
+      holderTaxId,
+      installments
+    };
+
+    setInlinePayStatus("Enviando pagamento transparente para o PagBank...", false);
+    await requestInlinePayment(payload, "credito", { keepCheckoutModalOpen: false });
+  } finally {
+    submitBtn && (submitBtn.disabled = false);
+  }
 }
 
 function syncPaymentRadios() {
@@ -1839,6 +2348,41 @@ inlinePayModal?.querySelectorAll("[data-inline-close]").forEach((el) => {
   el.addEventListener("click", closeInlinePayModal);
 });
 
+inlinePayContent?.addEventListener("input", (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLInputElement)) return;
+  if (target.id === "inline-card-number") {
+    const formatted = formatCardNumber(target.value);
+    if (target.value !== formatted) target.value = formatted;
+  }
+  if (target.id === "inline-card-expiry") {
+    const formatted = normalizeCardExpiry(target.value);
+    if (target.value !== formatted) target.value = formatted;
+  }
+  if (target.id === "inline-card-tax-id") {
+    const digits = digitsOnly(target.value).slice(0, 11);
+    const formatted = digits.length === 11
+      ? digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")
+      : digits;
+    if (target.value !== formatted) target.value = formatted;
+  }
+  if (target.id === "inline-card-cvv") {
+    const digits = digitsOnly(target.value).slice(0, 4);
+    if (target.value !== digits) target.value = digits;
+  }
+});
+
+inlinePayContent?.addEventListener("submit", async (event) => {
+  const form = event.target;
+  if (!(form instanceof HTMLFormElement) || form.id !== "inline-card-transparent-form") return;
+  event.preventDefault();
+  try {
+    await submitTransparentCardPayment();
+  } catch (error) {
+    setInlinePayStatus(normalizeCheckoutErrorMessage(error), true);
+  }
+});
+
 inlinePayDoneBtn?.addEventListener("click", () => {
   const pendingReference = readPendingCheckoutReference();
   const updated = markPendingOrderAsProcessing(pendingReference);
@@ -1930,6 +2474,14 @@ paymentForm?.addEventListener("submit", async (e) => {
     return;
   }
 
+  if (method === "credito") {
+    savePayment(method);
+    updatePaymentUI(method);
+    closeModal();
+    renderTransparentCardModal(method);
+    return;
+  }
+
   if (confirmPaymentBtn) {
     confirmPaymentBtn.disabled = true;
     confirmPaymentBtn.textContent = "Gerando pagamento...";
@@ -1939,54 +2491,7 @@ paymentForm?.addEventListener("submit", async (e) => {
   updatePaymentUI(method);
 
   try {
-    const endpointCandidates = resolvePagBankEndpointCandidates();
-    let effectiveEndpoint = "";
-    let effectiveApiBase = "";
-    let data = null;
-    let lastError = null;
-
-    for (const candidate of endpointCandidates) {
-      try {
-        data = await postJson(candidate.endpoint, payload, 22000);
-        effectiveEndpoint = candidate.endpoint;
-        effectiveApiBase = candidate.base;
-        rememberPagBankApiBase(candidate.base);
-        break;
-      } catch (candidateError) {
-        lastError = candidateError;
-      }
-    }
-
-    if (!data || typeof data !== "object") {
-      throw lastError || new Error("PagBank nao retornou dados de pagamento.");
-    }
-
-    registerSoldItemsFromCheckout(payload.items);
-    registerRatingFromCheckout(payload.items);
-
-    const referenceId = String(data?.referenceId || payload.referenceId || "").trim();
-    createPendingOrderFromCheckout(payload, method, referenceId, {
-      paymentEndpoint: effectiveEndpoint,
-      apiBase: effectiveApiBase
-    });
-    localStorage.setItem(
-      "stopmod_pending_checkout",
-      JSON.stringify({
-        referenceId,
-        method,
-        createdAt: new Date().toISOString()
-      })
-    );
-
-    closeModal();
-    feedback.textContent = hasHostedCheckoutLink(data)
-      ? "Pagamento criado. Abra o checkout seguro do PagBank para concluir."
-      : isProviderManagedPayment(data)
-        ? String(data?.mode || "").trim().toLowerCase() === "pix"
-          ? "Pix gerado. Pague com o QR Code e aguarde a confirmacao automatica."
-          : "Pagamento criado com confirmacao automatica pelo PagBank."
-        : "Pagamento iniciado. Finalize no quadro seguro abaixo.";
-    openInlinePayModal(data, method);
+    await requestInlinePayment(payload, method);
   } catch (error) {
     feedback.textContent = `Falha ao iniciar pagamento real: ${normalizeCheckoutErrorMessage(error)}`;
   } finally {
