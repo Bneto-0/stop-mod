@@ -1544,6 +1544,123 @@ function syncCheckoutPremiumTabs() {
   setConfirmButtonLabelForMethod(resolvedMethod);
 }
 
+function checkoutPanelForMethod(method) {
+  const key = String(method || "").trim().toLowerCase() === "credito" || String(method || "").trim().toLowerCase() === "debito"
+    ? "credito"
+    : String(method || "").trim().toLowerCase();
+  return checkoutPremiumPanels.find((panel) => String(panel.getAttribute("data-payment-panel") || "") === key) || null;
+}
+
+function renderCheckoutPaymentResult(data = {}, method = "") {
+  const panel = checkoutPanelForMethod(method);
+  if (!panel) return false;
+
+  const mode = String(data?.mode || "").trim().toLowerCase();
+  const referenceId = escapeHtml(String(data?.referenceId || "").trim());
+  const checkoutUrl = escapeHtml(String(data?.paymentUrl || data?.checkout?.payUrl || data?.checkoutUrl || "").trim());
+  const expiryText = String(data?.expiresAt || "").trim()
+    ? escapeHtml(new Date(String(data.expiresAt)).toLocaleString("pt-BR"))
+    : "";
+
+  if (mode === "card") {
+    const outcome = buildTransparentCardOutcome(data);
+    panel.innerHTML = `
+      <div class="checkout-result checkout-result--card">
+        <span class="checkout-result__badge">${escapeHtml(outcome.statusLabel)}</span>
+        <h3>${escapeHtml(outcome.title)}</h3>
+        <p>${escapeHtml(outcome.isError ? outcome.summary : "Seu pedido foi recebido e o pagamento foi confirmado dentro da Uzuu.")}</p>
+        ${referenceId ? `<p class="checkout-result__line"><strong>Pedido:</strong> ${referenceId}</p>` : ""}
+        <div class="checkout-result__actions">
+          <a class="checkout-result__button" href="../perfil/pedidos/">Ver meu pedido</a>
+          <a class="checkout-result__link" href="../">Continuar comprando</a>
+        </div>
+      </div>
+    `;
+    if (confirmPaymentBtn) {
+      confirmPaymentBtn.disabled = !outcome.isError;
+      confirmPaymentBtn.textContent = outcome.isError ? "Tentar novamente" : "Pagamento aprovado";
+    }
+    return true;
+  }
+
+  if (mode === "pix") {
+    const qrText = String(data?.pix?.qrText || "").trim();
+    const qrSources = resolvePixQrSources(data?.pix || {});
+    panel.innerHTML = `
+      <div class="checkout-result checkout-result--pix">
+        <span class="checkout-result__badge">Pix gerado</span>
+        <h3>Pague com Pix</h3>
+        <p>Escaneie o QR Code ou copie o codigo Pix. A Uzuu atualiza o pedido automaticamente quando o PagBank confirmar.</p>
+        <div id="checkout-pay-qr-slot" class="inline-pay-qr-slot checkout-result__qr"></div>
+        ${referenceId ? `<p class="checkout-result__line"><strong>Pedido:</strong> ${referenceId}</p>` : ""}
+        ${expiryText ? `<p class="checkout-result__line"><strong>Validade:</strong> ${expiryText}</p>` : ""}
+        ${qrText ? "<button id=\"checkout-pay-copy\" class=\"checkout-result__button\" type=\"button\">Copiar codigo Pix</button>" : ""}
+      </div>
+    `;
+    const qrSlot = document.getElementById("checkout-pay-qr-slot");
+    if (qrSlot) {
+      qrSlot.id = "inline-pay-qr-slot";
+      attachPixQrImage(qrSources, "Nao foi possivel carregar o QR Code automaticamente. Use o codigo Pix abaixo.");
+      qrSlot.id = "checkout-pay-qr-slot";
+    }
+    document.getElementById("checkout-pay-copy")?.addEventListener("click", async () => {
+      if (!qrText) return;
+      try {
+        await navigator.clipboard.writeText(qrText);
+        setCheckoutFeedback("Codigo Pix copiado com sucesso.", false);
+      } catch {
+        setCheckoutFeedback("Nao foi possivel copiar automaticamente. Copie manualmente o codigo.", true);
+      }
+    });
+    if (confirmPaymentBtn) {
+      confirmPaymentBtn.disabled = true;
+      confirmPaymentBtn.textContent = "Pix gerado";
+    }
+    return true;
+  }
+
+  if (mode === "boleto") {
+    const barcodeFormatted = String(data?.boleto?.formattedBarcode || data?.boleto?.barcode || "").trim();
+    const boletoPdf = escapeHtml(String(data?.boleto?.pdfUrl || checkoutUrl || "").trim());
+    panel.innerHTML = `
+      <div class="checkout-result checkout-result--boleto">
+        <span class="checkout-result__badge">Boleto pronto</span>
+        <h3>Boleto gerado</h3>
+        <p>Use o boleto para concluir o pagamento. Assim que o PagBank confirmar, o pedido sera atualizado automaticamente.</p>
+        ${barcodeFormatted ? `<p class="checkout-result__barcode">${escapeHtml(barcodeFormatted)}</p>` : ""}
+        ${referenceId ? `<p class="checkout-result__line"><strong>Pedido:</strong> ${referenceId}</p>` : ""}
+        ${expiryText ? `<p class="checkout-result__line"><strong>Validade:</strong> ${expiryText}</p>` : ""}
+        ${boletoPdf ? `<a class="checkout-result__button" href="${boletoPdf}" target="_blank" rel="noopener noreferrer">Abrir boleto</a>` : ""}
+      </div>
+    `;
+    if (confirmPaymentBtn) {
+      confirmPaymentBtn.disabled = true;
+      confirmPaymentBtn.textContent = "Boleto gerado";
+    }
+    return true;
+  }
+
+  if (hasHostedCheckoutLink(data)) {
+    const label = paymentLabel(method) || "PagBank";
+    panel.innerHTML = `
+      <div class="checkout-result checkout-result--hosted">
+        <span class="checkout-result__badge">${escapeHtml(label)}</span>
+        <h3>Pagamento pronto</h3>
+        <p>O PagBank gerou a proxima etapa para concluir este pagamento.</p>
+        ${referenceId ? `<p class="checkout-result__line"><strong>Pedido:</strong> ${referenceId}</p>` : ""}
+        ${checkoutUrl ? `<a class="checkout-result__button" href="${checkoutUrl}" target="_blank" rel="noopener noreferrer">Concluir pagamento</a>` : ""}
+      </div>
+    `;
+    if (confirmPaymentBtn) {
+      confirmPaymentBtn.disabled = true;
+      confirmPaymentBtn.textContent = "Pagamento criado";
+    }
+    return true;
+  }
+
+  return false;
+}
+
 function openModal() {
   if (!checkoutModal) return;
   renderAddressConfirmation();
@@ -2272,6 +2389,9 @@ async function requestInlinePayment(payload, method, options = {}) {
         ? "Pix gerado. Pague com o QR Code e aguarde a confirmacao automatica."
         : buildTransparentCardOutcome(data).feedback
       : "Pagamento iniciado. Finalize no quadro seguro abaixo.";
+  if (options.renderResultInCheckout && renderCheckoutPaymentResult(data, method)) {
+    return data;
+  }
   openInlinePayModal(data, method);
   return data;
 }
@@ -2403,7 +2523,10 @@ async function submitCheckoutTransparentCardPayment() {
   };
 
   setCheckoutFeedback("Enviando pagamento transparente para o PagBank...", false);
-  await requestInlinePayment(payload, "credito");
+  await requestInlinePayment(payload, "credito", {
+    keepCheckoutModalOpen: true,
+    renderResultInCheckout: true
+  });
 }
 
 function syncPaymentRadios() {
@@ -2770,7 +2893,10 @@ paymentForm?.addEventListener("submit", async (e) => {
   updatePaymentUI(method);
 
   try {
-    await requestInlinePayment(payload, method);
+    await requestInlinePayment(payload, method, {
+      keepCheckoutModalOpen: true,
+      renderResultInCheckout: true
+    });
   } catch (error) {
     feedback.textContent = `Falha ao iniciar pagamento real: ${normalizeCheckoutErrorMessage(error)}`;
   } finally {
