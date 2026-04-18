@@ -111,6 +111,15 @@ const checkoutAddressLine = document.getElementById("checkout-address-line");
 const checkoutAddressShip = document.getElementById("checkout-address-ship");
 const checkoutFeedback = document.getElementById("checkout-feedback");
 const confirmAddress = document.getElementById("confirm-address");
+const checkoutSummaryImage = document.getElementById("checkout-summary-image");
+const checkoutSummaryName = document.getElementById("checkout-summary-name");
+const checkoutSummaryMeta = document.getElementById("checkout-summary-meta");
+const checkoutSummaryQty = document.getElementById("checkout-summary-qty");
+const checkoutSummarySubtotal = document.getElementById("checkout-summary-subtotal");
+const checkoutSummaryShipping = document.getElementById("checkout-summary-shipping");
+const checkoutSummaryTotal = document.getElementById("checkout-summary-total");
+const checkoutPremiumTabs = Array.from(document.querySelectorAll("[data-payment-tab]"));
+const checkoutPremiumPanels = Array.from(document.querySelectorAll("[data-payment-panel]"));
 const inlinePayModal = document.getElementById("inline-pay-modal");
 const inlinePayContent = document.getElementById("inline-pay-content");
 const inlinePayStatus = document.getElementById("inline-pay-status");
@@ -1419,9 +1428,112 @@ function updatePaymentUI(method) {
   paymentSelected.hidden = false;
 }
 
+function formatCheckoutSummaryShipping(value) {
+  if (value === null || Number.isNaN(Number(value))) return "--";
+  if (Number(value) === 0) return "Gratis";
+  return `R$ ${formatBRL(Number(value) || 0)}`;
+}
+
+function setConfirmButtonLabelForMethod(method) {
+  if (!confirmPaymentBtn) return;
+  const value = String(method || "").trim().toLowerCase();
+  if (value === "pix") {
+    confirmPaymentBtn.textContent = "Gerar Pix";
+    return;
+  }
+  if (value === "boleto") {
+    confirmPaymentBtn.textContent = "Gerar boleto";
+    return;
+  }
+  if (value === "debito") {
+    confirmPaymentBtn.textContent = "Continuar com debito";
+    return;
+  }
+  if (value === "credito") {
+    confirmPaymentBtn.textContent = "Continuar com cartao";
+    return;
+  }
+  confirmPaymentBtn.textContent = confirmPaymentDefaultLabel;
+}
+
+function renderCheckoutModalSnapshot() {
+  const snapshot = checkoutSnapshot();
+  const firstItem = snapshot.grouped[0] || null;
+  const totalUnits = snapshot.grouped.reduce((sum, item) => sum + (Number(item.qty) || 0), 0);
+  const extraItems = Math.max(0, snapshot.grouped.length - 1);
+
+  if (checkoutSummaryImage) {
+    if (firstItem?.image) {
+      checkoutSummaryImage.innerHTML = `<img src="${escapeHtml(firstItem.image)}" alt="${escapeHtml(firstItem.name || "Produto Uzuu")}" loading="lazy" />`;
+    } else {
+      checkoutSummaryImage.textContent = "UZUU";
+    }
+  }
+
+  if (checkoutSummaryName) {
+    checkoutSummaryName.textContent = firstItem
+      ? extraItems > 0
+        ? `${firstItem.name} +${extraItems} ${extraItems > 1 ? "itens" : "item"}`
+        : firstItem.name
+      : "Produto Uzuu";
+  }
+
+  if (checkoutSummaryMeta) {
+    checkoutSummaryMeta.textContent = firstItem
+      ? [firstItem.category, firstItem.size].filter(Boolean).join(" | ") || "Entrega protegida pela Uzuu"
+      : "Entrega protegida pela Uzuu";
+  }
+
+  if (checkoutSummaryQty) {
+    checkoutSummaryQty.textContent = totalUnits === 1 ? "1 unidade" : `${totalUnits} unidades`;
+  }
+
+  if (checkoutSummarySubtotal) {
+    checkoutSummarySubtotal.textContent = `R$ ${formatBRL(snapshot.subtotal)}`;
+  }
+
+  if (checkoutSummaryShipping) {
+    checkoutSummaryShipping.textContent = formatCheckoutSummaryShipping(snapshot.shipping);
+  }
+
+  if (checkoutSummaryTotal) {
+    checkoutSummaryTotal.textContent = `R$ ${formatBRL(snapshot.total)}`;
+  }
+}
+
+function syncCheckoutPremiumTabs() {
+  if (!paymentForm) return;
+  const checked = paymentForm.querySelector('input[name="pay"]:checked');
+  const radioValue = String(checked?.value || "").trim().toLowerCase() || "pix";
+  const resolvedMethod = radioValue === "credito"
+    ? String(cardKindSelect?.value || "credito").trim().toLowerCase() === "debito"
+      ? "debito"
+      : "credito"
+    : radioValue;
+  const panelKey = radioValue === "credito" ? "credito" : radioValue;
+
+  checkoutPremiumTabs.forEach((tab) => {
+    const tabKey = String(tab.getAttribute("data-payment-tab") || "").trim().toLowerCase();
+    const isActive = tabKey === panelKey;
+    tab.classList.toggle("is-active", isActive);
+  });
+
+  checkoutPremiumPanels.forEach((panel) => {
+    const panelName = String(panel.getAttribute("data-payment-panel") || "").trim().toLowerCase();
+    const isActive = panelName === panelKey;
+    panel.classList.toggle("is-active", isActive);
+    panel.hidden = !isActive;
+  });
+
+  setConfirmButtonLabelForMethod(resolvedMethod);
+}
+
 function openModal() {
   if (!checkoutModal) return;
   renderAddressConfirmation();
+  renderCheckoutModalSnapshot();
+  syncPaymentRadios();
+  syncCheckoutPremiumTabs();
   clearCheckoutFeedback();
   checkoutModal.hidden = false;
 }
@@ -2239,6 +2351,7 @@ function syncPaymentRadios() {
     cardKindSelect.value = cur === "debito" ? "debito" : "credito";
   }
   setMorePaymentsOpen(shouldExpandMorePayments(cur));
+  syncCheckoutPremiumTabs();
 }
 
 function selectedPaymentFromModal() {
@@ -2296,6 +2409,7 @@ function renderCart() {
       cartTotalMain.textContent = "0";
       cartTotalCents.textContent = "00";
     }
+    renderCheckoutModalSnapshot();
     return;
   }
 
@@ -2382,6 +2496,7 @@ function renderCart() {
   }
 
   checkoutBtn.disabled = false;
+  renderCheckoutModalSnapshot();
 
   cartItems.querySelectorAll("button[data-action][data-id]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -2489,6 +2604,14 @@ cardKindSelect?.addEventListener("change", () => {
   if (!paymentForm) return;
   const cardRadio = paymentForm.querySelector('input[name="pay"][value="credito"]');
   if (cardRadio) cardRadio.checked = true;
+  syncCheckoutPremiumTabs();
+});
+
+paymentForm?.addEventListener("change", (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLInputElement)) return;
+  if (target.name !== "pay") return;
+  syncCheckoutPremiumTabs();
 });
 
 addressInlineConfirm?.addEventListener("click", () => {

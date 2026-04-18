@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=36" />
+  <link rel="stylesheet" href="style.css?v=37" />
   <script>window.__UZUU_API_BASE__ = "/ops-api";</script>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6485539380158983" crossorigin="anonymous"></script>
 <link rel="stylesheet" href="/assets/site-header.css?v=27" />
@@ -89,90 +89,117 @@
 
   <div id="checkout-modal" class="modal" hidden>
     <div class="modal-backdrop" data-close="1"></div>
-    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <h2 id="modal-title">Escolha a forma de pagamento</h2>
-      <form id="payment-form" class="modal-form">
-        <section class="checkout-address-box" aria-label="Endereco para entrega">
-          <div class="checkout-address-head">
-            <strong>Endereco de entrega</strong>
-            <a id="edit-address-link" class="edit-address-link" href="../entrega/">Alterar endereco</a>
-          </div>
-          <p id="checkout-address-line" class="checkout-address-line">Nenhum endereco selecionado.</p>
-          <p id="checkout-address-ship" class="checkout-address-ship">Frete: --</p>
-          <label class="confirm-address-check">
-            <input id="confirm-address" type="checkbox" />
-            <span>Confirmo que o endereco esta correto.</span>
-          </label>
-        </section>
+    <div class="modal-card modal-card--checkout" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <header class="checkout-premium-head">
+        <div class="checkout-premium-head-copy">
+          <h2 id="modal-title">Pagamento</h2>
+          <p class="checkout-premium-head-text">Escolha como deseja concluir seu pedido na Uzuu com mais espaco e leitura clara.</p>
+        </div>
+        <button class="checkout-premium-close" type="button" data-close="1" aria-label="Fechar pagamento">x</button>
+      </header>
 
-        <section class="payment-list" aria-label="Meios de pagamento">
-          <label class="pay-row">
-            <input type="radio" name="pay" value="pix" />
-            <span class="pay-row-icon pay-row-icon--pix" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <rect x="9.9" y="2.4" width="4.2" height="4.2" rx="1.1" transform="rotate(45 12 4.5)"></rect>
-                <rect x="17.4" y="9.9" width="4.2" height="4.2" rx="1.1" transform="rotate(45 19.5 12)"></rect>
-                <rect x="9.9" y="17.4" width="4.2" height="4.2" rx="1.1" transform="rotate(45 12 19.5)"></rect>
-                <rect x="2.4" y="9.9" width="4.2" height="4.2" rx="1.1" transform="rotate(45 4.5 12)"></rect>
-              </svg>
-            </span>
-            <span class="pay-row-body">
-              <strong>Pix</strong>
-              <small>Aprovacao imediata</small>
-            </span>
-          </label>
+      <form id="payment-form" class="checkout-premium-form">
+        <div class="checkout-premium-layout">
+          <section class="checkout-premium-main">
+            <section class="checkout-premium-address" aria-label="Endereco para entrega">
+              <div class="checkout-premium-section-head">
+                <strong>Endereco de entrega</strong>
+                <a id="edit-address-link" class="edit-address-link" href="../entrega/">Alterar endereco</a>
+              </div>
+              <p id="checkout-address-line" class="checkout-address-line">Nenhum endereco selecionado.</p>
+              <p id="checkout-address-ship" class="checkout-address-ship">Frete: --</p>
+              <label class="confirm-address-check">
+                <input id="confirm-address" type="checkbox" />
+                <span>Confirmo que o endereco esta correto.</span>
+              </label>
+            </section>
 
-          <p class="pay-group-title">Cartoes</p>
+            <section class="checkout-premium-methods" aria-label="Meios de pagamento">
+              <div class="checkout-premium-tabs">
+                <label class="checkout-premium-tab" data-payment-tab="pix">
+                  <input type="radio" name="pay" value="pix" />
+                  <strong>Pix</strong>
+                  <small>Aprovacao imediata</small>
+                </label>
 
-          <label class="pay-row pay-row--card">
-            <input type="radio" name="pay" value="credito" />
-            <span class="pay-row-icon pay-row-icon--card-banner" aria-hidden="true">
-              <img src="../assets/icons/card-banner.svg" alt="" />
-            </span>
-            <span class="pay-row-body">
-              <strong>Cartao credito / debito</strong>
-              <small>Em ate 12x</small>
-              <span class="pay-card-kind">
-                <span>Tipo:</span>
-                <select id="card-kind-select" aria-label="Tipo do cartao">
-                  <option value="credito">Credito</option>
-                  <option value="debito">Debito</option>
-                </select>
-              </span>
-            </span>
-          </label>
+                <label class="checkout-premium-tab" data-payment-tab="credito">
+                  <input type="radio" name="pay" value="credito" />
+                  <strong>Cartao</strong>
+                  <small>Credito ou debito</small>
+                </label>
 
-          <div id="more-payment-options" class="payment-more" hidden>
-            <p class="pay-group-title">Outros meios de pagamento</p>
+                <label class="checkout-premium-tab" data-payment-tab="boleto">
+                  <input type="radio" name="pay" value="boleto" />
+                  <strong>Boleto</strong>
+                  <small>Compensacao em ate 2 dias</small>
+                </label>
+              </div>
 
-            <label class="pay-row">
-              <input type="radio" name="pay" value="boleto" />
-              <span class="pay-row-icon pay-row-icon--barcode" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <rect x="3" y="4.3" width="2" height="15.4" rx="0.4"></rect>
-                  <rect x="6.2" y="4.3" width="1.2" height="15.4" rx="0.4"></rect>
-                  <rect x="8.4" y="4.3" width="2.4" height="15.4" rx="0.4"></rect>
-                  <rect x="12.2" y="4.3" width="1.2" height="15.4" rx="0.4"></rect>
-                  <rect x="14.5" y="4.3" width="2.6" height="15.4" rx="0.4"></rect>
-                  <rect x="18.3" y="4.3" width="1.4" height="15.4" rx="0.4"></rect>
-                </svg>
-              </span>
-              <span class="pay-row-body">
-                <strong>Boleto</strong>
-                <small>Aprovacao em 1 a 2 dias uteis</small>
-              </span>
-            </label>
-          </div>
+              <div class="checkout-premium-panels">
+                <section class="checkout-premium-panel" data-payment-panel="pix">
+                  <span class="checkout-premium-badge">3% de desconto no Pix</span>
+                  <h3>Pague com Pix</h3>
+                  <p>Finalize o pedido e a Uzuu gera o QR Code e o copia e cola direto na loja.</p>
+                </section>
 
-          <button id="toggle-more-payments" class="more-payments-btn" type="button" aria-expanded="false">
-            Mostrar mais meios de pagamento
-          </button>
-        </section>
-        <p id="checkout-feedback" class="feedback" aria-live="polite"></p>
+                <section class="checkout-premium-panel" data-payment-panel="credito">
+                  <div class="checkout-premium-card-head">
+                    <div>
+                      <h3>Cartao de credito e debito</h3>
+                      <p>Voce continua dentro da Uzuu. No credito, seguimos com o formulario protegido; no debito, o fluxo respeita a validacao do gateway.</p>
+                    </div>
+                    <img class="checkout-premium-card-banner" src="../assets/icons/card-banner.svg" alt="Bandeiras de cartao aceitas" />
+                  </div>
+                  <label class="checkout-premium-inline-field">
+                    <span>Tipo do cartao</span>
+                    <select id="card-kind-select" aria-label="Tipo do cartao">
+                      <option value="credito">Credito</option>
+                      <option value="debito">Debito</option>
+                    </select>
+                  </label>
+                </section>
 
-        <div class="modal-actions">
-          <button class="btn secondary" type="button" data-close="1">Cancelar</button>
-          <button id="confirm-payment" class="btn primary" type="submit">Continuar</button>
+                <section class="checkout-premium-panel" data-payment-panel="boleto">
+                  <h3>Pague com boleto</h3>
+                  <p>O boleto sera gerado depois da confirmacao e pode levar de 1 a 2 dias uteis para compensar.</p>
+                </section>
+              </div>
+            </section>
+
+            <p id="checkout-feedback" class="feedback" aria-live="polite"></p>
+          </section>
+
+          <aside class="checkout-premium-summary" aria-label="Resumo do pedido">
+            <h3 class="checkout-premium-summary-title">Resumo do pedido</h3>
+            <div class="checkout-premium-product">
+              <div id="checkout-summary-image" class="checkout-premium-product-image">UZUU</div>
+              <div class="checkout-premium-product-copy">
+                <strong id="checkout-summary-name">Produto Uzuu</strong>
+                <small id="checkout-summary-meta">Entrega protegida pela Uzuu</small>
+                <small id="checkout-summary-qty">1 unidade</small>
+              </div>
+            </div>
+
+            <div class="checkout-premium-price-lines">
+              <div class="checkout-premium-line">
+                <span>Subtotal</span>
+                <strong id="checkout-summary-subtotal">R$ 0,00</strong>
+              </div>
+              <div class="checkout-premium-line">
+                <span>Entrega</span>
+                <strong id="checkout-summary-shipping">--</strong>
+              </div>
+              <div class="checkout-premium-line checkout-premium-line--total">
+                <span>Total</span>
+                <strong id="checkout-summary-total">R$ 0,00</strong>
+              </div>
+            </div>
+
+            <div class="checkout-premium-actions">
+              <button class="btn secondary" type="button" data-close="1">Cancelar</button>
+              <button id="confirm-payment" class="btn primary" type="submit">Continuar</button>
+            </div>
+          </aside>
         </div>
       </form>
     </div>
@@ -207,7 +234,7 @@
 
   <script src="https://assets.pagseguro.com.br/checkout-sdk-js/rc/dist/browser/pagseguro.min.js"></script>
   <script src="../assets/catalog.js?v=10"></script>
-  <script src="script.js?v=54"></script>
+  <script src="script.js?v=55"></script>
   <script src="../assets/menu-dropdown.js?v=22"></script>
 </body>
 </html>
