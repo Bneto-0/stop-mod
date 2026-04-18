@@ -355,12 +355,25 @@ function isNotAllowedHtmlError(message) {
 function normalizeCheckoutErrorMessage(error) {
   const raw = String(error?.message || "").trim();
   const lower = raw.toLowerCase();
+  const details = Array.isArray(error?.details) ? error.details : [];
+  const firstDetail = details[0] && typeof details[0] === "object" ? details[0] : null;
+  const detailDescription = String(firstDetail?.description || "").trim();
+  const detailParameter = String(firstDetail?.parameter_name || "").trim();
 
   if (isNotAllowedHtmlError(raw)) {
     return "A rota de pagamento nao esta disponivel neste ambiente agora.";
   }
   if (lower.includes("failed to fetch") || lower.includes("connection refused")) {
     return "Nao foi possivel conectar ao gateway de pagamento no momento.";
+  }
+  if (
+    detailParameter === "customer.email" &&
+    detailDescription.toLowerCase().includes("buyer email must not be equals to merchant email")
+  ) {
+    return "No ambiente de teste do PagBank, o e-mail do comprador nao pode ser o mesmo da conta vendedora.";
+  }
+  if (detailDescription) {
+    return raw ? `${raw} ${detailDescription}` : detailDescription;
   }
   return raw || "tente novamente.";
 }
@@ -389,7 +402,11 @@ async function postJson(url, payload, timeoutMs) {
 
     if (!response.ok) {
       const message = String(data?.message || data?.error || text || `HTTP ${response.status}`);
-      throw new Error(message);
+      const error = new Error(message);
+      if (data?.details) {
+        error.details = data.details;
+      }
+      throw error;
     }
 
     return data || {};
