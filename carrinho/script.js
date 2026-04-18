@@ -1442,23 +1442,6 @@ function formatCheckoutSummaryShipping(value) {
 
 function setConfirmButtonLabelForMethod(method) {
   if (!confirmPaymentBtn) return;
-  const value = String(method || "").trim().toLowerCase();
-  if (value === "credito") {
-    confirmPaymentBtn.textContent = "Finalizar compra";
-    return;
-  }
-  if (value === "pix") {
-    confirmPaymentBtn.textContent = "Gerar Pix";
-    return;
-  }
-  if (value === "boleto") {
-    confirmPaymentBtn.textContent = "Gerar boleto";
-    return;
-  }
-  if (value === "debito") {
-    confirmPaymentBtn.textContent = "Continuar com debito";
-    return;
-  }
   confirmPaymentBtn.textContent = confirmPaymentDefaultLabel;
 }
 
@@ -1497,9 +1480,8 @@ function renderCheckoutModalSnapshot() {
   }
 
   if (checkoutSummaryMeta) {
-    checkoutSummaryMeta.textContent = firstItem
-      ? [firstItem.category, firstItem.size].filter(Boolean).join(" | ") || "Entrega protegida pela Uzuu"
-      : "Entrega protegida pela Uzuu";
+    const meta = firstItem ? [firstItem.category, firstItem.size].filter(Boolean).join(" | ") : "";
+    checkoutSummaryMeta.textContent = meta || "Em ate 3 dias uteis";
   }
 
   if (checkoutSummaryQty) {
@@ -2373,7 +2355,7 @@ async function submitCheckoutTransparentCardPayment() {
   const holderName = String(checkoutCardHolder?.value || "").trim();
   const { expMonth, expYear } = parseCardExpiry(checkoutCardExpiry?.value || "");
   const securityCode = digitsOnly(checkoutCardCvv?.value || "").slice(0, 4);
-  const holderTaxId = digitsOnly(checkoutCardTaxId?.value || "").slice(0, 11);
+  const holderTaxId = digitsOnly(checkoutCardTaxId?.value || loadCheckoutCustomer()?.cpf || "").slice(0, 11);
   const installments = Math.max(1, Math.min(12, Number(checkoutCardInstallments?.value || 1) || 1));
 
   if (cardNumber.length < 13) {
@@ -2749,11 +2731,6 @@ paymentForm?.addEventListener("submit", async (e) => {
   const confirmedInModal = !!confirmAddress?.checked;
   if (!isCepValid(shipTo?.cep)) {
     setCheckoutFeedback("Selecione um endereco valido para entrega.", true);
-    feedback.textContent = "";
-    return;
-  }
-  if (!confirmedInModal && !isAddressConfirmed(shipTo)) {
-    setCheckoutFeedback("Confirme o endereco ou altere antes de continuar.", true);
     feedback.textContent = "";
     return;
   }

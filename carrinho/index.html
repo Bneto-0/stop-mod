@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=38" />
+  <link rel="stylesheet" href="style.css?v=39" />
   <script>window.__UZUU_API_BASE__ = "/ops-api";</script>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6485539380158983" crossorigin="anonymous"></script>
 <link rel="stylesheet" href="/assets/site-header.css?v=27" />
@@ -90,32 +90,15 @@
   <div id="checkout-modal" class="modal" hidden>
     <div class="modal-backdrop" data-close="1"></div>
     <div class="modal-card modal-card--checkout" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <header class="checkout-premium-head">
-        <div class="checkout-premium-head-copy">
-          <h2 id="modal-title">Pagamento</h2>
-        </div>
-        <button class="checkout-premium-close" type="button" data-close="1" aria-label="Fechar pagamento">x</button>
-      </header>
-
       <form id="payment-form" class="checkout-premium-form">
         <div class="checkout-premium-layout">
           <section class="checkout-premium-main">
-            <section class="checkout-premium-delivery" aria-label="Endereco para entrega">
-              <div class="checkout-premium-delivery-copy">
-                <strong>Endereco de entrega</strong>
-                <p id="checkout-address-line" class="checkout-address-line">Nenhum endereco selecionado.</p>
-              </div>
-              <div class="checkout-premium-delivery-side">
-                <span id="checkout-address-ship" class="checkout-address-ship">Frete: --</span>
-                <a id="edit-address-link" class="edit-address-link" href="../entrega/">Alterar endereco</a>
-              </div>
-            </section>
-
-            <label class="confirm-address-check confirm-address-check--soft">
-              <input id="confirm-address" type="checkbox" />
-              <span>Confirmo que o endereco esta correto.</span>
-            </label>
-
+            <button class="checkout-premium-close" type="button" data-close="1" aria-label="Fechar pagamento">x</button>
+            <h2 id="modal-title" class="checkout-premium-title">Pagamento</h2>
+            <span id="checkout-address-line" class="checkout-hidden-field">Nenhum endereco selecionado.</span>
+            <span id="checkout-address-ship" class="checkout-hidden-field">Frete: --</span>
+            <a id="edit-address-link" class="checkout-hidden-field" href="../entrega/">Alterar endereco</a>
+            <input id="confirm-address" class="checkout-hidden-field" type="checkbox" tabindex="-1" aria-hidden="true" />
             <section class="checkout-premium-methods" aria-label="Meios de pagamento">
               <div class="checkout-premium-tabs">
                 <label class="checkout-premium-tab" data-payment-tab="credito">
@@ -125,12 +108,12 @@
 
                 <label class="checkout-premium-tab" data-payment-tab="pix">
                   <input type="radio" name="pay" value="pix" />
-                  <strong>PIX</strong>
+                  <strong><span class="checkout-tab-icon checkout-tab-icon--pix" aria-hidden="true"></span>PIX</strong>
                 </label>
 
                 <label class="checkout-premium-tab" data-payment-tab="boleto">
                   <input type="radio" name="pay" value="boleto" />
-                  <strong>Boleto</strong>
+                  <strong><span class="checkout-tab-icon checkout-tab-icon--boleto" aria-hidden="true"></span>Boleto</strong>
                 </label>
               </div>
 
@@ -167,15 +150,8 @@
                       <input id="checkout-card-cvv" type="password" inputmode="numeric" autocomplete="cc-csc" placeholder="CVV" maxlength="4" />
                     </label>
 
-                    <label class="checkout-premium-inline-field checkout-premium-inline-field--full">
-                      <span>CPF do titular</span>
-                      <input id="checkout-card-tax-id" type="text" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" />
-                    </label>
-
-                    <label class="checkout-premium-inline-field checkout-premium-inline-field--full">
-                      <span>Parcelamento</span>
-                      <select id="checkout-card-installments" aria-label="Parcelamento do cartao"></select>
-                    </label>
+                    <input id="checkout-card-tax-id" type="hidden" />
+                    <select id="checkout-card-installments" class="checkout-hidden-field" aria-label="Parcelamento do cartao"></select>
 
                     <label class="checkout-premium-inline-field checkout-premium-inline-field--hidden">
                       <span>Tipo do cartao</span>
@@ -267,7 +243,7 @@
 
   <script src="https://assets.pagseguro.com.br/checkout-sdk-js/rc/dist/browser/pagseguro.min.js"></script>
   <script src="../assets/catalog.js?v=10"></script>
-  <script src="script.js?v=56"></script>
+  <script src="script.js?v=57"></script>
   <script src="../assets/menu-dropdown.js?v=22"></script>
 </body>
 </html>
