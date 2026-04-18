@@ -1271,6 +1271,11 @@ function hasHostedCheckoutLink(data) {
   return !!paymentUrl && (mode === "checkout" || lifecycleMode === "provider_webhook");
 }
 
+function isProviderManagedPayment(data) {
+  const lifecycleMode = String(data?.lifecycleMode || "").trim().toLowerCase();
+  return lifecycleMode === "provider_webhook";
+}
+
 function setInlinePayDoneVisible(visible) {
   if (!inlinePayDoneBtn) return;
   inlinePayDoneBtn.hidden = !visible;
@@ -1397,11 +1402,16 @@ function renderInlinePaymentContent(data, method) {
 function openInlinePayModal(data, method) {
   if (!inlinePayModal || !inlinePayContent) return;
   const hostedCheckout = hasHostedCheckoutLink(data);
-  setInlinePayDoneVisible(!hostedCheckout);
+  const providerManaged = isProviderManagedPayment(data);
+  setInlinePayDoneVisible(!providerManaged && !hostedCheckout);
   setInlinePayStatus(
     hostedCheckout
       ? `Pagamento com ${paymentLabel(method) || "PagBank"} pronto no checkout seguro do PagBank.`
-      : `Pagamento com ${paymentLabel(method) || "PagBank"} iniciado em ambiente de teste.`,
+      : providerManaged
+        ? String(data?.mode || "").trim().toLowerCase() === "pix"
+          ? "Pix gerado com sucesso. Assim que o PagBank confirmar o pagamento, o pedido sera atualizado automaticamente."
+          : `Pagamento com ${paymentLabel(method) || "PagBank"} criado com confirmacao automatica pelo PagBank.`
+        : `Pagamento com ${paymentLabel(method) || "PagBank"} iniciado em ambiente de teste.`,
     false
   );
   renderInlinePaymentContent(data || {}, method);
@@ -1764,7 +1774,11 @@ paymentForm?.addEventListener("submit", async (e) => {
     closeModal();
     feedback.textContent = hasHostedCheckoutLink(data)
       ? "Pagamento criado. Abra o checkout seguro do PagBank para concluir."
-      : "Pagamento iniciado. Finalize no quadro seguro abaixo.";
+      : isProviderManagedPayment(data)
+        ? String(data?.mode || "").trim().toLowerCase() === "pix"
+          ? "Pix gerado. Pague com o QR Code e aguarde a confirmacao automatica."
+          : "Pagamento criado com confirmacao automatica pelo PagBank."
+        : "Pagamento iniciado. Finalize no quadro seguro abaixo.";
     openInlinePayModal(data, method);
   } catch (error) {
     feedback.textContent = `Falha ao iniciar pagamento real: ${normalizeCheckoutErrorMessage(error)}`;
