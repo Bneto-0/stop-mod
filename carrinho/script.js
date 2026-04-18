@@ -105,6 +105,12 @@ const checkoutModal = document.getElementById("checkout-modal");
 const paymentForm = document.getElementById("payment-form");
 const confirmPaymentBtn = document.getElementById("confirm-payment");
 const cardKindSelect = document.getElementById("card-kind-select");
+const checkoutCardNumber = document.getElementById("checkout-card-number");
+const checkoutCardHolder = document.getElementById("checkout-card-holder");
+const checkoutCardExpiry = document.getElementById("checkout-card-expiry");
+const checkoutCardCvv = document.getElementById("checkout-card-cvv");
+const checkoutCardTaxId = document.getElementById("checkout-card-tax-id");
+const checkoutCardInstallments = document.getElementById("checkout-card-installments");
 const morePaymentOptions = document.getElementById("more-payment-options");
 const toggleMorePaymentsBtn = document.getElementById("toggle-more-payments");
 const checkoutAddressLine = document.getElementById("checkout-address-line");
@@ -1437,6 +1443,10 @@ function formatCheckoutSummaryShipping(value) {
 function setConfirmButtonLabelForMethod(method) {
   if (!confirmPaymentBtn) return;
   const value = String(method || "").trim().toLowerCase();
+  if (value === "credito") {
+    confirmPaymentBtn.textContent = "Finalizar compra";
+    return;
+  }
   if (value === "pix") {
     confirmPaymentBtn.textContent = "Gerar Pix";
     return;
@@ -1449,11 +1459,19 @@ function setConfirmButtonLabelForMethod(method) {
     confirmPaymentBtn.textContent = "Continuar com debito";
     return;
   }
-  if (value === "credito") {
-    confirmPaymentBtn.textContent = "Continuar com cartao";
-    return;
-  }
   confirmPaymentBtn.textContent = confirmPaymentDefaultLabel;
+}
+
+function buildInstallmentOptions(total, selectedValue = 1) {
+  const safeTotal = Math.max(0, Number(total) || 0);
+  const maxInstallments = Math.max(1, Math.min(6, Math.floor(safeTotal / 60) || 1));
+  return Array.from({ length: maxInstallments }, (_, index) => {
+    const installment = index + 1;
+    const label = installment === 1
+      ? `1x de R$ ${formatBRL(safeTotal)} sem juros`
+      : `${installment}x de R$ ${formatBRL(safeTotal / installment)} sem juros`;
+    return `<option value="${installment}"${Number(selectedValue) === installment ? " selected" : ""}>${escapeHtml(label)}</option>`;
+  }).join("");
 }
 
 function renderCheckoutModalSnapshot() {
@@ -1501,6 +1519,22 @@ function renderCheckoutModalSnapshot() {
   }
 }
 
+function populateCheckoutCardForm() {
+  const view = buildTransparentCardViewModel("credito");
+  if (checkoutCardHolder && !String(checkoutCardHolder.value || "").trim()) {
+    checkoutCardHolder.value = view.customerName || "";
+  }
+  if (checkoutCardTaxId && !digitsOnly(checkoutCardTaxId.value).length) {
+    checkoutCardTaxId.value = view.customerCpf
+      ? view.customerCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")
+      : "";
+  }
+  if (checkoutCardInstallments) {
+    const current = Number(checkoutCardInstallments.value || 1) || 1;
+    checkoutCardInstallments.innerHTML = buildInstallmentOptions(view.total, current);
+  }
+}
+
 function syncCheckoutPremiumTabs() {
   if (!paymentForm) return;
   const checked = paymentForm.querySelector('input[name="pay"]:checked');
@@ -1532,6 +1566,7 @@ function openModal() {
   if (!checkoutModal) return;
   renderAddressConfirmation();
   renderCheckoutModalSnapshot();
+  populateCheckoutCardForm();
   syncPaymentRadios();
   syncCheckoutPremiumTabs();
   clearCheckoutFeedback();
@@ -1830,13 +1865,7 @@ function renderTransparentCardModal(method = "credito") {
             <label class="inline-card-preview__field">
               <span>Parcelamento</span>
               <select id="inline-card-installments" class="inline-card-preview__native-select">
-                ${Array.from({ length: Math.max(1, Math.min(6, Math.floor((view.total || 0) / 60) || 1)) }, (_, index) => {
-                  const installment = index + 1;
-                  const label = installment === 1
-                    ? `1x de R$ ${formatBRL(view.total)} sem juros`
-                    : `${installment}x de R$ ${formatBRL(view.total / installment)} sem juros`;
-                  return `<option value="${installment}">${escapeHtml(label)}</option>`;
-                }).join("")}
+                ${buildInstallmentOptions(view.total, 1)}
               </select>
             </label>
           </div>
@@ -2339,9 +2368,65 @@ async function submitTransparentCardPayment() {
   }
 }
 
+async function submitCheckoutTransparentCardPayment() {
+  const cardNumber = normalizeCardNumber(checkoutCardNumber?.value || "");
+  const holderName = String(checkoutCardHolder?.value || "").trim();
+  const { expMonth, expYear } = parseCardExpiry(checkoutCardExpiry?.value || "");
+  const securityCode = digitsOnly(checkoutCardCvv?.value || "").slice(0, 4);
+  const holderTaxId = digitsOnly(checkoutCardTaxId?.value || "").slice(0, 11);
+  const installments = Math.max(1, Math.min(12, Number(checkoutCardInstallments?.value || 1) || 1));
+
+  if (cardNumber.length < 13) {
+    throw new Error("Preencha um numero de cartao valido.");
+  }
+  if (!holderName) {
+    throw new Error("Informe o nome do titular.");
+  }
+  if (!expMonth || !expYear || Number(expMonth) < 1 || Number(expMonth) > 12 || String(expYear).length !== 4) {
+    throw new Error("Informe a validade do cartao no formato MM / AAAA.");
+  }
+  if (securityCode.length < 3) {
+    throw new Error("Informe um CVV valido.");
+  }
+  if (holderTaxId.length !== 11) {
+    throw new Error("Informe o CPF completo do titular.");
+  }
+
+  setCheckoutFeedback("Protegendo os dados do cartao com o PagBank...", false);
+  await loadPagBankSdk();
+  const keyData = await fetchPagBankPublicKey();
+  const card = window.PagSeguro.encryptCard({
+    publicKey: keyData.publicKey,
+    holder: holderName,
+    number: cardNumber,
+    expMonth,
+    expYear,
+    securityCode
+  });
+
+  if (card?.hasErrors) {
+    const firstError = Array.isArray(card.errors) ? card.errors[0] : null;
+    throw new Error(String(firstError?.message || "Nao foi possivel criptografar os dados do cartao."));
+  }
+
+  const payload = buildPagBankCheckoutPayload("credito");
+  if (!payload) {
+    throw new Error("Seu carrinho esta vazio.");
+  }
+  payload.card = {
+    encryptedCard: String(card?.encryptedCard || "").trim(),
+    holderName,
+    holderTaxId,
+    installments
+  };
+
+  setCheckoutFeedback("Enviando pagamento transparente para o PagBank...", false);
+  await requestInlinePayment(payload, "credito");
+}
+
 function syncPaymentRadios() {
   if (!paymentForm) return;
-  const cur = loadPayment();
+  const cur = loadPayment() || "credito";
   const radioValue = cur === "debito" ? "credito" : cur;
   const radios = paymentForm.querySelectorAll("input[name=\"pay\"]");
   radios.forEach((r) => {
@@ -2685,14 +2770,23 @@ paymentForm?.addEventListener("submit", async (e) => {
   if (method === "credito") {
     savePayment(method);
     updatePaymentUI(method);
-    closeModal();
-    renderTransparentCardModal(method);
+    confirmPaymentBtn.disabled = true;
+    confirmPaymentBtn.textContent = "Processando...";
+    try {
+      await submitCheckoutTransparentCardPayment();
+    } catch (error) {
+      setCheckoutFeedback(normalizeCheckoutErrorMessage(error), true);
+      feedback.textContent = "";
+    } finally {
+      confirmPaymentBtn.disabled = false;
+      syncCheckoutPremiumTabs();
+    }
     return;
   }
 
   if (confirmPaymentBtn) {
     confirmPaymentBtn.disabled = true;
-    confirmPaymentBtn.textContent = "Gerando pagamento...";
+    confirmPaymentBtn.textContent = method === "boleto" ? "Gerando boleto..." : "Gerando pagamento...";
   }
 
   savePayment(method);
@@ -2705,7 +2799,7 @@ paymentForm?.addEventListener("submit", async (e) => {
   } finally {
     if (confirmPaymentBtn) {
       confirmPaymentBtn.disabled = false;
-      confirmPaymentBtn.textContent = confirmPaymentDefaultLabel;
+      syncCheckoutPremiumTabs();
     }
   }
 });
@@ -2718,6 +2812,30 @@ document.addEventListener("keydown", (e) => {
   }
   if (checkoutModal && !checkoutModal.hidden) {
     closeModal();
+  }
+});
+
+paymentForm?.addEventListener("input", (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLInputElement)) return;
+  if (target.id === "checkout-card-number") {
+    const formatted = formatCardNumber(target.value);
+    if (target.value !== formatted) target.value = formatted;
+  }
+  if (target.id === "checkout-card-expiry") {
+    const formatted = normalizeCardExpiry(target.value);
+    if (target.value !== formatted) target.value = formatted;
+  }
+  if (target.id === "checkout-card-tax-id") {
+    const digits = digitsOnly(target.value).slice(0, 11);
+    const formatted = digits.length === 11
+      ? digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")
+      : digits;
+    if (target.value !== formatted) target.value = formatted;
+  }
+  if (target.id === "checkout-card-cvv") {
+    const digits = digitsOnly(target.value).slice(0, 4);
+    if (target.value !== digits) target.value = digits;
   }
 });
 
