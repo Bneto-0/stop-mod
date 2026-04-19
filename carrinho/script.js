@@ -18,7 +18,10 @@ const AUTH_TOUCH_MIN_GAP_MS = 15 * 1000;
 const PAGBANK_API_BASE_KEY = "stopmod_pagbank_api_base";
 const DEFAULT_STORE_PAGBANK_BASE = "/ops-api";
 const DEFAULT_REMOTE_PAGBANK_BASE = "https://uzuu-backend.onrender.com";
-const LEGACY_REMOTE_PAGBANK_BASES = Object.freeze(["https://stop-mod-api.onrender.com"]);
+const LEGACY_REMOTE_PAGBANK_BASES = Object.freeze([
+  DEFAULT_REMOTE_PAGBANK_BASE,
+  "https://stop-mod-api.onrender.com"
+]);
 const PAGBANK_RETURN_URL_KEY = "stopmod_pagbank_return_url";
 const PAGBANK_REDIRECT_URL_KEY = "stopmod_pagbank_redirect_url";
 const PAGBANK_NOTIFICATION_URL_KEY = "stopmod_pagbank_notification_url";
@@ -259,10 +262,20 @@ function isProdStoreHost() {
   return host !== "localhost" && host !== "127.0.0.1" && !host.endsWith(".onrender.com");
 }
 
+function isRenderApiBase(value) {
+  const base = normalizeApiBase(value);
+  if (!/^https?:\/\//i.test(base)) return false;
+  try {
+    return new URL(base).hostname.toLowerCase().endsWith(".onrender.com");
+  } catch {
+    return false;
+  }
+}
+
 function readConfiguredPagBankApiBase() {
   const configured = normalizeApiBase(localStorage.getItem(PAGBANK_API_BASE_KEY) || "");
   if (!configured) return "";
-  if (LEGACY_REMOTE_PAGBANK_BASES.includes(configured)) {
+  if (LEGACY_REMOTE_PAGBANK_BASES.includes(configured) || (isProdStoreHost() && isRenderApiBase(configured))) {
     localStorage.removeItem(PAGBANK_API_BASE_KEY);
     return "";
   }
@@ -314,9 +327,8 @@ function resolvePagBankEndpointCandidates() {
     pushUnique(DEFAULT_STORE_PAGBANK_BASE);
   } else {
     pushUnique("http://localhost:8787");
+    pushUnique(DEFAULT_REMOTE_PAGBANK_BASE);
   }
-
-  pushUnique(DEFAULT_REMOTE_PAGBANK_BASE);
 
   return candidates.map((base) => ({
     base,
@@ -341,9 +353,8 @@ function resolvePagBankPublicKeyEndpointCandidates() {
     pushUnique(DEFAULT_STORE_PAGBANK_BASE);
   } else {
     pushUnique("http://localhost:8787");
+    pushUnique(DEFAULT_REMOTE_PAGBANK_BASE);
   }
-
-  pushUnique(DEFAULT_REMOTE_PAGBANK_BASE);
 
   return candidates.map((base) => ({
     base,
@@ -412,6 +423,9 @@ function normalizeCheckoutErrorMessage(error) {
 
   if (isNotAllowedHtmlError(raw)) {
     return "A rota de pagamento nao esta disponivel neste ambiente agora.";
+  }
+  if (lower.includes("falha ao consultar o pagbank (404)") || lower.includes("pagbank (404)")) {
+    return "A API de cartao do PagBank nao esta liberada para esse ambiente. Nenhuma cobranca foi feita.";
   }
   if (lower.includes("failed to fetch") || lower.includes("connection refused")) {
     return "Nao foi possivel conectar ao gateway de pagamento no momento.";
@@ -542,7 +556,7 @@ async function fetchPagBankPublicKey() {
   if (pagBankPublicKeyCache) {
     return {
       publicKey: pagBankPublicKeyCache,
-      apiBase: readConfiguredPagBankApiBase() || resolveForcedApiBase() || DEFAULT_STORE_PAGBANK_BASE
+      apiBase: resolveForcedApiBase() || readConfiguredPagBankApiBase() || DEFAULT_STORE_PAGBANK_BASE
     };
   }
 
