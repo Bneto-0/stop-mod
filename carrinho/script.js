@@ -424,6 +424,9 @@ function normalizeCheckoutErrorMessage(error) {
   if (isNotAllowedHtmlError(raw)) {
     return "A rota de pagamento nao esta disponivel neste ambiente agora.";
   }
+  if (lower.includes("whitelist access required") || lower.includes("access_denied")) {
+    return "A conta PagBank de producao ainda precisa de liberacao para pagamentos por API. Nenhuma cobranca foi feita.";
+  }
   if (lower.includes("falha ao consultar o pagbank (404)") || lower.includes("pagbank (404)")) {
     return "A API de cartao do PagBank nao esta liberada para esse ambiente. Nenhuma cobranca foi feita.";
   }
