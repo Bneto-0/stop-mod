@@ -92,6 +92,7 @@ const productsNowCents = document.getElementById("products-now-cents");
 const cartTotalMain = document.getElementById("cart-total-main");
 const cartTotalCents = document.getElementById("cart-total-cents");
 const itemsCount = document.getElementById("items-count");
+const cartItemsBadge = document.getElementById("cart-items-badge");
 const shippingValue = document.getElementById("shipping-value");
 const freeShipCount = document.getElementById("free-ship-count");
 const couponCount = document.getElementById("coupon-count");
@@ -1105,6 +1106,14 @@ function removeOne(id) {
   const idx = ids.indexOf(canonicalId);
   if (idx === -1) return;
   ids.splice(idx, 1);
+  saveCartIds(ids);
+  renderCart();
+}
+
+function removeProductCompletely(id) {
+  const canonicalId = resolveCanonicalProductId(id);
+  if (!canonicalId) return;
+  const ids = loadCartIds().filter((itemId) => itemId !== canonicalId);
   saveCartIds(ids);
   renderCart();
 }
@@ -2607,10 +2616,17 @@ function renderCart() {
   renderAddressConfirmation();
 
   if (!ids.length) {
-    cartItems.innerHTML = "<li class=\"empty\">Seu carrinho esta vazio.</li>";
+    cartItems.innerHTML = `
+      <li class="cart-empty-state">
+        <strong>Seu carrinho esta vazio.</strong>
+        <p>Escolha seus produtos favoritos e volte para finalizar sua compra na Uzuu.</p>
+        <a class="cart-empty-state__action" href="../#produtos">Ver produtos</a>
+      </li>
+    `;
     checkoutBtn.disabled = true;
     feedback.textContent = "";
     if (itemsCount) itemsCount.textContent = "0";
+    if (cartItemsBadge) cartItemsBadge.textContent = "0 itens";
     if (freeShipCount) freeShipCount.textContent = "0";
     if (shippingValue) {
       shippingValue.textContent = "--";
@@ -2634,26 +2650,43 @@ function renderCart() {
 
   const grouped = groupedCart(ids);
   if (!grouped.length) {
-    cartItems.innerHTML = "<li class=\"empty\">Nenhum item encontrado.</li>";
+    cartItems.innerHTML = `
+      <li class="cart-empty-state">
+        <strong>Nenhum item encontrado.</strong>
+        <p>Atualize os produtos da sacola e tente novamente.</p>
+      </li>
+    `;
   } else {
     cartItems.innerHTML = grouped
       .map((item) => {
         const meta = [item.category, item.size].filter(Boolean).join(" | ");
+        const totalItem = item.price * item.qty;
         return `
         <li class="cart-item">
           <a class="cart-item-media" href="${productHref(item.id)}"><img src="${item.image}" alt="${item.name}" loading="lazy" /></a>
           <div class="cart-item-body">
-            <strong><a class="cart-item-link" href="${productHref(item.id)}">${item.name}</a></strong>
-            ${meta ? `<div class="cart-item-meta">${meta}</div>` : ""}
+            <div class="cart-item-head">
+              <div class="cart-item-copy">
+                <strong><a class="cart-item-link" href="${productHref(item.id)}">${item.name}</a></strong>
+                ${meta ? `<div class="cart-item-meta">${meta}</div>` : ""}
+              </div>
+              <button class="cart-item-remove" data-action="remove" data-id="${item.id}" type="button" aria-label="Remover ${escapeHtml(item.name)} do carrinho">Remover</button>
+            </div>
+            <div class="cart-item-pricing">
+              <span class="cart-item-price-label">Preco unitario</span>
+              <span class="cart-item-price">R$ ${formatBRL(item.price)}</span>
+            </div>
             <div class="cart-item-row">
               <div class="qty-controls" aria-label="Quantidade">
                 <button class="qty-btn" data-action="dec" data-id="${item.id}" aria-label="Diminuir">-</button>
                 <span class="qty-val" aria-label="Quantidade">${item.qty}</span>
                 <button class="qty-btn" data-action="inc" data-id="${item.id}" aria-label="Aumentar">+</button>
               </div>
-              <span class="cart-item-price">R$ ${formatBRL(item.price)}</span>
+              <div class="cart-item-subtotal">
+                <span>Subtotal</span>
+                <strong>R$ ${formatBRL(totalItem)}</strong>
+              </div>
             </div>
-            <div class="cart-item-meta">Subtotal: R$ ${formatBRL(item.price * item.qty)}</div>
             <a class="cart-item-link-inline" href="${productHref(item.id)}">Ver detalhes do produto</a>
           </div>
         </li>
@@ -2693,6 +2726,7 @@ function renderCart() {
   }
 
   if (itemsCount) itemsCount.textContent = String(ids.length);
+  if (cartItemsBadge) cartItemsBadge.textContent = `${ids.length} ${ids.length === 1 ? "item" : "itens"}`;
   if (couponCount) couponCount.textContent = String(coupons.length);
 
   if (shippingValue) {
@@ -2721,6 +2755,7 @@ function renderCart() {
       const action = String(btn.getAttribute("data-action"));
       if (action === "inc") addOne(id);
       if (action === "dec") removeOne(id);
+      if (action === "remove") removeProductCompletely(id);
     });
   });
 }
