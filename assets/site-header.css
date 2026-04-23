@@ -133,8 +133,8 @@
 
 .shared-search input:focus {
   outline: none;
-  border-color: rgba(237, 53, 42, 0.6);
-  box-shadow: 0 0 0 3px rgba(237, 53, 42, 0.12);
+  border-color: rgba(255, 255, 255, 0.24);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
 }
 
 .shared-search__button {
@@ -145,7 +145,7 @@
   padding: 0 18px;
   border: none;
   border-radius: 999px;
-  background: linear-gradient(135deg, #ec3d31 0%, #c91e17 100%);
+  background: linear-gradient(135deg, #262626 0%, #121212 100%);
   color: #ffffff;
   font: inherit;
   font-size: 0.82rem;
@@ -222,7 +222,7 @@
   height: 18px;
   padding: 0 5px;
   border-radius: 999px;
-  background: #ec3d31;
+  background: #2d2d2d;
   color: #ffffff;
   font-size: 0.7rem;
   font-weight: 800;
@@ -267,7 +267,7 @@
 }
 
 .shared-catalog__button svg {
-  color: #ec3d31;
+  color: #d8d8d8;
 }
 
 .shared-catalog__button:hover,
@@ -311,7 +311,7 @@
   min-height: 34px;
   font-size: 0.78rem;
   font-weight: 700;
-  color: #ff5244;
+  color: #f0f0f0;
 }
 
 .shared-promo-link svg {
@@ -368,8 +368,8 @@
   width: 8px;
   height: 8px;
   border-radius: 2px;
-  background: linear-gradient(135deg, #f0493b 0%, #a9130d 100%);
-  box-shadow: 0 0 0 3px rgba(240, 73, 59, 0.14);
+  background: linear-gradient(135deg, #6d6d6d 0%, #2a2a2a 100%);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
 }
 
 .shared-mega-column__links {
@@ -392,7 +392,7 @@
   align-items: center;
   gap: 6px;
   margin-top: 16px;
-  color: #ef473b;
+  color: #f2f2f2;
   text-decoration: none;
   font-size: 0.76rem;
   font-weight: 700;
@@ -454,7 +454,7 @@
   min-height: 34px;
   padding: 0 14px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #ec3d31 0%, #c81f18 100%);
+  background: linear-gradient(135deg, #2b2b2b 0%, #151515 100%);
   color: #ffffff;
   text-decoration: none;
   font-size: 0.72rem;
