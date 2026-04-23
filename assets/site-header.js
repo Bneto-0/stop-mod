@@ -10,8 +10,6 @@
 
   const path = window.location.pathname || "/";
   const isHome = path === "/" || /\/index\.html$/i.test(path);
-  const isDesktop = typeof window.matchMedia === "function" ? window.matchMedia("(min-width: 1040px)").matches : true;
-
   const navState = {
     perfil: /^\/perfil\/?$/i.test(path),
     favoritos: /\/perfil\/favoritos\//i.test(path),
@@ -385,5 +383,5 @@
 
   syncSearchFromQuery();
   renderHeaderState();
-  setCatalogOpen(isHome && isDesktop);
+  setCatalogOpen(false);
 })();
