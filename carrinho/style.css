@@ -835,7 +835,7 @@ footer p { color: var(--text-soft); }
 
 #checkout-modal .modal-card--checkout {
   width: min(1024px, calc(100vw - 36px));
-  min-height: 548px;
+  min-height: 616px;
   max-height: calc(100vh - 80px);
   overflow: auto;
   border: 1px solid #eee7e2;
@@ -845,18 +845,18 @@ footer p { color: var(--text-soft); }
 }
 
 #checkout-modal .checkout-premium-form {
-  min-height: 548px;
+  min-height: 616px;
 }
 
 #checkout-modal .checkout-premium-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.85fr) minmax(310px, 1fr);
-  min-height: 548px;
+  min-height: 616px;
   padding: 0;
 }
 
 #checkout-modal .checkout-premium-main {
-  padding: 38px 42px 42px;
+  padding: 43px 43px 52px;
   display: block;
   background: #ffffff;
 }
@@ -864,8 +864,8 @@ footer p { color: var(--text-soft); }
 #checkout-modal .checkout-premium-summary {
   position: relative;
   top: auto;
-  min-height: 548px;
-  padding: 39px 34px;
+  min-height: 616px;
+  padding: 43px 35px;
   border-left: 1px solid #f0ebe7;
   background: #fffdfc;
 }
@@ -875,11 +875,11 @@ footer p { color: var(--text-soft); }
 }
 
 #checkout-modal .checkout-premium-title {
-  margin: 0 0 24px;
+  margin: 0 0 26px;
   color: #2a2727;
-  font-size: 1.9rem;
+  font-size: 1.5rem;
   font-weight: 800;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.02em;
 }
 
 #checkout-modal .checkout-hidden-field {
@@ -948,12 +948,12 @@ footer p { color: var(--text-soft); }
 }
 
 #checkout-modal .checkout-premium-brands {
-  margin: 0 0 24px;
+  margin: 0 0 27px;
 }
 
 #checkout-modal .checkout-premium-card-banner {
-  width: min(380px, 100%);
-  max-height: 38px;
+  width: min(390px, 100%);
+  max-height: 34px;
   object-fit: contain;
   object-position: left center;
 }
@@ -1019,9 +1019,9 @@ footer p { color: var(--text-soft); }
 #checkout-modal .checkout-premium-summary-title {
   margin: 0 0 20px;
   color: #2a2727;
-  font-size: 1.7rem;
+  font-size: 1.5rem;
   font-weight: 800;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.02em;
 }
 
 #checkout-modal .checkout-premium-summary-card {
