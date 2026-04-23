@@ -315,7 +315,12 @@
 }
 
 .shared-promo-link svg {
-  color: inherit;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
 }
 
 .shared-header__mega {
@@ -548,6 +553,25 @@ body.with-shared-header .cart-page {
 }
 
 @media (max-width: 620px) {
+  .shared-header__menu-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 0;
+  }
+
+  .shared-catalog,
+  .shared-nav {
+    display: none;
+  }
+
+  .shared-promo-link {
+    justify-content: center;
+    justify-self: stretch;
+    width: 100%;
+    min-height: 44px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
   .shared-brand {
     font-size: 1.74rem;
   }

@@ -181,7 +181,7 @@
           </nav>
 
           <a class="shared-promo-link ${navState.promocoes ? "is-current" : ""}" href="/cupons/" aria-label="Promocoes">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m20 12-8 8-8-8 8-8 8 8zm-8-5.2L6.8 12 12 17.2 17.2 12 12 6.8z"></path></svg>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3.5 16.5 10 10 16.5 3.5 10 10 3.5Z"></path></svg>
             <span>Promocoes</span>
           </a>
         </div>
