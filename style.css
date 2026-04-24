@@ -3853,7 +3853,7 @@ body.home-page main {
 }
 
 body.home-page .container {
-  width: min(1280px, calc(100% - 40px));
+  width: min(1380px, calc(100% - 56px));
 }
 
 body.home-page .site-footer {
@@ -3866,12 +3866,12 @@ body.home-page .site-footer {
 }
 
 .home-hero-section {
-  padding: 1.15rem 0 0;
+  padding: 1.75rem 0 0;
 }
 
 .home-hero {
   position: relative;
-  min-height: 36.5rem;
+  min-height: 39rem;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 1.9rem;
@@ -3880,7 +3880,7 @@ body.home-page .site-footer {
 
 .home-hero__track {
   position: relative;
-  min-height: 36.5rem;
+  min-height: 39rem;
 }
 
 .home-hero__slide {
@@ -3922,8 +3922,8 @@ body.home-page .site-footer {
   align-content: center;
   gap: 1rem;
   max-width: 34rem;
-  min-height: 36.5rem;
-  padding: 4rem 3rem;
+  min-height: 39rem;
+  padding: 4.75rem 3.6rem;
 }
 
 .home-hero__kicker {
@@ -4044,7 +4044,7 @@ body.home-page .site-footer {
 .home-proof-strip {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-top: 1.15rem;
+  margin-top: 1.55rem;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 1.4rem;
   background: #111111;
@@ -4055,7 +4055,7 @@ body.home-page .site-footer {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 1.45rem 1.55rem;
+  padding: 1.65rem 1.8rem;
 }
 
 .home-proof-strip__item + .home-proof-strip__item {
@@ -4098,7 +4098,7 @@ body.home-page .site-footer {
 }
 
 .home-orbit-section {
-  padding: 1.55rem 0 2rem;
+  padding: 2.2rem 0 2.9rem;
 }
 
 .home-orbit-grid {
@@ -4154,7 +4154,7 @@ body.home-page .site-footer {
 }
 
 .home-merch-section {
-  padding: 0 0 2rem;
+  padding: 0 0 2.8rem;
 }
 
 .home-merch-section__head {
@@ -4162,7 +4162,7 @@ body.home-page .site-footer {
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 1.35rem;
+  margin-bottom: 1.75rem;
 }
 
 .home-merch-section__head h2,
@@ -4345,8 +4345,8 @@ body.home-page .site-footer {
 .home-promo-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
-  padding: 0 0 2.5rem;
+  gap: 1.35rem;
+  padding: 0 0 3.25rem;
 }
 
 .home-promo-card {
@@ -4435,7 +4435,7 @@ body.home-page .site-footer {
 }
 
 .home-merch-section--recommend {
-  padding-top: 0.2rem;
+  padding-top: 0.45rem;
 }
 
 .home-merch-section__head--filters {
@@ -4474,7 +4474,7 @@ body.home-page .site-footer {
 .home-loadmore-section {
   display: flex;
   justify-content: center;
-  padding: 0.5rem 0 3rem;
+  padding: 0.8rem 0 3.6rem;
 }
 
 .home-loadmore-button {
@@ -4504,10 +4504,10 @@ body.home-page .site-footer {
 .home-newsletter {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(20rem, 0.9fr);
-  gap: 1.4rem;
+  gap: 1.8rem;
   align-items: center;
-  margin-bottom: 2rem;
-  padding: 1.5rem 1.75rem;
+  margin-bottom: 2.5rem;
+  padding: 1.8rem 2rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 1rem;
   background: #111111;
@@ -4576,8 +4576,8 @@ body.home-page .site-footer {
 .home-footer__top {
   display: grid;
   grid-template-columns: minmax(13rem, 19rem) minmax(0, 1fr);
-  gap: 2rem;
-  padding: 0.9rem 0 2rem;
+  gap: 2.4rem;
+  padding: 1.15rem 0 2.6rem;
 }
 
 .home-footer__brand {
@@ -4745,12 +4745,12 @@ body.home-page .toast {
   .home-hero,
   .home-hero__track,
   .home-hero__content {
-    min-height: 31rem;
+    min-height: 33rem;
   }
 
   .home-hero__content {
     max-width: 30rem;
-    padding: 3rem 2rem;
+    padding: 3.35rem 2.3rem;
   }
 
   .home-hero__content h1 {
@@ -4764,7 +4764,7 @@ body.home-page .toast {
 
 @media (max-width: 760px) {
   body.home-page .container {
-    width: min(100% - 24px, 1280px);
+    width: min(100% - 28px, 1380px);
   }
 
   .home-proof-strip,
@@ -4805,11 +4805,11 @@ body.home-page .toast {
   .home-hero,
   .home-hero__track,
   .home-hero__content {
-    min-height: 27.5rem;
+    min-height: 29rem;
   }
 
   .home-hero__content {
-    padding: 2.3rem 1.3rem 3rem;
+    padding: 2.7rem 1.45rem 3.2rem;
   }
 
   .home-hero__content h1 {
