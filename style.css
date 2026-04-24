@@ -4478,27 +4478,14 @@ body.home-page .site-footer {
 .home-loadmore-section {
   display: flex;
   justify-content: center;
-  padding: 0.8rem 0 3.6rem;
+  padding: 0.35rem 0 3.6rem;
 }
 
-.home-loadmore-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.7rem;
-  min-width: 20rem;
-  min-height: 3.45rem;
-  padding: 0 1.4rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 999px;
-  background: #0f0f0f;
-  color: #ffffff;
-  cursor: pointer;
-}
-
-.home-loadmore-button[disabled] {
-  opacity: 0.55;
-  cursor: default;
+.home-loadmore-sentinel {
+  width: 100%;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .home-premium-footer {
@@ -4835,10 +4822,6 @@ body.home-page .toast {
   .home-orbit-card__media {
     width: 6.8rem;
     height: 6.8rem;
-  }
-
-  .home-loadmore-button {
-    min-width: 100%;
   }
 
   .home-footer__logo {

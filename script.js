@@ -15,7 +15,7 @@ const bestSellersTrack = document.getElementById("best-sellers-track");
 const recommendGrid = document.getElementById("recommend-grid");
 const recommendFeedback = document.getElementById("recommend-feedback");
 const recommendTabs = Array.from(document.querySelectorAll("[data-home-filter]"));
-const loadMoreButton = document.getElementById("load-more-products");
+const loadMoreSentinel = document.getElementById("load-more-products");
 const newsletterForm = document.getElementById("newsletter-form");
 const newsletterEmail = document.getElementById("newsletter-email");
 const searchInput = document.getElementById("search-input");
@@ -144,11 +144,20 @@ const recommendationIds = [15, 2, 4, 17, 1, 11, 3, 12, 14, 18, 21, 13];
 const recommendationBadges = {
   15: "-10%"
 };
+const recommendationPoolIds = Array.from(
+  new Set(
+    [...recommendationIds, ...products.map((item) => Number(item?.id || 0))]
+      .filter((id) => Number.isInteger(id) && id > 0)
+  )
+);
+const RECOMMEND_BATCH_SIZE = 6;
 
 let currentHeroIndex = 0;
 let heroTimer = null;
 let activeFilter = "all";
-let recommendLimit = 6;
+let recommendLimit = RECOMMEND_BATCH_SIZE;
+let recommendObserver = null;
+let recommendLoadQueued = false;
 const filterKeywords = new Set(["all", "masculino", "feminino", "acessorios", "calcados", "streetwear"]);
 
 function getQueryParams() {
@@ -386,11 +395,48 @@ function updateFilterButtons() {
 
 function getRecommendationProducts() {
   const term = getSearchTerm();
-  return recommendationIds
+  return recommendationPoolIds
     .map((id) => getDisplayProduct(id))
     .filter(Boolean)
     .filter((product) => matchesFilter(product, activeFilter))
     .filter((product) => matchesSearch(product, term));
+}
+
+function disconnectRecommendationObserver() {
+  if (recommendObserver) {
+    recommendObserver.disconnect();
+    recommendObserver = null;
+  }
+}
+
+function queueMoreRecommendations() {
+  const list = getRecommendationProducts();
+  if (recommendLoadQueued || recommendLimit >= list.length) return;
+  recommendLoadQueued = true;
+  window.requestAnimationFrame(() => {
+    recommendLimit = Math.min(recommendLimit + RECOMMEND_BATCH_SIZE, list.length);
+    recommendLoadQueued = false;
+    renderRecommendations();
+  });
+}
+
+function setupRecommendationObserver(hasMore) {
+  disconnectRecommendationObserver();
+  if (!loadMoreSentinel || !hasMore) return;
+
+  recommendObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) queueMoreRecommendations();
+      });
+    },
+    {
+      rootMargin: "420px 0px 420px 0px",
+      threshold: 0.01
+    }
+  );
+
+  recommendObserver.observe(loadMoreSentinel);
 }
 
 function renderRecommendations() {
@@ -405,18 +451,16 @@ function renderRecommendations() {
 
   recommendFeedback.hidden = list.length > 0;
   updateFilterButtons();
-
-  if (loadMoreButton) {
-    const remaining = list.length - visible.length;
-    loadMoreButton.hidden = list.length === 0;
-    loadMoreButton.disabled = remaining <= 0;
-    loadMoreButton.querySelector("span:last-child").textContent = remaining > 0 ? "Carregando mais produtos..." : "Todos os produtos ja foram exibidos";
+  if (loadMoreSentinel) {
+    const hasMore = list.length > visible.length;
+    loadMoreSentinel.hidden = list.length === 0 || !hasMore;
+    setupRecommendationObserver(hasMore);
   }
 }
 
 function setActiveFilter(filter) {
   activeFilter = filter;
-  recommendLimit = 6;
+  recommendLimit = RECOMMEND_BATCH_SIZE;
   renderRecommendations();
 }
 
@@ -514,12 +558,7 @@ recommendTabs.forEach((button) => {
 });
 
 searchInput?.addEventListener("input", () => {
-  recommendLimit = 6;
-  renderRecommendations();
-});
-
-loadMoreButton?.addEventListener("click", () => {
-  recommendLimit += 6;
+  recommendLimit = RECOMMEND_BATCH_SIZE;
   renderRecommendations();
 });
 
@@ -541,6 +580,10 @@ window.addEventListener("storage", (event) => {
     renderRecommendations();
     renderCartCount();
   }
+});
+
+window.addEventListener("beforeunload", () => {
+  disconnectRecommendationObserver();
 });
 
 syncInitialState();
