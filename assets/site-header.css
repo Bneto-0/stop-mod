@@ -652,7 +652,7 @@ body.with-shared-header .cart-page {
 }
 
 .shared-header--home .shared-header__container {
-  width: min(1380px, calc(100% - 56px));
+  width: min(1460px, calc(100% - 28px));
 }
 
 .shared-header__utility {
@@ -780,7 +780,7 @@ body.with-shared-header .cart-page {
 
 @media (max-width: 820px) {
   .shared-header--home .shared-header__container {
-    width: min(100% - 28px, 1380px);
+    width: min(100% - 20px, 1460px);
   }
 
   .shared-header--home .shared-brand {

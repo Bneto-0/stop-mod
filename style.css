@@ -3853,7 +3853,7 @@ body.home-page main {
 }
 
 body.home-page .container {
-  width: min(1380px, calc(100% - 56px));
+  width: min(1460px, calc(100% - 28px));
 }
 
 body.home-page .site-footer {
@@ -3866,25 +3866,25 @@ body.home-page .site-footer {
 }
 
 .home-hero-section {
-  padding: 0.55rem 0 0;
+  padding: 0.35rem 0 0;
 }
 
 .home-hero-section .container {
-  width: min(1460px, calc(100% - 10px));
+  width: min(100% - 4px, 1580px);
 }
 
 .home-hero {
   position: relative;
-  min-height: 33.5rem;
+  min-height: 29.5rem;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 1.5rem;
+  border-radius: 1.15rem;
   background: #0a0a0a;
 }
 
 .home-hero__track {
   position: relative;
-  min-height: 33.5rem;
+  min-height: 29.5rem;
 }
 
 .home-hero__slide {
@@ -3926,8 +3926,8 @@ body.home-page .site-footer {
   align-content: center;
   gap: 1rem;
   max-width: 34rem;
-  min-height: 33.5rem;
-  padding: 3.55rem 3.2rem;
+  min-height: 29.5rem;
+  padding: 3rem 2.8rem;
 }
 
 .home-hero__kicker {
@@ -3946,7 +3946,7 @@ body.home-page .site-footer {
 .home-hero__content h1 {
   margin: 0;
   max-width: 28rem;
-  font-size: clamp(3.5rem, 7vw, 5.7rem);
+  font-size: clamp(3rem, 6vw, 5rem);
   line-height: 0.9;
   letter-spacing: -0.07em;
   text-transform: uppercase;
@@ -3956,7 +3956,7 @@ body.home-page .site-footer {
   margin: 0;
   max-width: 27rem;
   color: rgba(255, 255, 255, 0.88);
-  font-size: 1.22rem;
+  font-size: 1.05rem;
   line-height: 1.45;
 }
 
@@ -4747,18 +4747,18 @@ body.home-page .toast {
 
 @media (max-width: 980px) {
   .home-hero-section .container {
-    width: min(100% - 12px, 1460px);
+    width: min(100% - 4px, 1580px);
   }
 
   .home-hero,
   .home-hero__track,
   .home-hero__content {
-    min-height: 30rem;
+    min-height: 26.5rem;
   }
 
   .home-hero__content {
     max-width: 30rem;
-    padding: 3rem 2.2rem;
+    padding: 2.5rem 2rem;
   }
 
   .home-hero__content h1 {
@@ -4772,11 +4772,11 @@ body.home-page .toast {
 
 @media (max-width: 760px) {
   .home-hero-section .container {
-    width: min(100% - 8px, 1460px);
+    width: min(100% - 2px, 1580px);
   }
 
   body.home-page .container {
-    width: min(100% - 28px, 1380px);
+    width: min(100% - 20px, 1460px);
   }
 
   .home-proof-strip,
@@ -4817,11 +4817,11 @@ body.home-page .toast {
   .home-hero,
   .home-hero__track,
   .home-hero__content {
-    min-height: 26rem;
+    min-height: 23.5rem;
   }
 
   .home-hero__content {
-    padding: 2.3rem 1.35rem 2.8rem;
+    padding: 2rem 1.15rem 2.3rem;
   }
 
   .home-hero__content h1 {
