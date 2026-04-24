@@ -25,7 +25,7 @@
     { label: "Acessorios", href: "/?cat=Acessorios#produtos", current: false },
     { label: "Calcados", href: "/?q=calcados#produtos", current: false },
     { label: "Streetwear", href: "/?q=streetwear#produtos", current: false },
-    { label: "Marketplace", href: "/marketplace/", current: navState.marketplace }
+    { label: "Marcas", href: "/marketplace/", current: navState.marketplace }
   ];
 
   const megaColumns = [
@@ -93,10 +93,7 @@
 
   function renderPrimaryNav() {
     return primaryLinks
-      .map(
-        (link) =>
-          `<a href="${link.href}" class="${link.current ? "is-current" : ""}">${link.label}</a>`
-      )
+      .map((link) => `<a href="${link.href}" class="${link.current ? "is-current" : ""}">${link.label}</a>`)
       .join("");
   }
 
@@ -119,8 +116,35 @@
       .join("");
   }
 
+  function renderUtilityStrip() {
+    if (!isHome) return "";
+    return `
+      <div class="shared-header__utility">
+        <div class="shared-header__container shared-header__utility-row">
+          <span class="shared-header__utility-item">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h10v8H3zm11 3h3l3 3v2h-6zm-9 7a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm11 0a2 2 0 1 0 .001 4A2 2 0 0 0 16 17zM5 19h7m4 0h2"></path></svg>
+            <span>Frete gratis para todo o Brasil</span>
+          </span>
+          <span class="shared-header__utility-item">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3zm0 4h18M7 15h3"></path></svg>
+            <span>Parcele em ate 12x sem juros</span>
+          </span>
+          <span class="shared-header__utility-item">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 13.66-5.66M20 12a8 8 0 0 1-13.66 5.66M17 3v4h-4M7 21v-4h4"></path></svg>
+            <span>Troca gratis em ate 7 dias</span>
+          </span>
+          <span class="shared-header__utility-item">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.6-2.7 8.8-7 10-4.3-1.2-7-5.4-7-10V6zm-3 9 2 2 4-4"></path></svg>
+            <span>Compra 100% segura</span>
+          </span>
+        </div>
+      </div>
+    `;
+  }
+
   root.innerHTML = `
-    <header class="shared-header" aria-label="Cabecalho da loja">
+    <header class="shared-header ${isHome ? "shared-header--home" : ""}" aria-label="Cabecalho da loja">
+      ${renderUtilityStrip()}
       <div class="shared-header__container">
         <div class="shared-header__top-row">
           <div class="shared-header__identity">
@@ -139,15 +163,24 @@
           <form id="shared-search-form" class="shared-search" role="search">
             <svg class="shared-search__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 4a6.5 6.5 0 1 0 4.03 11.6l4.43 4.44 1.41-1.42-4.44-4.43A6.5 6.5 0 0 0 10.5 4zm0 2a4.5 4.5 0 1 1 0 9.001A4.5 4.5 0 0 1 10.5 6z"></path></svg>
             <label class="sr-only" for="search-input">Pesquisar produto</label>
-            <input id="search-input" type="search" placeholder="Pesquisar produto, categoria ou marca..." />
-            <button class="shared-search__button" type="submit">Buscar</button>
+            <input id="search-input" type="search" placeholder="Buscar produtos, categorias ou marcas..." />
+            <button class="shared-search__button ${isHome ? "shared-search__button--icon" : ""}" type="submit" aria-label="Buscar">
+              ${
+                isHome
+                  ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 4a6.5 6.5 0 1 0 4.03 11.6l4.43 4.44 1.41-1.42-4.44-4.43A6.5 6.5 0 0 0 10.5 4zm0 2a4.5 4.5 0 1 1 0 9.001A4.5 4.5 0 0 1 10.5 6z"></path></svg>'
+                  : "Buscar"
+              }
+            </button>
           </form>
 
           <div class="shared-header__actions">
             <a id="profile-top-link" class="shared-action-link shared-profile ${navState.perfil ? "is-current" : ""}" href="/login/" aria-label="Perfil">
               <img id="profile-top-photo" class="shared-profile-photo" alt="" hidden />
               <svg class="shared-profile-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"></path></svg>
-              <span id="profile-top-name">Perfil</span>
+              <span class="shared-action-link__stack">
+                <strong id="profile-top-name">Entrar</strong>
+                <small id="profile-top-subtext">ou cadastrar</small>
+              </span>
             </a>
 
             <a class="shared-action-link ${navState.favoritos ? "is-current" : ""}" href="/perfil/favoritos/" aria-label="Favoritos">
@@ -167,7 +200,7 @@
       <div class="shared-header__menu-shell">
         <div class="shared-header__container shared-header__menu-row">
           <div class="shared-catalog">
-            <button id="shared-catalog-button" class="shared-catalog__button ${navState.categorias || isHome ? "is-current" : ""}" type="button" aria-haspopup="true" aria-expanded="false">
+            <button id="shared-catalog-button" class="shared-catalog__button ${navState.categorias ? "is-current" : ""}" type="button" aria-haspopup="true" aria-expanded="false">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"></path></svg>
               <span>Todas as categorias</span>
               <span class="shared-catalog__caret" aria-hidden="true">&#9662;</span>
@@ -197,7 +230,7 @@
               <aside class="shared-mega-promo">
                 <span class="shared-mega-promo__eyebrow">Selecao UZUU</span>
                 <strong>Estilo sem pagar caro</strong>
-                <p>Moda com vitrine mais forte, leitura premium e campanhas prontas para vender mais.</p>
+                <p>Moda com leitura premium e preco forte para uma home mais comercial.</p>
                 <a href="/#produtos">Ver colecao</a>
               </aside>
             </div>
@@ -216,6 +249,7 @@
   const shipSummary = document.getElementById("ship-summary");
   const profileLink = document.getElementById("profile-top-link");
   const profileName = document.getElementById("profile-top-name");
+  const profileSubtext = document.getElementById("profile-top-subtext");
   const profilePhoto = document.getElementById("profile-top-photo");
   const catalogButton = document.getElementById("shared-catalog-button");
 
@@ -272,11 +306,10 @@
   function renderHeaderProfile() {
     const profile = loadJson(PROFILE_KEY);
     if (!profile || !profileName || !profileLink) {
-      if (profileName) profileName.textContent = "Perfil";
-      if (profileLink) {
-        profileLink.href = "/login/";
-        profileLink.classList.remove("has-photo");
-      }
+      profileName.textContent = isHome ? "Entrar" : "Perfil";
+      if (profileSubtext) profileSubtext.textContent = isHome ? "ou cadastrar" : "";
+      profileLink.href = "/login/";
+      profileLink.classList.remove("has-photo");
       if (profilePhoto) {
         profilePhoto.hidden = true;
         profilePhoto.removeAttribute("src");
@@ -291,6 +324,7 @@
     const avatarSrc = isUsablePicture(picture) ? picture : buildFallbackAvatar(displayName);
 
     profileName.textContent = displayName;
+    if (profileSubtext) profileSubtext.textContent = isHome ? "minha conta" : "";
     profileLink.href = "/perfil/";
     profileLink.setAttribute("aria-label", `Perfil de ${displayName}`);
     profileLink.classList.add("has-photo");

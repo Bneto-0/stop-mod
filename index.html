@@ -6,193 +6,234 @@
   <title>Uzuu | Marketplace de moda, calcados e acessorios</title>
   <meta name="description" content="A Uzuu evolui como marketplace de moda, calcados e acessorios, com vitrine forte, checkout integrado e espaco para marcas e lojistas parceiros." />
   <link rel="canonical" href="https://uzuu.com.br/" />
-  <link rel="icon" href="./favicon.png?v=20260416b" type="image/png" />
+  <link rel="icon" href="./favicon.png?v=20260423home" type="image/png" />
   <link rel="manifest" href="./site.webmanifest" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./style.css?v=20260416b" />
-  <link rel="stylesheet" href="/assets/site-header.css?v=28" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./style.css?v=20260423home" />
+  <link rel="stylesheet" href="/assets/site-header.css?v=29" />
 </head>
-<body id="top" class="home-page">
+<body id="top" class="home-page home-page--premium">
   <div id="site-header-root"></div>
-  <script src="/assets/site-header.js?v=17"></script>
+  <script src="/assets/site-header.js?v=18"></script>
   <script src="/assets/catalog.js?v=10"></script>
 
-  <main>
-    <section class="home-stage" id="anuncios">
-      <div class="home-stage__hero">
-        <section class="announcement-carousel" aria-label="Anuncios principais da loja">
-          <button class="announcement-hotspot announcement-hotspot--prev" type="button" aria-label="Anuncio anterior" data-announcement-nav="prev"></button>
-          <div id="announcement-track" class="announcement-track"></div>
-          <button class="announcement-hotspot announcement-hotspot--next" type="button" aria-label="Proximo anuncio" data-announcement-nav="next"></button>
-          <div id="announcement-dots" class="announcement-dots" aria-label="Controle dos anuncios"></div>
-        </section>
-      </div>
-    </section>
-
-    <section class="container marketplace-spotlight" aria-label="Camada institucional do marketplace">
-      <div class="marketplace-spotlight__copy">
-        <p class="eyebrow">Marketplace Uzuu</p>
-        <h2>Uma base mais forte para vender como loja e crescer como plataforma.</h2>
-        <p>
-          A Uzuu esta evoluindo para reunir compradores, marcas, colecoes e lojistas parceiros em um so ambiente,
-          com vitrine curada, checkout integrado e experiencia de compra mais confiavel.
-        </p>
-        <div class="marketplace-spotlight__actions">
-          <a class="btn primary" href="./marketplace/">Como funciona</a>
+  <main class="home-premium">
+    <section class="home-hero-section" id="anuncios" aria-label="Destaques da Uzuu">
+      <div class="container">
+        <div class="home-hero" id="home-hero-slider">
+          <button class="home-hero__arrow home-hero__arrow--prev" type="button" aria-label="Banner anterior" data-hero-nav="prev">
+            <span aria-hidden="true">&#8249;</span>
+          </button>
+          <div id="home-hero-track" class="home-hero__track"></div>
+          <button class="home-hero__arrow home-hero__arrow--next" type="button" aria-label="Proximo banner" data-hero-nav="next">
+            <span aria-hidden="true">&#8250;</span>
+          </button>
+          <div id="home-hero-dots" class="home-hero__dots" aria-label="Controle do banner principal"></div>
         </div>
       </div>
-
-      <div class="marketplace-spotlight__stats" aria-label="Pilares da plataforma">
-        <article class="marketplace-stat-card">
-          <strong>Multicategoria</strong>
-          <span>Moda, calcados, acessorios e colecoes sazonais em uma vitrine unica.</span>
-        </article>
-        <article class="marketplace-stat-card">
-          <strong>Lojistas parceiros</strong>
-          <span>Operacao preparada para receber sellers com curadoria, onboarding e pagina propria.</span>
-        </article>
-        <article class="marketplace-stat-card">
-          <strong>Compra protegida</strong>
-          <span>Pagamento integrado, confirmacao de pedido, rastreio e reputacao por produto e por loja.</span>
-        </article>
-        <article class="marketplace-stat-card">
-          <strong>Escala comercial</strong>
-          <span>Campanhas, cupons, destaques e vitrine pensados para crescer para um marketplace geral.</span>
-        </article>
-      </div>
     </section>
 
-    <section class="container ad-gallery" aria-label="Anuncios secundarios da home">
-      <div class="section-head section-head--split">
-        <div>
-          <p class="eyebrow">Destaques da semana</p>
-          <h2>Destaques da semana</h2>
-        </div>
-        <p class="section-note">Produtos em alta com mais cara de marketplace, preco forte e leitura limpa.</p>
-      </div>
-      <div id="ad-flow" class="ad-flow"></div>
-    </section>
-
-    <section class="container campaign-banner-shell" aria-label="Banner promocional da loja">
-      <div id="campaign-banner" class="campaign-banner"></div>
-    </section>
-
-    <section class="container marketplace-pillars" aria-label="Pilares da operacao Uzuu">
-      <article class="marketplace-pillar">
-        <p class="eyebrow">Curadoria</p>
-        <h3>Vitrine com leitura de marca mais profissional</h3>
-        <p>Produtos ganham contexto visual, destaque comercial e distribuicao melhor entre home, campanha e paginas internas.</p>
+    <section class="container home-proof-strip" aria-label="Beneficios da compra">
+      <article class="home-proof-strip__item">
+        <span class="home-proof-strip__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M3 7h10v8H3zm11 3h3l3 3v2h-6zm-9 7a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm11 0a2 2 0 1 0 .001 4A2 2 0 0 0 16 17zM5 19h7m4 0h2"></path></svg>
+        </span>
+        <span class="home-proof-strip__copy">
+          <strong>FRETE GRATIS</strong>
+          <small>para todo o Brasil</small>
+        </span>
       </article>
-      <article class="marketplace-pillar">
-        <p class="eyebrow">Seller growth</p>
-        <h3>Espaco para marcas e lojistas venderem junto com voce</h3>
-        <p>A plataforma ja mostra loja responsavel por produto e agora tambem ganha pagina propria para captar parceiros.</p>
+      <article class="home-proof-strip__item">
+        <span class="home-proof-strip__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M3 6h18v12H3zm0 4h18M7 15h3"></path></svg>
+        </span>
+        <span class="home-proof-strip__copy">
+          <strong>PARCELE EM ATE 12X</strong>
+          <small>sem juros no cartao</small>
+        </span>
       </article>
-      <article class="marketplace-pillar">
-        <p class="eyebrow">Operacao</p>
-        <h3>Checkout, rastreio e experiencia orientados a escala</h3>
-        <p>O foco passa a ser uma loja mais confiavel hoje, pronta para uma camada real de marketplace no backend.</p>
+      <article class="home-proof-strip__item">
+        <span class="home-proof-strip__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.66-5.66M20 12a8 8 0 0 1-13.66 5.66M17 3v4h-4M7 21v-4h4"></path></svg>
+        </span>
+        <span class="home-proof-strip__copy">
+          <strong>TROCA GRATIS</strong>
+          <small>em ate 7 dias</small>
+        </span>
+      </article>
+      <article class="home-proof-strip__item">
+        <span class="home-proof-strip__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.6-2.7 8.8-7 10-4.3-1.2-7-5.4-7-10V6zm-3 9 2 2 4-4"></path></svg>
+        </span>
+        <span class="home-proof-strip__copy">
+          <strong>COMPRA 100% SEGURA</strong>
+          <small>seus dados protegidos</small>
+        </span>
       </article>
     </section>
 
-    <section class="container showcase-shell" aria-label="Grade compacta de produtos">
-      <div class="section-head section-head--split">
-        <div>
-          <p class="eyebrow">Mais vendidos</p>
-          <h2>Mais vendidos</h2>
-        </div>
-        <p class="section-note">Uma faixa mais enxuta para dar sequencia de produto logo abaixo da campanha.</p>
-      </div>
-      <div id="compact-product-board" class="compact-product-board"></div>
-      <section class="home-benefits home-benefits--secondary" aria-label="Diferenciais da Uzuu">
-        <article class="home-benefits__item">
-          <span class="home-benefits__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M3 7h10v8H3zm11 3h3l3 3v2h-6zm-9 7a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm11 0a2 2 0 1 0 .001 4A2 2 0 0 0 16 17zM5 19h7m4 0h2"></path></svg>
-          </span>
-          <span class="home-benefits__copy">
-            <span class="home-benefits__label">Frete Gratis</span>
-            <strong class="home-benefits__text">acima de R$ 99</strong>
-          </span>
-        </article>
-        <article class="home-benefits__item">
-          <span class="home-benefits__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M3 13l7 2 2 6 2-5 7-7-8 1-2-7-3 8z"></path></svg>
-          </span>
-          <span class="home-benefits__copy">
-            <span class="home-benefits__label">Entrega Rapida</span>
-            <strong class="home-benefits__text">postagem em ate 24h</strong>
-          </span>
-        </article>
-        <article class="home-benefits__item">
-          <span class="home-benefits__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.6-2.7 8.8-7 10-4.3-1.2-7-5.4-7-10V6zm-3 9 2 2 4-4"></path></svg>
-          </span>
-          <span class="home-benefits__copy">
-            <span class="home-benefits__label">Compra Segura</span>
-            <strong class="home-benefits__text">ambiente protegido</strong>
-          </span>
-        </article>
-        <article class="home-benefits__item">
-          <span class="home-benefits__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M3 6h18v12H3zm0 4h18M7 15h3"></path></svg>
-          </span>
-          <span class="home-benefits__copy">
-            <span class="home-benefits__label">Ate 12x Sem Juros</span>
-            <strong class="home-benefits__text">no cartao de credito</strong>
-          </span>
-        </article>
-      </section>
+    <section class="container home-orbit-section" aria-label="Atalhos por categoria" id="produtos">
+      <div id="home-category-orbit" class="home-orbit-grid"></div>
     </section>
 
-    <section class="container shelf-shell" id="produtos">
-      <div class="section-head section-head--split">
-        <div>
-          <p class="eyebrow">Todos os produtos</p>
-          <h2>Vitrine completa</h2>
-        </div>
-        <div class="filter-pills" role="tablist" aria-label="Categorias">
-          <button class="pill is-active" type="button" data-filter="todos">Todos</button>
-          <button class="pill" type="button" data-filter="Camisetas">Camisetas</button>
-          <button class="pill" type="button" data-filter="Calcas">Calcas</button>
-          <button class="pill" type="button" data-filter="Jaquetas">Jaquetas</button>
-          <button class="pill" type="button" data-filter="Vestidos">Vestidos</button>
+    <section class="container home-merch-section" aria-label="Mais vendidos">
+      <div class="home-merch-section__head">
+        <h2>MAIS VENDIDOS</h2>
+        <div class="home-merch-section__controls">
+          <a href="#recomendados">Ver todos</a>
+          <div class="home-scroll-arrows">
+            <button type="button" aria-label="Voltar prateleira" data-scroll-target="best-sellers-track" data-scroll-direction="prev">&#8249;</button>
+            <button type="button" aria-label="Avancar prateleira" data-scroll-target="best-sellers-track" data-scroll-direction="next">&#8250;</button>
+          </div>
         </div>
       </div>
-      <div id="product-shelf" class="product-shelf" aria-label="Prateleira de produtos com rolagem"></div>
+      <div id="best-sellers-track" class="home-product-row"></div>
     </section>
 
-    <section class="container catalog-shell">
-      <div class="section-head section-head--split">
-        <div>
-          <p class="eyebrow">Catalogo completo</p>
-          <h2>Mais produtos logo abaixo</h2>
+    <section class="container home-promo-grid" id="lancamentos" aria-label="Campanhas promocionais">
+      <article class="home-promo-card home-promo-card--launch">
+        <div class="home-promo-card__copy">
+          <h3>LANCAMENTOS</h3>
+          <p>Novas pecas toda semana</p>
+          <a href="#recomendados">Ver lancamentos</a>
         </div>
-        <p id="catalog-summary" class="section-note">Use a pesquisa ou as categorias para filtrar a vitrine.</p>
+      </article>
+      <article class="home-promo-card home-promo-card--sale">
+        <div class="home-promo-card__copy">
+          <h3>ATE 50% OFF</h3>
+          <p>Nas melhores pecas</p>
+          <a href="/cupons/">Aproveitar ofertas</a>
+        </div>
+      </article>
+      <article class="home-promo-card home-promo-card--street">
+        <div class="home-promo-card__copy">
+          <h3>STREETWEAR PREMIUM</h3>
+          <p>Qualidade que se destaca</p>
+          <a href="#recomendados">Ver streetwear</a>
+        </div>
+      </article>
+    </section>
+
+    <section class="container home-merch-section home-merch-section--recommend" id="recomendados" aria-label="Recomendados para voce">
+      <div class="home-merch-section__head home-merch-section__head--filters">
+        <h2>RECOMENDADOS PARA VOCE</h2>
+        <div id="recommend-tabs" class="home-filter-tabs" role="tablist" aria-label="Filtros de recomendacao">
+          <button class="is-active" type="button" data-home-filter="all">Todos</button>
+          <button type="button" data-home-filter="masculino">Masculino</button>
+          <button type="button" data-home-filter="feminino">Feminino</button>
+          <button type="button" data-home-filter="acessorios">Acessorios</button>
+          <button type="button" data-home-filter="calcados">Calcados</button>
+          <button type="button" data-home-filter="streetwear">Streetwear</button>
+        </div>
       </div>
-      <div id="product-grid" class="product-grid product-grid--dense" aria-live="polite"></div>
-      <p id="catalog-feedback" class="catalog-feedback" hidden>Nenhum produto encontrado.</p>
+      <div id="recommend-grid" class="home-product-grid"></div>
+      <p id="recommend-feedback" class="home-recommend-feedback" hidden>Nenhum produto encontrado para esse filtro.</p>
+    </section>
+
+    <section class="container home-loadmore-section" aria-label="Carregar mais produtos">
+      <button id="load-more-products" class="home-loadmore-button" type="button">
+        <span aria-hidden="true">&#8635;</span>
+        <span>Carregando mais produtos...</span>
+      </button>
     </section>
   </main>
 
-  <footer class="site-footer">
-    <div class="container site-footer__row">
-      <div>
-        <strong>Uzuu</strong>
-        <p>Marketplace em construcao para unir compradores, marcas e lojistas parceiros em uma operacao mais forte de moda, calcados e acessorios.</p>
+  <footer class="site-footer home-premium-footer">
+    <div class="container home-newsletter">
+      <div class="home-newsletter__copy">
+        <span class="home-newsletter__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M3 6h18v12H3zm1.5 1.5 7.5 6 7.5-6"></path></svg>
+        </span>
+        <div>
+          <strong>Cadastre-se e receba ofertas exclusivas</strong>
+          <p>Novidades, promocoes e lancamentos direto no seu e-mail.</p>
+        </div>
       </div>
-      <nav class="footer-links" aria-label="Links do rodape">
-        <a href="./marketplace/">Marketplace</a>
-        <a href="./privacidade/">Privacidade</a>
-        <a href="./termos/">Termos</a>
-        <a href="./notificacoes/">Notificacoes</a>
-        <a href="./perfil/pedidos/">Meus pedidos</a>
-      </nav>
+      <form id="newsletter-form" class="home-newsletter__form">
+        <label class="sr-only" for="newsletter-email">Digite seu e-mail</label>
+        <input id="newsletter-email" type="email" placeholder="Digite seu e-mail" />
+        <button type="submit">Cadastrar</button>
+      </form>
+    </div>
+
+    <div class="container home-footer__top">
+      <section class="home-footer__brand">
+        <a class="home-footer__logo" href="/#top" aria-label="UZUU">UZUU</a>
+        <p>Estilo sem pagar caro.<br />Peca premium com preco justo para todos os estilos.</p>
+        <div class="home-footer__social" aria-label="Redes sociais">
+          <a href="#" aria-label="Instagram">
+            <svg viewBox="0 0 24 24"><path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm5 5.2A4.8 4.8 0 1 0 16.8 12 4.8 4.8 0 0 0 12 7.2zm6.2-.9a1.1 1.1 0 1 0 1.1 1.1 1.1 1.1 0 0 0-1.1-1.1z"></path></svg>
+          </a>
+          <a href="#" aria-label="TikTok">
+            <svg viewBox="0 0 24 24"><path d="M14 3c1 2 2.7 3.7 5 4.2V10a8.2 8.2 0 0 1-5-1.7v6.4a5.7 5.7 0 1 1-4-5.4v2.8a2.9 2.9 0 1 0 1.2 2.4V3z"></path></svg>
+          </a>
+          <a href="#" aria-label="WhatsApp">
+            <svg viewBox="0 0 24 24"><path d="M20 11.5a8.5 8.5 0 0 1-12.4 7.5L4 20l1.1-3.4A8.5 8.5 0 1 1 20 11.5zm-4.8 2.3-.8-.4c-.3-.2-.6-.2-.8.1l-.2.3c-.2.2-.4.3-.7.2a6.9 6.9 0 0 1-3.3-2.9c-.2-.3-.2-.6 0-.8l.2-.2c.2-.2.2-.5.1-.8l-.3-.8c-.2-.5-.7-.6-1.1-.3a2 2 0 0 0-.7 2.1 9.2 9.2 0 0 0 5.6 5.7 2 2 0 0 0 2.1-.6c.4-.4.3-.9-.1-1.2z"></path></svg>
+          </a>
+          <a href="#" aria-label="YouTube">
+            <svg viewBox="0 0 24 24"><path d="M21.6 7.2a2.7 2.7 0 0 0-1.9-1.9C18 4.8 12 4.8 12 4.8s-6 0-7.7.5A2.7 2.7 0 0 0 2.4 7.2 28.8 28.8 0 0 0 1.9 12c0 1.7.1 3.3.5 4.8a2.7 2.7 0 0 0 1.9 1.9c1.7.5 7.7.5 7.7.5s6 0 7.7-.5a2.7 2.7 0 0 0 1.9-1.9c.4-1.5.5-3.1.5-4.8s-.1-3.3-.5-4.8zM10 15.5v-7l6 3.5-6 3.5z"></path></svg>
+          </a>
+        </div>
+      </section>
+
+      <div class="home-footer__columns">
+        <section>
+          <h3>INSTITUCIONAL</h3>
+          <a href="/sobre/">Sobre a UZUU</a>
+          <a href="/trabalhe-conosco/">Trabalhe conosco</a>
+          <a href="/privacidade/">Politica de privacidade</a>
+          <a href="/trocas/">Trocas e devolucoes</a>
+          <a href="/termos/">Termos de uso</a>
+        </section>
+        <section>
+          <h3>AJUDA</h3>
+          <a href="/central-de-ajuda/">Central de ajuda</a>
+          <a href="/como-comprar/">Como comprar</a>
+          <a href="/pagamento/">Formas de pagamento</a>
+          <a href="/prazos/">Prazos de entrega</a>
+          <a href="/perfil/pedidos/">Rastrear pedido</a>
+        </section>
+        <section>
+          <h3>CATEGORIAS</h3>
+          <a href="/?q=masculino#produtos">Masculino</a>
+          <a href="/?q=feminino#produtos">Feminino</a>
+          <a href="/?cat=Acessorios#produtos">Acessorios</a>
+          <a href="/?q=calcados#produtos">Calcados</a>
+          <a href="/?q=streetwear#produtos">Streetwear</a>
+          <a href="/cupons/">Promocoes</a>
+        </section>
+        <section class="home-footer__payments">
+          <h3>FORMAS DE PAGAMENTO</h3>
+          <div class="home-payment-badges">
+            <span><img src="/assets/icons/visa-logo-real.svg" alt="Visa" /></span>
+            <span><img src="/assets/icons/mastercard-logo-real.svg" alt="Mastercard" /></span>
+            <span><img src="/assets/icons/elo-logo-real.png" alt="Elo" /></span>
+            <span><img src="/assets/icons/hipercard-logo-real.svg" alt="Hipercard" /></span>
+            <span><img src="/assets/icons/pix-logo.svg" alt="Pix" /></span>
+          </div>
+          <div class="home-security-card">
+            <h3>SEGURANCA</h3>
+            <div class="home-security-card__item">
+              <span aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.6-2.7 8.8-7 10-4.3-1.2-7-5.4-7-10V6zm-3 9 2 2 4-4"></path></svg>
+              </span>
+              <div>
+                <strong>Site protegido</strong>
+                <small>Certificado SSL</small>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <div class="container home-footer__bottom">
+      <p>&copy; 2024 UZUU. Todos os direitos reservados.</p>
     </div>
   </footer>
 
-  <script src="./script.js?v=13"></script>
+  <script src="./script.js?v=14"></script>
 </body>
 </html>
-
