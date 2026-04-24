@@ -1157,6 +1157,35 @@
             <button class="btn primary" type="button" data-buy-now ${soldOut ? "disabled" : ""}>Comprar agora</button>
           </div>
           <p class="product-detail-feedback" data-product-feedback hidden></p>
+          <section class="product-security-card" aria-label="Seguranca da compra">
+            <article class="product-security-card__item">
+              <span aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.97 3.05 7.98 7 9 3.95-1.02 7-4.03 7-9V6l-7-3zm0 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-3 8a4 4 0 0 1 6 0"></path></svg>
+              </span>
+              <div>
+                <strong>Site protegido</strong>
+                <small>Certificado SSL ativo</small>
+              </div>
+            </article>
+            <article class="product-security-card__item">
+              <span aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 12h4l2-5 4 10 2-5h4M6 18h12"></path></svg>
+              </span>
+              <div>
+                <strong>Pagamento protegido</strong>
+                <small>Dados criptografados na compra</small>
+              </div>
+            </article>
+            <article class="product-security-card__item">
+              <span aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15.36-6.36M21 12a9 9 0 0 1-15.36 6.36M18 3v4h-4M6 21v-4h4"></path></svg>
+              </span>
+              <div>
+                <strong>Troca facilitada</strong>
+                <small>Suporte e devolucao em ate 7 dias</small>
+              </div>
+            </article>
+          </section>
         </section>
       </div>
 
