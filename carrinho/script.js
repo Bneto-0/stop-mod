@@ -92,10 +92,18 @@ const productsNowCents = document.getElementById("products-now-cents");
 const cartTotalMain = document.getElementById("cart-total-main");
 const cartTotalCents = document.getElementById("cart-total-cents");
 const itemsCount = document.getElementById("items-count");
-const cartItemsBadge = document.getElementById("cart-items-badge");
+const cartOverviewCount = document.getElementById("cart-overview-count");
 const shippingValue = document.getElementById("shipping-value");
 const freeShipCount = document.getElementById("free-ship-count");
 const couponCount = document.getElementById("coupon-count");
+const clearCartBtn = document.getElementById("clear-cart-btn");
+const couponInput = document.getElementById("coupon-input");
+const applyCouponBtn = document.getElementById("apply-coupon-btn");
+const summarySubtotalLabel = document.getElementById("summary-subtotal-label");
+const summaryCouponValue = document.getElementById("summary-coupon-value");
+const summaryInstallments = document.getElementById("summary-installments");
+const summaryPixValue = document.getElementById("summary-pix-value");
+const cartRecommendationsGrid = document.getElementById("cart-recommendations-grid");
 const feedback = document.getElementById("feedback");
 const checkoutBtn = document.getElementById("checkout");
 const searchInput = document.getElementById("search-input");
@@ -1129,6 +1137,78 @@ function calcDiscount(subtotal, coupons) {
   if (!unique.length) return 0;
   // Simples: 10% com 1 cupom (demo).
   return subtotal * 0.1;
+}
+
+function pluralizeItems(count) {
+  const total = Number(count) || 0;
+  return `${total} ${total === 1 ? "item" : "itens"}`;
+}
+
+function buildCartComparePricing(item, index) {
+  const basePrice = Number(item?.price || 0);
+  const shouldHighlight = index === 0 && basePrice > 0;
+  if (!shouldHighlight) {
+    return {
+      compareText: "",
+      badgeText: ""
+    };
+  }
+
+  const comparePrice = basePrice / 0.8;
+  return {
+    compareText: `R$ ${formatBRL(comparePrice)}`,
+    badgeText: "20% OFF"
+  };
+}
+
+function buildCartRecommendations(ids) {
+  const selectedIds = new Set(groupedCart(ids).map((item) => item.id));
+  return products.filter((product) => !selectedIds.has(product.id)).slice(0, 5);
+}
+
+function renderCartRecommendations(ids) {
+  if (!cartRecommendationsGrid) return;
+  const suggestions = buildCartRecommendations(ids);
+
+  if (!suggestions.length) {
+    cartRecommendationsGrid.innerHTML = "";
+    return;
+  }
+
+  cartRecommendationsGrid.innerHTML = suggestions
+    .map((item) => {
+      const installment = Math.max(0, Number(item.price || 0) / 12);
+      return `
+        <a class="cart-suggestion-card" href="${productHref(item.id)}">
+          <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" loading="lazy" />
+          <div class="cart-suggestion-card__copy">
+            <strong>${escapeHtml(item.name)}</strong>
+            <span>R$ ${formatBRL(Number(item.price || 0))}</span>
+            <small>12x de R$ ${formatBRL(installment)}</small>
+          </div>
+        </a>
+      `;
+    })
+    .join("");
+}
+
+function applyCouponCode(rawValue) {
+  const code = String(rawValue || "").trim().toUpperCase();
+  if (!code) {
+    feedback.textContent = "Digite um cupom para aplicar.";
+    return;
+  }
+
+  saveCoupons([code]);
+  feedback.textContent = `Cupom ${code} aplicado com sucesso.`;
+  renderCart();
+}
+
+function clearCartCompletely() {
+  saveCartIds([]);
+  saveCoupons([]);
+  renderCart();
+  feedback.textContent = "Carrinho limpo com sucesso.";
 }
 
 function checkoutSnapshot() {
@@ -2614,6 +2694,16 @@ function renderCart() {
   const shipTo = loadShipTo();
   if (shipSummary) shipSummary.textContent = shipSummaryText(shipTo);
   renderAddressConfirmation();
+  renderCartRecommendations(ids);
+
+  if (clearCartBtn) {
+    clearCartBtn.hidden = !ids.length;
+  }
+
+  const coupons = loadCoupons();
+  if (couponInput) {
+    couponInput.value = coupons[0] || "";
+  }
 
   if (!ids.length) {
     cartItems.innerHTML = `
@@ -2626,13 +2716,19 @@ function renderCart() {
     checkoutBtn.disabled = true;
     feedback.textContent = "";
     if (itemsCount) itemsCount.textContent = "0";
-    if (cartItemsBadge) cartItemsBadge.textContent = "0 itens";
     if (freeShipCount) freeShipCount.textContent = "0";
     if (shippingValue) {
-      shippingValue.textContent = "--";
+      shippingValue.textContent = "Calcular";
       shippingValue.classList.remove("free");
+      shippingValue.classList.add("is-link");
     }
-    if (couponCount) couponCount.textContent = String(loadCoupons().length);
+    if (summarySubtotalLabel) summarySubtotalLabel.textContent = "Subtotal (0 produtos)";
+    if (summaryCouponValue) {
+      summaryCouponValue.textContent = "Adicionar";
+      summaryCouponValue.classList.remove("is-applied");
+      summaryCouponValue.classList.add("is-link");
+    }
+    if (couponCount) couponCount.textContent = String(coupons.length);
     if (productsBeforeWrap) productsBeforeWrap.hidden = true;
     if (productsNowMain && productsNowCents) {
       productsNowMain.textContent = "0";
@@ -2642,6 +2738,8 @@ function renderCart() {
       cartTotalMain.textContent = "0";
       cartTotalCents.textContent = "00";
     }
+    if (summaryInstallments) summaryInstallments.textContent = "em ate 12x de R$ 0,00 sem juros";
+    if (summaryPixValue) summaryPixValue.textContent = "ou R$ 0,00 no PIX (5% OFF)";
     renderCheckoutModalSnapshot();
     return;
   }
@@ -2649,6 +2747,10 @@ function renderCart() {
   const cep = shipTo.cep;
 
   const grouped = groupedCart(ids);
+  if (cartOverviewCount) {
+    cartOverviewCount.textContent = pluralizeItems(grouped.length);
+  }
+
   if (!grouped.length) {
     cartItems.innerHTML = `
       <li class="cart-empty-state">
@@ -2658,36 +2760,37 @@ function renderCart() {
     `;
   } else {
     cartItems.innerHTML = grouped
-      .map((item) => {
-        const meta = [item.category, item.size].filter(Boolean).join(" | ");
+      .map((item, index) => {
+        const color = String(item.color || "Preto").trim() || "Preto";
+        const comparePricing = buildCartComparePricing(item, index);
         const totalItem = item.price * item.qty;
         return `
         <li class="cart-item">
+          <label class="cart-item-select" aria-label="Produto selecionado">
+            <input type="checkbox" checked disabled />
+            <span></span>
+          </label>
           <a class="cart-item-media" href="${productHref(item.id)}"><img src="${item.image}" alt="${item.name}" loading="lazy" /></a>
           <div class="cart-item-body">
-            <div class="cart-item-head">
-              <div class="cart-item-copy">
-                <strong><a class="cart-item-link" href="${productHref(item.id)}">${item.name}</a></strong>
-                ${meta ? `<div class="cart-item-meta">${meta}</div>` : ""}
-              </div>
-              <button class="cart-item-remove" data-action="remove" data-id="${item.id}" type="button" aria-label="Remover ${escapeHtml(item.name)} do carrinho">Remover</button>
+            <strong><a class="cart-item-link" href="${productHref(item.id)}">${item.name}</a></strong>
+            <div class="cart-item-meta">Cor: ${escapeHtml(color)} <span>&bull;</span> Tamanho: ${escapeHtml(item.size || "Unico")}</div>
+            <div class="cart-item-stock">
+              <span class="cart-item-stock__dot" aria-hidden="true"></span>
+              <span>Em estoque</span>
             </div>
-            <div class="cart-item-pricing">
-              <span class="cart-item-price-label">Preco unitario</span>
-              <span class="cart-item-price">R$ ${formatBRL(item.price)}</span>
+          </div>
+          <div class="cart-item-qty">
+            <div class="qty-controls" aria-label="Quantidade">
+              <button class="qty-btn" data-action="dec" data-id="${item.id}" aria-label="Diminuir">-</button>
+              <span class="qty-val" aria-label="Quantidade">${item.qty}</span>
+              <button class="qty-btn" data-action="inc" data-id="${item.id}" aria-label="Aumentar">+</button>
             </div>
-            <div class="cart-item-row">
-              <div class="qty-controls" aria-label="Quantidade">
-                <button class="qty-btn" data-action="dec" data-id="${item.id}" aria-label="Diminuir">-</button>
-                <span class="qty-val" aria-label="Quantidade">${item.qty}</span>
-                <button class="qty-btn" data-action="inc" data-id="${item.id}" aria-label="Aumentar">+</button>
-              </div>
-              <div class="cart-item-subtotal">
-                <span>Subtotal</span>
-                <strong>R$ ${formatBRL(totalItem)}</strong>
-              </div>
-            </div>
-            <a class="cart-item-link-inline" href="${productHref(item.id)}">Ver detalhes do produto</a>
+            <button class="cart-item-remove" data-action="remove" data-id="${item.id}" type="button" aria-label="Remover ${escapeHtml(item.name)} do carrinho">Remover</button>
+          </div>
+          <div class="cart-item-pricebox">
+            <strong class="cart-item-price">R$ ${formatBRL(totalItem)}</strong>
+            ${comparePricing.compareText ? `<span class="cart-item-compare">${comparePricing.compareText}</span>` : ""}
+            ${comparePricing.badgeText ? `<span class="cart-item-discount">${comparePricing.badgeText}</span>` : ""}
           </div>
         </li>
       `;
@@ -2695,8 +2798,7 @@ function renderCart() {
       .join("");
   }
 
-  const subtotal = groupedCart(ids).reduce((sum, item) => sum + item.price * item.qty, 0);
-  const coupons = loadCoupons();
+  const subtotal = grouped.reduce((sum, item) => sum + item.price * item.qty, 0);
   const shipping = calcShipping(subtotal, ids.length, cep);
   const discount = calcDiscount(subtotal, coupons);
 
@@ -2725,25 +2827,50 @@ function renderCart() {
     cartTotalCents.textContent = t.cents;
   }
 
-  if (itemsCount) itemsCount.textContent = String(ids.length);
-  if (cartItemsBadge) cartItemsBadge.textContent = `${ids.length} ${ids.length === 1 ? "item" : "itens"}`;
+  if (itemsCount) itemsCount.textContent = String(grouped.length);
+  if (summarySubtotalLabel) {
+    summarySubtotalLabel.textContent = `Subtotal (${grouped.length} ${grouped.length === 1 ? "produto" : "produtos"})`;
+  }
   if (couponCount) couponCount.textContent = String(coupons.length);
 
   if (shippingValue) {
     if (shipping === null) {
-      shippingValue.textContent = "Selecionar";
+      shippingValue.textContent = "Calcular";
       shippingValue.classList.remove("free");
+      shippingValue.classList.add("is-link");
     } else if (shipping === 0) {
       shippingValue.textContent = "Gratis";
       shippingValue.classList.add("free");
+      shippingValue.classList.remove("is-link");
     } else {
       shippingValue.textContent = `R$ ${formatBRL(shipping)}`;
       shippingValue.classList.remove("free");
+      shippingValue.classList.remove("is-link");
+    }
+  }
+
+  if (summaryCouponValue) {
+    if (discount > 0.01) {
+      summaryCouponValue.textContent = `-R$ ${formatBRL(discount)}`;
+      summaryCouponValue.classList.add("is-applied");
+      summaryCouponValue.classList.remove("is-link");
+    } else {
+      summaryCouponValue.textContent = "Adicionar";
+      summaryCouponValue.classList.remove("is-applied");
+      summaryCouponValue.classList.add("is-link");
     }
   }
 
   if (freeShipCount) {
     freeShipCount.textContent = String(shipping === 0 ? ids.length : 0);
+  }
+
+  if (summaryInstallments) {
+    summaryInstallments.textContent = `em ate 12x de R$ ${formatBRL(totalFinal / 12)} sem juros`;
+  }
+
+  if (summaryPixValue) {
+    summaryPixValue.textContent = `ou R$ ${formatBRL(totalFinal * 0.95)} no PIX (5% OFF)`;
   }
 
   checkoutBtn.disabled = false;
@@ -2759,6 +2886,30 @@ function renderCart() {
     });
   });
 }
+
+clearCartBtn?.addEventListener("click", () => {
+  if (!loadCartIds().length) return;
+  clearCartCompletely();
+});
+
+applyCouponBtn?.addEventListener("click", () => {
+  applyCouponCode(couponInput?.value || "");
+});
+
+couponInput?.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter") return;
+  event.preventDefault();
+  applyCouponCode(couponInput.value || "");
+});
+
+shippingValue?.addEventListener("click", () => {
+  window.location.href = "../entrega/";
+});
+
+summaryCouponValue?.addEventListener("click", () => {
+  couponInput?.focus();
+  couponInput?.scrollIntoView({ behavior: "smooth", block: "center" });
+});
 
 checkoutBtn.addEventListener("click", () => {
   if (!hasActiveAuthSession()) {
