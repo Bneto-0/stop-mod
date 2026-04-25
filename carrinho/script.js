@@ -3,6 +3,7 @@ const CART_KEY = sharedCatalog?.storageKeys?.cart || "stopmod_cart";
 const MAX_CART_ITEMS = 2000;
 const SHIP_KEY = "stopmod_ship_to";
 const LEGACY_SHIP_KEY = "stopmod_ship_cep";
+const SHIPPING_MODE_KEY = "stopmod_shipping_mode";
 const COUPON_KEY = "stopmod_coupons";
 const PAY_KEY = "stopmod_payment";
 const ORDERS_KEY = "stopmod_orders";
@@ -100,10 +101,18 @@ const clearCartBtn = document.getElementById("clear-cart-btn");
 const couponInput = document.getElementById("coupon-input");
 const applyCouponBtn = document.getElementById("apply-coupon-btn");
 const summarySubtotalLabel = document.getElementById("summary-subtotal-label");
+const summarySubtotalAmount = document.getElementById("summary-subtotal-amount");
 const summaryCouponValue = document.getElementById("summary-coupon-value");
 const summaryInstallments = document.getElementById("summary-installments");
 const summaryPixValue = document.getElementById("summary-pix-value");
+const summaryPixTotal = document.getElementById("summary-pix-total");
 const cartRecommendationsGrid = document.getElementById("cart-recommendations-grid");
+const cartSavingsBadge = document.getElementById("cart-savings-badge");
+const cartCepInput = document.getElementById("cart-cep-input");
+const cartCepApply = document.getElementById("cart-cep-apply");
+const shippingFeedback = document.getElementById("shipping-feedback");
+const shippingMethodStandard = document.getElementById("shipping-method-standard");
+const shippingMethodExpress = document.getElementById("shipping-method-express");
 const feedback = document.getElementById("feedback");
 const checkoutBtn = document.getElementById("checkout");
 const searchInput = document.getElementById("search-input");
@@ -800,6 +809,43 @@ function loadShipTo() {
   return { street: "", number: "", district: "", city: "", state: "", cep: "", complement: "" };
 }
 
+function saveShipTo(to) {
+  const next = {
+    street: String(to?.street || "").trim(),
+    number: String(to?.number || "").trim(),
+    district: String(to?.district || "").trim(),
+    city: String(to?.city || "").trim(),
+    state: normalizeState(String(to?.state || "")),
+    cep: normalizeCep(String(to?.cep || "")),
+    complement: String(to?.complement || "").trim()
+  };
+
+  localStorage.setItem(SHIP_KEY, JSON.stringify(next));
+  if (next.cep) {
+    localStorage.setItem(LEGACY_SHIP_KEY, next.cep);
+  } else {
+    localStorage.removeItem(LEGACY_SHIP_KEY);
+  }
+}
+
+function saveShipCepFromCart(rawCep) {
+  const current = loadShipTo();
+  const next = { ...current, cep: normalizeCep(rawCep) };
+  saveShipTo(next);
+  setAddressConfirmed(next, false);
+  return next;
+}
+
+function loadShippingMode() {
+  const mode = String(localStorage.getItem(SHIPPING_MODE_KEY) || "standard").trim().toLowerCase();
+  return mode === "express" ? "express" : "standard";
+}
+
+function saveShippingMode(mode) {
+  const next = String(mode || "").trim().toLowerCase() === "express" ? "express" : "standard";
+  localStorage.setItem(SHIPPING_MODE_KEY, next);
+}
+
 function shipSummaryText(to) {
   const street = String(to?.street || "").trim();
   const number = String(to?.number || "").trim();
@@ -1128,6 +1174,8 @@ function removeProductCompletely(id) {
 
 function calcShipping(subtotal, itemCount, cep) {
   if (!isCepValid(cep)) return null;
+  const mode = loadShippingMode();
+  if (mode === "express") return 19.9;
   const free = subtotal > 50;
   return free ? 0 : 19.9;
 }
@@ -1146,24 +1194,27 @@ function pluralizeItems(count) {
 
 function buildCartComparePricing(item, index) {
   const basePrice = Number(item?.price || 0);
-  const shouldHighlight = index === 0 && basePrice > 0;
-  if (!shouldHighlight) {
+  if (basePrice <= 0) {
     return {
       compareText: "",
-      badgeText: ""
+      badgeText: "",
+      comparePrice: 0
     };
   }
 
-  const comparePrice = basePrice / 0.8;
+  const ratios = [1.22, 1.16, 1.14, 1.19];
+  const comparePrice = basePrice * ratios[index % ratios.length];
+  const badgePercent = Math.max(8, Math.round((1 - (basePrice / comparePrice)) * 100));
   return {
     compareText: `R$ ${formatBRL(comparePrice)}`,
-    badgeText: "20% OFF"
+    badgeText: `${badgePercent}% OFF`,
+    comparePrice
   };
 }
 
 function buildCartRecommendations(ids) {
   const selectedIds = new Set(groupedCart(ids).map((item) => item.id));
-  return products.filter((product) => !selectedIds.has(product.id)).slice(0, 5);
+  return products.filter((product) => !selectedIds.has(product.id)).slice(0, 4);
 }
 
 function renderCartRecommendations(ids) {
@@ -1176,26 +1227,50 @@ function renderCartRecommendations(ids) {
   }
 
   cartRecommendationsGrid.innerHTML = suggestions
-    .map((item) => {
+    .map((item, index) => {
       const installment = Math.max(0, Number(item.price || 0) / 12);
+      const labels = [
+        "Combina com seu carrinho",
+        "Mais vendido",
+        "Ultimas unidades",
+        "Oferta especial"
+      ];
       return `
-        <a class="cart-suggestion-card" href="${productHref(item.id)}">
-          <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" loading="lazy" />
-          <div class="cart-suggestion-card__copy">
-            <strong>${escapeHtml(item.name)}</strong>
-            <span>R$ ${formatBRL(Number(item.price || 0))}</span>
+        <article class="cart-premium-suggestion-card">
+          <a class="cart-premium-suggestion-card__media" href="${productHref(item.id)}">
+            <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" loading="lazy" />
+            <span>${labels[index % labels.length]}</span>
+          </a>
+          <div class="cart-premium-suggestion-card__copy">
+            <a class="cart-premium-suggestion-card__title" href="${productHref(item.id)}">${escapeHtml(item.name)}</a>
+            <strong>R$ ${formatBRL(Number(item.price || 0))}</strong>
             <small>12x de R$ ${formatBRL(installment)}</small>
+            <button type="button" class="cart-premium-suggestion-card__button" data-add-product="${item.id}">Adicionar</button>
           </div>
-        </a>
+        </article>
       `;
     })
     .join("");
+
+  cartRecommendationsGrid.querySelectorAll("[data-add-product]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const id = Number(button.getAttribute("data-add-product"));
+      if (!id) return;
+      addOne(id);
+      feedback.textContent = "Produto adicionado ao carrinho.";
+    });
+  });
 }
 
 function applyCouponCode(rawValue) {
   const code = String(rawValue || "").trim().toUpperCase();
   if (!code) {
     feedback.textContent = "Digite um cupom para aplicar.";
+    return;
+  }
+
+  if (code !== "UZUU10") {
+    feedback.textContent = "Cupom invalido. Use UZUU10 para testar.";
     return;
   }
 
@@ -2692,9 +2767,20 @@ function renderCart() {
   updateCartCount();
   setCartExtraSpace(ids.length);
   const shipTo = loadShipTo();
+  const shippingMode = loadShippingMode();
   if (shipSummary) shipSummary.textContent = shipSummaryText(shipTo);
   renderAddressConfirmation();
   renderCartRecommendations(ids);
+
+   if (cartCepInput) {
+    cartCepInput.value = shipTo.cep || "";
+  }
+  if (shippingMethodStandard) {
+    shippingMethodStandard.checked = shippingMode === "standard";
+  }
+  if (shippingMethodExpress) {
+    shippingMethodExpress.checked = shippingMode === "express";
+  }
 
   if (clearCartBtn) {
     clearCartBtn.hidden = !ids.length;
@@ -2715,21 +2801,26 @@ function renderCart() {
     `;
     checkoutBtn.disabled = true;
     feedback.textContent = "";
+    if (shippingFeedback) {
+      shippingFeedback.textContent = "Informe seu CEP para ver as opcoes de entrega.";
+    }
+    if (cartSavingsBadge) {
+      cartSavingsBadge.textContent = "Voce economiza R$ 0,00 neste pedido";
+    }
     if (itemsCount) itemsCount.textContent = "0";
     if (freeShipCount) freeShipCount.textContent = "0";
     if (shippingValue) {
       shippingValue.textContent = "Calcular";
-      shippingValue.classList.remove("free");
-      shippingValue.classList.add("is-link");
     }
     if (summarySubtotalLabel) summarySubtotalLabel.textContent = "Subtotal (0 produtos)";
+    if (summarySubtotalAmount) summarySubtotalAmount.textContent = "R$ 0,00";
     if (summaryCouponValue) {
       summaryCouponValue.textContent = "Adicionar";
-      summaryCouponValue.classList.remove("is-applied");
-      summaryCouponValue.classList.add("is-link");
     }
     if (couponCount) couponCount.textContent = String(coupons.length);
     if (productsBeforeWrap) productsBeforeWrap.hidden = true;
+    if (productsBeforeMain) productsBeforeMain.textContent = "0";
+    if (productsBeforeCents) productsBeforeCents.textContent = "00";
     if (productsNowMain && productsNowCents) {
       productsNowMain.textContent = "0";
       productsNowCents.textContent = "00";
@@ -2738,7 +2829,8 @@ function renderCart() {
       cartTotalMain.textContent = "0";
       cartTotalCents.textContent = "00";
     }
-    if (summaryInstallments) summaryInstallments.textContent = "em ate 12x de R$ 0,00 sem juros";
+    if (summaryPixTotal) summaryPixTotal.textContent = "R$ 0,00";
+    if (summaryInstallments) summaryInstallments.textContent = "Em ate 12x de R$ 0,00 sem juros.";
     if (summaryPixValue) summaryPixValue.textContent = "ou R$ 0,00 no PIX (5% OFF)";
     renderCheckoutModalSnapshot();
     return;
@@ -2747,8 +2839,9 @@ function renderCart() {
   const cep = shipTo.cep;
 
   const grouped = groupedCart(ids);
+  const totalUnits = grouped.reduce((sum, item) => sum + (Number(item.qty) || 0), 0);
   if (cartOverviewCount) {
-    cartOverviewCount.textContent = pluralizeItems(grouped.length);
+    cartOverviewCount.textContent = `${pluralizeItems(totalUnits)} selecionado${totalUnits === 1 ? "" : "s"}`;
   }
 
   if (!grouped.length) {
@@ -2764,33 +2857,39 @@ function renderCart() {
         const color = String(item.color || "Preto").trim() || "Preto";
         const comparePricing = buildCartComparePricing(item, index);
         const totalItem = item.price * item.qty;
+        const compareTotal = Number(comparePricing.comparePrice || item.price) * item.qty;
+        const stock = Math.max(3, 12 - (index * 2) + item.qty);
         return `
-        <li class="cart-item">
-          <label class="cart-item-select" aria-label="Produto selecionado">
-            <input type="checkbox" checked disabled />
-            <span></span>
-          </label>
-          <a class="cart-item-media" href="${productHref(item.id)}"><img src="${item.image}" alt="${item.name}" loading="lazy" /></a>
-          <div class="cart-item-body">
-            <strong><a class="cart-item-link" href="${productHref(item.id)}">${item.name}</a></strong>
-            <div class="cart-item-meta">Cor: ${escapeHtml(color)} <span>&bull;</span> Tamanho: ${escapeHtml(item.size || "Unico")}</div>
-            <div class="cart-item-stock">
-              <span class="cart-item-stock__dot" aria-hidden="true"></span>
-              <span>Em estoque</span>
+        <li class="cart-premium-item">
+          <a class="cart-premium-item__media" href="${productHref(item.id)}">
+            <img src="${item.image}" alt="${item.name}" loading="lazy" />
+            ${comparePricing.badgeText ? `<span class="cart-premium-item__badge">${comparePricing.badgeText}</span>` : ""}
+          </a>
+          <div class="cart-premium-item__content">
+            <div class="cart-premium-item__top">
+              <div class="cart-premium-item__info">
+                <p class="cart-premium-item__category">${escapeHtml(item.category || "UZUU")}</p>
+                <strong><a class="cart-premium-item__title" href="${productHref(item.id)}">${escapeHtml(item.name)}</a></strong>
+                <p class="cart-premium-item__meta">Cor: ${escapeHtml(color)} &bull; Tamanho: ${escapeHtml(item.size || "Unico")}</p>
+                <p class="cart-premium-item__stock">Estoque baixo: restam ${stock} unidades</p>
+              </div>
+              <div class="cart-premium-item__price">
+                <strong>R$ ${formatBRL(totalItem)}</strong>
+                ${compareTotal > totalItem ? `<span>R$ ${formatBRL(compareTotal)}</span>` : ""}
+                <small>5% OFF no PIX</small>
+              </div>
             </div>
-          </div>
-          <div class="cart-item-qty">
-            <div class="qty-controls" aria-label="Quantidade">
-              <button class="qty-btn" data-action="dec" data-id="${item.id}" aria-label="Diminuir">-</button>
-              <span class="qty-val" aria-label="Quantidade">${item.qty}</span>
-              <button class="qty-btn" data-action="inc" data-id="${item.id}" aria-label="Aumentar">+</button>
+            <div class="cart-premium-item__bottom">
+              <div class="cart-premium-qty" aria-label="Quantidade">
+                <button data-action="dec" data-id="${item.id}" aria-label="Diminuir quantidade">-</button>
+                <span>${item.qty}</span>
+                <button data-action="inc" data-id="${item.id}" aria-label="Aumentar quantidade">+</button>
+              </div>
+              <div class="cart-premium-item__actions">
+                <a class="cart-premium-item__ghost" href="${productHref(item.id)}">Ver produto</a>
+                <button class="cart-premium-item__remove" data-action="remove" data-id="${item.id}" type="button" aria-label="Remover ${escapeHtml(item.name)} do carrinho">Remover</button>
+              </div>
             </div>
-            <button class="cart-item-remove" data-action="remove" data-id="${item.id}" type="button" aria-label="Remover ${escapeHtml(item.name)} do carrinho">Remover</button>
-          </div>
-          <div class="cart-item-pricebox">
-            <strong class="cart-item-price">R$ ${formatBRL(totalItem)}</strong>
-            ${comparePricing.compareText ? `<span class="cart-item-compare">${comparePricing.compareText}</span>` : ""}
-            ${comparePricing.badgeText ? `<span class="cart-item-discount">${comparePricing.badgeText}</span>` : ""}
           </div>
         </li>
       `;
@@ -2801,33 +2900,40 @@ function renderCart() {
   const subtotal = grouped.reduce((sum, item) => sum + item.price * item.qty, 0);
   const shipping = calcShipping(subtotal, ids.length, cep);
   const discount = calcDiscount(subtotal, coupons);
+  const totalCard = Math.max(0, subtotal - discount + (shipping ?? 0));
+  const totalPix = Math.max(0, totalCard * 0.95);
+  const compareTotalSavings = grouped.reduce((sum, item, index) => {
+    const comparePricing = buildCartComparePricing(item, index);
+    const comparePrice = Number(comparePricing.comparePrice || item.price);
+    return sum + Math.max(0, (comparePrice - Number(item.price || 0)) * item.qty);
+  }, 0);
+  const totalSavings = compareTotalSavings + discount + Math.max(0, totalCard - totalPix);
 
-  const productsBefore = subtotal;
-  const productsNow = Math.max(0, subtotal - discount);
-  const totalFinal = Math.max(0, productsNow + (shipping ?? 0));
+  const subtotalParts = moneyParts(subtotal);
+  if (productsBeforeMain) productsBeforeMain.textContent = subtotalParts.main;
+  if (productsBeforeCents) productsBeforeCents.textContent = subtotalParts.cents;
+  if (productsBeforeWrap) productsBeforeWrap.hidden = true;
 
-  const pNow = moneyParts(productsNow);
-  if (productsNowMain) productsNowMain.textContent = pNow.main;
-  if (productsNowCents) productsNowCents.textContent = pNow.cents;
-
-  if (productsBeforeWrap && productsBeforeMain && productsBeforeCents) {
-    if (discount > 0.01) {
-      const pBefore = moneyParts(productsBefore);
-      productsBeforeMain.textContent = pBefore.main;
-      productsBeforeCents.textContent = pBefore.cents;
-      productsBeforeWrap.hidden = false;
-    } else {
-      productsBeforeWrap.hidden = true;
-    }
-  }
+  const cardParts = moneyParts(totalCard);
+  if (productsNowMain) productsNowMain.textContent = cardParts.main;
+  if (productsNowCents) productsNowCents.textContent = cardParts.cents;
 
   if (cartTotalMain && cartTotalCents) {
-    const t = moneyParts(totalFinal);
+    const t = moneyParts(totalCard);
     cartTotalMain.textContent = t.main;
     cartTotalCents.textContent = t.cents;
   }
 
-  if (itemsCount) itemsCount.textContent = String(grouped.length);
+  if (summarySubtotalAmount) {
+    summarySubtotalAmount.textContent = `R$ ${formatBRL(subtotal)}`;
+  }
+  if (summaryPixTotal) {
+    summaryPixTotal.textContent = `R$ ${formatBRL(totalPix)}`;
+  }
+  if (cartSavingsBadge) {
+    cartSavingsBadge.textContent = `Voce economiza R$ ${formatBRL(totalSavings)} neste pedido`;
+  }
+  if (itemsCount) itemsCount.textContent = String(totalUnits);
   if (summarySubtotalLabel) {
     summarySubtotalLabel.textContent = `Subtotal (${grouped.length} ${grouped.length === 1 ? "produto" : "produtos"})`;
   }
@@ -2836,28 +2942,29 @@ function renderCart() {
   if (shippingValue) {
     if (shipping === null) {
       shippingValue.textContent = "Calcular";
-      shippingValue.classList.remove("free");
-      shippingValue.classList.add("is-link");
     } else if (shipping === 0) {
       shippingValue.textContent = "Gratis";
-      shippingValue.classList.add("free");
-      shippingValue.classList.remove("is-link");
     } else {
       shippingValue.textContent = `R$ ${formatBRL(shipping)}`;
-      shippingValue.classList.remove("free");
-      shippingValue.classList.remove("is-link");
+    }
+  }
+  if (shippingFeedback) {
+    if (!isCepValid(cep)) {
+      shippingFeedback.textContent = "Informe um CEP valido para liberar as opcoes de entrega.";
+    } else if (shippingMode === "express") {
+      shippingFeedback.textContent = "Entrega expressa selecionada para este pedido.";
+    } else {
+      shippingFeedback.textContent = shipping === 0
+        ? "Frete padrao gratis para este pedido."
+        : "Frete padrao calculado para o seu CEP.";
     }
   }
 
   if (summaryCouponValue) {
     if (discount > 0.01) {
       summaryCouponValue.textContent = `-R$ ${formatBRL(discount)}`;
-      summaryCouponValue.classList.add("is-applied");
-      summaryCouponValue.classList.remove("is-link");
     } else {
       summaryCouponValue.textContent = "Adicionar";
-      summaryCouponValue.classList.remove("is-applied");
-      summaryCouponValue.classList.add("is-link");
     }
   }
 
@@ -2866,11 +2973,11 @@ function renderCart() {
   }
 
   if (summaryInstallments) {
-    summaryInstallments.textContent = `em ate 12x de R$ ${formatBRL(totalFinal / 12)} sem juros`;
+    summaryInstallments.textContent = `Em ate 12x de R$ ${formatBRL(totalCard / 12)} sem juros.`;
   }
 
   if (summaryPixValue) {
-    summaryPixValue.textContent = `ou R$ ${formatBRL(totalFinal * 0.95)} no PIX (5% OFF)`;
+    summaryPixValue.textContent = `ou R$ ${formatBRL(totalPix)} no PIX (5% OFF)`;
   }
 
   checkoutBtn.disabled = false;
@@ -2902,8 +3009,46 @@ couponInput?.addEventListener("keydown", (event) => {
   applyCouponCode(couponInput.value || "");
 });
 
+cartCepApply?.addEventListener("click", () => {
+  const next = saveShipCepFromCart(cartCepInput?.value || "");
+  if (!isCepValid(next.cep)) {
+    if (shippingFeedback) {
+      shippingFeedback.textContent = "Digite um CEP valido para calcular o frete.";
+    }
+    return;
+  }
+  feedback.textContent = "CEP atualizado para calcular o frete do pedido.";
+  renderCart();
+});
+
+cartCepInput?.addEventListener("input", () => {
+  const formatted = normalizeCep(cartCepInput.value || "");
+  if (cartCepInput.value !== formatted) {
+    cartCepInput.value = formatted;
+  }
+});
+
+cartCepInput?.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter") return;
+  event.preventDefault();
+  cartCepApply?.click();
+});
+
+shippingMethodStandard?.addEventListener("change", () => {
+  if (!shippingMethodStandard.checked) return;
+  saveShippingMode("standard");
+  renderCart();
+});
+
+shippingMethodExpress?.addEventListener("change", () => {
+  if (!shippingMethodExpress.checked) return;
+  saveShippingMode("express");
+  renderCart();
+});
+
 shippingValue?.addEventListener("click", () => {
-  window.location.href = "../entrega/";
+  cartCepInput?.focus();
+  cartCepInput?.scrollIntoView({ behavior: "smooth", block: "center" });
 });
 
 summaryCouponValue?.addEventListener("click", () => {

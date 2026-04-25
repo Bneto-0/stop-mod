@@ -10,7 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=45" />
+  <link rel="stylesheet" href="../style.css?v=20260424black" />
+  <link rel="stylesheet" href="style.css?v=49" />
   <script>window.__UZUU_API_BASE__ = "/ops-api";</script>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6485539380158983" crossorigin="anonymous"></script>
 <link rel="stylesheet" href="/assets/site-header.css?v=28" />
@@ -19,174 +20,237 @@
   <div id="site-header-root"></div>
   <script src="/assets/site-header.js?v=17"></script>
 
-  <main id="cart" class="cart-page container">
-    <section class="cart-benefits" aria-label="Beneficios da compra">
-      <article class="cart-benefit">
-        <span class="cart-benefit__icon" aria-hidden="true">
+  <main id="cart" class="cart-premium-page container">
+    <section class="cart-premium-progress" aria-label="Etapas da compra">
+      <div class="cart-premium-progress__steps">
+        <span class="is-active">Carrinho</span>
+        <span>Identificacao</span>
+        <span>Pagamento</span>
+        <span>Confirmacao</span>
+      </div>
+      <a class="cart-premium-progress__link" href="../#produtos">Continuar comprando</a>
+    </section>
+
+    <section class="cart-premium-benefits" aria-label="Beneficios da compra">
+      <article class="cart-premium-benefit">
+        <span class="cart-premium-benefit__icon" aria-hidden="true">
           <svg viewBox="0 0 24 24"><path d="M3 7h11v8H3zM14 9h3l4 4v2h-2a2 2 0 1 1-4 0H9a2 2 0 1 1-4 0H3V7m4 10a1 1 0 1 0 0 2 1 1 0 0 0 0-2m10 0a1 1 0 1 0 .001 2A1 1 0 0 0 17 17zM14 10v3h5"></path></svg>
         </span>
-        <div class="cart-benefit__copy">
-          <strong>Frete rapido para todo o Brasil</strong>
+        <div>
+          <strong>Frete gratis para todo o Brasil</strong>
           <span>Receba com agilidade</span>
         </div>
       </article>
-
-      <article class="cart-benefit">
-        <span class="cart-benefit__icon" aria-hidden="true">
+      <article class="cart-premium-benefit">
+        <span class="cart-premium-benefit__icon" aria-hidden="true">
           <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4zM8 10h4M8 14h6M16 10h2"></path></svg>
         </span>
-        <div class="cart-benefit__copy">
+        <div>
           <strong>Parcele em ate 12x sem juros</strong>
           <span>No cartao de credito</span>
         </div>
       </article>
-
-      <article class="cart-benefit">
-        <span class="cart-benefit__icon" aria-hidden="true">
+      <article class="cart-premium-benefit">
+        <span class="cart-premium-benefit__icon" aria-hidden="true">
           <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15.36-6.36M21 12a9 9 0 0 1-15.36 6.36M18 3v4h-4M6 21v-4h4"></path></svg>
         </span>
-        <div class="cart-benefit__copy">
-          <strong>Troca facil em ate 7 dias</strong>
-          <span>Garantia de satisfacao</span>
+        <div>
+          <strong>Troca gratis em ate 7 dias</strong>
+          <span>Satisfacao garantida</span>
         </div>
       </article>
-
-      <article class="cart-benefit">
-        <span class="cart-benefit__icon" aria-hidden="true">
+      <article class="cart-premium-benefit">
+        <span class="cart-premium-benefit__icon" aria-hidden="true">
           <svg viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.97 3.05 7.98 7 9 3.95-1.02 7-4.03 7-9V6l-7-3zm0 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-3 8a4 4 0 0 1 6 0"></path></svg>
         </span>
-        <div class="cart-benefit__copy">
+        <div>
           <strong>Compra 100% segura</strong>
           <span>Seus dados protegidos</span>
         </div>
       </article>
     </section>
 
-    <div class="cart-shell">
-      <section class="cart-main" aria-label="Conteudo do carrinho">
-        <header class="cart-overview">
-          <div class="cart-overview__copy">
-            <h1 class="cart-overview__title">Meu carrinho</h1>
-            <p id="cart-overview-count" class="cart-overview__count">0 itens</p>
-          </div>
-          <button id="clear-cart-btn" class="cart-clear-btn" type="button">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V5h6v2m-7 3v8m4-8v8m4-8v8M7 7l1 13h8l1-13"></path></svg>
-            <span>Limpar carrinho</span>
-          </button>
-        </header>
+    <header class="cart-premium-hero">
+      <div class="cart-premium-hero__copy">
+        <p class="cart-premium-hero__eyebrow">Carrinho UZUU</p>
+        <h1>Revise seu pedido</h1>
+        <p id="cart-overview-count" class="cart-premium-hero__count">0 itens selecionados</p>
+      </div>
+      <div id="cart-savings-badge" class="cart-premium-savings">Voce economiza R$ 0,00 neste pedido</div>
+    </header>
 
-        <section class="cart-table-card" aria-label="Lista de produtos">
-          <div class="cart-table-head" aria-hidden="true">
-            <span class="cart-table-head__product">Produto</span>
-            <span class="cart-table-head__qty">Quantidade</span>
-            <span class="cart-table-head__price">Preco</span>
+    <div class="cart-premium-layout">
+      <section class="cart-premium-main" aria-label="Conteudo do carrinho">
+        <section class="cart-premium-panel" aria-label="Produtos no carrinho">
+          <div class="cart-premium-panel__head">
+            <div>
+              <h2>Produtos no carrinho</h2>
+              <p>Confira os itens, ajuste as quantidades e finalize com seguranca.</p>
+            </div>
+            <button id="clear-cart-btn" class="cart-premium-clear" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V5h6v2m-7 3v8m4-8v8m4-8v8M7 7l1 13h8l1-13"></path></svg>
+              <span>Limpar carrinho</span>
+            </button>
           </div>
-          <ul id="cart-items" class="cart-table-list"></ul>
+          <ul id="cart-items" class="cart-premium-items"></ul>
         </section>
 
-        <section class="cart-coupon-card" aria-label="Cupom de desconto">
-          <div class="cart-coupon-card__head">
-            <span class="cart-coupon-card__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M20 10.5 12.5 18a2 2 0 0 1-2.83 0L4 12.33V6h6.33L17 12.67a2 2 0 0 1 0 2.83Z"></path><circle cx="9" cy="9" r="1.4"></circle></svg>
-            </span>
-            <strong>Cupom de desconto</strong>
-          </div>
-          <div class="cart-coupon-card__form">
-            <input id="coupon-input" type="text" placeholder="Digite seu cupom" autocomplete="off" />
-            <button id="apply-coupon-btn" type="button">Aplicar</button>
-          </div>
-        </section>
+        <div class="cart-premium-support-grid">
+          <section class="cart-premium-panel cart-premium-panel--compact" aria-label="Calcular frete">
+            <div class="cart-premium-panel__head cart-premium-panel__head--compact">
+              <div>
+                <h3>Calcular frete</h3>
+                <p>Informe seu CEP e escolha a melhor entrega.</p>
+              </div>
+              <a class="cart-premium-inline-link" href="../entrega/">Editar endereco</a>
+            </div>
 
-        <section class="cart-recommendations" aria-label="Voce tambem pode gostar">
-          <div class="cart-recommendations__head">
-            <h2>Voce tambem pode gostar</h2>
+            <div class="cart-premium-inline-form">
+              <input id="cart-cep-input" type="text" inputmode="numeric" placeholder="00000-000" autocomplete="postal-code" />
+              <button id="cart-cep-apply" type="button">OK</button>
+            </div>
+            <p id="shipping-feedback" class="cart-premium-inline-note"></p>
+
+            <div class="cart-premium-shipping-options">
+              <label class="cart-premium-shipping-option cart-premium-shipping-option--highlight">
+                <input id="shipping-method-standard" type="radio" name="shipping-method" value="standard" checked />
+                <span class="cart-premium-shipping-option__copy">
+                  <strong>Entrega padrao</strong>
+                  <small>5 a 8 dias uteis</small>
+                </span>
+                <span class="cart-premium-shipping-option__price is-free">Gratis</span>
+              </label>
+
+              <label class="cart-premium-shipping-option">
+                <input id="shipping-method-express" type="radio" name="shipping-method" value="express" />
+                <span class="cart-premium-shipping-option__copy">
+                  <strong>Entrega expressa</strong>
+                  <small>2 a 4 dias uteis</small>
+                </span>
+                <span class="cart-premium-shipping-option__price">R$ 19,90</span>
+              </label>
+            </div>
+          </section>
+
+          <section class="cart-premium-panel cart-premium-panel--compact" aria-label="Cupom de desconto">
+            <div class="cart-premium-panel__head cart-premium-panel__head--compact">
+              <div>
+                <h3>Cupom de desconto</h3>
+                <p>Use UZUU10 para testar 10% OFF.</p>
+              </div>
+            </div>
+            <div class="cart-premium-inline-form">
+              <input id="coupon-input" type="text" placeholder="Digite seu cupom" autocomplete="off" />
+              <button id="apply-coupon-btn" type="button">Aplicar</button>
+            </div>
+          </section>
+        </div>
+
+        <section class="cart-premium-recommendations" aria-label="Complete seu look">
+          <div class="cart-premium-section-head">
+            <div>
+              <h2>Complete seu look</h2>
+              <p>Produtos que combinam com seu carrinho.</p>
+            </div>
             <a href="../#produtos">Ver todos</a>
           </div>
-          <div id="cart-recommendations-grid" class="cart-recommendations__grid"></div>
+          <div id="cart-recommendations-grid" class="cart-premium-recommendations__grid"></div>
         </section>
       </section>
 
-      <aside class="cart-side" aria-label="Resumo do pedido">
-        <section class="cart-summary-card">
-          <h2 class="cart-summary-card__title">Resumo da compra</h2>
+      <aside class="cart-premium-side" aria-label="Resumo do pedido">
+        <section class="cart-premium-summary">
+          <h2>Resumo do pedido</h2>
 
-          <div class="cart-summary-card__rows">
-            <div class="cart-summary-row">
+          <div class="cart-premium-summary__rows">
+            <div class="cart-premium-summary__row">
               <span id="summary-subtotal-label">Subtotal (0 produtos)</span>
-              <span class="sum-prices">
-                <span id="products-before-wrap" class="money before" hidden>
-                  R$ <span id="products-before-main">0</span><sup id="products-before-cents">00</sup>
-                </span>
-                <span class="money now">
-                  R$ <span id="products-now-main">0</span><sup id="products-now-cents">00</sup>
-                </span>
-              </span>
+              <strong id="summary-subtotal-amount">R$ 0,00</strong>
             </div>
-
-            <div class="cart-summary-row">
+            <div class="cart-premium-summary__row">
               <span>Frete</span>
-              <button id="shipping-value" class="cart-summary-row__action ship-value is-link" type="button">Calcular</button>
+              <button id="shipping-value" class="cart-premium-summary__action" type="button">Calcular</button>
             </div>
-
-            <div class="cart-summary-row">
-              <span>Cupons</span>
-              <button id="summary-coupon-value" class="cart-summary-row__action is-link" type="button">Adicionar</button>
+            <div class="cart-premium-summary__row">
+              <span>Cupom</span>
+              <button id="summary-coupon-value" class="cart-premium-summary__action" type="button">Adicionar</button>
             </div>
           </div>
 
-          <div class="cart-summary-total">
-            <div class="cart-summary-total__line">
-              <span>Total</span>
-              <span class="money total">
-                R$ <span id="cart-total-main">0</span><sup id="cart-total-cents">00</sup>
+          <div class="cart-premium-total cart-premium-total--highlight">
+            <p>Melhor opcao</p>
+            <div class="cart-premium-total__line">
+              <span>Total no Pix</span>
+              <strong id="summary-pix-total">R$ 0,00</strong>
+            </div>
+            <small>Economia automatica de 5% pagando com Pix.</small>
+          </div>
+
+          <div class="cart-premium-total">
+            <div class="cart-premium-total__line">
+              <span>Total no cartao</span>
+              <strong>R$ <span id="cart-total-main">0</span><sup id="cart-total-cents">00</sup></strong>
+            </div>
+            <small id="summary-installments">Em ate 12x de R$ 0,00 sem juros.</small>
+          </div>
+
+          <div class="cart-premium-actions">
+            <button id="checkout" class="cart-premium-primary" disabled>Finalizar compra com seguranca</button>
+            <a class="cart-premium-secondary" href="../#produtos">Continuar comprando</a>
+          </div>
+
+          <div class="cart-premium-payments">
+            <p>Formas de pagamento</p>
+            <div class="cart-premium-payments__chips">
+              <span>PIX</span>
+              <span>Visa</span>
+              <span>Mastercard</span>
+              <span>Elo</span>
+              <span>Hipercard</span>
+            </div>
+          </div>
+
+          <div class="cart-premium-trust">
+            <article class="cart-premium-trust__item">
+              <span aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.97 3.05 7.98 7 9 3.95-1.02 7-4.03 7-9V6l-7-3zm0 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-3 8a4 4 0 0 1 6 0"></path></svg>
               </span>
-            </div>
-            <p id="summary-installments" class="cart-summary-total__note">em ate 12x de R$ 0,00 sem juros</p>
-            <p id="summary-pix-value" class="cart-summary-total__pix">ou R$ 0,00 no PIX (5% OFF)</p>
+              <div>
+                <strong>Pagamento criptografado</strong>
+                <small>Ambiente seguro e certificado SSL.</small>
+              </div>
+            </article>
+            <article class="cart-premium-trust__item">
+              <span aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15.36-6.36M21 12a9 9 0 0 1-15.36 6.36M18 3v4h-4M6 21v-4h4"></path></svg>
+              </span>
+              <div>
+                <strong>Troca facilitada</strong>
+                <small>Suporte em ate 7 dias apos a compra.</small>
+              </div>
+            </article>
+            <article class="cart-premium-trust__item">
+              <span aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 3 4 7v10l8 4 8-4V7l-8-4Zm0 0v18M4 7l8 4 8-4"></path></svg>
+              </span>
+              <div>
+                <strong>Atualizacoes do pedido</strong>
+                <small>Acompanhe o status por e-mail e na sua conta.</small>
+              </div>
+            </article>
           </div>
 
-          <div class="cart-actions">
-            <button id="checkout" class="btn primary" disabled><span aria-hidden="true">&#128274;</span> Finalizar compra</button>
-            <a class="btn secondary cart-continue" href="../#produtos">Continuar comprando</a>
-          </div>
-
-          <p id="feedback" class="feedback"></p>
+          <p id="feedback" class="cart-premium-feedback"></p>
           <span id="items-count" hidden>0</span>
           <span id="free-ship-count" hidden>0</span>
           <span id="coupon-count" hidden>0</span>
+          <span id="products-before-main" hidden>0</span>
+          <span id="products-before-cents" hidden>00</span>
+          <span id="products-now-main" hidden>0</span>
+          <span id="products-now-cents" hidden>00</span>
+          <span id="products-before-wrap" hidden></span>
+          <p id="summary-pix-value" hidden>ou R$ 0,00 no PIX (5% OFF)</p>
           <p id="payment-selected" class="pay-selected-inline" hidden></p>
-        </section>
-
-        <section class="cart-trust-card" aria-label="Seguranca e atendimento">
-          <article class="cart-trust-item">
-            <span class="cart-trust-item__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.97 3.05 7.98 7 9 3.95-1.02 7-4.03 7-9V6l-7-3zm0 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-3 8a4 4 0 0 1 6 0"></path></svg>
-            </span>
-            <div>
-              <strong>Site protegido</strong>
-              <p>Certificado SSL ativo</p>
-            </div>
-          </article>
-
-          <article class="cart-trust-item">
-            <span class="cart-trust-item__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M4 12h4l2-5 4 10 2-5h4M6 18h12"></path></svg>
-            </span>
-            <div>
-              <strong>Pagamento protegido</strong>
-              <p>Dados criptografados</p>
-            </div>
-          </article>
-
-          <article class="cart-trust-item">
-            <span class="cart-trust-item__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15.36-6.36M21 12a9 9 0 0 1-15.36 6.36M18 3v4h-4M6 21v-4h4"></path></svg>
-            </span>
-            <div>
-              <strong>Troca facilitada</strong>
-              <p>Suporte em ate 7 dias</p>
-            </div>
-          </article>
         </section>
       </aside>
     </div>
@@ -367,17 +431,12 @@
     </section>
   </div>
 
-  <footer>
-    <div class="footer-links">
-      <a href="../privacidade/">Politica de privacidade</a>
-      <a href="../termos/">Termos de servico</a>
-    </div>
-    <p>(c) 2026 Uzuu. Todos os direitos reservados.</p>
-  </footer>
+  <div id="site-footer-root"></div>
+<script src="/assets/site-footer.js?v=1"></script>
 
   <script src="https://assets.pagseguro.com.br/checkout-sdk-js/rc/dist/browser/pagseguro.min.js"></script>
   <script src="../assets/catalog.js?v=10"></script>
-  <script src="script.js?v=62"></script>
+  <script src="script.js?v=63"></script>
   <script src="../assets/menu-dropdown.js?v=22"></script>
 </body>
 </html>
