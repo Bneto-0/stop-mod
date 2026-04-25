@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../style.css?v=20260424black" />
-  <link rel="stylesheet" href="style.css?v=49" />
+  <link rel="stylesheet" href="style.css?v=50" />
   <script>window.__UZUU_API_BASE__ = "/ops-api";</script>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6485539380158983" crossorigin="anonymous"></script>
 <link rel="stylesheet" href="/assets/site-header.css?v=28" />
@@ -20,227 +20,171 @@
   <div id="site-header-root"></div>
   <script src="/assets/site-header.js?v=17"></script>
 
-  <main id="cart" class="cart-premium-page container">
-    <section class="cart-premium-progress" aria-label="Etapas da compra">
-      <div class="cart-premium-progress__steps">
-        <span class="is-active">Carrinho</span>
-        <span>Identificacao</span>
-        <span>Pagamento</span>
-        <span>Confirmacao</span>
-      </div>
-      <a class="cart-premium-progress__link" href="../#produtos">Continuar comprando</a>
-    </section>
-
-    <section class="cart-premium-benefits" aria-label="Beneficios da compra">
-      <article class="cart-premium-benefit">
-        <span class="cart-premium-benefit__icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M3 7h11v8H3zM14 9h3l4 4v2h-2a2 2 0 1 1-4 0H9a2 2 0 1 1-4 0H3V7m4 10a1 1 0 1 0 0 2 1 1 0 0 0 0-2m10 0a1 1 0 1 0 .001 2A1 1 0 0 0 17 17zM14 10v3h5"></path></svg>
-        </span>
-        <div>
-          <strong>Frete gratis para todo o Brasil</strong>
-          <span>Receba com agilidade</span>
-        </div>
-      </article>
-      <article class="cart-premium-benefit">
-        <span class="cart-premium-benefit__icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4zM8 10h4M8 14h6M16 10h2"></path></svg>
-        </span>
-        <div>
-          <strong>Parcele em ate 12x sem juros</strong>
-          <span>No cartao de credito</span>
-        </div>
-      </article>
-      <article class="cart-premium-benefit">
-        <span class="cart-premium-benefit__icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15.36-6.36M21 12a9 9 0 0 1-15.36 6.36M18 3v4h-4M6 21v-4h4"></path></svg>
-        </span>
-        <div>
-          <strong>Troca gratis em ate 7 dias</strong>
-          <span>Satisfacao garantida</span>
-        </div>
-      </article>
-      <article class="cart-premium-benefit">
-        <span class="cart-premium-benefit__icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.97 3.05 7.98 7 9 3.95-1.02 7-4.03 7-9V6l-7-3zm0 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-3 8a4 4 0 0 1 6 0"></path></svg>
-        </span>
-        <div>
-          <strong>Compra 100% segura</strong>
-          <span>Seus dados protegidos</span>
-        </div>
-      </article>
-    </section>
-
-    <header class="cart-premium-hero">
-      <div class="cart-premium-hero__copy">
-        <p class="cart-premium-hero__eyebrow">Carrinho UZUU</p>
-        <h1>Revise seu pedido</h1>
-        <p id="cart-overview-count" class="cart-premium-hero__count">0 itens selecionados</p>
-      </div>
-      <div id="cart-savings-badge" class="cart-premium-savings">Voce economiza R$ 0,00 neste pedido</div>
-    </header>
-
-    <div class="cart-premium-layout">
-      <section class="cart-premium-main" aria-label="Conteudo do carrinho">
-        <section class="cart-premium-panel" aria-label="Produtos no carrinho">
-          <div class="cart-premium-panel__head">
+  <main id="cart" class="cart-obsidian-page container">
+    <div class="cart-obsidian-layout">
+      <section class="cart-obsidian-main" aria-label="Conteudo do carrinho">
+        <section class="cart-obsidian-card cart-obsidian-items-card">
+          <div class="cart-obsidian-head">
             <div>
-              <h2>Produtos no carrinho</h2>
-              <p>Confira os itens, ajuste as quantidades e finalize com seguranca.</p>
+              <h1 id="cart-overview-title">Meu Carrinho (0)</h1>
+              <p id="cart-overview-count" class="cart-obsidian-select-all">
+                <span aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M20 7 9 18l-5-5"></path></svg>
+                </span>
+                Selecione todos os itens
+              </p>
             </div>
-            <button id="clear-cart-btn" class="cart-premium-clear" type="button">
+            <button id="clear-cart-btn" class="cart-obsidian-clear" type="button">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V5h6v2m-7 3v8m4-8v8m4-8v8M7 7l1 13h8l1-13"></path></svg>
               <span>Limpar carrinho</span>
             </button>
           </div>
-          <ul id="cart-items" class="cart-premium-items"></ul>
+          <ul id="cart-items" class="cart-obsidian-items"></ul>
         </section>
 
-        <div class="cart-premium-support-grid">
-          <section class="cart-premium-panel cart-premium-panel--compact" aria-label="Calcular frete">
-            <div class="cart-premium-panel__head cart-premium-panel__head--compact">
-              <div>
+        <section class="cart-obsidian-card cart-obsidian-recommendations" aria-label="Voce tambem pode gostar">
+          <div class="cart-obsidian-section-head">
+            <h2>Voce tambem pode gostar</h2>
+            <a href="../#produtos">Ver tudo</a>
+          </div>
+          <div id="cart-recommendations-grid" class="cart-obsidian-recommendations__grid"></div>
+        </section>
+
+        <section class="cart-obsidian-benefits" aria-label="Vantagens da compra">
+          <article class="cart-obsidian-benefit">
+            <span aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15.36-6.36M21 12a9 9 0 0 1-15.36 6.36M18 3v4h-4M6 21v-4h4"></path></svg>
+            </span>
+            <div>
+              <strong>Troca facil</strong>
+              <small>Ate 30 dias para trocar</small>
+            </div>
+          </article>
+          <article class="cart-obsidian-benefit">
+            <span aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M3 7h11v8H3zM14 9h3l4 4v2h-2a2 2 0 1 1-4 0H9a2 2 0 1 1-4 0H3V7m4 10a1 1 0 1 0 0 2 1 1 0 0 0 0-2m10 0a1 1 0 1 0 .001 2A1 1 0 0 0 17 17zM14 10v3h5"></path></svg>
+            </span>
+            <div>
+              <strong>Frete gratis</strong>
+              <small>Em compras acima de R$250</small>
+            </div>
+          </article>
+          <article class="cart-obsidian-benefit">
+            <span aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4zM8 10h4M8 14h6M16 10h2"></path></svg>
+            </span>
+            <div>
+              <strong>Parcele em ate 12x</strong>
+              <small>No cartao de credito</small>
+            </div>
+          </article>
+          <article class="cart-obsidian-benefit">
+            <span aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.97 3.05 7.98 7 9 3.95-1.02 7-4.03 7-9V6l-7-3zm0 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-3 8a4 4 0 0 1 6 0"></path></svg>
+            </span>
+            <div>
+              <strong>Compra segura</strong>
+              <small>Seus dados protegidos</small>
+            </div>
+          </article>
+        </section>
+
+        <section id="cart-tools-panel" class="cart-obsidian-tools" hidden aria-label="Ferramentas do carrinho">
+          <div class="cart-obsidian-tools__grid">
+            <article class="cart-obsidian-tool-card">
+              <div class="cart-obsidian-tool-head">
                 <h3>Calcular frete</h3>
-                <p>Informe seu CEP e escolha a melhor entrega.</p>
+                <p>Informe o CEP para atualizar a entrega.</p>
               </div>
-              <a class="cart-premium-inline-link" href="../entrega/">Editar endereco</a>
-            </div>
+              <div class="cart-obsidian-inline-form">
+                <input id="cart-cep-input" type="text" inputmode="numeric" placeholder="00000-000" autocomplete="postal-code" />
+                <button id="cart-cep-apply" type="button">OK</button>
+              </div>
+              <div class="cart-obsidian-shipping-options">
+                <label class="cart-obsidian-shipping-option">
+                  <input id="shipping-method-standard" type="radio" name="shipping-method" value="standard" checked />
+                  <span>Entrega padrao</span>
+                  <strong>Gratis</strong>
+                </label>
+                <label class="cart-obsidian-shipping-option">
+                  <input id="shipping-method-express" type="radio" name="shipping-method" value="express" />
+                  <span>Entrega expressa</span>
+                  <strong>R$ 19,90</strong>
+                </label>
+              </div>
+              <p id="shipping-feedback" class="cart-obsidian-inline-note"></p>
+            </article>
 
-            <div class="cart-premium-inline-form">
-              <input id="cart-cep-input" type="text" inputmode="numeric" placeholder="00000-000" autocomplete="postal-code" />
-              <button id="cart-cep-apply" type="button">OK</button>
-            </div>
-            <p id="shipping-feedback" class="cart-premium-inline-note"></p>
-
-            <div class="cart-premium-shipping-options">
-              <label class="cart-premium-shipping-option cart-premium-shipping-option--highlight">
-                <input id="shipping-method-standard" type="radio" name="shipping-method" value="standard" checked />
-                <span class="cart-premium-shipping-option__copy">
-                  <strong>Entrega padrao</strong>
-                  <small>5 a 8 dias uteis</small>
-                </span>
-                <span class="cart-premium-shipping-option__price is-free">Gratis</span>
-              </label>
-
-              <label class="cart-premium-shipping-option">
-                <input id="shipping-method-express" type="radio" name="shipping-method" value="express" />
-                <span class="cart-premium-shipping-option__copy">
-                  <strong>Entrega expressa</strong>
-                  <small>2 a 4 dias uteis</small>
-                </span>
-                <span class="cart-premium-shipping-option__price">R$ 19,90</span>
-              </label>
-            </div>
-          </section>
-
-          <section class="cart-premium-panel cart-premium-panel--compact" aria-label="Cupom de desconto">
-            <div class="cart-premium-panel__head cart-premium-panel__head--compact">
-              <div>
+            <article class="cart-obsidian-tool-card">
+              <div class="cart-obsidian-tool-head">
                 <h3>Cupom de desconto</h3>
                 <p>Use UZUU10 para testar 10% OFF.</p>
               </div>
-            </div>
-            <div class="cart-premium-inline-form">
-              <input id="coupon-input" type="text" placeholder="Digite seu cupom" autocomplete="off" />
-              <button id="apply-coupon-btn" type="button">Aplicar</button>
-            </div>
-          </section>
-        </div>
-
-        <section class="cart-premium-recommendations" aria-label="Complete seu look">
-          <div class="cart-premium-section-head">
-            <div>
-              <h2>Complete seu look</h2>
-              <p>Produtos que combinam com seu carrinho.</p>
-            </div>
-            <a href="../#produtos">Ver todos</a>
+              <div class="cart-obsidian-inline-form">
+                <input id="coupon-input" type="text" placeholder="Digite seu cupom" autocomplete="off" />
+                <button id="apply-coupon-btn" type="button">Aplicar</button>
+              </div>
+            </article>
           </div>
-          <div id="cart-recommendations-grid" class="cart-premium-recommendations__grid"></div>
         </section>
       </section>
 
-      <aside class="cart-premium-side" aria-label="Resumo do pedido">
-        <section class="cart-premium-summary">
+      <aside class="cart-obsidian-side" aria-label="Resumo do pedido">
+        <section class="cart-obsidian-card cart-obsidian-summary">
           <h2>Resumo do pedido</h2>
 
-          <div class="cart-premium-summary__rows">
-            <div class="cart-premium-summary__row">
-              <span id="summary-subtotal-label">Subtotal (0 produtos)</span>
+          <div class="cart-obsidian-summary__rows">
+            <div class="cart-obsidian-summary__row">
+              <span id="summary-subtotal-label">Subtotal (0 itens)</span>
               <strong id="summary-subtotal-amount">R$ 0,00</strong>
             </div>
-            <div class="cart-premium-summary__row">
+            <div class="cart-obsidian-summary__row">
+              <span>Descontos</span>
+              <strong id="summary-discount-total" class="is-discount">-R$ 0,00</strong>
+            </div>
+            <div class="cart-obsidian-summary__row">
               <span>Frete</span>
-              <button id="shipping-value" class="cart-premium-summary__action" type="button">Calcular</button>
-            </div>
-            <div class="cart-premium-summary__row">
-              <span>Cupom</span>
-              <button id="summary-coupon-value" class="cart-premium-summary__action" type="button">Adicionar</button>
+              <button id="shipping-value" class="cart-obsidian-summary__action" type="button">Gratis</button>
             </div>
           </div>
 
-          <div class="cart-premium-total cart-premium-total--highlight">
-            <p>Melhor opcao</p>
-            <div class="cart-premium-total__line">
-              <span>Total no Pix</span>
-              <strong id="summary-pix-total">R$ 0,00</strong>
-            </div>
-            <small>Economia automatica de 5% pagando com Pix.</small>
+          <div class="cart-obsidian-total">
+            <span>Total</span>
+            <strong>R$ <span id="cart-total-main">0</span><sup id="cart-total-cents">00</sup></strong>
           </div>
 
-          <div class="cart-premium-total">
-            <div class="cart-premium-total__line">
-              <span>Total no cartao</span>
-              <strong>R$ <span id="cart-total-main">0</span><sup id="cart-total-cents">00</sup></strong>
-            </div>
-            <small id="summary-installments">Em ate 12x de R$ 0,00 sem juros.</small>
-          </div>
-
-          <div class="cart-premium-actions">
-            <button id="checkout" class="cart-premium-primary" disabled>Finalizar compra com seguranca</button>
-            <a class="cart-premium-secondary" href="../#produtos">Continuar comprando</a>
-          </div>
-
-          <div class="cart-premium-payments">
-            <p>Formas de pagamento</p>
-            <div class="cart-premium-payments__chips">
-              <span>PIX</span>
-              <span>Visa</span>
-              <span>Mastercard</span>
-              <span>Elo</span>
-              <span>Hipercard</span>
-            </div>
-          </div>
-
-          <div class="cart-premium-trust">
-            <article class="cart-premium-trust__item">
+          <div class="cart-obsidian-pix">
+            <div class="cart-obsidian-pix__label">
               <span aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.97 3.05 7.98 7 9 3.95-1.02 7-4.03 7-9V6l-7-3zm0 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-3 8a4 4 0 0 1 6 0"></path></svg>
+                <svg viewBox="0 0 24 24"><path d="M20 7 9 18l-5-5"></path></svg>
               </span>
-              <div>
-                <strong>Pagamento criptografado</strong>
-                <small>Ambiente seguro e certificado SSL.</small>
-              </div>
-            </article>
-            <article class="cart-premium-trust__item">
-              <span aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15.36-6.36M21 12a9 9 0 0 1-15.36 6.36M18 3v4h-4M6 21v-4h4"></path></svg>
-              </span>
-              <div>
-                <strong>Troca facilitada</strong>
-                <small>Suporte em ate 7 dias apos a compra.</small>
-              </div>
-            </article>
-            <article class="cart-premium-trust__item">
-              <span aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M12 3 4 7v10l8 4 8-4V7l-8-4Zm0 0v18M4 7l8 4 8-4"></path></svg>
-              </span>
-              <div>
-                <strong>Atualizacoes do pedido</strong>
-                <small>Acompanhe o status por e-mail e na sua conta.</small>
-              </div>
-            </article>
+              <small>5% OFF no PIX</small>
+            </div>
+            <strong id="summary-pix-total">R$ 0,00</strong>
           </div>
 
-          <p id="feedback" class="cart-premium-feedback"></p>
+          <div class="cart-obsidian-actions">
+            <button id="checkout" class="cart-obsidian-primary" disabled>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 1 1 10 0v3M6 11h12l-1 9H7l-1-9Z"></path></svg>
+              Finalizar compra
+            </button>
+            <a class="cart-obsidian-secondary" href="../#produtos">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h2l2.2 9.1a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.76L20 7H7"></path><circle cx="10" cy="19" r="1.5"></circle><circle cx="17" cy="19" r="1.5"></circle></svg>
+              Continuar comprando
+            </a>
+          </div>
+
+          <button id="summary-coupon-value" class="cart-obsidian-inline-link" type="button">Aplicar cupom</button>
+
+          <div class="cart-obsidian-secure">
+            <span aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.97 3.05 7.98 7 9 3.95-1.02 7-4.03 7-9V6l-7-3zm0 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-3 8a4 4 0 0 1 6 0"></path></svg>
+            </span>
+            <small>Compra 100% segura</small>
+          </div>
+
+          <p id="summary-installments" class="cart-obsidian-installments">Em ate 12x de R$ 0,00</p>
+          <p id="feedback" class="cart-obsidian-feedback"></p>
           <span id="items-count" hidden>0</span>
           <span id="free-ship-count" hidden>0</span>
           <span id="coupon-count" hidden>0</span>
@@ -249,8 +193,28 @@
           <span id="products-now-main" hidden>0</span>
           <span id="products-now-cents" hidden>00</span>
           <span id="products-before-wrap" hidden></span>
-          <p id="summary-pix-value" hidden>ou R$ 0,00 no PIX (5% OFF)</p>
+          <p id="summary-pix-value" hidden>R$ 0,00</p>
           <p id="payment-selected" class="pay-selected-inline" hidden></p>
+          <span id="cart-savings-badge" hidden>0</span>
+        </section>
+
+        <section class="cart-obsidian-card cart-obsidian-goal">
+          <div class="cart-obsidian-goal__head">
+            <span aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M3 7h11v8H3zM14 9h3l4 4v2h-2a2 2 0 1 1-4 0H9a2 2 0 1 1-4 0H3V7m4 10a1 1 0 1 0 0 2 1 1 0 0 0 0-2m10 0a1 1 0 1 0 .001 2A1 1 0 0 0 17 17zM14 10v3h5"></path></svg>
+            </span>
+            <div>
+              <strong>Frete gratis</strong>
+              <p id="cart-progress-copy">Adicione mais R$ 250,00 para ganhar frete gratis.</p>
+            </div>
+          </div>
+          <div class="cart-obsidian-goal__bar">
+            <span id="cart-progress-fill"></span>
+          </div>
+          <div class="cart-obsidian-goal__labels">
+            <small id="cart-progress-current">R$ 0,00</small>
+            <small>R$ 250,00</small>
+          </div>
         </section>
       </aside>
     </div>
@@ -436,7 +400,7 @@
 
   <script src="https://assets.pagseguro.com.br/checkout-sdk-js/rc/dist/browser/pagseguro.min.js"></script>
   <script src="../assets/catalog.js?v=10"></script>
-  <script src="script.js?v=63"></script>
+  <script src="script.js?v=64"></script>
   <script src="../assets/menu-dropdown.js?v=22"></script>
 </body>
 </html>

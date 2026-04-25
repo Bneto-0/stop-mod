@@ -93,6 +93,7 @@ const productsNowCents = document.getElementById("products-now-cents");
 const cartTotalMain = document.getElementById("cart-total-main");
 const cartTotalCents = document.getElementById("cart-total-cents");
 const itemsCount = document.getElementById("items-count");
+const cartOverviewTitle = document.getElementById("cart-overview-title");
 const cartOverviewCount = document.getElementById("cart-overview-count");
 const shippingValue = document.getElementById("shipping-value");
 const freeShipCount = document.getElementById("free-ship-count");
@@ -103,16 +104,21 @@ const applyCouponBtn = document.getElementById("apply-coupon-btn");
 const summarySubtotalLabel = document.getElementById("summary-subtotal-label");
 const summarySubtotalAmount = document.getElementById("summary-subtotal-amount");
 const summaryCouponValue = document.getElementById("summary-coupon-value");
+const summaryDiscountTotal = document.getElementById("summary-discount-total");
 const summaryInstallments = document.getElementById("summary-installments");
 const summaryPixValue = document.getElementById("summary-pix-value");
 const summaryPixTotal = document.getElementById("summary-pix-total");
 const cartRecommendationsGrid = document.getElementById("cart-recommendations-grid");
 const cartSavingsBadge = document.getElementById("cart-savings-badge");
+const cartToolsPanel = document.getElementById("cart-tools-panel");
 const cartCepInput = document.getElementById("cart-cep-input");
 const cartCepApply = document.getElementById("cart-cep-apply");
 const shippingFeedback = document.getElementById("shipping-feedback");
 const shippingMethodStandard = document.getElementById("shipping-method-standard");
 const shippingMethodExpress = document.getElementById("shipping-method-express");
+const cartProgressCopy = document.getElementById("cart-progress-copy");
+const cartProgressFill = document.getElementById("cart-progress-fill");
+const cartProgressCurrent = document.getElementById("cart-progress-current");
 const feedback = document.getElementById("feedback");
 const checkoutBtn = document.getElementById("checkout");
 const searchInput = document.getElementById("search-input");
@@ -1214,7 +1220,13 @@ function buildCartComparePricing(item, index) {
 
 function buildCartRecommendations(ids) {
   const selectedIds = new Set(groupedCart(ids).map((item) => item.id));
-  return products.filter((product) => !selectedIds.has(product.id)).slice(0, 4);
+  return products.filter((product) => !selectedIds.has(product.id)).slice(0, 6);
+}
+
+function revealCartTools() {
+  if (!cartToolsPanel) return;
+  cartToolsPanel.hidden = false;
+  cartToolsPanel.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 function renderCartRecommendations(ids) {
@@ -1227,25 +1239,21 @@ function renderCartRecommendations(ids) {
   }
 
   cartRecommendationsGrid.innerHTML = suggestions
-    .map((item, index) => {
+    .map((item) => {
       const installment = Math.max(0, Number(item.price || 0) / 12);
-      const labels = [
-        "Combina com seu carrinho",
-        "Mais vendido",
-        "Ultimas unidades",
-        "Oferta especial"
-      ];
       return `
-        <article class="cart-premium-suggestion-card">
-          <a class="cart-premium-suggestion-card__media" href="${productHref(item.id)}">
+        <article class="cart-obsidian-suggestion">
+          <a class="cart-obsidian-suggestion__media" href="${productHref(item.id)}">
             <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" loading="lazy" />
-            <span>${labels[index % labels.length]}</span>
+            <span class="cart-obsidian-suggestion__fav" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="m12 20-1.5-1.35C5.4 14.05 2 10.96 2 7.17 2 4.08 4.42 2 7.44 2c1.7 0 3.33.8 4.36 2.05C12.83 2.8 14.46 2 16.16 2 19.18 2 21.6 4.08 21.6 7.17c0 3.79-3.4 6.88-8.5 11.48L12 20Z"></path></svg>
+            </span>
           </a>
-          <div class="cart-premium-suggestion-card__copy">
-            <a class="cart-premium-suggestion-card__title" href="${productHref(item.id)}">${escapeHtml(item.name)}</a>
-            <strong>R$ ${formatBRL(Number(item.price || 0))}</strong>
-            <small>12x de R$ ${formatBRL(installment)}</small>
-            <button type="button" class="cart-premium-suggestion-card__button" data-add-product="${item.id}">Adicionar</button>
+          <div class="cart-obsidian-suggestion__copy">
+            <a class="cart-obsidian-suggestion__title" href="${productHref(item.id)}">${escapeHtml(item.name)}</a>
+            <strong class="cart-obsidian-suggestion__price">R$ ${formatBRL(Number(item.price || 0))}</strong>
+            <small class="cart-obsidian-suggestion__installment">12x de R$ ${formatBRL(installment)}</small>
+            <button type="button" class="cart-obsidian-suggestion__add" data-add-product="${item.id}" aria-label="Adicionar ${escapeHtml(item.name)}">+</button>
           </div>
         </article>
       `;
@@ -2793,7 +2801,7 @@ function renderCart() {
 
   if (!ids.length) {
     cartItems.innerHTML = `
-      <li class="cart-empty-state">
+      <li class="cart-empty-state cart-obsidian-empty-state">
         <strong>Seu carrinho esta vazio.</strong>
         <p>Escolha seus produtos favoritos e volte para finalizar sua compra na Uzuu.</p>
         <a class="cart-empty-state__action" href="../#produtos">Ver produtos</a>
@@ -2804,18 +2812,30 @@ function renderCart() {
     if (shippingFeedback) {
       shippingFeedback.textContent = "Informe seu CEP para ver as opcoes de entrega.";
     }
+    if (cartOverviewTitle) {
+      cartOverviewTitle.textContent = "Meu Carrinho (0)";
+    }
+    if (cartOverviewCount) {
+      cartOverviewCount.innerHTML = `
+        <span aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M20 7 9 18l-5-5"></path></svg>
+        </span>
+        Selecione todos os itens
+      `;
+    }
     if (cartSavingsBadge) {
-      cartSavingsBadge.textContent = "Voce economiza R$ 0,00 neste pedido";
+      cartSavingsBadge.textContent = "R$ 0,00";
     }
     if (itemsCount) itemsCount.textContent = "0";
     if (freeShipCount) freeShipCount.textContent = "0";
     if (shippingValue) {
       shippingValue.textContent = "Calcular";
     }
-    if (summarySubtotalLabel) summarySubtotalLabel.textContent = "Subtotal (0 produtos)";
+    if (summarySubtotalLabel) summarySubtotalLabel.textContent = "Subtotal (0 itens)";
     if (summarySubtotalAmount) summarySubtotalAmount.textContent = "R$ 0,00";
+    if (summaryDiscountTotal) summaryDiscountTotal.textContent = "-R$ 0,00";
     if (summaryCouponValue) {
-      summaryCouponValue.textContent = "Adicionar";
+      summaryCouponValue.textContent = "Aplicar cupom";
     }
     if (couponCount) couponCount.textContent = String(coupons.length);
     if (productsBeforeWrap) productsBeforeWrap.hidden = true;
@@ -2830,8 +2850,11 @@ function renderCart() {
       cartTotalCents.textContent = "00";
     }
     if (summaryPixTotal) summaryPixTotal.textContent = "R$ 0,00";
-    if (summaryInstallments) summaryInstallments.textContent = "Em ate 12x de R$ 0,00 sem juros.";
-    if (summaryPixValue) summaryPixValue.textContent = "ou R$ 0,00 no PIX (5% OFF)";
+    if (summaryInstallments) summaryInstallments.textContent = "Em ate 12x de R$ 0,00 sem juros";
+    if (summaryPixValue) summaryPixValue.textContent = "R$ 0,00";
+    if (cartProgressFill) cartProgressFill.style.width = "0%";
+    if (cartProgressCurrent) cartProgressCurrent.textContent = "R$ 0,00";
+    if (cartProgressCopy) cartProgressCopy.textContent = "Adicione mais R$ 250,00 para ganhar frete gratis.";
     renderCheckoutModalSnapshot();
     return;
   }
@@ -2840,13 +2863,21 @@ function renderCart() {
 
   const grouped = groupedCart(ids);
   const totalUnits = grouped.reduce((sum, item) => sum + (Number(item.qty) || 0), 0);
+  if (cartOverviewTitle) {
+    cartOverviewTitle.textContent = `Meu Carrinho (${totalUnits})`;
+  }
   if (cartOverviewCount) {
-    cartOverviewCount.textContent = `${pluralizeItems(totalUnits)} selecionado${totalUnits === 1 ? "" : "s"}`;
+    cartOverviewCount.innerHTML = `
+      <span aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M20 7 9 18l-5-5"></path></svg>
+      </span>
+      Selecione todos os itens
+    `;
   }
 
   if (!grouped.length) {
     cartItems.innerHTML = `
-      <li class="cart-empty-state">
+      <li class="cart-empty-state cart-obsidian-empty-state">
         <strong>Nenhum item encontrado.</strong>
         <p>Atualize os produtos da sacola e tente novamente.</p>
       </li>
@@ -2858,39 +2889,31 @@ function renderCart() {
         const comparePricing = buildCartComparePricing(item, index);
         const totalItem = item.price * item.qty;
         const compareTotal = Number(comparePricing.comparePrice || item.price) * item.qty;
-        const stock = Math.max(3, 12 - (index * 2) + item.qty);
         return `
-        <li class="cart-premium-item">
-          <a class="cart-premium-item__media" href="${productHref(item.id)}">
+        <li class="cart-obsidian-item">
+          <span class="cart-obsidian-item__check" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M20 7 9 18l-5-5"></path></svg>
+          </span>
+          <a class="cart-obsidian-item__media" href="${productHref(item.id)}">
             <img src="${item.image}" alt="${item.name}" loading="lazy" />
-            ${comparePricing.badgeText ? `<span class="cart-premium-item__badge">${comparePricing.badgeText}</span>` : ""}
           </a>
-          <div class="cart-premium-item__content">
-            <div class="cart-premium-item__top">
-              <div class="cart-premium-item__info">
-                <p class="cart-premium-item__category">${escapeHtml(item.category || "UZUU")}</p>
-                <strong><a class="cart-premium-item__title" href="${productHref(item.id)}">${escapeHtml(item.name)}</a></strong>
-                <p class="cart-premium-item__meta">Cor: ${escapeHtml(color)} &bull; Tamanho: ${escapeHtml(item.size || "Unico")}</p>
-                <p class="cart-premium-item__stock">Estoque baixo: restam ${stock} unidades</p>
-              </div>
-              <div class="cart-premium-item__price">
-                <strong>R$ ${formatBRL(totalItem)}</strong>
-                ${compareTotal > totalItem ? `<span>R$ ${formatBRL(compareTotal)}</span>` : ""}
-                <small>5% OFF no PIX</small>
-              </div>
-            </div>
-            <div class="cart-premium-item__bottom">
-              <div class="cart-premium-qty" aria-label="Quantidade">
-                <button data-action="dec" data-id="${item.id}" aria-label="Diminuir quantidade">-</button>
-                <span>${item.qty}</span>
-                <button data-action="inc" data-id="${item.id}" aria-label="Aumentar quantidade">+</button>
-              </div>
-              <div class="cart-premium-item__actions">
-                <a class="cart-premium-item__ghost" href="${productHref(item.id)}">Ver produto</a>
-                <button class="cart-premium-item__remove" data-action="remove" data-id="${item.id}" type="button" aria-label="Remover ${escapeHtml(item.name)} do carrinho">Remover</button>
-              </div>
-            </div>
+          <div class="cart-obsidian-item__content">
+            <a class="cart-obsidian-item__title" href="${productHref(item.id)}">${escapeHtml(item.name)}</a>
+            <p class="cart-obsidian-item__meta">${escapeHtml(color)} &bull; ${escapeHtml(item.size || "Unico")}</p>
+            <p class="cart-obsidian-item__stock">Em estoque</p>
           </div>
+          <div class="cart-obsidian-qty" aria-label="Quantidade">
+            <button data-action="dec" data-id="${item.id}" aria-label="Diminuir quantidade">-</button>
+            <span>${item.qty}</span>
+            <button data-action="inc" data-id="${item.id}" aria-label="Aumentar quantidade">+</button>
+          </div>
+          <div class="cart-obsidian-item__price">
+            <strong>R$ ${formatBRL(totalItem)}</strong>
+            ${compareTotal > totalItem ? `<span>R$ ${formatBRL(compareTotal)}</span>` : ""}
+          </div>
+          <button class="cart-obsidian-item__remove" data-action="remove" data-id="${item.id}" type="button" aria-label="Remover ${escapeHtml(item.name)} do carrinho">
+            <svg viewBox="0 0 24 24"><path d="M5 7h14M9 7V5h6v2m-7 3v8m4-8v8m4-8v8M7 7l1 13h8l1-13"></path></svg>
+          </button>
         </li>
       `;
       })
@@ -2931,13 +2954,16 @@ function renderCart() {
     summaryPixTotal.textContent = `R$ ${formatBRL(totalPix)}`;
   }
   if (cartSavingsBadge) {
-    cartSavingsBadge.textContent = `Voce economiza R$ ${formatBRL(totalSavings)} neste pedido`;
+    cartSavingsBadge.textContent = `R$ ${formatBRL(totalSavings)}`;
   }
   if (itemsCount) itemsCount.textContent = String(totalUnits);
   if (summarySubtotalLabel) {
-    summarySubtotalLabel.textContent = `Subtotal (${grouped.length} ${grouped.length === 1 ? "produto" : "produtos"})`;
+    summarySubtotalLabel.textContent = `Subtotal (${grouped.length} ${grouped.length === 1 ? "item" : "itens"})`;
   }
   if (couponCount) couponCount.textContent = String(coupons.length);
+  if (summaryDiscountTotal) {
+    summaryDiscountTotal.textContent = `-R$ ${formatBRL(discount)}`;
+  }
 
   if (shippingValue) {
     if (shipping === null) {
@@ -2962,9 +2988,9 @@ function renderCart() {
 
   if (summaryCouponValue) {
     if (discount > 0.01) {
-      summaryCouponValue.textContent = `-R$ ${formatBRL(discount)}`;
+      summaryCouponValue.textContent = `Cupom aplicado`;
     } else {
-      summaryCouponValue.textContent = "Adicionar";
+      summaryCouponValue.textContent = "Aplicar cupom";
     }
   }
 
@@ -2973,11 +2999,27 @@ function renderCart() {
   }
 
   if (summaryInstallments) {
-    summaryInstallments.textContent = `Em ate 12x de R$ ${formatBRL(totalCard / 12)} sem juros.`;
+    summaryInstallments.textContent = `Em ate 12x de R$ ${formatBRL(totalCard / 12)} sem juros`;
   }
 
   if (summaryPixValue) {
-    summaryPixValue.textContent = `ou R$ ${formatBRL(totalPix)} no PIX (5% OFF)`;
+    summaryPixValue.textContent = `R$ ${formatBRL(totalPix)}`;
+  }
+
+  if (cartProgressFill) {
+    const freeShippingGoal = 250;
+    const progress = Math.max(0, Math.min(100, (subtotal / freeShippingGoal) * 100));
+    cartProgressFill.style.width = `${progress}%`;
+    if (cartProgressCopy) {
+      if (subtotal >= freeShippingGoal) {
+        cartProgressCopy.textContent = "Voce liberou o frete gratis para este pedido.";
+      } else {
+        cartProgressCopy.textContent = `Adicione mais R$ ${formatBRL(freeShippingGoal - subtotal)} para ganhar frete gratis.`;
+      }
+    }
+    if (cartProgressCurrent) {
+      cartProgressCurrent.textContent = `R$ ${formatBRL(subtotal)}`;
+    }
   }
 
   checkoutBtn.disabled = false;
@@ -3047,13 +3089,13 @@ shippingMethodExpress?.addEventListener("change", () => {
 });
 
 shippingValue?.addEventListener("click", () => {
+  revealCartTools();
   cartCepInput?.focus();
-  cartCepInput?.scrollIntoView({ behavior: "smooth", block: "center" });
 });
 
 summaryCouponValue?.addEventListener("click", () => {
+  revealCartTools();
   couponInput?.focus();
-  couponInput?.scrollIntoView({ behavior: "smooth", block: "center" });
 });
 
 checkoutBtn.addEventListener("click", () => {
