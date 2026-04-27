@@ -4104,7 +4104,7 @@ body.home-page .site-footer {
 }
 
 .home-hero__kicker span {
-  color: #ff2b2b;
+  color: #3b82f6;
 }
 
 .home-hero__content h1 {
@@ -4146,7 +4146,7 @@ body.home-page .site-footer {
 }
 
 .home-hero__primary {
-  background: #e31b23;
+  background: #2563eb;
   color: #ffffff;
 }
 
@@ -4206,7 +4206,7 @@ body.home-page .site-footer {
 }
 
 .home-hero__dots button.is-active {
-  background: #ff232d;
+  background: #3b82f6;
 }
 
 .home-proof-strip {
@@ -4315,7 +4315,7 @@ body.home-page .site-footer {
 }
 
 .home-orbit-card__promo-icon {
-  color: #ff2b2b;
+  color: #3b82f6;
   font-size: 4rem;
   font-weight: 800;
   line-height: 1;
@@ -4348,7 +4348,7 @@ body.home-page .site-footer {
 }
 
 .home-merch-section__controls a {
-  color: #ff2b2b;
+  color: #3b82f6;
   font-size: 1rem;
   font-weight: 600;
   text-decoration: none;
@@ -4433,7 +4433,7 @@ body.home-page .site-footer {
 }
 
 .home-product-card__favorite.is-active {
-  color: #ff3d46;
+  color: #60a5fa;
 }
 
 .home-product-card__sale {
@@ -4442,7 +4442,7 @@ body.home-page .site-footer {
   min-height: 1.7rem;
   padding: 0 0.58rem;
   border-radius: 999px;
-  background: #ff2b2b;
+  background: #2563eb;
   color: #ffffff;
   font-size: 0.72rem;
   font-weight: 700;
@@ -4718,7 +4718,7 @@ body.home-page .site-footer {
   padding: 0 1.4rem;
   border: 0;
   border-radius: 0.85rem;
-  background: #e31b23;
+  background: #2563eb;
   color: #ffffff;
   font-weight: 700;
   cursor: pointer;
