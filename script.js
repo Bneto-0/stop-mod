@@ -1,595 +1,281 @@
-const sharedCatalog = window.stopmodCatalog || null;
-const CART_KEY = sharedCatalog?.storageKeys?.cart || "stopmod_cart";
-const FAVORITES_KEY = sharedCatalog?.storageKeys?.favorites || "stopmod_favorites";
+const API_URL = "https://SEU-BACKEND.onrender.com";
 
-const products = Array.isArray(sharedCatalog?.products) ? sharedCatalog.products : [];
-const formatBRL = sharedCatalog?.formatBRL || ((value) => Number(value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }));
-const pixPrice = sharedCatalog?.pixPrice || ((value) => Number(value || 0) * 0.93);
-const oldPrice = sharedCatalog?.oldPrice || ((value) => Number(value || 0) * 1.12);
-const productHref = sharedCatalog?.productHref || ((id) => `/produtos/?id=${encodeURIComponent(String(id))}`);
-
-const heroTrack = document.getElementById("home-hero-track");
-const heroDots = document.getElementById("home-hero-dots");
-const orbitGrid = document.getElementById("home-category-orbit");
-const bestSellersTrack = document.getElementById("best-sellers-track");
-const recommendGrid = document.getElementById("recommend-grid");
-const recommendFeedback = document.getElementById("recommend-feedback");
-const recommendTabs = Array.from(document.querySelectorAll("[data-home-filter]"));
-const loadMoreSentinel = document.getElementById("load-more-products");
-const newsletterForm = document.getElementById("newsletter-form");
-const newsletterEmail = document.getElementById("newsletter-email");
-const searchInput = document.getElementById("search-input");
-const cartCount = document.getElementById("cart-count");
-
-const heroSlides = [
-  {
-    kickerAccent: "COLECAO",
-    kickerText: "OUTONO / INVERNO",
-    title: "ESTILO SEM PAGAR CARO",
-    text: "As melhores pecas com os melhores precos. Qualidade premium, preco justo.",
-    primaryLabel: "Ver colecao",
-    primaryHref: "#recomendados",
-    secondaryLabel: "Lancamentos",
-    secondaryHref: "#lancamentos",
-    image: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1600&q=80"
-  },
-  {
-    kickerAccent: "DROP",
-    kickerText: "STREETWEAR PREMIUM",
-    title: "PECAS FORTES EM LEITURA LIMPA",
-    text: "Modelagens urbanas, visual refinado e selecao pensada para vender com cara de marca grande.",
-    primaryLabel: "Ver streetwear",
-    primaryHref: "#recomendados",
-    secondaryLabel: "Mais vendidos",
-    secondaryHref: "#produtos",
-    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1600&q=80"
-  },
-  {
-    kickerAccent: "NOVA",
-    kickerText: "CURADORIA UZUU",
-    title: "PRECO FORTE E VITRINE PREMIUM",
-    text: "Selecao escura, premium e comercial para deixar a home com leitura de marketplace profissional.",
-    primaryLabel: "Explorar agora",
-    primaryHref: "#produtos",
-    secondaryLabel: "Promocoes",
-    secondaryHref: "/cupons/",
-    image: "https://images.unsplash.com/photo-1503341338985-c0477be52513?auto=format&fit=crop&w=1600&q=80"
-  }
+const categories = [
+  { name: "Masculino", image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80" },
+  { name: "Feminino", image: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=800&q=80" },
+  { name: "Acessórios", image: "https://images.unsplash.com/photo-1523779105320-d1cd346ff52b?auto=format&fit=crop&w=800&q=80" },
+  { name: "Calçados", image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80" },
+  { name: "Streetwear", image: "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=800&q=80" },
+  { name: "Promoções", image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=800&q=80" },
 ];
 
-const homeProductMeta = {
-  1: {
-    segment: "streetwear",
-    orbit: "streetwear",
-    image: "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=900&q=80"
-  },
-  2: {
-    segment: "masculino",
-    orbit: "masculino",
-    image: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=900&q=80"
-  },
-  3: {
-    segment: "feminino",
-    orbit: "feminino",
-    image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=80"
-  },
-  4: {
-    segment: "streetwear",
-    orbit: "streetwear",
-    image: "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=900&q=80"
-  },
-  10: {
-    segment: "masculino",
-    orbit: "masculino",
-    image: "https://images.unsplash.com/photo-1562157873-818bc0726f68?auto=format&fit=crop&w=900&q=80"
-  },
-  11: {
-    segment: "calcados",
-    orbit: "calcados",
-    image: "https://images.unsplash.com/photo-1549298916-f52d724204b4?auto=format&fit=crop&w=900&q=80"
-  },
-  12: {
-    segment: "acessorios",
-    orbit: "acessorios",
-    image: "https://images.unsplash.com/photo-1495107334309-fcf20504a5ab?auto=format&fit=crop&w=900&q=80"
-  },
-  13: {
-    segment: "feminino",
-    orbit: "feminino",
-    image: "https://images.unsplash.com/photo-1506629905607-d9d4b5b1f1b3?auto=format&fit=crop&w=900&q=80"
-  },
-  14: {
-    segment: "masculino",
-    orbit: "masculino",
-    image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80"
-  },
-  15: {
-    segment: "feminino",
-    orbit: "feminino",
-    image: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=900&q=80"
-  },
-  17: {
-    segment: "streetwear",
-    orbit: "streetwear",
-    image: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&w=900&q=80"
-  },
-  18: {
-    segment: "masculino",
-    orbit: "masculino",
-    image: "https://images.unsplash.com/photo-1551232864-3f0890e580d9?auto=format&fit=crop&w=900&q=80"
-  },
-  19: {
-    segment: "streetwear",
-    orbit: "streetwear",
-    image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80"
-  },
-  21: {
-    segment: "feminino",
-    orbit: "feminino",
-    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=80"
-  }
-};
-
-const orbitCards = [
-  { key: "masculino", label: "Masculino", productId: 2 },
-  { key: "feminino", label: "Feminino", productId: 15 },
-  { key: "acessorios", label: "Acessorios", productId: 12 },
-  { key: "calcados", label: "Calcados", productId: 11 },
-  { key: "streetwear", label: "Streetwear", productId: 4 },
-  { key: "promocoes", label: "Promocoes", promo: true }
+const demoProducts = [
+  { id: "d-1", nome: "Moletom UZUU Oversized", categoria: "Streetwear", preco: 199.9, precoAntigo: 249.9, imagem: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=800&q=80", tag: "20% OFF", avaliacao: 4.9, reviews: 128 },
+  { id: "d-2", nome: "Camiseta UZUU Basic", categoria: "Masculino", preco: 89.9, precoAntigo: null, imagem: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=800&q=80", tag: "Novo", avaliacao: 4.8, reviews: 96 },
+  { id: "d-3", nome: "Boné UZUU Classic", categoria: "Acessórios", preco: 79.9, precoAntigo: 99.9, imagem: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=800&q=80", tag: "Mais vendido", avaliacao: 4.9, reviews: 76 },
+  { id: "d-4", nome: "Mochila UZUU Essential", categoria: "Acessórios", preco: 159.9, precoAntigo: null, imagem: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80", tag: "Premium", avaliacao: 4.7, reviews: 54 },
+  { id: "d-5", nome: "Tênis UZUU Street", categoria: "Calçados", preco: 249.9, precoAntigo: 299.9, imagem: "https://images.unsplash.com/photo-1543508282-6319a3e2621f?auto=format&fit=crop&w=800&q=80", tag: "Oferta", avaliacao: 4.8, reviews: 112 },
+  { id: "d-6", nome: "Bermuda UZUU Casual", categoria: "Masculino", preco: 99.9, precoAntigo: null, imagem: "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?auto=format&fit=crop&w=800&q=80", tag: "Leve", avaliacao: 4.7, reviews: 68 },
+  { id: "d-7", nome: "Jaqueta Puffer UZUU", categoria: "Streetwear", preco: 299.9, precoAntigo: 379.9, imagem: "https://images.unsplash.com/photo-1543076447-215ad9ba6923?auto=format&fit=crop&w=800&q=80", tag: "-10%", avaliacao: 4.9, reviews: 88 },
+  { id: "d-8", nome: "Calça Cargo UZUU", categoria: "Masculino", preco: 189.9, precoAntigo: null, imagem: "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?auto=format&fit=crop&w=800&q=80", tag: "Trend", avaliacao: 4.8, reviews: 63 },
+  { id: "d-9", nome: "Moletom Canguru UZUU", categoria: "Streetwear", preco: 229.9, precoAntigo: null, imagem: "https://images.unsplash.com/photo-1578587018452-892bacefd3f2?auto=format&fit=crop&w=800&q=80", tag: "Top", avaliacao: 4.9, reviews: 119 },
+  { id: "d-10", nome: "Bucket Hat UZUU", categoria: "Acessórios", preco: 69.9, precoAntigo: 89.9, imagem: "https://images.unsplash.com/photo-1521369909029-2afed882baee?auto=format&fit=crop&w=800&q=80", tag: "Oferta", avaliacao: 4.7, reviews: 42 },
+  { id: "d-11", nome: "Meia UZUU Cano Alto", categoria: "Acessórios", preco: 69.9, precoAntigo: null, imagem: "https://images.unsplash.com/photo-1586350977771-b3b0abd50c82?auto=format&fit=crop&w=800&q=80", tag: "Kit", avaliacao: 4.8, reviews: 104 },
+  { id: "d-12", nome: "Camiseta Oversized UZUU", categoria: "Masculino", preco: 99.9, precoAntigo: null, imagem: "https://images.unsplash.com/photo-1503341504253-dff4815485f1?auto=format&fit=crop&w=800&q=80", tag: "Novo", avaliacao: 4.9, reviews: 97 },
+  { id: "d-13", nome: "Tênis UZUU Black", categoria: "Calçados", preco: 279.9, precoAntigo: 329.9, imagem: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80", tag: "-15%", avaliacao: 4.9, reviews: 71 },
+  { id: "d-14", nome: "Hoodie Zíper UZUU", categoria: "Streetwear", preco: 249.9, precoAntigo: null, imagem: "https://images.unsplash.com/photo-1578681994506-b8f463449011?auto=format&fit=crop&w=800&q=80", tag: "Premium", avaliacao: 4.8, reviews: 83 },
+  { id: "d-15", nome: "Shoulder Bag UZUU", categoria: "Acessórios", preco: 129.9, precoAntigo: 159.9, imagem: "https://images.unsplash.com/photo-1622560480605-d83c853bc5c3?auto=format&fit=crop&w=800&q=80", tag: "Útil", avaliacao: 4.7, reviews: 45 },
+  { id: "d-16", nome: "Óculos UZUU Style", categoria: "Acessórios", preco: 99.9, precoAntigo: null, imagem: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=800&q=80", tag: "Novo", avaliacao: 4.8, reviews: 41 },
+  { id: "d-17", nome: "Calça Moletom UZUU", categoria: "Streetwear", preco: 169.9, precoAntigo: null, imagem: "https://images.unsplash.com/photo-1506629905607-d9f297d8f8af?auto=format&fit=crop&w=800&q=80", tag: "Conforto", avaliacao: 4.7, reviews: 74 },
+  { id: "d-18", nome: "Coturno UZUU Street", categoria: "Calçados", preco: 329.9, precoAntigo: null, imagem: "https://images.unsplash.com/photo-1608256246200-53e8b47b6609?auto=format&fit=crop&w=800&q=80", tag: "Forte", avaliacao: 4.9, reviews: 57 },
 ];
 
-const bestSellerIds = [4, 1, 12, 11, 14, 10];
-const recommendationIds = [15, 2, 4, 17, 1, 11, 3, 12, 14, 18, 21, 13];
-const recommendationBadges = {
-  15: "-10%"
+const adBanners = [
+  { title: "Lançamentos", subtitle: "Novas peças toda semana", cta: "Ver lançamentos", image: "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=1000&q=80", tone: "from-red-950" },
+  { title: "Até 50% OFF", subtitle: "Nas melhores peças", cta: "Aproveitar ofertas", image: "https://images.unsplash.com/photo-1506629905607-d9f297d8f8af?auto=format&fit=crop&w=1000&q=80", tone: "from-black" },
+  { title: "Streetwear Premium", subtitle: "Qualidade que se destaca", cta: "Ver streetwear", image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1000&q=80", tone: "from-neutral-950" },
+];
+
+const state = {
+  products: [],
+  page: 1,
+  loadingInitial: true,
+  loadingMore: false,
+  selectedCategory: "Todos",
 };
-const recommendationPoolIds = Array.from(
-  new Set(
-    [...recommendationIds, ...products.map((item) => Number(item?.id || 0))]
-      .filter((id) => Number.isInteger(id) && id > 0)
-  )
-);
-const RECOMMEND_BATCH_SIZE = 6;
 
-let currentHeroIndex = 0;
-let heroTimer = null;
-let activeFilter = "all";
-let recommendLimit = RECOMMEND_BATCH_SIZE;
-let recommendObserver = null;
-let recommendLoadQueued = false;
-const filterKeywords = new Set(["all", "masculino", "feminino", "acessorios", "calcados", "streetwear"]);
-
-function getQueryParams() {
-  try {
-    return new URLSearchParams(window.location.search);
-  } catch {
-    return new URLSearchParams();
-  }
+function money(value) {
+  const number = Number(value || 0);
+  return number.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-function normalizeText(value) {
-  return String(value || "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-}
-
-function getProductById(id) {
-  return sharedCatalog?.getProductById ? sharedCatalog.getProductById(id) : products.find((item) => Number(item.id) === Number(id)) || null;
-}
-
-function getDisplayProduct(id) {
-  const product = getProductById(id);
-  if (!product) return null;
-  const summary = sharedCatalog?.getRatingSummary ? sharedCatalog.getRatingSummary(product.id) : { average: 4.8, count: 32, sold: 0 };
-  const meta = homeProductMeta[product.id] || {};
+function normalizeProduct(raw, index = 0) {
   return {
-    ...product,
-    displayImage: meta.image || product.image,
-    segment: meta.segment || "all",
-    ratingAverage: Number(summary?.average || 4.8),
-    ratingCount: Math.max(Number(summary?.count || 0), 12),
-    soldCount: Number(summary?.sold || 0),
-    compareAt: oldPrice(product.price),
-    pixValue: pixPrice(product.price)
+    id: raw.id || raw._id || `produto-${Date.now()}-${index}`,
+    nome: raw.nome || raw.name || "Produto UZUU",
+    categoria: raw.categoria || raw.category || "Streetwear",
+    preco: Number(raw.preco || raw.price || 0),
+    precoAntigo: raw.precoAntigo || raw.oldPrice || raw.compare_at_price || null,
+    imagem: raw.imagem || raw.image || raw.image_url || "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=800&q=80",
+    tag: raw.tag || raw.badge || "Novo",
+    avaliacao: Number(raw.avaliacao || raw.rating || 4.8),
+    reviews: Number(raw.reviews || raw.review_count || 0),
   };
 }
 
-function loadFavoriteIds() {
-  if (sharedCatalog?.loadFavorites) return sharedCatalog.loadFavorites();
+function demoPage(page) {
+  return Array.from({ length: 18 }, (_, index) => {
+    const base = demoProducts[(page * 18 + index) % demoProducts.length];
+    return {
+      ...base,
+      id: `demo-${page}-${index}-${base.nome}`,
+      preco: Number((base.preco + ((page + index) % 3) * 4).toFixed(2)),
+    };
+  });
+}
+
+async function fetchProducts(page = 1) {
+  if (!API_URL || API_URL.includes("SEU-BACKEND")) {
+    return demoPage(page - 1);
+  }
+
   try {
-    const parsed = JSON.parse(localStorage.getItem(FAVORITES_KEY) || "[]");
-    return Array.isArray(parsed) ? parsed.map(Number).filter((item) => Number.isInteger(item) && item > 0) : [];
-  } catch {
-    return [];
+    const response = await fetch(`${API_URL}/products?page=${page}&limit=18`, {
+      headers: { Accept: "application/json" },
+    });
+
+    if (!response.ok) throw new Error("Falha ao buscar produtos");
+
+    const data = await response.json();
+    const list = Array.isArray(data) ? data : Array.isArray(data.products) ? data.products : [];
+    return list.map(normalizeProduct);
+  } catch (error) {
+    console.error("Erro ao carregar produtos:", error);
+    return demoPage(page - 1);
   }
 }
 
-function isFavorite(id) {
-  return sharedCatalog?.isFavorite ? sharedCatalog.isFavorite(id) : loadFavoriteIds().includes(Number(id));
-}
-
-function toggleFavorite(id) {
-  return sharedCatalog?.toggleFavorite ? sharedCatalog.toggleFavorite(id) : false;
-}
-
-function renderCartCount() {
-  if (!cartCount) return;
-  const total = sharedCatalog?.countCartItems ? sharedCatalog.countCartItems() : 0;
-  cartCount.textContent = String(total);
-}
-
-function renderStars() {
-  return "&#9733;&#9733;&#9733;&#9733;&#9733;";
-}
-
-function installPrice(value) {
-  return formatBRL(Number(value || 0) / 12);
-}
-
-function favoriteIconMarkup(product) {
-  const favorite = isFavorite(product.id);
+function productCard(product) {
+  const pixPrice = product.preco * 0.95;
   return `
-    <button class="home-product-card__favorite${favorite ? " is-active" : ""}" type="button" data-product-favorite="${product.id}" data-no-card-open aria-label="${favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}" aria-pressed="${favorite ? "true" : "false"}">
-      ${favorite ? "&#10084;" : "&#9825;"}
-    </button>
-  `;
-}
-
-function productCardMarkup(product, options = {}) {
-  const saleBadge = options.saleBadge ? `<span class="home-product-card__sale">${options.saleBadge}</span>` : "";
-  const compareAt = options.showCompare === false ? "" : `<small>${formatBRL(product.compareAt)}</small>`;
-  return `
-    <article class="home-product-card" data-product-open-id="${product.id}" tabindex="0" role="link" aria-label="Abrir ${product.name}">
-      <div class="home-product-card__media">
-        ${saleBadge}
-        ${favoriteIconMarkup(product)}
-        <img src="${product.displayImage}" alt="${product.name}" loading="lazy" />
+    <article class="home-infinite-product-card">
+      <div class="home-infinite-product-card__media">
+        <img src="${product.imagem}" alt="${product.nome}" loading="lazy" />
+        <button type="button" aria-label="Favoritar produto">♡</button>
+        <span>${product.tag}</span>
       </div>
-      <div class="home-product-card__body">
-        <h3>${product.name}</h3>
-        <div class="home-product-card__rating">
-          <span class="home-product-card__stars" aria-hidden="true">${renderStars()}</span>
-          <span>(${product.ratingCount})</span>
-        </div>
-        <div class="home-product-card__price">
-          <strong>${formatBRL(product.price)}</strong>
-          ${compareAt}
-        </div>
-        <div class="home-product-card__pix">${formatBRL(product.pixValue)} no PIX</div>
-        <div class="home-product-card__installments">12x de ${installPrice(product.price)}</div>
+      <div class="home-infinite-product-card__body">
+        <p>${product.categoria}</p>
+        <h3>${product.nome}</h3>
+        <div class="home-infinite-product-card__rating">★★★★★ <small>(${product.reviews})</small></div>
+        <strong>${money(product.preco)}</strong>
+        ${product.precoAntigo ? `<del>${money(product.precoAntigo)}</del>` : ""}
+        <em>${money(pixPrice)} no PIX</em>
+        <small>12x de ${money(product.preco / 12)}</small>
       </div>
     </article>
   `;
 }
 
-function renderHero() {
-  if (!heroTrack || !heroDots) return;
-
-  heroTrack.innerHTML = heroSlides
-    .map(
-      (slide, index) => `
-        <article class="home-hero__slide${index === currentHeroIndex ? " is-active" : ""}" data-hero-slide="${index}">
-          <div class="home-hero__media" style="background-image:url('${slide.image}')"></div>
-          <div class="home-hero__overlay"></div>
-          <div class="home-hero__content">
-            <p class="home-hero__kicker"><span>${slide.kickerAccent}</span> ${slide.kickerText}</p>
-            <h1>${slide.title}</h1>
-            <p>${slide.text}</p>
-            <div class="home-hero__actions">
-              <a class="home-hero__primary" href="${slide.primaryHref}">${slide.primaryLabel}</a>
-              <a class="home-hero__secondary" href="${slide.secondaryHref}">${slide.secondaryLabel}</a>
-            </div>
-          </div>
-        </article>
-      `
-    )
-    .join("");
-
-  heroDots.innerHTML = heroSlides
-    .map(
-      (_, index) => `<button type="button" class="${index === currentHeroIndex ? "is-active" : ""}" data-hero-dot="${index}" aria-label="Ir para banner ${index + 1}"></button>`
-    )
-    .join("");
+function skeletonCard() {
+  return `
+    <article class="home-infinite-skeleton">
+      <div></div>
+      <span></span>
+      <span></span>
+      <span></span>
+    </article>
+  `;
 }
 
-function activateHero(index) {
-  const total = heroSlides.length;
-  currentHeroIndex = (index + total) % total;
-  document.querySelectorAll("[data-hero-slide]").forEach((slide, slideIndex) => {
-    slide.classList.toggle("is-active", slideIndex === currentHeroIndex);
+function renderProductGrid(node, products) {
+  if (!node) return;
+  node.innerHTML = products.map(productCard).join("");
+}
+
+function renderSkeletonGrid(node, count = 18) {
+  if (!node) return;
+  node.innerHTML = Array.from({ length: count }, skeletonCard).join("");
+}
+
+function filteredProducts() {
+  if (state.selectedCategory === "Todos") return state.products;
+  return state.products.filter((product) => product.categoria === state.selectedCategory);
+}
+
+function renderAllProducts() {
+  const bestSellers = state.products.slice(0, 18);
+  const recommended = filteredProducts().slice(0, 18);
+  const exploreMore = state.products.slice(18);
+  renderProductGrid(document.getElementById("best-sellers-grid"), bestSellers);
+  renderProductGrid(document.getElementById("recommended-grid"), recommended);
+  renderProductGrid(document.getElementById("explore-grid"), exploreMore);
+}
+
+function renderCategories() {
+  const node = document.getElementById("home-categories-grid");
+  if (!node) return;
+  node.innerHTML = categories.map((category) => `
+    <button type="button" data-category="${category.name}">
+      <span><img src="${category.image}" alt="${category.name}" loading="lazy" /></span>
+      <strong>${category.name}</strong>
+    </button>
+  `).join("");
+
+  node.querySelectorAll("[data-category]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const value = button.getAttribute("data-category");
+      state.selectedCategory = value === state.selectedCategory ? "Todos" : value;
+      updateTabs();
+      renderAllProducts();
+    });
   });
-  document.querySelectorAll("[data-hero-dot]").forEach((dot, dotIndex) => {
-    dot.classList.toggle("is-active", dotIndex === currentHeroIndex);
+}
+
+function renderTabs() {
+  const node = document.getElementById("home-filter-tabs");
+  if (!node) return;
+  const tabs = ["Todos", "Masculino", "Feminino", "Acessórios", "Calçados", "Streetwear"];
+  node.innerHTML = tabs.map((category) => `<button type="button" data-filter="${category}">${category}</button>`).join("");
+  node.querySelectorAll("[data-filter]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.selectedCategory = button.getAttribute("data-filter");
+      updateTabs();
+      renderAllProducts();
+    });
+  });
+  updateTabs();
+}
+
+function updateTabs() {
+  document.querySelectorAll("[data-filter]").forEach((button) => {
+    button.classList.toggle("is-active", button.getAttribute("data-filter") === state.selectedCategory);
   });
 }
 
-function restartHeroTimer() {
-  if (heroTimer) clearInterval(heroTimer);
-  heroTimer = setInterval(() => activateHero(currentHeroIndex + 1), 5400);
+function renderAdBanners(targetId) {
+  const node = document.getElementById(targetId);
+  if (!node) return;
+  node.innerHTML = adBanners.map((banner) => `
+    <article class="home-infinite-ad-card home-infinite-ad-card--${banner.tone}">
+      <img src="${banner.image}" alt="${banner.title}" loading="lazy" />
+      <div></div>
+      <section>
+        <h3>${banner.title}</h3>
+        <p>${banner.subtitle}</p>
+        <button type="button">${banner.cta}</button>
+      </section>
+    </article>
+  `).join("");
 }
 
-function renderOrbit() {
-  if (!orbitGrid) return;
+function renderCartCount() {
+  const node = document.getElementById("home-cart-count");
+  if (!node) return;
+  try {
+    const raw = JSON.parse(localStorage.getItem("stopmod_cart") || "[]");
+    const total = Array.isArray(raw)
+      ? raw.reduce((sum, item) => sum + Math.max(1, Number(item.quantity || item.qty || 1)), 0)
+      : 0;
+    node.textContent = String(total);
+  } catch {
+    node.textContent = "0";
+  }
+}
 
-  orbitGrid.innerHTML = orbitCards
-    .map((item) => {
-      if (item.promo) {
-        return `
-          <button class="home-orbit-card home-orbit-card--promo" type="button" data-orbit-filter="promocoes" aria-label="Abrir promocoes">
-            <span class="home-orbit-card__media">
-              <span class="home-orbit-card__promo-icon" aria-hidden="true">%</span>
-            </span>
-            <span class="home-orbit-card__label">${item.label}</span>
-          </button>
-        `;
+async function loadInitial() {
+  state.loadingInitial = true;
+  renderSkeletonGrid(document.getElementById("best-sellers-grid"));
+  renderSkeletonGrid(document.getElementById("recommended-grid"));
+  const firstPage = await fetchProducts(1);
+  state.products = firstPage;
+  state.page = 2;
+  state.loadingInitial = false;
+  renderAllProducts();
+}
+
+function setupInfiniteLoad() {
+  const node = document.getElementById("infinite-loader");
+  const loadingGrid = document.getElementById("loading-more-grid");
+  if (!node) return;
+
+  const observer = new IntersectionObserver((entries) => {
+    const [entry] = entries;
+    if (!entry.isIntersecting || state.loadingMore || state.loadingInitial) return;
+
+    async function loadMore() {
+      state.loadingMore = true;
+      node.textContent = "Carregando mais produtos...";
+      if (loadingGrid) {
+        loadingGrid.hidden = false;
+        renderSkeletonGrid(loadingGrid, 6);
       }
-
-      const product = getDisplayProduct(item.productId);
-      if (!product) return "";
-
-      return `
-        <button class="home-orbit-card" type="button" data-orbit-filter="${item.key}" aria-label="Filtrar por ${item.label}">
-          <span class="home-orbit-card__media">
-            <img src="${product.displayImage}" alt="${item.label}" loading="lazy" />
-          </span>
-          <span class="home-orbit-card__label">${item.label}</span>
-        </button>
-      `;
-    })
-    .join("");
-}
-
-function renderBestSellers() {
-  if (!bestSellersTrack) return;
-  bestSellersTrack.innerHTML = bestSellerIds
-    .map((id) => getDisplayProduct(id))
-    .filter(Boolean)
-    .map((product) => productCardMarkup(product, { showCompare: true }))
-    .join("");
-}
-
-function getSearchTerm() {
-  const fromInput = String(searchInput?.value || "").trim();
-  if (fromInput) {
-    const normalizedInput = normalizeText(fromInput);
-    return filterKeywords.has(normalizedInput) ? "" : fromInput;
-  }
-
-  const params = getQueryParams();
-  const query = String(params.get("q") || "").trim();
-  return filterKeywords.has(normalizeText(query)) ? "" : query;
-}
-
-function inferFilterFromUrl() {
-  const params = getQueryParams();
-  const category = normalizeText(params.get("cat"));
-  const query = normalizeText(params.get("q"));
-
-  if (category === "acessorios") return "acessorios";
-  if (category === "calcados") return "calcados";
-  if (query.includes("streetwear")) return "streetwear";
-  if (query.includes("masculino")) return "masculino";
-  if (query.includes("feminino")) return "feminino";
-  if (query.includes("calcados")) return "calcados";
-  if (query.includes("acessorios")) return "acessorios";
-  return "all";
-}
-
-function matchesSearch(product, term) {
-  const haystack = normalizeText(`${product.name} ${product.category} ${product.badge} ${product.shortDescription || ""}`);
-  return !term || haystack.includes(normalizeText(term));
-}
-
-function matchesFilter(product, filter) {
-  return filter === "all" ? true : product.segment === filter;
-}
-
-function updateFilterButtons() {
-  recommendTabs.forEach((button) => {
-    button.classList.toggle("is-active", String(button.dataset.homeFilter || "") === activeFilter);
-  });
-}
-
-function getRecommendationProducts() {
-  const term = getSearchTerm();
-  return recommendationPoolIds
-    .map((id) => getDisplayProduct(id))
-    .filter(Boolean)
-    .filter((product) => matchesFilter(product, activeFilter))
-    .filter((product) => matchesSearch(product, term));
-}
-
-function disconnectRecommendationObserver() {
-  if (recommendObserver) {
-    recommendObserver.disconnect();
-    recommendObserver = null;
-  }
-}
-
-function queueMoreRecommendations() {
-  const list = getRecommendationProducts();
-  if (recommendLoadQueued || recommendLimit >= list.length) return;
-  recommendLoadQueued = true;
-  window.requestAnimationFrame(() => {
-    recommendLimit = Math.min(recommendLimit + RECOMMEND_BATCH_SIZE, list.length);
-    recommendLoadQueued = false;
-    renderRecommendations();
-  });
-}
-
-function setupRecommendationObserver(hasMore) {
-  disconnectRecommendationObserver();
-  if (!loadMoreSentinel || !hasMore) return;
-
-  recommendObserver = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) queueMoreRecommendations();
-      });
-    },
-    {
-      rootMargin: "420px 0px 420px 0px",
-      threshold: 0.01
-    }
-  );
-
-  recommendObserver.observe(loadMoreSentinel);
-}
-
-function renderRecommendations() {
-  if (!recommendGrid || !recommendFeedback) return;
-
-  const list = getRecommendationProducts();
-  const visible = list.slice(0, recommendLimit);
-
-  recommendGrid.innerHTML = visible
-    .map((product) => productCardMarkup(product, { saleBadge: recommendationBadges[product.id] || "" }))
-    .join("");
-
-  recommendFeedback.hidden = list.length > 0;
-  updateFilterButtons();
-  if (loadMoreSentinel) {
-    const hasMore = list.length > visible.length;
-    loadMoreSentinel.hidden = list.length === 0 || !hasMore;
-    setupRecommendationObserver(hasMore);
-  }
-}
-
-function setActiveFilter(filter) {
-  activeFilter = filter;
-  recommendLimit = RECOMMEND_BATCH_SIZE;
-  renderRecommendations();
-}
-
-function showToast(message) {
-  const current = document.querySelector(".toast");
-  if (current) current.remove();
-
-  const toast = document.createElement("div");
-  toast.className = "toast";
-  toast.textContent = message;
-  document.body.appendChild(toast);
-
-  window.setTimeout(() => {
-    toast.remove();
-  }, 2200);
-}
-
-function syncInitialState() {
-  activeFilter = inferFilterFromUrl();
-  updateFilterButtons();
-  if (searchInput) {
-    const params = getQueryParams();
-    const query = String(params.get("q") || "").trim();
-    if (query && !searchInput.value) searchInput.value = query;
-  }
-}
-
-document.addEventListener("click", (event) => {
-  const favoriteButton = event.target instanceof Element ? event.target.closest("[data-product-favorite]") : null;
-  if (favoriteButton) {
-    const id = favoriteButton.getAttribute("data-product-favorite");
-    const product = getProductById(id);
-    const isNowFavorite = toggleFavorite(id);
-    renderBestSellers();
-    renderRecommendations();
-    showToast(isNowFavorite ? `${product?.name || "Produto"} salvo nos favoritos.` : `${product?.name || "Produto"} removido dos favoritos.`);
-    return;
-  }
-
-  const card = event.target instanceof Element ? event.target.closest("[data-product-open-id]") : null;
-  if (card && !event.target.closest("[data-no-card-open]")) {
-    window.location.href = productHref(card.getAttribute("data-product-open-id"));
-    return;
-  }
-
-  const heroDot = event.target instanceof Element ? event.target.closest("[data-hero-dot]") : null;
-  if (heroDot) {
-    activateHero(Number(heroDot.getAttribute("data-hero-dot") || 0));
-    restartHeroTimer();
-    return;
-  }
-
-  const heroNav = event.target instanceof Element ? event.target.closest("[data-hero-nav]") : null;
-  if (heroNav) {
-    activateHero(currentHeroIndex + (heroNav.getAttribute("data-hero-nav") === "prev" ? -1 : 1));
-    restartHeroTimer();
-    return;
-  }
-
-  const orbit = event.target instanceof Element ? event.target.closest("[data-orbit-filter]") : null;
-  if (orbit) {
-    const filter = String(orbit.getAttribute("data-orbit-filter") || "");
-    if (filter === "promocoes") {
-      window.location.href = "/cupons/";
-      return;
+      const nextPage = await fetchProducts(state.page);
+      state.products = [...state.products, ...nextPage];
+      state.page += 1;
+      state.loadingMore = false;
+      if (loadingGrid) {
+        loadingGrid.hidden = true;
+        loadingGrid.innerHTML = "";
+      }
+      node.textContent = "Role para carregar mais produtos";
+      renderAllProducts();
     }
 
-    setActiveFilter(filter);
-    document.getElementById("recomendados")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    return;
-  }
+    loadMore();
+  }, { rootMargin: "700px" });
 
-  const scrollButton = event.target instanceof Element ? event.target.closest("[data-scroll-target]") : null;
-  if (scrollButton) {
-    const targetId = scrollButton.getAttribute("data-scroll-target");
-    const direction = scrollButton.getAttribute("data-scroll-direction") === "prev" ? -1 : 1;
-    const target = document.getElementById(String(targetId || ""));
-    target?.scrollBy({ left: direction * 380, behavior: "smooth" });
-    return;
-  }
-});
+  observer.observe(node);
+}
 
-document.addEventListener("keydown", (event) => {
-  const card = event.target instanceof Element ? event.target.closest("[data-product-open-id]") : null;
-  if (!card) return;
-  if (event.key !== "Enter" && event.key !== " ") return;
-  event.preventDefault();
-  window.location.href = productHref(card.getAttribute("data-product-open-id"));
-});
+function initHome() {
+  renderCartCount();
+  renderCategories();
+  renderTabs();
+  renderAdBanners("ad-banner-row-primary");
+  renderAdBanners("ad-banner-row-secondary");
+  loadInitial();
+  setupInfiniteLoad();
+}
 
-recommendTabs.forEach((button) => {
-  button.addEventListener("click", () => {
-    setActiveFilter(String(button.dataset.homeFilter || "all"));
-  });
-});
-
-searchInput?.addEventListener("input", () => {
-  recommendLimit = RECOMMEND_BATCH_SIZE;
-  renderRecommendations();
-});
-
-newsletterForm?.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const email = String(newsletterEmail?.value || "").trim();
-  if (!email || !email.includes("@")) {
-    showToast("Digite um e-mail valido para continuar.");
-    return;
-  }
-
-  if (newsletterEmail) newsletterEmail.value = "";
-  showToast("Cadastro realizado com sucesso.");
-});
-
-window.addEventListener("storage", (event) => {
-  if ([FAVORITES_KEY, CART_KEY].includes(String(event.key || ""))) {
-    renderBestSellers();
-    renderRecommendations();
-    renderCartCount();
-  }
-});
-
-window.addEventListener("beforeunload", () => {
-  disconnectRecommendationObserver();
-});
-
-syncInitialState();
-renderHero();
-renderOrbit();
-renderBestSellers();
-renderRecommendations();
-renderCartCount();
-restartHeroTimer();
+document.addEventListener("DOMContentLoaded", initHome);
