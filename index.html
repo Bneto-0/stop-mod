@@ -13,12 +13,12 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="format-detection" content="telephone=no" />
   <link rel="apple-touch-icon" href="/favicon.png?v=20260423home" />
-  <link rel="manifest" href="/site.webmanifest" />
+  <link rel="manifest" href="/site.webmanifest?v=20260430blackapp1" />
   <link rel="icon" href="./favicon.png?v=20260423home" type="image/png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./style.css?v=20260430azulhome1" />
+  <link rel="stylesheet" href="./style.css?v=20260430blackapp1" />
 </head>
 <body id="top" class="home-page home-infinite-page">
   <div class="home-infinite">
@@ -34,9 +34,9 @@
     <header class="home-infinite-header">
       <div class="home-infinite-container home-infinite-header__row">
         <a class="home-infinite-brand" href="#top" aria-label="UZUU">UZUU</a>
-        <button class="home-infinite-category-trigger" type="button">☰ Todas as categorias</button>
-        <form class="home-infinite-search" role="search">
-          <input type="search" placeholder="Buscar produtos, categorias ou marcas..." aria-label="Buscar produtos" />
+        <button class="home-infinite-category-trigger" type="button" data-home-action="categories">☰ Todas as categorias</button>
+        <form id="home-search-form" class="home-infinite-search" role="search">
+          <input id="home-search-input" type="search" placeholder="Buscar produtos, categorias ou marcas..." aria-label="Buscar produtos" />
           <span aria-hidden="true">⌕</span>
         </form>
         <a class="home-infinite-login" href="/login/">Entrar<br /><span>ou cadastrar</span></a>
@@ -66,8 +66,8 @@
             <h1>Estilo sem<br />pagar caro</h1>
             <span>As melhores peças com os melhores preços. Qualidade premium, preço justo.</span>
             <div class="home-infinite-hero__actions">
-              <button type="button">Ver coleção</button>
-              <button type="button">Lançamentos</button>
+              <button type="button" data-home-action="collection">Ver coleção</button>
+              <button type="button" data-home-action="launches">Lançamentos</button>
             </div>
           </div>
         </div>
@@ -87,7 +87,7 @@
       <section id="novidades" class="home-infinite-container home-infinite-section">
         <div class="home-infinite-section__head">
           <h2>Mais vendidos</h2>
-          <button type="button">Ver todos</button>
+          <button type="button" data-home-action="show-all">Ver todos</button>
         </div>
         <div id="best-sellers-grid" class="home-infinite-product-grid"></div>
       </section>
@@ -99,7 +99,7 @@
       <section class="home-infinite-container home-infinite-section">
         <div class="home-infinite-section__head">
           <h2>Recomendados para você</h2>
-          <button type="button">Ver todos</button>
+          <button type="button" data-home-action="show-all">Ver todos</button>
         </div>
         <div id="home-filter-tabs" class="home-infinite-tabs"></div>
         <div id="recommended-grid" class="home-infinite-product-grid"></div>
@@ -112,7 +112,7 @@
       <section class="home-infinite-container home-infinite-section">
         <div class="home-infinite-section__head">
           <h2>Continue explorando</h2>
-          <button type="button">Carregamento automático</button>
+          <button type="button" data-home-action="load-more">Carregamento automático</button>
         </div>
         <div id="explore-grid" class="home-infinite-product-grid"></div>
         <div id="loading-more-grid" class="home-infinite-product-grid" hidden></div>
@@ -124,10 +124,11 @@
           <h2>Cadastre-se e receba ofertas exclusivas</h2>
           <p>Novidades, promoções e lançamentos direto no seu e-mail.</p>
         </div>
-        <form>
+        <form id="home-newsletter-form">
           <input type="email" placeholder="Digite seu e-mail" aria-label="Digite seu e-mail" />
           <button type="submit">Cadastrar</button>
         </form>
+        <p id="home-newsletter-feedback" class="home-infinite-newsletter__feedback" hidden></p>
       </section>
     </main>
 
@@ -140,17 +141,17 @@
         </section>
         <section>
           <h3>Institucional</h3>
-          <a href="#">Sobre a UZUU</a>
-          <a href="#">Trabalhe conosco</a>
+          <a href="/marketplace/">Sobre a UZUU</a>
+          <a href="/seller/">Trabalhe conosco</a>
           <a href="/privacidade/">Política de privacidade</a>
           <a href="/termos/">Termos de uso</a>
         </section>
         <section>
           <h3>Ajuda</h3>
-          <a href="#">Central de ajuda</a>
-          <a href="#">Como comprar</a>
-          <a href="#">Formas de pagamento</a>
-          <a href="#">Rastrear pedido</a>
+          <a href="/perfil/">Central de ajuda</a>
+          <a href="/produtos/">Como comprar</a>
+          <a href="/carrinho/">Formas de pagamento</a>
+          <a href="/perfil/pedidos/">Rastrear pedido</a>
         </section>
         <section>
           <h3>Categorias</h3>
@@ -165,6 +166,9 @@
     </footer>
   </div>
 
-  <script src="./script.js?v=20260430azulhome1"></script>
+  <div id="home-toast" class="home-toast" hidden></div>
+  <script src="/assets/catalog.js?v=10"></script>
+  <script src="./script.js?v=20260430homefunc1"></script>
 </body>
 </html>
+

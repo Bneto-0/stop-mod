@@ -475,3 +475,140 @@ input:focus {
     grid-template-columns: 1fr;
   }
 }
+
+body {
+  background: #050505;
+  color: #ffffff;
+}
+
+.page {
+  background:
+    radial-gradient(circle at 14% 8%, rgba(255, 255, 255, 0.05) 0%, transparent 30%),
+    radial-gradient(circle at 86% 0%, rgba(255, 255, 255, 0.04) 0%, transparent 34%),
+    linear-gradient(180deg, #050505 0%, #090909 100%);
+}
+
+.card,
+.modal-card {
+  background: linear-gradient(180deg, #121212 0%, #0d0d0d 100%);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+}
+
+.login-brand,
+h1,
+h2,
+.link.strong,
+.btn.secondary,
+.btn.ghost,
+.x,
+input,
+.codebox {
+  color: #ffffff;
+}
+
+.login-intro,
+.muted,
+.link,
+.hint,
+.legal a,
+.foot span {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+input,
+.btn.secondary,
+.btn.ghost,
+.x,
+.codebox {
+  background: #181818;
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+}
+
+input::placeholder {
+  color: rgba(255, 255, 255, 0.36);
+}
+
+.btn.secondary:hover,
+.btn.ghost:hover,
+.x:hover {
+  background: #202020;
+}
+
+.login-divider {
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.login-divider::before,
+.login-divider::after {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+#site-footer-root {
+  display: block;
+  margin-top: 24px;
+}
+
+/* Card de entrada no mesmo padrao preto/azul da home */
+:root {
+  --bg: #050505;
+  --text: #ffffff;
+  --muted: rgba(255, 255, 255, 0.68);
+  --line: rgba(255, 255, 255, 0.14);
+  --line-strong: rgba(255, 255, 255, 0.18);
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-deep: #ffffff;
+  --soft: #111111;
+  --card-shadow: 0 24px 70px rgba(0, 0, 0, 0.36);
+}
+
+.login-card,
+.register-card {
+  background:
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 36%),
+    linear-gradient(180deg, #111111 0%, #0b0b0b 100%);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: var(--card-shadow);
+}
+
+.login-brand {
+  color: #ffffff;
+  text-shadow: none;
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  box-shadow: 0 18px 34px rgba(37, 99, 235, 0.24);
+}
+
+.btn.primary:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.btn.secondary,
+.btn.ghost {
+  background: #0b0b0b;
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.btn.secondary:hover,
+.btn.ghost:hover {
+  background: #151515;
+}
+
+.soc-ic.g {
+  background: #ffffff;
+  color: #111111;
+}
+
+.msg {
+  color: #93c5fd;
+}
+
+.msg.err {
+  color: #fca5a5;
+}

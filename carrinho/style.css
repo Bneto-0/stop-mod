@@ -1,4 +1,4 @@
-@import "../style.css?v=20260427blue";
+@import "../style.css?v=20260430blackapp1";
 body { background: radial-gradient(circle at top left, rgba(0,0,0,0.08), transparent 18%), linear-gradient(180deg, #f5f5f5 0%, #ebebeb 100%); }
 .hero { padding: 20px 0 18px; }
 .menu-top, .hero-menu, .cart-shell, footer { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
@@ -4064,5 +4064,66 @@ footer p,
   .cart-obsidian-inline-form {
     flex-direction: column;
   }
+}
+
+/* Garantia visual: carrinho sempre preto, inclusive estado vazio */
+body {
+  background:
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 24%),
+    linear-gradient(180deg, #050505 0%, #080808 100%) !important;
+  color: #ffffff;
+}
+
+.cart-page,
+.cart-obsidian-page {
+  background: transparent !important;
+  color: #ffffff;
+}
+
+.cart-benefits,
+.cart-table-card,
+.cart-summary-card,
+.cart-coupon-card,
+.cart-trust-card,
+.cart-products,
+.cart-summary,
+.inline-pay-card,
+.address-inline-box,
+.cart-obsidian-card,
+.cart-obsidian-items-card,
+.cart-obsidian-recommendations,
+.cart-obsidian-summary,
+.cart-obsidian-goal,
+.cart-obsidian-tools,
+#cart-items .cart-obsidian-empty-state {
+  background: linear-gradient(180deg, #14161c 0%, #101116 100%) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: none !important;
+  color: #ffffff;
+}
+
+.cart-overview__title,
+.cart-benefit__copy strong,
+.cart-summary-card h2,
+.cart-coupon-card h3,
+.cart-trust-card h3,
+#cart-items .cart-obsidian-empty-state strong {
+  color: #ffffff !important;
+}
+
+.cart-overview__count,
+.cart-benefit__copy span,
+.summary-row span,
+.cart-trust-card p,
+#cart-items .cart-obsidian-empty-state p {
+  color: rgba(255, 255, 255, 0.68) !important;
+}
+
+.cart-empty-state__action,
+.cart-obsidian-primary,
+.cart-obsidian-inline-form button {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+  color: #ffffff !important;
 }
 
