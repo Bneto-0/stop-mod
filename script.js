@@ -31,7 +31,7 @@ const demoProducts = [
 ];
 
 const adBanners = [
-  { title: "Lançamentos", subtitle: "Novas peças toda semana", cta: "Ver lançamentos", image: "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=1000&q=80", tone: "from-red-950" },
+  { title: "Lançamentos", subtitle: "Novas peças toda semana", cta: "Ver lançamentos", image: "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=1000&q=80", tone: "from-blue-950" },
   { title: "Até 50% OFF", subtitle: "Nas melhores peças", cta: "Aproveitar ofertas", image: "https://images.unsplash.com/photo-1506629905607-d9f297d8f8af?auto=format&fit=crop&w=1000&q=80", tone: "from-black" },
   { title: "Streetwear Premium", subtitle: "Qualidade que se destaca", cta: "Ver streetwear", image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1000&q=80", tone: "from-neutral-950" },
 ];
