@@ -5176,6 +5176,7 @@ body.home-infinite-page .home-infinite {
 .home-infinite-category-trigger {
   display: inline-flex;
   align-items: center;
+  gap: 0.55rem;
   border: 0;
   border-radius: 999px;
   background: transparent;
@@ -5267,6 +5268,10 @@ body.home-infinite-page .home-infinite {
   font-weight: 800;
 }
 
+.home-infinite-header.is-categories-open .home-infinite-category-trigger {
+  color: #60a5fa;
+}
+
 .home-infinite-nav a {
   transition: color 0.2s ease;
 }
@@ -5274,6 +5279,32 @@ body.home-infinite-page .home-infinite {
 .home-infinite-nav a:hover,
 .home-infinite-nav a.is-promo {
   color: #3b82f6;
+}
+
+.home-infinite-header__menu-panel {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(5, 5, 5, 0.985) 0%, rgba(12, 12, 12, 0.985) 100%);
+}
+
+.home-infinite-header__menu-inner {
+  padding: 1.15rem 0 1.4rem;
+}
+
+.home-infinite-header__menu-head {
+  display: grid;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.home-infinite-header__menu-head strong {
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.home-infinite-header__menu-head span {
+  color: #9ca3af;
+  font-size: 0.86rem;
 }
 
 .home-infinite-hero {
@@ -5416,6 +5447,10 @@ body.home-infinite-page .home-infinite {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 1rem;
+}
+
+.home-infinite-categories__grid--menu {
+  gap: 1.15rem;
 }
 
 .home-infinite-categories__grid button {

@@ -18,42 +18,59 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./style.css?v=20260501darksweep2" />
+  <link rel="stylesheet" href="./style.css?v=20260501homecats1" />
 </head>
 <body id="top" class="home-page home-infinite-page">
   <div class="home-infinite">
     <div class="home-infinite-topbar">
       <div class="home-infinite-container home-infinite-topbar__inner">
-        <span>🚚 Frete grátis para todo o Brasil</span>
-        <span>💳 Parcele em até 12x sem juros</span>
-        <span>↩ Troca fácil em até 7 dias</span>
-        <span>🔒 Compra 100% segura</span>
+        <span>Frete gratis para todo o Brasil</span>
+        <span>Parcele em ate 12x sem juros</span>
+        <span>Troca facil em ate 7 dias</span>
+        <span>Compra 100% segura</span>
       </div>
     </div>
 
     <header class="home-infinite-header">
       <div class="home-infinite-container home-infinite-header__row">
         <a class="home-infinite-brand" href="#top" aria-label="UZUU">UZUU</a>
-        <button class="home-infinite-category-trigger" type="button" data-home-action="categories">☰ Todas as categorias</button>
+        <button
+          id="home-category-trigger"
+          class="home-infinite-category-trigger"
+          type="button"
+          data-home-action="categories"
+          aria-expanded="false"
+          aria-controls="home-categories-menu"
+        >Todas as categorias</button>
         <form id="home-search-form" class="home-infinite-search" role="search">
           <input id="home-search-input" type="search" placeholder="Buscar produtos, categorias ou marcas..." aria-label="Buscar produtos" />
           <span aria-hidden="true">⌕</span>
         </form>
         <a class="home-infinite-login" href="/login/">Entrar<br /><span>ou cadastrar</span></a>
-        <a class="home-infinite-action" href="/perfil/favoritos/">♡ Favoritos</a>
-        <a class="home-infinite-cart" href="/carrinho/">🛒 Carrinho <span id="home-cart-count">0</span></a>
+        <a class="home-infinite-action" href="/perfil/favoritos/">Favoritos</a>
+        <a class="home-infinite-cart" href="/carrinho/">Carrinho <span id="home-cart-count">0</span></a>
       </div>
 
       <nav class="home-infinite-container home-infinite-nav" aria-label="Navegacao principal">
         <a href="#novidades">Novidades</a>
         <a href="#masculino">Masculino</a>
         <a href="#feminino">Feminino</a>
-        <a href="#acessorios">Acessórios</a>
-        <a href="#calcados">Calçados</a>
+        <a href="#acessorios">Acessorios</a>
+        <a href="#calcados">Calcados</a>
         <a href="#streetwear">Streetwear</a>
         <a href="#marcas">Marcas</a>
-        <a class="is-promo" href="#promocoes">Promoções</a>
+        <a class="is-promo" href="#promocoes">Promocoes</a>
       </nav>
+
+      <div id="home-categories-menu" class="home-infinite-header__menu-panel" hidden>
+        <div class="home-infinite-container home-infinite-header__menu-inner">
+          <div class="home-infinite-header__menu-head">
+            <strong>Todas as categorias</strong>
+            <span>Escolha uma categoria para filtrar os produtos da home.</span>
+          </div>
+          <div id="home-categories-menu-grid" class="home-infinite-categories__grid home-infinite-categories__grid--menu"></div>
+        </div>
+      </div>
     </header>
 
     <main>
@@ -62,22 +79,22 @@
         <div class="home-infinite-hero__overlay"></div>
         <div class="home-infinite-container home-infinite-hero__content">
           <div>
-            <p>Coleção outono / inverno</p>
+            <p>Colecao outono / inverno</p>
             <h1>Estilo sem<br />pagar caro</h1>
-            <span>As melhores peças com os melhores preços. Qualidade premium, preço justo.</span>
+            <span>As melhores pecas com os melhores precos. Qualidade premium, preco justo.</span>
             <div class="home-infinite-hero__actions">
-              <button type="button" data-home-action="collection">Ver coleção</button>
-              <button type="button" data-home-action="launches">Lançamentos</button>
+              <button type="button" data-home-action="collection">Ver colecao</button>
+              <button type="button" data-home-action="launches">Lancamentos</button>
             </div>
           </div>
         </div>
       </section>
 
       <section class="home-infinite-container home-infinite-benefits" aria-label="Beneficios da compra">
-        <article><span>🚚</span><div><strong>Frete grátis</strong><small>para todo o Brasil</small></div></article>
-        <article><span>💳</span><div><strong>Parcele em até 12x</strong><small>sem juros no cartão</small></div></article>
-        <article><span>↩</span><div><strong>Troca grátis</strong><small>em até 7 dias</small></div></article>
-        <article><span>🔒</span><div><strong>Compra 100% segura</strong><small>seus dados protegidos</small></div></article>
+        <article><span>+</span><div><strong>Frete gratis</strong><small>para todo o Brasil</small></div></article>
+        <article><span>+</span><div><strong>Parcele em ate 12x</strong><small>sem juros no cartao</small></div></article>
+        <article><span>+</span><div><strong>Troca gratis</strong><small>em ate 7 dias</small></div></article>
+        <article><span>+</span><div><strong>Compra 100% segura</strong><small>seus dados protegidos</small></div></article>
       </section>
 
       <section class="home-infinite-container home-infinite-categories" aria-label="Categorias">
@@ -98,7 +115,7 @@
 
       <section class="home-infinite-container home-infinite-section">
         <div class="home-infinite-section__head">
-          <h2>Recomendados para você</h2>
+          <h2>Recomendados para voce</h2>
           <button type="button" data-home-action="show-all">Ver todos</button>
         </div>
         <div id="home-filter-tabs" class="home-infinite-tabs"></div>
@@ -112,7 +129,7 @@
       <section class="home-infinite-container home-infinite-section">
         <div class="home-infinite-section__head">
           <h2>Continue explorando</h2>
-          <button type="button" data-home-action="load-more">Carregamento automático</button>
+          <button type="button" data-home-action="load-more">Carregamento automatico</button>
         </div>
         <div id="explore-grid" class="home-infinite-product-grid"></div>
         <div id="loading-more-grid" class="home-infinite-product-grid" hidden></div>
@@ -122,7 +139,7 @@
       <section class="home-infinite-container home-infinite-newsletter">
         <div>
           <h2>Cadastre-se e receba ofertas exclusivas</h2>
-          <p>Novidades, promoções e lançamentos direto no seu e-mail.</p>
+          <p>Novidades, promocoes e lancamentos direto no seu e-mail.</p>
         </div>
         <form id="home-newsletter-form">
           <input type="email" placeholder="Digite seu e-mail" aria-label="Digite seu e-mail" />
@@ -136,14 +153,14 @@
       <div class="home-infinite-container home-infinite-footer__grid">
         <section class="home-infinite-footer__brand">
           <strong>UZUU</strong>
-          <p>Estilo sem pagar caro. Peças premium com preço justo para todos os estilos.</p>
-          <div>◎ ♪ ☁ ▶</div>
+          <p>Estilo sem pagar caro. Pecas premium com preco justo para todos os estilos.</p>
+          <div>Social</div>
         </section>
         <section>
           <h3>Institucional</h3>
           <a href="/marketplace/">Sobre a UZUU</a>
           <a href="/seller/">Trabalhe conosco</a>
-          <a href="/privacidade/">Política de privacidade</a>
+          <a href="/privacidade/">Politica de privacidade</a>
           <a href="/termos/">Termos de uso</a>
         </section>
         <section>
@@ -157,9 +174,9 @@
           <h3>Categorias</h3>
           <a href="#masculino">Masculino</a>
           <a href="#feminino">Feminino</a>
-          <a href="#acessorios">Acessórios</a>
-          <a href="#calcados">Calçados</a>
-          <a href="#promocoes">Promoções</a>
+          <a href="#acessorios">Acessorios</a>
+          <a href="#calcados">Calcados</a>
+          <a href="#promocoes">Promocoes</a>
         </section>
       </div>
       <div class="home-infinite-container home-infinite-footer__bottom">© 2026 UZUU. Todos os direitos reservados.</div>
@@ -168,7 +185,6 @@
 
   <div id="home-toast" class="home-toast" hidden></div>
   <script src="/assets/catalog.js?v=10"></script>
-  <script src="./script.js?v=20260430homefunc1"></script>
+  <script src="./script.js?v=20260501homecats1"></script>
 </body>
 </html>
-

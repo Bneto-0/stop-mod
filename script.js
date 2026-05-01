@@ -40,7 +40,8 @@
     visibleCount: 24,
     selectedCategory: "Todos",
     query: "",
-    loadingMore: false
+    loadingMore: false,
+    categoriesMenuOpen: false
   };
 
   function escapeHtml(value) {
@@ -251,15 +252,21 @@
     updateCategories();
   }
 
-  function renderCategories() {
-    const node = document.getElementById("home-categories-grid");
-    if (!node) return;
-    node.innerHTML = categories.map((category) => `
+  function categoriesMarkup() {
+    return categories.map((category) => `
       <button type="button" data-category="${category.name}">
         <span><img src="${category.image}" alt="${escapeHtml(category.label || category.name)}" loading="lazy" /></span>
         <strong>${escapeHtml(category.label || category.name)}</strong>
       </button>
     `).join("");
+  }
+
+  function renderCategories() {
+    ["home-categories-grid", "home-categories-menu-grid"].forEach((targetId) => {
+      const node = document.getElementById(targetId);
+      if (!node) return;
+      node.innerHTML = categoriesMarkup();
+    });
   }
 
   function renderTabs() {
@@ -292,7 +299,20 @@
     state.selectedCategory = category || "Todos";
     state.visibleCount = 24;
     renderAllProducts();
+    setCategoriesMenuOpen(false);
     if (shouldScroll) scrollToProducts();
+  }
+
+  function setCategoriesMenuOpen(nextOpen) {
+    state.categoriesMenuOpen = !!nextOpen;
+
+    const header = document.querySelector(".home-infinite-header");
+    const trigger = document.getElementById("home-category-trigger");
+    const panel = document.getElementById("home-categories-menu");
+
+    header?.classList.toggle("is-categories-open", state.categoriesMenuOpen);
+    if (trigger) trigger.setAttribute("aria-expanded", state.categoriesMenuOpen ? "true" : "false");
+    if (panel) panel.hidden = !state.categoriesMenuOpen;
   }
 
   function loadMoreProducts() {
@@ -418,11 +438,20 @@
         }
         if (action === "launches") selectCategory("launches");
         if (action === "categories") {
-          document.querySelector(".home-infinite-categories")?.scrollIntoView({ behavior: "smooth", block: "start" });
+          const nextOpen = !state.categoriesMenuOpen;
+          setCategoriesMenuOpen(nextOpen);
+          if (nextOpen) {
+            document.getElementById("home-categories-menu")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          }
         }
         if (action === "load-more") {
           loadMoreProducts();
         }
+        return;
+      }
+
+      if (state.categoriesMenuOpen && !target.closest("#home-categories-menu") && !target.closest("#home-category-trigger")) {
+        setCategoriesMenuOpen(false);
       }
     });
 
