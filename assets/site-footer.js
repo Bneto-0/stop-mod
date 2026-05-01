@@ -27,18 +27,18 @@
         <div class="home-footer__columns">
           <section>
             <h3>INSTITUCIONAL</h3>
-            <a href="/sobre/">Sobre a UZUU</a>
-            <a href="/trabalhe-conosco/">Trabalhe conosco</a>
+            <a href="/marketplace/">Sobre a UZUU</a>
+            <a href="/seller/">Trabalhe conosco</a>
             <a href="/privacidade/">Politica de privacidade</a>
-            <a href="/trocas/">Trocas e devolucoes</a>
+            <a href="/termos/">Trocas e devolucoes</a>
             <a href="/termos/">Termos de uso</a>
           </section>
           <section>
             <h3>AJUDA</h3>
-            <a href="/central-de-ajuda/">Central de ajuda</a>
-            <a href="/como-comprar/">Como comprar</a>
-            <a href="/pagamento/">Formas de pagamento</a>
-            <a href="/prazos/">Prazos de entrega</a>
+            <a href="/perfil/">Central de ajuda</a>
+            <a href="/produtos/">Como comprar</a>
+            <a href="/carrinho/">Formas de pagamento</a>
+            <a href="/entrega/">Prazos de entrega</a>
             <a href="/perfil/pedidos/">Rastrear pedido</a>
           </section>
           <section>
@@ -76,7 +76,7 @@
       </div>
 
       <div class="container home-footer__bottom">
-        <p>&copy; 2024 UZUU. Todos os direitos reservados.</p>
+        <p>&copy; 2026 UZUU. Todos os direitos reservados.</p>
       </div>
     </footer>
   `;

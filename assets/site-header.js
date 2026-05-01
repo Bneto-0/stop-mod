@@ -415,6 +415,10 @@
     }
   });
 
+  window.addEventListener("stopmod:cart-updated", renderHeaderCartCount);
+  window.addEventListener("stopmod:profile-updated", renderHeaderProfile);
+  window.addEventListener("stopmod:shipping-updated", renderHeaderAddress);
+
   syncSearchFromQuery();
   renderHeaderState();
   setCatalogOpen(false);

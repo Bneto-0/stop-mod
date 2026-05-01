@@ -2266,7 +2266,7 @@ body.home-page .footer-links a {
 
 .product-detail-shell {
   width: 100%;
-  background: #fff;
+  background: linear-gradient(180deg, #101215 0%, #0b0d10 100%);
   border: 0;
   box-shadow: none;
   padding: 1rem 1.1rem 1.3rem;
@@ -2510,7 +2510,7 @@ body.home-page .footer-links a {
 .product-detail-panel h1 {
   margin: 0;
   max-width: none;
-  color: #111111;
+  color: #ffffff;
   font-size: clamp(2.3rem, 3vw, 3.05rem);
   line-height: 1;
   letter-spacing: -0.04em;
@@ -2549,21 +2549,21 @@ body.home-page .footer-links a {
 }
 
 .product-detail-price strong {
-  color: #111111;
+  color: #ffffff;
   font-size: clamp(2.2rem, 3vw, 3.1rem);
   line-height: 0.96;
   letter-spacing: -0.05em;
 }
 
 .product-detail-price__pix span {
-  color: #111111;
+  color: #ffffff;
   font-size: 1rem;
   font-weight: 500;
   margin-bottom: 0.2rem;
 }
 
 .product-detail-price small {
-  color: #111111;
+  color: #ffffff;
   font-size: 0.95rem;
 }
 
@@ -3152,14 +3152,14 @@ body.home-page .footer-links a {
 
 .product-detail-actions .btn.primary {
   order: -1;
-  background: linear-gradient(180deg, #ec1212 0%, #c50808 100%);
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
   color: #fff;
-  box-shadow: 0 18px 40px rgba(229, 22, 22, 0.24);
+  box-shadow: 0 18px 40px rgba(37, 99, 235, 0.26);
 }
 
 .product-detail-feedback {
   margin: 0;
-  color: #111111;
+  color: #dbeafe;
   font-weight: 700;
 }
 
@@ -5373,6 +5373,38 @@ body.home-infinite-page .home-infinite {
   margin-top: 2rem;
 }
 
+.home-infinite-hero__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin-top: 2rem;
+  max-width: 44rem;
+}
+
+.home-infinite-hero__metrics article {
+  padding: 1rem 1.05rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.1rem;
+  background: rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(10px);
+}
+
+.home-infinite-hero__metrics strong {
+  display: block;
+  color: #ffffff;
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.home-infinite-hero__metrics small {
+  display: block;
+  margin-top: 0.3rem;
+  color: #b7c2d1;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
 .home-infinite-hero__actions button {
   border: 0;
   border-radius: 999px;
@@ -5441,6 +5473,38 @@ body.home-infinite-page .home-infinite {
 .home-infinite-categories {
   padding-top: 1rem;
   padding-bottom: 1rem;
+}
+
+.home-infinite-proof-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.home-infinite-proof-strip__item {
+  display: grid;
+  gap: 0.45rem;
+  min-height: 134px;
+  padding: 1.15rem 1.2rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.2rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%),
+    #0d0f12;
+}
+
+.home-infinite-proof-strip__item strong {
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.home-infinite-proof-strip__item span {
+  color: #a3aab7;
+  font-size: 0.92rem;
+  line-height: 1.65;
 }
 
 .home-infinite-categories__grid {
@@ -5513,6 +5577,20 @@ body.home-infinite-page .home-infinite {
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1.25rem;
+}
+
+.home-infinite-section__head > div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.home-infinite-section__eyebrow {
+  margin: 0;
+  color: #60a5fa;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
 }
 
 .home-infinite-section__head h2 {
@@ -6068,6 +6146,7 @@ body.home-infinite-page .home-infinite {
 
   .home-infinite-ad-grid,
   .home-infinite-benefits,
+  .home-infinite-proof-strip,
   .home-infinite-footer__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -6124,6 +6203,12 @@ body.home-infinite-page .home-infinite {
     padding: 0.35rem;
   }
 
+  .home-infinite-hero__metrics {
+    grid-template-columns: 1fr;
+    max-width: 19rem;
+    margin-top: 1.35rem;
+  }
+
   .home-infinite-categories__grid span {
     width: 6rem;
     height: 6rem;
@@ -6143,6 +6228,7 @@ body.home-infinite-page .home-infinite {
   .home-infinite-product-grid,
   .home-infinite-ad-grid,
   .home-infinite-benefits,
+  .home-infinite-proof-strip,
   .home-infinite-categories__grid,
   .home-infinite-footer__grid {
     grid-template-columns: 1fr;
@@ -6150,6 +6236,10 @@ body.home-infinite-page .home-infinite {
 
   .home-infinite-hero__content h1 {
     font-size: 2.65rem;
+  }
+
+  .home-infinite-hero__metrics article {
+    padding: 0.9rem 1rem;
   }
 
   .home-infinite-newsletter form {

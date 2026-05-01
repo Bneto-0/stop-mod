@@ -12,36 +12,28 @@
   ];
 
   const categories = [
-    { name: "Masculino", image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80" },
-    { name: "Feminino", image: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=800&q=80" },
-    { name: "Acessorios", label: "Acessórios", image: "https://images.unsplash.com/photo-1523779105320-d1cd346ff52b?auto=format&fit=crop&w=800&q=80" },
-    { name: "Calcados", label: "Calçados", image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80" },
-    { name: "Streetwear", image: "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=800&q=80" },
-    { name: "Promocoes", label: "Promoções", image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=800&q=80" }
+    { name: "Masculino", label: "Masculino", image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80" },
+    { name: "Feminino", label: "Feminino", image: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=800&q=80" },
+    { name: "Acessorios", label: "Acessorios", image: "https://images.unsplash.com/photo-1523779105320-d1cd346ff52b?auto=format&fit=crop&w=800&q=80" },
+    { name: "Calcados", label: "Calcados", image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80" },
+    { name: "Streetwear", label: "Streetwear", image: "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=800&q=80" },
+    { name: "Promocoes", label: "Promocoes", image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=800&q=80" }
   ];
+
+  const tabs = ["Todos", "Masculino", "Feminino", "Acessorios", "Calcados", "Streetwear"];
 
   const adBanners = [
-    { title: "Lançamentos", subtitle: "Novas peças toda semana", cta: "Ver lançamentos", action: "launches", image: "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=1000&q=80", tone: "from-blue-950" },
-    { title: "Até 50% OFF", subtitle: "Nas melhores peças", cta: "Aproveitar ofertas", action: "Promocoes", image: "https://images.unsplash.com/photo-1506629905607-d9f297d8f8af?auto=format&fit=crop&w=1000&q=80", tone: "from-black" },
+    { title: "Lancamentos", subtitle: "Novas pecas toda semana", cta: "Ver lancamentos", action: "launches", image: "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=1000&q=80", tone: "from-blue-950" },
+    { title: "Ate 50% OFF", subtitle: "Nas melhores pecas", cta: "Aproveitar ofertas", action: "Promocoes", image: "https://images.unsplash.com/photo-1506629905607-d9f297d8f8af?auto=format&fit=crop&w=1000&q=80", tone: "from-black" },
     { title: "Streetwear Premium", subtitle: "Qualidade que se destaca", cta: "Ver streetwear", action: "Streetwear", image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1000&q=80", tone: "from-neutral-950" }
   ];
-
-  const categoryGroups = {
-    Masculino: ["camisetas", "camisas", "calcas", "shorts", "moletons", "calcados"],
-    Feminino: ["vestidos", "saias", "blusas", "conjuntos", "blazers"],
-    Acessorios: ["acessorios", "bolsas"],
-    Calcados: ["calcados", "tenis", "coturno"],
-    Streetwear: ["streetwear", "moletons", "jaquetas", "camisetas", "calcas"],
-    Promocoes: ["promocoes"]
-  };
 
   const state = {
     products: [],
     visibleCount: 24,
     selectedCategory: "Todos",
     query: "",
-    loadingMore: false,
-    categoriesMenuOpen: false
+    loadingMore: false
   };
 
   function escapeHtml(value) {
@@ -108,73 +100,20 @@
 
   function buildProductPool() {
     const base = baseProducts();
-    const repeats = [];
-    for (let page = 0; page < 5; page += 1) {
+    const pool = [];
+
+    for (let batch = 0; batch < 8; batch += 1) {
       base.forEach((product, index) => {
-        repeats.push({
+        pool.push({
           ...product,
-          uiId: `${product.id}-${page}-${index}`,
-          badge: page === 0 ? product.badge : (index % 4 === 0 ? "Novo" : product.badge)
+          uiId: `${product.id}-${batch}-${index}`,
+          price: Number((product.price + ((batch + index) % 3) * 3.5).toFixed(2)),
+          badge: batch === 0 ? product.badge : (index % 4 === 0 ? "Novo" : product.badge)
         });
       });
     }
-    return repeats;
-  }
 
-  function matchesCategory(product, category) {
-    if (!category || category === "Todos") return true;
-    if (category === "Promocoes") return product.oldPrice > product.price;
-    if (category === "launches") return ["novo", "lançamento", "lancamento", "drop"].some((word) => normalizeText(product.badge).includes(word));
-
-    const normalizedCategory = normalizeText(product.category);
-    const normalizedName = normalizeText(product.name);
-    const groups = categoryGroups[category] || [category];
-    return groups.some((item) => {
-      const token = normalizeText(item);
-      return normalizedCategory.includes(token) || normalizedName.includes(token);
-    });
-  }
-
-  function matchesQuery(product) {
-    const query = normalizeText(state.query);
-    if (!query) return true;
-    return [product.name, product.category, product.size, product.badge, product.description]
-      .some((field) => normalizeText(field).includes(query));
-  }
-
-  function filteredProducts() {
-    return state.products.filter((product) => matchesCategory(product, state.selectedCategory) && matchesQuery(product));
-  }
-
-  function scrollToProducts() {
-    document.getElementById("novidades")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-  function showToast(message) {
-    const toast = document.getElementById("home-toast");
-    if (!toast) return;
-    toast.textContent = message;
-    toast.hidden = false;
-    window.clearTimeout(showToast.timer);
-    showToast.timer = window.setTimeout(() => {
-      toast.hidden = true;
-    }, 2300);
-  }
-
-  function renderCartCount() {
-    const node = document.getElementById("home-cart-count");
-    if (!node) return;
-    if (catalog?.countCartItems) {
-      node.textContent = String(catalog.countCartItems());
-      return;
-    }
-
-    try {
-      const raw = JSON.parse(localStorage.getItem("stopmod_cart") || "[]");
-      node.textContent = String(Array.isArray(raw) ? raw.length : 0);
-    } catch {
-      node.textContent = "0";
-    }
+    return pool;
   }
 
   function favoriteLabel(productId) {
@@ -185,10 +124,152 @@
     return catalog?.isFavorite?.(productId) ? "♥" : "♡";
   }
 
+  function renderCartCount() {
+    const homeCounter = document.getElementById("home-cart-count");
+    if (!homeCounter) return;
+
+    if (catalog?.countCartItems) {
+      homeCounter.textContent = String(catalog.countCartItems());
+      return;
+    }
+
+    try {
+      const raw = JSON.parse(localStorage.getItem("stopmod_cart") || "[]");
+      homeCounter.textContent = String(Array.isArray(raw) ? raw.length : 0);
+    } catch {
+      homeCounter.textContent = "0";
+    }
+  }
+
+  function showToast(message) {
+    const toast = document.getElementById("home-toast");
+    if (!toast) return;
+
+    toast.textContent = message;
+    toast.hidden = false;
+    window.clearTimeout(showToast.timer);
+    showToast.timer = window.setTimeout(() => {
+      toast.hidden = true;
+    }, 2400);
+  }
+
+  function searchInput() {
+    return document.getElementById("search-input") || document.getElementById("home-search-input");
+  }
+
+  function readQueryParams() {
+    const params = new URLSearchParams(window.location.search);
+    const cat = String(params.get("cat") || "").trim();
+    const q = String(params.get("q") || "").trim();
+    if (q) state.query = q;
+    if (cat) state.selectedCategory = cat;
+  }
+
+  function matchesCategory(product, category) {
+    if (!category || category === "Todos") return true;
+    if (category === "Promocoes") return product.oldPrice > product.price;
+    if (category === "launches") return ["novo", "lancamento", "drop"].some((word) => normalizeText(product.badge).includes(word));
+
+    const normalizedCategory = normalizeText(product.category);
+    const normalizedName = normalizeText(product.name);
+    const token = normalizeText(category);
+
+    return normalizedCategory.includes(token) || normalizedName.includes(token);
+  }
+
+  function matchesQuery(product) {
+    const query = normalizeText(state.query);
+    if (!query) return true;
+
+    return [product.name, product.category, product.size, product.badge, product.description]
+      .some((field) => normalizeText(field).includes(query));
+  }
+
+  function filteredProducts() {
+    return state.products.filter((product) => matchesCategory(product, state.selectedCategory) && matchesQuery(product));
+  }
+
+  function updateUrlState() {
+    const next = new URL(window.location.href);
+
+    if (state.query) next.searchParams.set("q", state.query);
+    else next.searchParams.delete("q");
+
+    if (state.selectedCategory && state.selectedCategory !== "Todos" && state.selectedCategory !== "launches") {
+      next.searchParams.set("cat", state.selectedCategory);
+    } else {
+      next.searchParams.delete("cat");
+    }
+
+    window.history.replaceState({}, "", next.toString());
+  }
+
+  function scrollToProducts() {
+    document.getElementById("produtos")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function categoriesMarkup() {
+    return categories.map((category) => `
+      <button type="button" data-category="${category.name}">
+        <span><img src="${escapeHtml(category.image)}" alt="${escapeHtml(category.label)}" loading="lazy" /></span>
+        <strong>${escapeHtml(category.label)}</strong>
+      </button>
+    `).join("");
+  }
+
+  function renderCategories() {
+    const node = document.getElementById("home-categories-grid");
+    if (!node) return;
+    node.innerHTML = categoriesMarkup();
+  }
+
+  function renderTabs() {
+    const node = document.getElementById("home-filter-tabs");
+    if (!node) return;
+
+    node.innerHTML = tabs.map((tab) => `
+      <button type="button" data-filter="${tab}">${tab}</button>
+    `).join("");
+  }
+
+  function renderAdBanners(targetId) {
+    const node = document.getElementById(targetId);
+    if (!node) return;
+
+    node.innerHTML = adBanners.map((banner) => `
+      <article class="home-infinite-ad-card home-infinite-ad-card--${escapeHtml(banner.tone)}">
+        <img src="${escapeHtml(banner.image)}" alt="${escapeHtml(banner.title)}" loading="lazy" />
+        <div></div>
+        <section>
+          <h3>${escapeHtml(banner.title)}</h3>
+          <p>${escapeHtml(banner.subtitle)}</p>
+          <button type="button" data-banner-action="${escapeHtml(banner.action)}">${escapeHtml(banner.cta)}</button>
+        </section>
+      </article>
+    `).join("");
+  }
+
+  function skeletonCard() {
+    return `
+      <article class="home-infinite-skeleton">
+        <div></div>
+        <span></span>
+        <span></span>
+        <span></span>
+      </article>
+    `;
+  }
+
+  function renderSkeletonGrid(node, count = 18) {
+    if (!node) return;
+    node.innerHTML = Array.from({ length: count }, skeletonCard).join("");
+  }
+
   function productCard(product) {
-    const rating = productRating(product);
     const href = productHref(product);
+    const rating = productRating(product);
     const isFavorite = !!catalog?.isFavorite?.(product.id);
+
     return `
       <article class="home-infinite-product-card" data-product-id="${product.id}">
         <a class="home-infinite-product-card__media" href="${href}" aria-label="Abrir ${escapeHtml(product.name)}">
@@ -210,77 +291,20 @@
     `;
   }
 
-  function skeletonCard() {
-    return `
-      <article class="home-infinite-skeleton">
-        <div></div>
-        <span></span>
-        <span></span>
-        <span></span>
-      </article>
-    `;
-  }
-
   function renderProductGrid(node, products) {
     if (!node) return;
+
     if (!products.length) {
       node.innerHTML = `
         <div class="home-infinite-empty">
           <strong>Nenhum produto encontrado.</strong>
-          <span>Tente buscar por camiseta, calça, jaqueta ou acessórios.</span>
+          <span>Tente buscar por camiseta, calca, jaqueta ou acessorios.</span>
         </div>
       `;
       return;
     }
+
     node.innerHTML = products.map(productCard).join("");
-  }
-
-  function renderSkeletonGrid(node, count = 18) {
-    if (!node) return;
-    node.innerHTML = Array.from({ length: count }, skeletonCard).join("");
-  }
-
-  function renderAllProducts() {
-    const list = filteredProducts();
-    const bestSellers = state.products.filter((product) => matchesQuery(product)).slice(0, 18);
-    const recommended = list.slice(0, 18);
-    const exploreMore = list.slice(18, state.visibleCount);
-    renderProductGrid(document.getElementById("best-sellers-grid"), state.selectedCategory === "Todos" ? bestSellers : recommended);
-    renderProductGrid(document.getElementById("recommended-grid"), recommended);
-    renderProductGrid(document.getElementById("explore-grid"), exploreMore);
-    updateTabs();
-    updateCategories();
-  }
-
-  function categoriesMarkup() {
-    return categories.map((category) => `
-      <button type="button" data-category="${category.name}">
-        <span><img src="${category.image}" alt="${escapeHtml(category.label || category.name)}" loading="lazy" /></span>
-        <strong>${escapeHtml(category.label || category.name)}</strong>
-      </button>
-    `).join("");
-  }
-
-  function renderCategories() {
-    ["home-categories-grid", "home-categories-menu-grid"].forEach((targetId) => {
-      const node = document.getElementById(targetId);
-      if (!node) return;
-      node.innerHTML = categoriesMarkup();
-    });
-  }
-
-  function renderTabs() {
-    const node = document.getElementById("home-filter-tabs");
-    if (!node) return;
-    const tabs = [
-      { value: "Todos", label: "Todos" },
-      { value: "Masculino", label: "Masculino" },
-      { value: "Feminino", label: "Feminino" },
-      { value: "Acessorios", label: "Acessórios" },
-      { value: "Calcados", label: "Calçados" },
-      { value: "Streetwear", label: "Streetwear" }
-    ];
-    node.innerHTML = tabs.map((category) => `<button type="button" data-filter="${category.value}">${category.label}</button>`).join("");
   }
 
   function updateTabs() {
@@ -295,51 +319,27 @@
     });
   }
 
+  function renderAllProducts() {
+    const list = filteredProducts();
+    const bestSellers = state.products.filter((product) => matchesQuery(product)).slice(0, 18);
+    const recommended = list.slice(0, 18);
+    const explore = list.slice(18, state.visibleCount);
+
+    renderProductGrid(document.getElementById("best-sellers-grid"), state.selectedCategory === "Todos" ? bestSellers : recommended);
+    renderProductGrid(document.getElementById("recommended-grid"), recommended);
+    renderProductGrid(document.getElementById("explore-grid"), explore);
+    updateTabs();
+    updateCategories();
+    updateUrlState();
+  }
+
   function selectCategory(category, shouldScroll = true) {
     state.selectedCategory = category || "Todos";
     state.visibleCount = 24;
     renderAllProducts();
-    setCategoriesMenuOpen(false);
+    document.querySelector(".shared-header")?.classList.remove("is-menu-open");
+
     if (shouldScroll) scrollToProducts();
-  }
-
-  function setCategoriesMenuOpen(nextOpen) {
-    state.categoriesMenuOpen = !!nextOpen;
-
-    const header = document.querySelector(".home-infinite-header");
-    const trigger = document.getElementById("home-category-trigger");
-    const panel = document.getElementById("home-categories-menu");
-
-    header?.classList.toggle("is-categories-open", state.categoriesMenuOpen);
-    if (trigger) trigger.setAttribute("aria-expanded", state.categoriesMenuOpen ? "true" : "false");
-    if (panel) panel.hidden = !state.categoriesMenuOpen;
-  }
-
-  function loadMoreProducts() {
-    const list = filteredProducts();
-    if (state.visibleCount >= list.length) {
-      showToast("Todos os produtos disponíveis já estão na vitrine.");
-      return;
-    }
-    state.visibleCount += 12;
-    renderAllProducts();
-    document.getElementById("explore-grid")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-  function renderAdBanners(targetId) {
-    const node = document.getElementById(targetId);
-    if (!node) return;
-    node.innerHTML = adBanners.map((banner) => `
-      <article class="home-infinite-ad-card home-infinite-ad-card--${banner.tone}">
-        <img src="${banner.image}" alt="${escapeHtml(banner.title)}" loading="lazy" />
-        <div></div>
-        <section>
-          <h3>${escapeHtml(banner.title)}</h3>
-          <p>${escapeHtml(banner.subtitle)}</p>
-          <button type="button" data-banner-action="${banner.action}">${escapeHtml(banner.cta)}</button>
-        </section>
-      </article>
-    `).join("");
   }
 
   function addToCart(productId) {
@@ -348,6 +348,7 @@
       window.location.href = `/produtos/?id=${encodeURIComponent(String(productId))}`;
       return;
     }
+
     const variant = catalog.getDefaultVariant?.(product.id);
     const count = catalog.addToCart(product.id, 1, { variantId: variant?.id || "" });
     renderCartCount();
@@ -357,14 +358,138 @@
 
   function toggleFavorite(productId) {
     if (!catalog?.toggleFavorite) return;
+
     const active = catalog.toggleFavorite(productId);
     document.querySelectorAll(`[data-home-favorite="${productId}"]`).forEach((button) => {
       button.classList.toggle("is-active", active);
       button.textContent = active ? "♥" : "♡";
       button.setAttribute("aria-label", active ? "Remover dos favoritos" : "Adicionar aos favoritos");
     });
+
     const product = catalog.getProductById?.(productId);
     showToast(active ? `${product?.name || "Produto"} salvo nos favoritos.` : "Produto removido dos favoritos.");
+  }
+
+  function inferCategoryFromHref(href) {
+    const normalized = normalizeText(href);
+    if (normalized.includes("/cupons/") || normalized.includes("promocoes")) return "Promocoes";
+    if (normalized.includes("streetwear") || normalized.includes("moletons") || normalized.includes("jaquetas")) return "Streetwear";
+    if (normalized.includes("calcados") || normalized.includes("tenis") || normalized.includes("botas") || normalized.includes("sandalias") || normalized.includes("slides")) return "Calcados";
+    if (normalized.includes("acessorios") || normalized.includes("oculos") || normalized.includes("bolsas") || normalized.includes("bones")) return "Acessorios";
+    if (normalized.includes("feminino") || normalized.includes("vestidos") || normalized.includes("blusas") || normalized.includes("saias")) return "Feminino";
+    if (normalized.includes("masculino") || normalized.includes("camisetas") || normalized.includes("calcas")) return "Masculino";
+    if (normalized.includes("novidades") || normalized.includes("marcas") || normalized.includes("/marketplace/")) return "Todos";
+    return "";
+  }
+
+  function loadMoreProducts() {
+    const list = filteredProducts();
+    if (state.visibleCount >= list.length) {
+      showToast("A vitrine continua carregando mais produtos.");
+      return;
+    }
+
+    state.visibleCount += 12;
+    renderAllProducts();
+    document.getElementById("explore-grid")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function setupSearchBindings() {
+    const form = document.getElementById("shared-search-form") || document.getElementById("home-search-form");
+    const input = searchInput();
+    if (!form || !input) return;
+
+    if (state.query && !input.value) input.value = state.query;
+
+    input.addEventListener("input", () => {
+      state.query = input.value;
+      state.visibleCount = 24;
+      renderAllProducts();
+    });
+
+    form.addEventListener("submit", () => {
+      window.setTimeout(() => {
+        state.query = input.value;
+        state.visibleCount = 24;
+        renderAllProducts();
+        scrollToProducts();
+      }, 0);
+    });
+  }
+
+  function setupNewsletter() {
+    const form = document.getElementById("home-newsletter-form");
+    if (!form) return;
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const input = form.querySelector("input[type='email']");
+      const feedback = document.getElementById("home-newsletter-feedback");
+      const email = String(input?.value || "").trim().toLowerCase();
+      const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+      if (!valid) {
+        if (feedback) {
+          feedback.hidden = false;
+          feedback.textContent = "Digite um e-mail valido para receber as ofertas.";
+        }
+        return;
+      }
+
+      const current = JSON.parse(localStorage.getItem(NEWSLETTER_KEY) || "[]");
+      const next = Array.isArray(current) && current.includes(email)
+        ? current
+        : [...(Array.isArray(current) ? current : []), email];
+
+      localStorage.setItem(NEWSLETTER_KEY, JSON.stringify(next.slice(-200)));
+
+      if (input) input.value = "";
+      if (feedback) {
+        feedback.hidden = false;
+        feedback.textContent = "Cadastro realizado. Voce vai receber as ofertas da UZUU.";
+      }
+
+      showToast("E-mail cadastrado com sucesso.");
+    });
+  }
+
+  function setupInfiniteLoad() {
+    const node = document.getElementById("infinite-loader");
+    const loadingGrid = document.getElementById("loading-more-grid");
+    if (!node) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      const [entry] = entries;
+      if (!entry.isIntersecting || state.loadingMore) return;
+
+      const list = filteredProducts();
+      if (state.visibleCount >= list.length) {
+        node.textContent = "Continue navegando pela colecao";
+        return;
+      }
+
+      state.loadingMore = true;
+      node.textContent = "Carregando mais produtos...";
+
+      if (loadingGrid) {
+        loadingGrid.hidden = false;
+        renderSkeletonGrid(loadingGrid, 6);
+      }
+
+      window.setTimeout(() => {
+        state.visibleCount += 12;
+        state.loadingMore = false;
+        if (loadingGrid) {
+          loadingGrid.hidden = true;
+          loadingGrid.innerHTML = "";
+        }
+        node.textContent = "Role para carregar mais produtos";
+        renderAllProducts();
+      }, 320);
+    }, { rootMargin: "700px" });
+
+    observer.observe(node);
   }
 
   function setupEvents() {
@@ -407,19 +532,10 @@
         return;
       }
 
-      const navCategory = target.closest(".home-infinite-nav a[href^='#'], .home-infinite-footer a[href^='#']");
+      const navCategory = target.closest(".shared-nav a, .shared-mega-column a, .shared-promo-link, .home-footer__columns a");
       if (navCategory) {
-        const hash = String(navCategory.getAttribute("href") || "").replace("#", "");
-        const mapped = {
-          novidades: "Todos",
-          masculino: "Masculino",
-          feminino: "Feminino",
-          acessorios: "Acessorios",
-          calcados: "Calcados",
-          streetwear: "Streetwear",
-          promocoes: "Promocoes",
-          marcas: "Todos"
-        }[hash];
+        const href = String(navCategory.getAttribute("href") || "");
+        const mapped = inferCategoryFromHref(href);
         if (mapped) {
           event.preventDefault();
           selectCategory(mapped);
@@ -428,116 +544,29 @@
       }
 
       const actionButton = target.closest("[data-home-action]");
-      if (actionButton) {
-        const action = actionButton.getAttribute("data-home-action");
-        if (action === "collection" || action === "show-all") {
-          state.query = "";
-          const input = document.getElementById("home-search-input");
-          if (input) input.value = "";
-          selectCategory("Todos");
-        }
-        if (action === "launches") selectCategory("launches");
-        if (action === "categories") {
-          const nextOpen = !state.categoriesMenuOpen;
-          setCategoriesMenuOpen(nextOpen);
-          if (nextOpen) {
-            document.getElementById("home-categories-menu")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-          }
-        }
-        if (action === "load-more") {
-          loadMoreProducts();
-        }
-        return;
-      }
+      if (!actionButton) return;
 
-      if (state.categoriesMenuOpen && !target.closest("#home-categories-menu") && !target.closest("#home-category-trigger")) {
-        setCategoriesMenuOpen(false);
+      const action = actionButton.getAttribute("data-home-action");
+      if (action === "collection" || action === "show-all") {
+        state.query = "";
+        const input = searchInput();
+        if (input) input.value = "";
+        selectCategory("Todos");
+      } else if (action === "launches") {
+        selectCategory("launches");
+      } else if (action === "load-more") {
+        loadMoreProducts();
       }
-    });
-
-    const searchForm = document.getElementById("home-search-form");
-    const searchInput = document.getElementById("home-search-input");
-    searchForm?.addEventListener("submit", (event) => {
-      event.preventDefault();
-      state.query = searchInput?.value || "";
-      state.visibleCount = 24;
-      renderAllProducts();
-      scrollToProducts();
-    });
-    searchInput?.addEventListener("input", () => {
-      state.query = searchInput.value;
-      state.visibleCount = 24;
-      renderAllProducts();
-    });
-
-    const newsletterForm = document.getElementById("home-newsletter-form");
-    newsletterForm?.addEventListener("submit", (event) => {
-      event.preventDefault();
-      const input = newsletterForm.querySelector("input[type='email']");
-      const feedback = document.getElementById("home-newsletter-feedback");
-      const email = String(input?.value || "").trim().toLowerCase();
-      const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-      if (!valid) {
-        if (feedback) {
-          feedback.hidden = false;
-          feedback.textContent = "Digite um e-mail válido para receber as ofertas.";
-        }
-        return;
-      }
-      const current = JSON.parse(localStorage.getItem(NEWSLETTER_KEY) || "[]");
-      const next = Array.isArray(current) && current.includes(email) ? current : [...(Array.isArray(current) ? current : []), email];
-      localStorage.setItem(NEWSLETTER_KEY, JSON.stringify(next.slice(-200)));
-      input.value = "";
-      if (feedback) {
-        feedback.hidden = false;
-        feedback.textContent = "Cadastro realizado. Você vai receber as ofertas da UZUU.";
-      }
-      showToast("E-mail cadastrado com sucesso.");
     });
 
     window.addEventListener("storage", renderCartCount);
     window.addEventListener("stopmod:cart-updated", renderCartCount);
   }
 
-  function setupInfiniteLoad() {
-    const node = document.getElementById("infinite-loader");
-    const loadingGrid = document.getElementById("loading-more-grid");
-    if (!node) return;
-
-    const observer = new IntersectionObserver((entries) => {
-      const [entry] = entries;
-      if (!entry.isIntersecting || state.loadingMore) return;
-
-      const list = filteredProducts();
-      if (state.visibleCount >= list.length) {
-        node.textContent = "Continue navegando pela coleção";
-        return;
-      }
-
-      state.loadingMore = true;
-      node.textContent = "Carregando mais produtos...";
-      if (loadingGrid) {
-        loadingGrid.hidden = false;
-        renderSkeletonGrid(loadingGrid, 6);
-      }
-
-      window.setTimeout(() => {
-        state.visibleCount += 12;
-        state.loadingMore = false;
-        if (loadingGrid) {
-          loadingGrid.hidden = true;
-          loadingGrid.innerHTML = "";
-        }
-        node.textContent = "Role para carregar mais produtos";
-        renderAllProducts();
-      }, 350);
-    }, { rootMargin: "700px" });
-
-    observer.observe(node);
-  }
-
   function initHome() {
+    readQueryParams();
     state.products = buildProductPool();
+
     renderSkeletonGrid(document.getElementById("best-sellers-grid"));
     renderSkeletonGrid(document.getElementById("recommended-grid"));
     renderCategories();
@@ -545,6 +574,8 @@
     renderAdBanners("ad-banner-row-primary");
     renderAdBanners("ad-banner-row-secondary");
     setupEvents();
+    setupSearchBindings();
+    setupNewsletter();
     renderCartCount();
     renderAllProducts();
     setupInfiniteLoad();
