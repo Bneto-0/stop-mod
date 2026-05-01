@@ -27,171 +27,170 @@
   <div id="site-header-root"></div>
   <script src="/assets/site-header.js?v=18"></script>
 
-  <main id="cart" class="cart-obsidian-page container">
-    <div class="cart-obsidian-layout">
-      <section class="cart-obsidian-main" aria-label="Conteudo do carrinho">
-        <section class="cart-obsidian-card cart-obsidian-items-card">
-          <div class="cart-obsidian-head">
+  <main id="cart" class="cart-premium-page container">
+    <section class="cart-premium-progress" aria-label="Etapas da compra">
+      <div class="cart-premium-progress__steps">
+        <span class="is-active">1. Carrinho</span>
+        <span>2. Identificacao</span>
+        <span>3. Pagamento</span>
+        <span>4. Confirmacao</span>
+      </div>
+      <a class="cart-premium-progress__link" href="../perfil/">Ambiente seguro</a>
+    </section>
+
+    <div class="cart-premium-layout">
+      <section class="cart-premium-main" aria-label="Conteudo do carrinho">
+        <section class="cart-premium-panel">
+          <div class="cart-premium-panel__head">
             <div>
-              <h1 id="cart-overview-title">Meu Carrinho (0)</h1>
-              <p id="cart-overview-count" class="cart-obsidian-select-all">
-                <span aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M20 7 9 18l-5-5"></path></svg>
-                </span>
-                Selecione todos os itens
-              </p>
+              <h2 id="cart-overview-title">Meu Carrinho (0)</h2>
+              <p id="cart-overview-count">Selecione todos os itens</p>
             </div>
-            <button id="clear-cart-btn" class="cart-obsidian-clear" type="button">
+            <button id="clear-cart-btn" class="cart-premium-clear" type="button">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V5h6v2m-7 3v8m4-8v8m4-8v8M7 7l1 13h8l1-13"></path></svg>
               <span>Limpar carrinho</span>
             </button>
           </div>
-          <ul id="cart-items" class="cart-obsidian-items"></ul>
+          <ul id="cart-items" class="cart-premium-items"></ul>
         </section>
 
-        <section class="cart-obsidian-card cart-obsidian-recommendations" aria-label="Voce tambem pode gostar">
-          <div class="cart-obsidian-section-head">
-            <h2>Voce tambem pode gostar</h2>
-            <a href="../#produtos">Ver tudo</a>
-          </div>
-          <div id="cart-recommendations-grid" class="cart-obsidian-recommendations__grid"></div>
-        </section>
-
-        <section class="cart-obsidian-benefits" aria-label="Vantagens da compra">
-          <article class="cart-obsidian-benefit">
-            <span aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15.36-6.36M21 12a9 9 0 0 1-15.36 6.36M18 3v4h-4M6 21v-4h4"></path></svg>
-            </span>
-            <div>
-              <strong>Troca facil</strong>
-              <small>Ate 30 dias para trocar</small>
-            </div>
-          </article>
-          <article class="cart-obsidian-benefit">
-            <span aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M3 7h11v8H3zM14 9h3l4 4v2h-2a2 2 0 1 1-4 0H9a2 2 0 1 1-4 0H3V7m4 10a1 1 0 1 0 0 2 1 1 0 0 0 0-2m10 0a1 1 0 1 0 .001 2A1 1 0 0 0 17 17zM14 10v3h5"></path></svg>
-            </span>
-            <div>
-              <strong>Frete gratis</strong>
-              <small>Em compras acima de R$250</small>
-            </div>
-          </article>
-          <article class="cart-obsidian-benefit">
-            <span aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4zM8 10h4M8 14h6M16 10h2"></path></svg>
-            </span>
-            <div>
-              <strong>Parcele em ate 12x</strong>
-              <small>No cartao de credito</small>
-            </div>
-          </article>
-          <article class="cart-obsidian-benefit">
-            <span aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.97 3.05 7.98 7 9 3.95-1.02 7-4.03 7-9V6l-7-3zm0 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-3 8a4 4 0 0 1 6 0"></path></svg>
-            </span>
-            <div>
-              <strong>Compra segura</strong>
-              <small>Seus dados protegidos</small>
-            </div>
-          </article>
-        </section>
-
-        <section id="cart-tools-panel" class="cart-obsidian-tools" hidden aria-label="Ferramentas do carrinho">
-          <div class="cart-obsidian-tools__grid">
-            <article class="cart-obsidian-tool-card">
-              <div class="cart-obsidian-tool-head">
-                <h3>Calcular frete</h3>
-                <p>Informe o CEP para atualizar a entrega.</p>
+        <section id="cart-tools-panel" class="cart-premium-panel cart-premium-panel--compact" hidden aria-label="Ferramentas do carrinho">
+          <div class="cart-premium-support-grid">
+            <article class="cart-premium-panel cart-premium-panel--compact">
+              <div class="cart-premium-panel__head">
+                <div>
+                  <h3>Cupom de desconto</h3>
+                  <p>Aplique beneficios da sua conta.</p>
+                </div>
               </div>
-              <div class="cart-obsidian-inline-form">
-                <input id="cart-cep-input" type="text" inputmode="numeric" placeholder="00000-000" autocomplete="postal-code" />
-                <button id="cart-cep-apply" type="button">OK</button>
-              </div>
-              <div class="cart-obsidian-shipping-options">
-                <label class="cart-obsidian-shipping-option">
-                  <input id="shipping-method-standard" type="radio" name="shipping-method" value="standard" checked />
-                  <span>Entrega padrao</span>
-                  <strong>Gratis</strong>
-                </label>
-                <label class="cart-obsidian-shipping-option">
-                  <input id="shipping-method-express" type="radio" name="shipping-method" value="express" />
-                  <span>Entrega expressa</span>
-                  <strong>R$ 19,90</strong>
-                </label>
-              </div>
-              <p id="shipping-feedback" class="cart-obsidian-inline-note"></p>
-            </article>
-
-            <article class="cart-obsidian-tool-card">
-              <div class="cart-obsidian-tool-head">
-                <h3>Cupom de desconto</h3>
-                <p>Use UZUU10 para testar 10% OFF.</p>
-              </div>
-              <div class="cart-obsidian-inline-form">
+              <div class="cart-premium-inline-form">
                 <input id="coupon-input" type="text" placeholder="Digite seu cupom" autocomplete="off" />
                 <button id="apply-coupon-btn" type="button">Aplicar</button>
               </div>
             </article>
+
+            <article class="cart-premium-panel cart-premium-panel--compact">
+              <div class="cart-premium-panel__head">
+                <div>
+                  <h3>Estimativa de entrega</h3>
+                  <p>Calcule o frete do seu CEP.</p>
+                </div>
+              </div>
+              <div class="cart-premium-inline-form">
+                <input id="cart-cep-input" type="text" inputmode="numeric" placeholder="00000-000" autocomplete="postal-code" />
+                <button id="cart-cep-apply" type="button">Calcular</button>
+              </div>
+              <div class="cart-premium-shipping-options">
+                <label class="cart-premium-shipping-option cart-premium-shipping-option--highlight">
+                  <input id="shipping-method-standard" type="radio" name="shipping-method" value="standard" checked />
+                  <div class="cart-premium-shipping-option__copy">
+                    <strong>Entrega padrao</strong>
+                    <small>Prazo economico</small>
+                  </div>
+                  <strong class="cart-premium-shipping-option__price is-free">Gratis</strong>
+                </label>
+                <label class="cart-premium-shipping-option">
+                  <input id="shipping-method-express" type="radio" name="shipping-method" value="express" />
+                  <div class="cart-premium-shipping-option__copy">
+                    <strong>Entrega expressa</strong>
+                    <small>Receba mais rapido</small>
+                  </div>
+                  <strong class="cart-premium-shipping-option__price">R$ 19,90</strong>
+                </label>
+              </div>
+              <p id="shipping-feedback" class="cart-premium-inline-note"></p>
+            </article>
           </div>
+        </section>
+
+        <section class="cart-premium-recommendations" aria-label="Voce tambem pode gostar">
+          <div class="cart-premium-section-head">
+            <div>
+              <h2>Voce tambem pode gostar</h2>
+              <p>Selecao complementar para sua compra.</p>
+            </div>
+            <a href="../#produtos">Ver tudo</a>
+          </div>
+          <div id="cart-recommendations-grid" class="cart-premium-recommendations__grid"></div>
         </section>
       </section>
 
-      <aside class="cart-obsidian-side" aria-label="Resumo do pedido">
-        <section class="cart-obsidian-card cart-obsidian-summary">
+      <aside class="cart-premium-side" aria-label="Resumo do pedido">
+        <section class="cart-premium-summary">
           <h2>Resumo do pedido</h2>
 
-          <div class="cart-obsidian-summary__rows">
-            <div class="cart-obsidian-summary__row">
+          <div class="cart-premium-summary__rows">
+            <div class="cart-premium-summary__row">
               <span id="summary-subtotal-label">Subtotal (0 itens)</span>
               <strong id="summary-subtotal-amount">R$ 0,00</strong>
             </div>
-            <div class="cart-obsidian-summary__row">
+            <div class="cart-premium-summary__row">
               <span>Descontos</span>
               <strong id="summary-discount-total" class="is-discount">-R$ 0,00</strong>
             </div>
-            <div class="cart-obsidian-summary__row">
+            <div class="cart-premium-summary__row">
               <span>Frete</span>
-              <button id="shipping-value" class="cart-obsidian-summary__action" type="button">Gratis</button>
+              <button id="shipping-value" class="cart-premium-summary__action" type="button">Gratis</button>
             </div>
           </div>
 
-          <div class="cart-obsidian-total">
-            <span>Total</span>
-            <strong>R$ <span id="cart-total-main">0</span><sup id="cart-total-cents">00</sup></strong>
+          <div class="cart-premium-total cart-premium-total--highlight">
+            <p>Voce esta economizando <span id="cart-savings-badge">R$ 0,00</span></p>
+            <div class="cart-premium-total__line">
+              <span>Total</span>
+              <strong>R$ <span id="cart-total-main">0</span><sup id="cart-total-cents">00</sup></strong>
+            </div>
+            <small id="summary-installments">Em ate 12x de R$ 0,00 sem juros</small>
           </div>
 
-          <div class="cart-obsidian-pix">
-            <div class="cart-obsidian-pix__label">
+          <div class="cart-premium-actions">
+            <button id="checkout" class="cart-premium-primary" disabled>Ir para pagamento</button>
+            <a class="cart-premium-secondary" href="../#produtos">Continuar comprando</a>
+          </div>
+
+          <div class="cart-premium-trust">
+            <article class="cart-premium-trust__item">
               <span aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M20 7 9 18l-5-5"></path></svg>
+                <svg viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.97 3.05 7.98 7 9 3.95-1.02 7-4.03 7-9V6l-7-3zm0 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-3 8a4 4 0 0 1 6 0"></path></svg>
               </span>
-              <small>5% OFF no PIX</small>
+              <div>
+                <strong>Compra segura</strong>
+                <small>Seus dados estao protegidos</small>
+              </div>
+            </article>
+            <article class="cart-premium-trust__item">
+              <span aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M3 7h11v8H3zM14 9h3l4 4v2h-2a2 2 0 1 1-4 0H9a2 2 0 1 1-4 0H3V7m4 10a1 1 0 1 0 0 2 1 1 0 0 0 0-2m10 0a1 1 0 1 0 .001 2A1 1 0 0 0 17 17zM14 10v3h5"></path></svg>
+              </span>
+              <div>
+                <strong>Frete gratis</strong>
+                <small>Acima do valor minimo</small>
+              </div>
+            </article>
+            <article class="cart-premium-trust__item">
+              <span aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4zM8 10h4M8 14h6M16 10h2"></path></svg>
+              </span>
+              <div>
+                <strong>Pagamento protegido</strong>
+                <small>Pix e cartoes aceitos</small>
+              </div>
+            </article>
+          </div>
+
+          <div class="cart-premium-payments">
+            <p>Formas de pagamento aceitas</p>
+            <div class="cart-premium-payments__chips">
+              <span>PIX</span>
+              <span>VISA</span>
+              <span>Mastercard</span>
+              <span>ELO</span>
+              <span>Hipercard</span>
             </div>
-            <strong id="summary-pix-total">R$ 0,00</strong>
           </div>
 
-          <div class="cart-obsidian-actions">
-            <button id="checkout" class="cart-obsidian-primary" disabled>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 1 1 10 0v3M6 11h12l-1 9H7l-1-9Z"></path></svg>
-              Finalizar compra
-            </button>
-            <a class="cart-obsidian-secondary" href="../#produtos">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h2l2.2 9.1a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.76L20 7H7"></path><circle cx="10" cy="19" r="1.5"></circle><circle cx="17" cy="19" r="1.5"></circle></svg>
-              Continuar comprando
-            </a>
-          </div>
-
-          <button id="summary-coupon-value" class="cart-obsidian-inline-link" type="button">Aplicar cupom</button>
-
-          <div class="cart-obsidian-secure">
-            <span aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.97 3.05 7.98 7 9 3.95-1.02 7-4.03 7-9V6l-7-3zm0 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-3 8a4 4 0 0 1 6 0"></path></svg>
-            </span>
-            <small>Compra 100% segura</small>
-          </div>
-
-          <p id="summary-installments" class="cart-obsidian-installments">Em ate 12x de R$ 0,00</p>
-          <p id="feedback" class="cart-obsidian-feedback"></p>
+          <p id="feedback" class="cart-premium-feedback"></p>
+          <button id="summary-coupon-value" class="cart-premium-inline-link" type="button">Aplicar cupom</button>
           <span id="items-count" hidden>0</span>
           <span id="free-ship-count" hidden>0</span>
           <span id="coupon-count" hidden>0</span>
@@ -202,16 +201,13 @@
           <span id="products-before-wrap" hidden></span>
           <p id="summary-pix-value" hidden>R$ 0,00</p>
           <p id="payment-selected" class="pay-selected-inline" hidden></p>
-          <span id="cart-savings-badge" hidden>0</span>
+          <span id="summary-pix-total" hidden>R$ 0,00</span>
         </section>
 
-        <section class="cart-obsidian-card cart-obsidian-goal">
-          <div class="cart-obsidian-goal__head">
-            <span aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M3 7h11v8H3zM14 9h3l4 4v2h-2a2 2 0 1 1-4 0H9a2 2 0 1 1-4 0H3V7m4 10a1 1 0 1 0 0 2 1 1 0 0 0 0-2m10 0a1 1 0 1 0 .001 2A1 1 0 0 0 17 17zM14 10v3h5"></path></svg>
-            </span>
+        <section class="cart-premium-summary">
+          <div class="cart-premium-panel__head">
             <div>
-              <strong>Frete gratis</strong>
+              <h3>Falta pouco para frete gratis</h3>
               <p id="cart-progress-copy">Adicione mais R$ 250,00 para ganhar frete gratis.</p>
             </div>
           </div>
@@ -539,7 +535,7 @@
 
   <script src="https://assets.pagseguro.com.br/checkout-sdk-js/rc/dist/browser/pagseguro.min.js"></script>
   <script src="../assets/catalog.js?v=11"></script>
-  <script src="script.js?v=65"></script>
+  <script src="script.js?v=66"></script>
   <script src="../assets/menu-dropdown.js?v=22"></script>
 </body>
 </html>

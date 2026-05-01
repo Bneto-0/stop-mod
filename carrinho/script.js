@@ -1256,18 +1256,18 @@ function renderCartRecommendations(ids) {
     .map((item) => {
       const installment = Math.max(0, Number(item.price || 0) / 12);
       return `
-        <article class="cart-obsidian-suggestion">
-          <a class="cart-obsidian-suggestion__media" href="${productHref(item.id)}">
+        <article class="cart-premium-suggestion-card">
+          <a class="cart-premium-suggestion-card__media" href="${productHref(item.id)}">
             <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" loading="lazy" />
-            <span class="cart-obsidian-suggestion__fav" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="m12 20-1.5-1.35C5.4 14.05 2 10.96 2 7.17 2 4.08 4.42 2 7.44 2c1.7 0 3.33.8 4.36 2.05C12.83 2.8 14.46 2 16.16 2 19.18 2 21.6 4.08 21.6 7.17c0 3.79-3.4 6.88-8.5 11.48L12 20Z"></path></svg>
-            </span>
+            <span aria-hidden="true">${escapeHtml(item.tag || "Destaque")}</span>
           </a>
-          <div class="cart-obsidian-suggestion__copy">
-            <a class="cart-obsidian-suggestion__title" href="${productHref(item.id)}">${escapeHtml(item.name)}</a>
-            <strong class="cart-obsidian-suggestion__price">R$ ${formatBRL(Number(item.price || 0))}</strong>
-            <small class="cart-obsidian-suggestion__installment">12x de R$ ${formatBRL(installment)}</small>
-            <button type="button" class="cart-obsidian-suggestion__add" data-add-product="${item.id}" aria-label="Adicionar ${escapeHtml(item.name)}">+</button>
+          <div class="cart-premium-suggestion-card__copy">
+            <a class="cart-premium-suggestion-card__title" href="${productHref(item.id)}">${escapeHtml(item.name)}</a>
+            <strong>R$ ${formatBRL(Number(item.price || 0))}</strong>
+            <small>12x de R$ ${formatBRL(installment)}</small>
+            <button type="button" class="cart-premium-suggestion-card__button" data-add-product="${item.id}" aria-label="Adicionar ${escapeHtml(item.name)}">
+              Adicionar
+            </button>
           </div>
         </article>
       `;
@@ -2994,31 +2994,42 @@ function renderCart() {
         const comparePricing = buildCartComparePricing(item, index);
         const totalItem = item.price * item.qty;
         const compareTotal = Number(comparePricing.comparePrice || item.price) * item.qty;
+        const pixTotal = Math.max(0, totalItem * 0.95);
+        const category = String(item.category || item.categoria || "Produto UZUU").trim();
+        const size = String(item.size || "Unico").trim();
         return `
-        <li class="cart-obsidian-item">
-          <span class="cart-obsidian-item__check" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M20 7 9 18l-5-5"></path></svg>
-          </span>
-          <a class="cart-obsidian-item__media" href="${productHref(item.id)}">
-            <img src="${item.image}" alt="${item.name}" loading="lazy" />
+        <li class="cart-premium-item">
+          <a class="cart-premium-item__media" href="${productHref(item.id)}">
+            <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" loading="lazy" />
+            <span class="cart-premium-item__badge">No carrinho</span>
           </a>
-          <div class="cart-obsidian-item__content">
-            <a class="cart-obsidian-item__title" href="${productHref(item.id)}">${escapeHtml(item.name)}</a>
-            <p class="cart-obsidian-item__meta">${escapeHtml(color)} &bull; ${escapeHtml(item.size || "Unico")}</p>
-            <p class="cart-obsidian-item__stock">Em estoque</p>
+          <div class="cart-premium-item__content">
+            <div class="cart-premium-item__top">
+              <div class="cart-premium-item__info">
+                <p class="cart-premium-item__category">${escapeHtml(category)}</p>
+                <a class="cart-premium-item__title" href="${productHref(item.id)}">${escapeHtml(item.name)}</a>
+                <p class="cart-premium-item__meta">Cor: ${escapeHtml(color)} &bull; Tamanho: ${escapeHtml(size)}</p>
+                <p class="cart-premium-item__stock">Em estoque &bull; Envio em ate 24h</p>
+              </div>
+              <div class="cart-premium-item__price">
+                <strong>R$ ${formatBRL(totalItem)}</strong>
+                ${compareTotal > totalItem ? `<span>R$ ${formatBRL(compareTotal)}</span>` : ""}
+                <small>R$ ${formatBRL(pixTotal)} no PIX</small>
+              </div>
+            </div>
+            <div class="cart-premium-item__bottom">
+              <div class="cart-premium-qty" aria-label="Quantidade">
+                <button data-action="dec" data-id="${item.id}" aria-label="Diminuir quantidade">-</button>
+                <span>${item.qty}</span>
+                <button data-action="inc" data-id="${item.id}" aria-label="Aumentar quantidade">+</button>
+              </div>
+              <div class="cart-premium-item__actions">
+                <button class="cart-premium-item__remove" data-action="remove" data-id="${item.id}" type="button" aria-label="Remover ${escapeHtml(item.name)} do carrinho">
+                  Remover
+                </button>
+              </div>
+            </div>
           </div>
-          <div class="cart-obsidian-qty" aria-label="Quantidade">
-            <button data-action="dec" data-id="${item.id}" aria-label="Diminuir quantidade">-</button>
-            <span>${item.qty}</span>
-            <button data-action="inc" data-id="${item.id}" aria-label="Aumentar quantidade">+</button>
-          </div>
-          <div class="cart-obsidian-item__price">
-            <strong>R$ ${formatBRL(totalItem)}</strong>
-            ${compareTotal > totalItem ? `<span>R$ ${formatBRL(compareTotal)}</span>` : ""}
-          </div>
-          <button class="cart-obsidian-item__remove" data-action="remove" data-id="${item.id}" type="button" aria-label="Remover ${escapeHtml(item.name)} do carrinho">
-            <svg viewBox="0 0 24 24"><path d="M5 7h14M9 7V5h6v2m-7 3v8m4-8v8m4-8v8M7 7l1 13h8l1-13"></path></svg>
-          </button>
         </li>
       `;
       })
