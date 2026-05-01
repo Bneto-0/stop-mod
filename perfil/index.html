@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Minha conta | Uzuu</title>
-    <meta name="theme-color" content="#000000" />
+  <title>Minha conta | UZUU</title>
+  <meta name="theme-color" content="#000000" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="UZUU" />
@@ -13,130 +13,562 @@
   <link rel="apple-touch-icon" href="/favicon.png?v=20260423home" />
   <link rel="manifest" href="/site.webmanifest?v=20260430blackapp1" />
   <link rel="icon" href="../favicon.png?v=20260416b" type="image/png" />
-  <link rel="stylesheet" href="../style.css?v=20260501darksweep2" />
-<link rel="stylesheet" href="/assets/site-header.css?v=29" />
+  <link rel="stylesheet" href="../style.css?v=20260501premium2" />
+  <link rel="stylesheet" href="/assets/site-header.css?v=29" />
 </head>
-<body>
+<body class="profile-premium-page">
 <div id="site-header-root"></div>
-<script src="/assets/site-header.js?v=17"></script>
-<main class="page-shell container profile-page">
-  <section class="page-card profile-summary-card">
-    <p class="eyebrow">Conta</p>
-    <h1 id="profile-name">Minha conta</h1>
-    <p id="profile-text">Entre ou cadastre-se para salvar endereco, acompanhar pedidos e finalizar compras.</p>
-    <div class="profile-summary-footer">
-      <div class="page-actions profile-actions">
-        <a id="profile-login-action" class="btn primary" href="../login/">Entrar</a>
-        <a class="btn secondary" href="./meus-dados/">Meus dados</a>
-        <a class="btn secondary" href="../entrega/">Enderecos</a>
-      </div>
-      <button id="profile-logout-action" class="btn secondary profile-logout" type="button" hidden>Sair</button>
-    </div>
-  </section>
-
-  <section class="page-card payment-guide-card payment-guide-card--stacked">
-    <p class="eyebrow">Pagamento</p>
-    <h2>Formas de pagamento aceitas</h2>
-    <p class="payment-guide-copy">Aceitamos pagamento por Pix, cartoes de debito e credito das principais bandeiras, boleto bancario e tambem PayPal. Assim o cliente entende com clareza como finalizar a compra dentro da loja.</p>
-
-    <div class="payment-method-list">
-      <article class="payment-method-row payment-method-row--pix">
-        <span class="payment-method-icon" aria-hidden="true">
-          <img class="payment-method-icon-logo payment-method-icon-logo--pix" src="../assets/icons/pix-logo.svg" alt="" />
-        </span>
-        <div class="payment-method-body">
-          <h3>Pix</h3>
-          <p>Pagamento rapido com confirmacao mais agil.</p>
-        </div>
-      </article>
-
-      <article class="payment-method-row payment-method-row--cards">
-        <span class="payment-method-icon" aria-hidden="true">
-          <svg viewBox="0 0 32 32"><rect x="4" y="7" width="24" height="18" rx="4" ry="4"></rect><path d="M4 12h24"></path></svg>
-        </span>
-        <div class="payment-method-body">
-          <h3>Debito e Credito</h3>
-          <p>Aceitamos as principais bandeiras para debito e credito.</p>
-          <div class="payment-brand-logos" aria-label="Bandeiras aceitas">
-            <img class="payment-brand-image payment-brand-image--visa" src="../assets/icons/visa-logo-real.svg" alt="Visa" />
-            <img class="payment-brand-image payment-brand-image--master" src="../assets/icons/mastercard-logo-real.svg" alt="Mastercard" />
-            <img class="payment-brand-image payment-brand-image--hiper" src="../assets/icons/hipercard-logo-real.svg" alt="Hipercard" />
-            <img class="payment-brand-image payment-brand-image--elo" src="../assets/icons/elo-logo-real.png" alt="Elo" />
-          </div>
-        </div>
-      </article>
-
-      <article class="payment-method-row payment-method-row--boleto">
-        <span class="payment-method-icon" aria-hidden="true">
-          <svg viewBox="0 0 32 32"><rect x="6" y="5" width="20" height="22" rx="3" ry="3"></rect><path d="M10 10v12M13 10v12M18 10v12M22 10v12"></path></svg>
-        </span>
-        <div class="payment-method-body">
-          <h3>Boleto</h3>
-          <p>Os pagamentos com boleto sao confirmados em ate 3 dias.</p>
-        </div>
-      </article>
-
-      <article class="payment-method-row payment-method-row--paypal">
-        <span class="payment-method-icon" aria-hidden="true">
-          <svg viewBox="0 0 32 32"><path d="M11 8h8.8c3.8 0 6.2 2.1 6.2 5.3 0 4.4-3.2 7.1-8 7.1H15l-1 5H9l2.6-15.4A2.3 2.3 0 0 1 11 8z"></path><path d="M13 13.4h5.2c2.4 0 3.8 1.1 3.8 3 0 2.6-2 4.3-5.1 4.3h-2.6"></path></svg>
-        </span>
-        <div class="payment-method-body">
-          <h3>Paypal</h3>
-          <p>Pagamento digital com confirmacao online e protecao adicional para compras elegiveis.</p>
-        </div>
-      </article>
-    </div>
-  </section>
-</main>
+<script src="/assets/site-header.js?v=18"></script>
 <script>window.__UZUU_API_BASE__ = "/ops-api";</script>
 <script src="/assets/api-client.js?v=3"></script>
 <script src="/assets/account-client.js?v=2"></script>
-<script>
-const profileName = document.getElementById("profile-name");
-const profileText = document.getElementById("profile-text");
-const profileLoginAction = document.getElementById("profile-login-action");
-const profileLogoutAction = document.getElementById("profile-logout-action");
+<script src="/assets/catalog.js?v=11"></script>
 
-function renderSummary(profile) {
-  if (profile && profile.name) {
-    profileName.textContent = profile.name.split(/\s+/)[0];
-    profileText.textContent = `Conta ativa para ${profile.email || "cliente"}.`;
-    if (profileLoginAction) profileLoginAction.remove();
-    if (profileLogoutAction) profileLogoutAction.hidden = false;
-    return;
-  }
-  if (profileLoginAction) profileLoginAction.hidden = false;
-  if (profileLogoutAction) profileLogoutAction.hidden = true;
+<main class="profile-premium container">
+  <section class="profile-premium__hero">
+    <div class="profile-premium__hero-backdrop"></div>
+    <div class="profile-premium__hero-head">
+      <div class="profile-premium__identity">
+        <div id="profile-avatar" class="profile-premium__avatar">UZ</div>
+        <div class="profile-premium__identity-copy">
+          <p class="profile-premium__eyebrow">Minha conta</p>
+          <h1 id="profile-hero-name">Minha conta</h1>
+          <p id="profile-hero-email" class="profile-premium__subcopy">Entre ou cadastre-se para acompanhar seus pedidos, favoritos e pagamentos.</p>
+          <span id="profile-hero-level" class="profile-premium__badge">Cliente UZUU Prime</span>
+        </div>
+      </div>
+
+      <div class="profile-premium__hero-actions">
+        <a id="profile-primary-action" class="btn primary" href="../login/">Entrar</a>
+        <a id="profile-secondary-action" class="btn secondary" href="./pedidos/">Ver pedidos</a>
+      </div>
+    </div>
+
+    <div class="profile-premium__stats">
+      <article class="profile-premium__stat-card">
+        <span class="profile-premium__stat-icon">📦</span>
+        <strong id="profile-stat-orders">0</strong>
+        <span>Pedidos</span>
+      </article>
+      <article class="profile-premium__stat-card">
+        <span class="profile-premium__stat-icon">♡</span>
+        <strong id="profile-stat-favorites">0</strong>
+        <span>Favoritos</span>
+      </article>
+      <article class="profile-premium__stat-card">
+        <span class="profile-premium__stat-icon">🎟</span>
+        <strong id="profile-stat-coupons">1</strong>
+        <span>Cupons</span>
+      </article>
+      <article class="profile-premium__stat-card">
+        <span class="profile-premium__stat-icon">⭐</span>
+        <strong id="profile-stat-points">0</strong>
+        <span>Pontos</span>
+      </article>
+    </div>
+  </section>
+
+  <section class="profile-premium__layout">
+    <aside class="profile-premium__sidebar">
+      <div class="profile-premium__sidebar-card">
+        <h2>Central do cliente</h2>
+        <nav class="profile-premium__menu" aria-label="Menu da conta">
+          <button class="profile-premium__menu-item is-active" type="button" data-panel="orders"><span>📦</span>Meus pedidos</button>
+          <button class="profile-premium__menu-item" type="button" data-panel="data"><span>👤</span>Meus dados</button>
+          <button class="profile-premium__menu-item" type="button" data-panel="addresses"><span>📍</span>Enderecos</button>
+          <button class="profile-premium__menu-item" type="button" data-panel="payments"><span>💳</span>Pagamentos</button>
+          <button class="profile-premium__menu-item" type="button" data-panel="favorites"><span>♡</span>Favoritos</button>
+          <button class="profile-premium__menu-item" type="button" data-panel="coupons"><span>🎟</span>Cupons</button>
+          <button class="profile-premium__menu-item" type="button" data-panel="security"><span>🔒</span>Seguranca</button>
+        </nav>
+        <button id="profile-logout-action" class="profile-premium__logout" type="button" hidden>🚪 Sair da conta</button>
+      </div>
+    </aside>
+
+    <section class="profile-premium__content">
+      <div class="profile-premium__panel is-active" data-panel="orders">
+        <div class="profile-premium__cards profile-premium__cards--triple">
+          <article class="profile-premium__info-card">
+            <p class="profile-premium__mini-eyebrow">Endereco padrao</p>
+            <h3>Entrega principal</h3>
+            <p id="profile-address-card">Rua nao informada</p>
+            <a href="../entrega/">Alterar endereco</a>
+          </article>
+          <article class="profile-premium__info-card">
+            <p class="profile-premium__mini-eyebrow is-green">Pagamento</p>
+            <h3>PagBank ativo</h3>
+            <p>Pix, cartao de credito, Visa, Mastercard, Elo e Hipercard.</p>
+            <button type="button" data-panel-target="payments">Gerenciar pagamentos</button>
+          </article>
+          <article class="profile-premium__info-card">
+            <p class="profile-premium__mini-eyebrow is-gold">Seguranca</p>
+            <h3>Conta protegida</h3>
+            <p>Dados criptografados, login seguro e historico de acesso.</p>
+            <button type="button" data-panel-target="security">Ver seguranca</button>
+          </article>
+        </div>
+
+        <article class="profile-premium__block">
+          <div class="profile-premium__block-head">
+            <div>
+              <p class="profile-premium__eyebrow">Pedidos UZUU</p>
+              <h2>Pedidos recentes</h2>
+            </div>
+            <a class="profile-premium__ghost-action" href="./pedidos/">Ver todos</a>
+          </div>
+          <div id="profile-orders-list" class="profile-premium__orders"></div>
+        </article>
+
+        <div class="profile-premium__cards profile-premium__cards--double">
+          <article class="profile-premium__coupon-card">
+            <p class="profile-premium__mini-eyebrow">Cupom exclusivo</p>
+            <h3>UZUU10</h3>
+            <p>Use no checkout e ganhe 10% OFF em produtos selecionados.</p>
+            <button id="profile-copy-coupon" class="profile-premium__coupon-button" type="button">Copiar cupom</button>
+          </article>
+          <article class="profile-premium__support-card">
+            <p class="profile-premium__mini-eyebrow is-muted">Suporte</p>
+            <h3>Precisa de ajuda?</h3>
+            <p>Acompanhe pedidos, pagamentos, trocas e atendimento da UZUU.</p>
+            <a class="btn secondary" href="../termos/">Falar com suporte</a>
+          </article>
+        </div>
+      </div>
+
+      <div class="profile-premium__panel" data-panel="data">
+        <article class="profile-premium__block">
+          <div class="profile-premium__block-head">
+            <div>
+              <p class="profile-premium__eyebrow">Meus dados</p>
+              <h2>Informacoes da conta</h2>
+            </div>
+            <a class="profile-premium__ghost-action" href="./meus-dados/">Editar dados</a>
+          </div>
+          <div class="profile-premium__details-grid">
+            <div class="profile-premium__detail-item">
+              <span>Nome completo</span>
+              <strong id="profile-detail-name">Nao informado</strong>
+            </div>
+            <div class="profile-premium__detail-item">
+              <span>E-mail</span>
+              <strong id="profile-detail-email">Nao informado</strong>
+            </div>
+            <div class="profile-premium__detail-item">
+              <span>Telefone</span>
+              <strong id="profile-detail-phone">Nao informado</strong>
+            </div>
+            <div class="profile-premium__detail-item">
+              <span>CPF</span>
+              <strong id="profile-detail-cpf">Nao informado</strong>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="profile-premium__panel" data-panel="addresses">
+        <article class="profile-premium__block">
+          <div class="profile-premium__block-head">
+            <div>
+              <p class="profile-premium__eyebrow">Enderecos</p>
+              <h2>Endereco principal</h2>
+            </div>
+            <a class="profile-premium__ghost-action" href="../entrega/">Gerenciar</a>
+          </div>
+          <div class="profile-premium__address-card">
+            <strong id="profile-address-title">Principal</strong>
+            <p id="profile-address-line">Rua nao informada</p>
+            <span id="profile-address-status">Endereco pronto para entrega.</span>
+          </div>
+        </article>
+      </div>
+
+      <div class="profile-premium__panel" data-panel="payments">
+        <article class="profile-premium__block">
+          <div class="profile-premium__block-head">
+            <div>
+              <p class="profile-premium__eyebrow">Pagamentos</p>
+              <h2>Formas aceitas na UZUU</h2>
+            </div>
+          </div>
+          <div class="profile-premium__payment-grid">
+            <article class="profile-premium__payment-card">
+              <span>PIX</span>
+              <strong>Aprovacao imediata</strong>
+              <p>Pagamento agil com confirmacao rapida no checkout.</p>
+            </article>
+            <article class="profile-premium__payment-card">
+              <span>Credito</span>
+              <strong>Parcelamento em ate 12x</strong>
+              <p>Visa, Mastercard, Elo e Hipercard no checkout seguro.</p>
+            </article>
+            <article class="profile-premium__payment-card">
+              <span>Boleto</span>
+              <strong>Compensacao em ate 3 dias</strong>
+              <p>Ideal para clientes que preferem pagar fora do cartao.</p>
+            </article>
+          </div>
+        </article>
+      </div>
+
+      <div class="profile-premium__panel" data-panel="favorites">
+        <article class="profile-premium__block">
+          <div class="profile-premium__block-head">
+            <div>
+              <p class="profile-premium__eyebrow">Favoritos</p>
+              <h2>Sua lista salva</h2>
+            </div>
+            <a class="profile-premium__ghost-action" href="./favoritos/">Abrir favoritos</a>
+          </div>
+          <div class="profile-premium__favorites-state">
+            <strong id="profile-favorites-total">0 produtos salvos</strong>
+            <p>Continue explorando a loja e salve itens para acompanhar depois.</p>
+          </div>
+        </article>
+      </div>
+
+      <div class="profile-premium__panel" data-panel="coupons">
+        <article class="profile-premium__block">
+          <div class="profile-premium__block-head">
+            <div>
+              <p class="profile-premium__eyebrow">Cupons</p>
+              <h2>Cupons disponiveis</h2>
+            </div>
+          </div>
+          <div class="profile-premium__coupon-list">
+            <article class="profile-premium__coupon-item">
+              <strong>UZUU10</strong>
+              <span>10% OFF em produtos selecionados</span>
+            </article>
+            <article class="profile-premium__coupon-item">
+              <strong>PIX5</strong>
+              <span>5% OFF adicional pagando com Pix</span>
+            </article>
+          </div>
+        </article>
+      </div>
+
+      <div class="profile-premium__panel" data-panel="security">
+        <article class="profile-premium__block">
+          <div class="profile-premium__block-head">
+            <div>
+              <p class="profile-premium__eyebrow">Seguranca</p>
+              <h2>Protecao da sua conta</h2>
+            </div>
+          </div>
+          <div class="profile-premium__security-list">
+            <article class="profile-premium__security-item">
+              <strong>Login autenticado</strong>
+              <p id="profile-security-session">Sessao local ativa apenas neste dispositivo.</p>
+            </article>
+            <article class="profile-premium__security-item">
+              <strong>Dados protegidos</strong>
+              <p>Criptografia, ambiente seguro e checkout com monitoramento.</p>
+            </article>
+            <article class="profile-premium__security-item">
+              <strong>Controle de acesso</strong>
+              <p>Voce pode sair da conta a qualquer momento pelo painel lateral.</p>
+            </article>
+          </div>
+        </article>
+      </div>
+    </section>
+  </section>
+</main>
+
+<script>
+const profileState = {
+  profile: {},
+  extra: {},
+  address: null,
+  orders: [],
+  favorites: []
+};
+
+const panelButtons = Array.from(document.querySelectorAll(".profile-premium__menu-item"));
+const panels = Array.from(document.querySelectorAll(".profile-premium__panel"));
+const panelJumpButtons = Array.from(document.querySelectorAll("[data-panel-target]"));
+const couponButton = document.getElementById("profile-copy-coupon");
+const logoutButton = document.getElementById("profile-logout-action");
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
-profileLogoutAction?.addEventListener("click", () => {
-  if (window.UzuuAccount?.clearSession) {
-    window.UzuuAccount.clearSession();
+function money(value) {
+  return Number(value || 0).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  });
+}
+
+function firstName(name) {
+  return String(name || "").trim().split(/\s+/).filter(Boolean)[0] || "Minha conta";
+}
+
+function initials(name) {
+  const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "UZ";
+  return parts.slice(0, 2).map((item) => item.charAt(0).toUpperCase()).join("");
+}
+
+function formatPhone(value) {
+  if (window.UzuuAccount?.formatPhone) return window.UzuuAccount.formatPhone(value);
+  return String(value || "").trim() || "Nao informado";
+}
+
+function composeAddress(address) {
+  if (!address || typeof address !== "object") return "Rua nao informada";
+  const street = String(address.street || "").trim();
+  const number = String(address.number || "").trim();
+  const district = String(address.district || "").trim();
+  const city = String(address.city || "").trim();
+  const state = String(address.state || "").trim();
+  const parts = [
+    [street, number].filter(Boolean).join(", "),
+    district,
+    [city, state].filter(Boolean).join(" - ")
+  ].filter(Boolean);
+  return parts.length ? parts.join(" - ") : "Rua nao informada";
+}
+
+function normalizeUserKey(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function loadLocalOrders() {
+  if (typeof window.stopmodCatalog?.loadOrders === "function") {
+    return window.stopmodCatalog.loadOrders();
   }
-  window.location.href = "../login/";
-});
+  try {
+    const parsed = JSON.parse(localStorage.getItem("stopmod_orders") || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
 
-(async () => {
-  const localProfile = window.UzuuAccount?.loadJson?.(window.UzuuAccount.keys.profile, {}) || {};
-  renderSummary(localProfile);
+function loadFavorites() {
+  if (typeof window.stopmodCatalog?.loadFavorites === "function") {
+    return window.stopmodCatalog.loadFavorites();
+  }
+  try {
+    const parsed = JSON.parse(localStorage.getItem("stopmod_favorites") || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
 
-  if (!window.UzuuAccount?.getAuthToken?.()) {
+function mapOrderStatus(order) {
+  const raw = String(order?.tracking?.status || order?.status || order?.apiStatus || "").trim().toLowerCase();
+  if (!raw) return "Pedido criado";
+  if (raw.includes("paid") || raw.includes("aprov")) return "Pagamento aprovado";
+  if (raw.includes("transport") || raw.includes("transito") || raw.includes("shipped")) return "Em transporte";
+  if (raw.includes("entreg")) return "Entregue";
+  if (raw.includes("cancel")) return "Cancelado";
+  if (raw.includes("process")) return "Em processamento";
+  return String(order?.tracking?.status || order?.status || order?.apiStatus || "Pedido criado");
+}
+
+function mapOrderDate(order) {
+  const raw = order?.createdAt || order?.paymentFinalizedAt || order?.updatedAt || "";
+  const parsed = Date.parse(String(raw || ""));
+  if (!Number.isFinite(parsed)) return "";
+  return new Date(parsed).toLocaleDateString("pt-BR");
+}
+
+function mapOrderTotal(order) {
+  const explicit = Number(order?.totals?.total || order?.total || 0);
+  if (Number.isFinite(explicit) && explicit > 0) return explicit;
+  return Array.isArray(order?.items)
+    ? order.items.reduce((sum, item) => sum + (Number(item?.price) || 0) * Math.max(1, Number(item?.qty) || 1), 0)
+    : 0;
+}
+
+function buildRecentOrders() {
+  const emailKey = normalizeUserKey(profileState.profile?.email);
+  const orders = loadLocalOrders()
+    .filter((order) => normalizeUserKey(order?.ownerEmail) === emailKey)
+    .sort((a, b) => Date.parse(String(b?.createdAt || b?.updatedAt || 0)) - Date.parse(String(a?.createdAt || a?.updatedAt || 0)));
+
+  profileState.orders = orders;
+  return orders.slice(0, 2);
+}
+
+function activatePanel(panelName) {
+  panelButtons.forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.panel === panelName);
+  });
+  panels.forEach((panel) => {
+    panel.classList.toggle("is-active", panel.dataset.panel === panelName);
+  });
+}
+
+function renderOrders() {
+  const ordersRoot = document.getElementById("profile-orders-list");
+  if (!ordersRoot) return;
+  const recentOrders = buildRecentOrders();
+
+  if (!recentOrders.length) {
+    ordersRoot.innerHTML = `
+      <article class="profile-premium__empty">
+        <strong>Nenhum pedido recente encontrado.</strong>
+        <p>Assim que voce finalizar compras na UZUU, seus pedidos vao aparecer aqui com status atualizado.</p>
+        <a class="btn primary" href="/produtos/">Ver produtos</a>
+      </article>
+    `;
     return;
   }
+
+  ordersRoot.innerHTML = recentOrders.map((order) => {
+    const item = Array.isArray(order.items) && order.items.length ? order.items[0] : null;
+    const image = String(item?.image || item?.imagem || "/favicon.png").trim();
+    const product = String(item?.name || item?.nome || "Produto UZUU").trim();
+    const reference = String(order?.referenceId || order?.id || "Pedido").trim();
+    return `
+      <article class="profile-premium__order-item">
+        <div class="profile-premium__order-media">
+          <img src="${escapeHtml(image)}" alt="${escapeHtml(product)}" />
+        </div>
+        <div class="profile-premium__order-copy">
+          <p>Pedido ${escapeHtml(reference)}</p>
+          <h3>${escapeHtml(product)}</h3>
+          <span>${escapeHtml(mapOrderStatus(order))}</span>
+          <small>${escapeHtml(mapOrderDate(order) || "Data indisponivel")}</small>
+        </div>
+        <div class="profile-premium__order-side">
+          <strong>${escapeHtml(money(mapOrderTotal(order)))}</strong>
+          <a class="profile-premium__order-action" href="./pedidos/">Detalhes</a>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+function renderProfile() {
+  const profile = profileState.profile || {};
+  const extra = profileState.extra || {};
+  const address = profileState.address || null;
+  const fullName = String(extra.fullName || profile.name || "Minha conta").trim();
+  const email = String(extra.email || profile.email || "").trim();
+  const phone = String(extra.phone || "").trim();
+  const cpf = String(extra.cpfMasked || "").trim();
+  const addressText = composeAddress(address);
+  const favorites = loadFavorites();
+  const orders = profileState.orders.length ? profileState.orders : buildRecentOrders();
+  const logged = !!(profile.name || profile.email || window.UzuuAccount?.getAuthToken?.());
+
+  profileState.favorites = favorites;
+
+  document.getElementById("profile-avatar").textContent = initials(fullName);
+  document.getElementById("profile-hero-name").textContent = logged ? firstName(fullName) : "Minha conta";
+  document.getElementById("profile-hero-email").textContent = logged
+    ? (email || "Conta ativa na UZUU.")
+    : "Entre ou cadastre-se para acompanhar seus pedidos, favoritos e pagamentos.";
+  document.getElementById("profile-hero-level").textContent = logged
+    ? (extra.role === "seller" ? "Lojista UZUU" : "Cliente UZUU Prime")
+    : "Acesso seguro UZUU";
+  document.getElementById("profile-address-card").textContent = addressText;
+  document.getElementById("profile-detail-name").textContent = fullName || "Nao informado";
+  document.getElementById("profile-detail-email").textContent = email || "Nao informado";
+  document.getElementById("profile-detail-phone").textContent = phone ? formatPhone(phone) : "Nao informado";
+  document.getElementById("profile-detail-cpf").textContent = cpf || "Nao informado";
+  document.getElementById("profile-address-line").textContent = addressText;
+  document.getElementById("profile-address-status").textContent = address ? "Endereco pronto para entrega." : "Cadastre um endereco para agilizar o checkout.";
+  document.getElementById("profile-favorites-total").textContent = `${favorites.length} produto(s) salvos`;
+  document.getElementById("profile-security-session").textContent = logged
+    ? "Sessao autenticada neste dispositivo."
+    : "Entre na sua conta para ativar o painel completo.";
+
+  document.getElementById("profile-stat-orders").textContent = String(orders.length);
+  document.getElementById("profile-stat-favorites").textContent = String(favorites.length);
+  document.getElementById("profile-stat-coupons").textContent = logged ? "2" : "1";
+  document.getElementById("profile-stat-points").textContent = String((orders.length * 70) + (favorites.length * 12));
+
+  const primaryAction = document.getElementById("profile-primary-action");
+  const secondaryAction = document.getElementById("profile-secondary-action");
+
+  if (logged) {
+    primaryAction.textContent = "Editar perfil";
+    primaryAction.setAttribute("href", "./meus-dados/");
+    secondaryAction.textContent = "Ver pedidos";
+    secondaryAction.setAttribute("href", "./pedidos/");
+    logoutButton.hidden = false;
+  } else {
+    primaryAction.textContent = "Entrar";
+    primaryAction.setAttribute("href", "../login/");
+    secondaryAction.textContent = "Criar conta";
+    secondaryAction.setAttribute("href", "../login/");
+    logoutButton.hidden = true;
+  }
+
+  renderOrders();
+}
+
+async function syncProfile() {
+  const localProfile = window.UzuuAccount?.loadJson?.(window.UzuuAccount.keys.profile, {}) || {};
+  const localExtra = window.UzuuAccount?.loadJson?.(window.UzuuAccount.keys.profileExtra, {}) || {};
+  const localAddress = window.UzuuAccount?.loadJson?.(window.UzuuAccount.keys.shipTo, null);
+
+  profileState.profile = localProfile;
+  profileState.extra = localExtra;
+  profileState.address = localAddress;
+  renderProfile();
+
+  if (!window.UzuuAccount?.getAuthToken?.()) return;
 
   try {
     const session = await window.UzuuAccount.fetchCurrentSession();
-    renderSummary(session?.profile || localProfile);
+    profileState.profile = session?.profile || localProfile;
+    profileState.extra = session?.extra || localExtra;
+    profileState.address = session?.defaultAddress || localAddress;
+    renderProfile();
   } catch {
-    renderSummary(localProfile);
+    renderProfile();
   }
-})();
+}
+
+panelButtons.forEach((button) => {
+  button.addEventListener("click", () => activatePanel(button.dataset.panel));
+});
+
+panelJumpButtons.forEach((button) => {
+  button.addEventListener("click", () => activatePanel(button.dataset.panelTarget));
+});
+
+couponButton?.addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText("UZUU10");
+    couponButton.textContent = "Cupom copiado";
+    setTimeout(() => {
+      couponButton.textContent = "Copiar cupom";
+    }, 1800);
+  } catch {
+    couponButton.textContent = "Nao foi possivel copiar";
+  }
+});
+
+logoutButton?.addEventListener("click", () => {
+  if (window.UzuuAccount?.clearSession) {
+    window.UzuuAccount.clearSession();
+  }
+  window.dispatchEvent(new Event("stopmod:profile-updated"));
+  window.location.href = "../login/";
+});
+
+window.addEventListener("storage", syncProfile);
+window.addEventListener("stopmod:profile-updated", syncProfile);
+window.addEventListener("stopmod:shipping-updated", syncProfile);
+
+syncProfile();
 </script>
+
 <div id="site-footer-root"></div>
-<script src="/assets/site-footer.js?v=2"></script>
+<script src="/assets/site-footer.js?v=3"></script>
 </body>
 </html>
-
-
-
-
