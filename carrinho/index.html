@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../style.css?v=20260501premium2" />
-  <link rel="stylesheet" href="style.css?v=55" />
+  <link rel="stylesheet" href="style.css?v=56" />
   <script>window.__UZUU_API_BASE__ = "/ops-api";</script>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6485539380158983" crossorigin="anonymous"></script>
 <link rel="stylesheet" href="/assets/site-header.css?v=29" />
@@ -50,6 +50,23 @@
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V5h6v2m-7 3v8m4-8v8m4-8v8M7 7l1 13h8l1-13"></path></svg>
               <span>Limpar carrinho</span>
             </button>
+          </div>
+          <div class="cart-premium-goal-card">
+            <div class="cart-premium-goal-card__copy">
+              <span aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M3 7h11v8H3zM14 9h3l4 4v2h-2a2 2 0 1 1-4 0H9a2 2 0 1 1-4 0H3V7m4 10a1 1 0 1 0 0 2 1 1 0 0 0 0-2m10 0a1 1 0 1 0 .001 2A1 1 0 0 0 17 17zM14 10v3h5"></path></svg>
+              </span>
+              <p id="cart-progress-copy">Adicione mais R$ 250,00 para ganhar frete gratis.</p>
+            </div>
+            <div class="cart-premium-goal-card__meter">
+              <div class="cart-obsidian-goal__bar">
+                <span id="cart-progress-fill"></span>
+              </div>
+              <div class="cart-obsidian-goal__labels">
+                <small id="cart-progress-current">R$ 0,00</small>
+                <small>R$ 250,00</small>
+              </div>
+            </div>
           </div>
           <ul id="cart-items" class="cart-premium-items"></ul>
         </section>
@@ -118,6 +135,15 @@
       <aside class="cart-premium-side" aria-label="Resumo do pedido">
         <section class="cart-premium-summary">
           <h2>Resumo do pedido</h2>
+          <div class="cart-premium-summary-free">
+            <span aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M3 7h11v8H3zM14 9h3l4 4v2h-2a2 2 0 1 1-4 0H9a2 2 0 1 1-4 0H3V7m4 10a1 1 0 1 0 0 2 1 1 0 0 0 0-2m10 0a1 1 0 1 0 .001 2A1 1 0 0 0 17 17zM14 10v3h5"></path></svg>
+            </span>
+            <div>
+              <strong>Parabens! Voce ganhou frete gratis.</strong>
+              <small>Envio para todo o Brasil.</small>
+            </div>
+          </div>
 
           <div class="cart-premium-summary__rows">
             <div class="cart-premium-summary__row">
@@ -202,22 +228,6 @@
           <p id="summary-pix-value" hidden>R$ 0,00</p>
           <p id="payment-selected" class="pay-selected-inline" hidden></p>
           <span id="summary-pix-total" hidden>R$ 0,00</span>
-        </section>
-
-        <section class="cart-premium-summary">
-          <div class="cart-premium-panel__head">
-            <div>
-              <h3>Falta pouco para frete gratis</h3>
-              <p id="cart-progress-copy">Adicione mais R$ 250,00 para ganhar frete gratis.</p>
-            </div>
-          </div>
-          <div class="cart-obsidian-goal__bar">
-            <span id="cart-progress-fill"></span>
-          </div>
-          <div class="cart-obsidian-goal__labels">
-            <small id="cart-progress-current">R$ 0,00</small>
-            <small>R$ 250,00</small>
-          </div>
         </section>
       </aside>
     </div>
