@@ -17,8 +17,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../style.css?v=20260501premium1" />
-  <link rel="stylesheet" href="style.css?v=54" />
+  <link rel="stylesheet" href="../style.css?v=20260501premium2" />
+  <link rel="stylesheet" href="style.css?v=55" />
   <script>window.__UZUU_API_BASE__ = "/ops-api";</script>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6485539380158983" crossorigin="anonymous"></script>
 <link rel="stylesheet" href="/assets/site-header.css?v=29" />
@@ -231,37 +231,81 @@
     <div class="modal-backdrop" data-close="1"></div>
     <div class="modal-card modal-card--checkout" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <form id="payment-form" class="checkout-premium-form">
+        <header class="checkout-premium-topbar">
+          <div class="checkout-premium-brand">UZUU</div>
+          <div class="checkout-premium-steps" aria-label="Etapas do checkout">
+            <span><em>1</em><strong>Carrinho</strong></span>
+            <span><em>2</em><strong>Identificacao</strong></span>
+            <span class="is-active"><em>3</em><strong>Pagamento</strong></span>
+            <span><em>4</em><strong>Confirmacao</strong></span>
+          </div>
+          <div class="checkout-premium-assurance">
+            <strong>Ambiente 100% seguro</strong>
+            <small>Seus dados estao protegidos</small>
+          </div>
+        </header>
         <div class="checkout-premium-layout">
           <section class="checkout-premium-main">
             <button class="checkout-premium-close" type="button" data-close="1" aria-label="Fechar pagamento">x</button>
-            <h2 id="modal-title" class="checkout-premium-title">Pagamento</h2>
-            <span id="checkout-address-line" class="checkout-hidden-field">Nenhum endereco selecionado.</span>
-            <span id="checkout-address-ship" class="checkout-hidden-field">Frete: --</span>
-            <a id="edit-address-link" class="checkout-hidden-field" href="../entrega/">Alterar endereco</a>
+            <div class="checkout-premium-title-wrap">
+              <h2 id="modal-title" class="checkout-premium-title">Forma de pagamento</h2>
+              <p>Escolha a melhor forma para finalizar sua compra.</p>
+            </div>
+            <span id="checkout-address-line" class="checkout-premium-hidden-mirror">Nenhum endereco selecionado.</span>
+            <span id="checkout-address-ship" class="checkout-premium-hidden-mirror">Frete: --</span>
+            <a id="edit-address-link" class="checkout-premium-hidden-mirror" href="../entrega/">Alterar endereco</a>
             <input id="confirm-address" class="checkout-hidden-field" type="checkbox" tabindex="-1" aria-hidden="true" />
             <section class="checkout-premium-methods" aria-label="Meios de pagamento">
               <div class="checkout-premium-tabs">
+                <label class="checkout-premium-tab is-active" data-payment-tab="pix">
+                  <input type="radio" name="pay" value="pix" checked />
+                  <strong><span class="checkout-tab-icon checkout-tab-icon--pix" aria-hidden="true"></span>PIX</strong>
+                  <small>5% OFF</small>
+                </label>
+
                 <label class="checkout-premium-tab" data-payment-tab="credito">
                   <input type="radio" name="pay" value="credito" />
                   <strong>Cartao</strong>
-                </label>
-
-                <label class="checkout-premium-tab" data-payment-tab="pix">
-                  <input type="radio" name="pay" value="pix" />
-                  <strong><span class="checkout-tab-icon checkout-tab-icon--pix" aria-hidden="true"></span>PIX</strong>
+                  <small>Ate 6x sem juros</small>
                 </label>
 
                 <label class="checkout-premium-tab" data-payment-tab="boleto">
                   <input type="radio" name="pay" value="boleto" />
                   <strong><span class="checkout-tab-icon checkout-tab-icon--boleto" aria-hidden="true"></span>Boleto</strong>
+                  <small>A vista</small>
                 </label>
               </div>
 
               <div class="checkout-premium-panels">
-                <section class="checkout-premium-panel" data-payment-panel="pix">
-                  <span class="checkout-premium-badge">3% de desconto no Pix</span>
-                  <h3>Pague com Pix</h3>
-                  <p>Finalize o pedido e a Uzuu gera o QR Code e o copia e cola direto na loja.</p>
+                <section class="checkout-premium-panel is-active" data-payment-panel="pix">
+                  <div class="checkout-premium-pix-layout">
+                    <article class="checkout-premium-pix-callout">
+                      <span class="checkout-premium-badge">Pix</span>
+                      <h3>Pague com Pix e economize mais</h3>
+                      <strong>5% OFF</strong>
+                      <p>Economize com o codigo copia e cola ou escaneie o QR Code para pagar agora.</p>
+                      <div class="checkout-premium-pix-safe">
+                        <span>I</span>
+                        <p>No pagamento a aprovacao ocorre direto no nosso painel com seguranca.</p>
+                      </div>
+                    </article>
+
+                    <article class="checkout-premium-pix-card checkout-premium-pix-card--qr">
+                      <div id="checkout-pay-qr-slot" class="inline-pay-qr-slot checkout-result__qr checkout-premium-pix-qr-slot">
+                        <div class="checkout-premium-pix-placeholder">
+                          <span>QR</span>
+                        </div>
+                      </div>
+                      <small>O QR Code expira em <strong id="checkout-pix-expire">29:47</strong></small>
+                    </article>
+
+                    <article class="checkout-premium-pix-card checkout-premium-pix-card--copy">
+                      <h4>Ou copie o codigo Pix</h4>
+                      <p>Colando no app do seu banco</p>
+                      <div id="checkout-pix-code" class="checkout-premium-pix-code">Aguardando codigo Pix...</div>
+                      <button id="checkout-pay-copy-inline" class="checkout-premium-copy-button" type="button">Copiar codigo</button>
+                    </article>
+                  </div>
                 </section>
 
                 <section class="checkout-premium-panel" data-payment-panel="credito">
@@ -303,9 +347,69 @@
                 </section>
 
                 <section class="checkout-premium-panel" data-payment-panel="boleto">
-                  <h3>Pague com boleto</h3>
-                  <p>O boleto sera gerado depois da confirmacao e pode levar de 1 a 2 dias uteis para compensar.</p>
+                  <div class="checkout-premium-boleto-card">
+                    <h3>Boleto bancario</h3>
+                    <p>O boleto sera gerado apos a confirmacao do pedido e podera ser pago no banco ou aplicativo. A compensacao pode levar ate 2 dias uteis.</p>
+                  </div>
                 </section>
+              </div>
+
+              <section class="checkout-premium-delivery-card" aria-label="Dados de entrega">
+                <div class="checkout-premium-delivery-card__head">
+                  <div>
+                    <h3>Dados de entrega</h3>
+                    <p>No mesmo painel da compra</p>
+                  </div>
+                  <span class="checkout-premium-delivery-chip">Frete gratis</span>
+                </div>
+                  <div class="checkout-premium-delivery-card__grid">
+                    <div class="checkout-premium-delivery-line">
+                        <span class="checkout-premium-delivery-icon">N</span>
+                    <div>
+                      <strong>Nome</strong>
+                      <small id="checkout-customer-name">Cliente</small>
+                    </div>
+                  </div>
+                  <div class="checkout-premium-delivery-line">
+                        <span class="checkout-premium-delivery-icon">F</span>
+                    <div>
+                      <strong>Entrega</strong>
+                      <small id="checkout-shipping-note">Frete protegido pela UZUU</small>
+                    </div>
+                  </div>
+                  <div class="checkout-premium-delivery-line">
+                        <span class="checkout-premium-delivery-icon">E</span>
+                    <div>
+                      <strong>E-mail</strong>
+                      <small id="checkout-customer-email">cliente@uzuu.com.br</small>
+                    </div>
+                  </div>
+                  <div class="checkout-premium-delivery-line">
+                        <span class="checkout-premium-delivery-icon">C</span>
+                    <div>
+                      <strong>CEP</strong>
+                      <small id="checkout-customer-cep">--</small>
+                    </div>
+                  </div>
+                  <div class="checkout-premium-delivery-line">
+                        <span class="checkout-premium-delivery-icon">T</span>
+                    <div>
+                      <strong>Telefone</strong>
+                      <small id="checkout-customer-phone">Nao informado</small>
+                    </div>
+                  </div>
+                  <div class="checkout-premium-delivery-line">
+                        <span class="checkout-premium-delivery-icon">U</span>
+                    <div>
+                      <strong>Cidade / Estado</strong>
+                      <small id="checkout-customer-city">Sao Paulo - SP</small>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <div class="checkout-premium-back-link">
+                <a href="#cart-summary-inline">Voltar para identificacao</a>
               </div>
 
               <div class="checkout-premium-secure">
@@ -320,12 +424,14 @@
           <aside class="checkout-premium-summary" aria-label="Resumo do pedido">
             <h3 class="checkout-premium-summary-title">Resumo do pedido</h3>
             <div class="checkout-premium-summary-card">
-              <div class="checkout-premium-product">
-                <div id="checkout-summary-image" class="checkout-premium-product-image">UZUU</div>
-                <div class="checkout-premium-product-copy">
-                  <strong id="checkout-summary-name">Produto Uzuu</strong>
-                  <small id="checkout-summary-meta">Entrega protegida pela Uzuu</small>
-                  <small id="checkout-summary-qty">1 unidade</small>
+              <div id="checkout-summary-items" class="checkout-premium-summary-items">
+                <div class="checkout-premium-product">
+                  <div id="checkout-summary-image" class="checkout-premium-product-image">UZUU</div>
+                  <div class="checkout-premium-product-copy">
+                    <strong id="checkout-summary-name">Produto Uzuu</strong>
+                    <small id="checkout-summary-meta">Entrega protegida pela Uzuu</small>
+                    <small id="checkout-summary-qty">1 unidade</small>
+                  </div>
                 </div>
               </div>
 
@@ -335,13 +441,26 @@
                   <strong id="checkout-summary-subtotal">R$ 0,00</strong>
                 </div>
                 <div class="checkout-premium-line">
+                  <span>Desconto</span>
+                  <strong id="checkout-summary-discount">R$ 0,00</strong>
+                </div>
+                <div class="checkout-premium-line">
                   <span>Entrega</span>
                   <strong id="checkout-summary-shipping">--</strong>
+                </div>
+                <div class="checkout-premium-line checkout-premium-line--pix-save">
+                  <span>Desconto Pix (5%)</span>
+                  <strong id="checkout-summary-pix-save">R$ 0,00</strong>
                 </div>
                 <div class="checkout-premium-line checkout-premium-line--total">
                   <span>Total</span>
                   <strong id="checkout-summary-total">R$ 0,00</strong>
                 </div>
+              </div>
+
+              <div class="checkout-premium-applied">
+                <span>✓ Cupom aplicado</span>
+                <small id="checkout-summary-coupon-label">UZUU10</small>
               </div>
 
               <div class="checkout-premium-actions">
@@ -377,6 +496,19 @@
                 </div>
               </article>
             </div>
+
+            <div class="checkout-premium-summary-footer">
+              <div class="checkout-premium-summary-footer__line">
+                <span>Forma de pagamento aceita</span>
+              </div>
+              <div class="checkout-premium-summary-brands">
+                <span>PIX</span>
+                <span>VISA</span>
+                <span>Mastercard</span>
+                <span>ELO</span>
+                <span>Hipercard</span>
+              </div>
+            </div>
           </aside>
         </div>
       </form>
@@ -406,8 +538,8 @@
 <script src="/assets/site-footer.js?v=3"></script>
 
   <script src="https://assets.pagseguro.com.br/checkout-sdk-js/rc/dist/browser/pagseguro.min.js"></script>
-  <script src="../assets/catalog.js?v=10"></script>
-  <script src="script.js?v=64"></script>
+  <script src="../assets/catalog.js?v=11"></script>
+  <script src="script.js?v=65"></script>
   <script src="../assets/menu-dropdown.js?v=22"></script>
 </body>
 </html>

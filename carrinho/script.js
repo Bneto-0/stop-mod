@@ -148,9 +148,23 @@ const checkoutSummaryImage = document.getElementById("checkout-summary-image");
 const checkoutSummaryName = document.getElementById("checkout-summary-name");
 const checkoutSummaryMeta = document.getElementById("checkout-summary-meta");
 const checkoutSummaryQty = document.getElementById("checkout-summary-qty");
+const checkoutSummaryItems = document.getElementById("checkout-summary-items");
 const checkoutSummarySubtotal = document.getElementById("checkout-summary-subtotal");
+const checkoutSummaryDiscount = document.getElementById("checkout-summary-discount");
 const checkoutSummaryShipping = document.getElementById("checkout-summary-shipping");
+const checkoutSummaryPixSave = document.getElementById("checkout-summary-pix-save");
 const checkoutSummaryTotal = document.getElementById("checkout-summary-total");
+const checkoutSummaryCouponLabel = document.getElementById("checkout-summary-coupon-label");
+const checkoutSummaryCouponState = document.querySelector(".checkout-premium-applied");
+const checkoutCustomerName = document.getElementById("checkout-customer-name");
+const checkoutCustomerEmail = document.getElementById("checkout-customer-email");
+const checkoutCustomerPhone = document.getElementById("checkout-customer-phone");
+const checkoutCustomerCep = document.getElementById("checkout-customer-cep");
+const checkoutCustomerCity = document.getElementById("checkout-customer-city");
+const checkoutShippingNote = document.getElementById("checkout-shipping-note");
+const checkoutPixCode = document.getElementById("checkout-pix-code");
+const checkoutPixExpire = document.getElementById("checkout-pix-expire");
+const checkoutPayCopyInline = document.getElementById("checkout-pay-copy-inline");
 const checkoutPremiumTabs = Array.from(document.querySelectorAll("[data-payment-tab]"));
 const checkoutPremiumPanels = Array.from(document.querySelectorAll("[data-payment-panel]"));
 const inlinePayModal = document.getElementById("inline-pay-modal");
@@ -1651,6 +1665,41 @@ function renderCheckoutModalSnapshot() {
   const firstItem = snapshot.grouped[0] || null;
   const totalUnits = snapshot.grouped.reduce((sum, item) => sum + (Number(item.qty) || 0), 0);
   const extraItems = Math.max(0, snapshot.grouped.length - 1);
+  const pixSave = Math.max(0, (snapshot.subtotal - snapshot.discount) * 0.05);
+  const customer = loadCheckoutCustomer();
+  const shipTo = snapshot.shipTo || {};
+  const couponLabel = Array.isArray(snapshot.coupons) && snapshot.coupons.length
+    ? snapshot.coupons.map((item) => String(item || "").trim().toUpperCase()).filter(Boolean).join(", ")
+    : "";
+
+  if (checkoutSummaryItems) {
+    checkoutSummaryItems.innerHTML = snapshot.grouped.length
+      ? snapshot.grouped.map((item) => {
+          const meta = [item.category, item.size].filter(Boolean).join(" | ");
+          const qtyText = Number(item.qty) === 1 ? "Quantidade: 1" : `Quantidade: ${Number(item.qty) || 1}`;
+          return `
+            <div class="checkout-premium-product">
+              <div class="checkout-premium-product-image">${item.image ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name || "Produto Uzuu")}" loading="lazy" />` : "UZUU"}</div>
+              <div class="checkout-premium-product-copy">
+                <strong>${escapeHtml(item.name || "Produto Uzuu")}</strong>
+                <small>${escapeHtml(meta || "Entrega protegida pela Uzuu")}</small>
+                <small>${escapeHtml(qtyText)}</small>
+              </div>
+              <div class="checkout-premium-product-price">R$ ${formatBRL((Number(item.price) || 0) * Math.max(1, Number(item.qty) || 1))}</div>
+            </div>
+          `;
+        }).join("")
+      : `
+        <div class="checkout-premium-product">
+          <div id="checkout-summary-image" class="checkout-premium-product-image">UZUU</div>
+          <div class="checkout-premium-product-copy">
+            <strong id="checkout-summary-name">Produto Uzuu</strong>
+            <small id="checkout-summary-meta">Entrega protegida pela Uzuu</small>
+            <small id="checkout-summary-qty">1 unidade</small>
+          </div>
+        </div>
+      `;
+  }
 
   if (checkoutSummaryImage) {
     if (firstItem?.image) {
@@ -1681,12 +1730,62 @@ function renderCheckoutModalSnapshot() {
     checkoutSummarySubtotal.textContent = `R$ ${formatBRL(snapshot.subtotal)}`;
   }
 
+  if (checkoutSummaryDiscount) {
+    checkoutSummaryDiscount.textContent = snapshot.discount > 0 ? `-R$ ${formatBRL(snapshot.discount)}` : "R$ 0,00";
+  }
+
   if (checkoutSummaryShipping) {
     checkoutSummaryShipping.textContent = formatCheckoutSummaryShipping(snapshot.shipping);
   }
 
+  if (checkoutSummaryPixSave) {
+    checkoutSummaryPixSave.textContent = pixSave > 0 ? `-R$ ${formatBRL(pixSave)}` : "R$ 0,00";
+  }
+
   if (checkoutSummaryTotal) {
     checkoutSummaryTotal.textContent = `R$ ${formatBRL(snapshot.total)}`;
+  }
+
+  if (checkoutSummaryCouponState) {
+    checkoutSummaryCouponState.hidden = !couponLabel;
+  }
+
+  if (checkoutSummaryCouponLabel) {
+    checkoutSummaryCouponLabel.textContent = couponLabel || "";
+  }
+
+  if (checkoutCustomerName) {
+    checkoutCustomerName.textContent = customer?.fullName || customer?.name || "Cliente";
+  }
+
+  if (checkoutCustomerEmail) {
+    checkoutCustomerEmail.textContent = customer?.email || "cliente@uzuu.com.br";
+  }
+
+  if (checkoutCustomerPhone) {
+    checkoutCustomerPhone.textContent = customer?.phone || "Nao informado";
+  }
+
+  if (checkoutCustomerCep) {
+    checkoutCustomerCep.textContent = shipTo?.cep || "--";
+  }
+
+  if (checkoutCustomerCity) {
+    checkoutCustomerCity.textContent = [shipTo?.city, shipTo?.state].filter(Boolean).join(" - ") || "Sao Paulo - SP";
+  }
+
+  if (checkoutShippingNote) {
+    checkoutShippingNote.textContent = snapshot.shipping > 0
+      ? `Entrega protegida • ${formatCheckoutSummaryShipping(snapshot.shipping)}`
+      : "Frete gratis para este pedido";
+  }
+
+  if (checkoutPixCode) {
+    checkoutPixCode.textContent = "O codigo Pix sera exibido aqui assim que o pedido for criado.";
+  }
+
+  if (checkoutPixExpire) {
+    checkoutPixExpire.textContent = "29:47";
   }
 }
 
@@ -1787,6 +1886,12 @@ function renderCheckoutPaymentResult(data = {}, method = "") {
         ${qrText ? "<button id=\"checkout-pay-copy\" class=\"checkout-result__button\" type=\"button\">Copiar codigo Pix</button>" : ""}
       </div>
     `;
+    if (checkoutPixCode) {
+      checkoutPixCode.textContent = qrText || "Nao foi possivel gerar o codigo Pix automaticamente.";
+    }
+    if (checkoutPixExpire) {
+      checkoutPixExpire.textContent = expiryText || "--:--";
+    }
     const qrSlot = document.getElementById("checkout-pay-qr-slot");
     if (qrSlot) {
       qrSlot.id = "inline-pay-qr-slot";
@@ -2730,7 +2835,7 @@ async function submitCheckoutTransparentCardPayment() {
 
 function syncPaymentRadios() {
   if (!paymentForm) return;
-  const cur = loadPayment() || "credito";
+  const cur = loadPayment() || "pix";
   const radioValue = cur === "debito" ? "credito" : cur;
   const radios = paymentForm.querySelectorAll("input[name=\"pay\"]");
   radios.forEach((r) => {
@@ -3339,6 +3444,20 @@ paymentForm?.addEventListener("input", (event) => {
   if (target.id === "checkout-card-cvv") {
     const digits = digitsOnly(target.value).slice(0, 4);
     if (target.value !== digits) target.value = digits;
+  }
+});
+
+checkoutPayCopyInline?.addEventListener("click", async () => {
+  const pixValue = String(checkoutPixCode?.textContent || "").trim();
+  if (!pixValue || /sera exibido aqui|nao foi possivel/i.test(pixValue)) {
+    setCheckoutFeedback("Finalize o pedido em Pix para gerar o codigo copia e cola.", true);
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(pixValue);
+    setCheckoutFeedback("Codigo Pix copiado com sucesso.", false);
+  } catch {
+    setCheckoutFeedback("Nao foi possivel copiar automaticamente. Copie manualmente o codigo Pix.", true);
   }
 });
 
