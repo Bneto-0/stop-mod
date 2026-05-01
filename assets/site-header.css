@@ -721,7 +721,7 @@ body.with-shared-header .cart-page {
   height: 38px;
   padding: 0;
   border-radius: 12px;
-  background: #e31b23;
+  background: #2563eb;
   color: #ffffff;
 }
 
@@ -747,7 +747,7 @@ body.with-shared-header .cart-page {
 }
 
 .shared-header--home .shared-cart strong {
-  background: #e31b23;
+  background: #2563eb;
 }
 
 .shared-header--home .shared-header__menu-row {
@@ -764,11 +764,11 @@ body.with-shared-header .cart-page {
 
 .shared-header--home .shared-promo-link,
 .shared-header--home .shared-promo-link svg {
-  color: #ff3737;
+  color: #3b82f6;
 }
 
 .shared-header--home .shared-mega-promo a {
-  background: #e31b23;
+  background: #2563eb;
 }
 
 @media (max-width: 1160px) {

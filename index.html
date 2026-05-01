@@ -2,235 +2,173 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Uzuu | Marketplace de moda, calcados e acessorios</title>
   <meta name="description" content="A Uzuu evolui como marketplace de moda, calcados e acessorios, com vitrine forte, checkout integrado e espaco para marcas e lojistas parceiros." />
   <link rel="canonical" href="https://uzuu.com.br/" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="UZUU" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="format-detection" content="telephone=no" />
+  <link rel="apple-touch-icon" href="/favicon.png?v=20260423home" />
+  <link rel="manifest" href="/site.webmanifest?v=20260430blackapp1" />
   <link rel="icon" href="./favicon.png?v=20260423home" type="image/png" />
-  <link rel="manifest" href="./site.webmanifest" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./style.css?v=20260423home" />
-  <link rel="stylesheet" href="/assets/site-header.css?v=29" />
+  <link rel="stylesheet" href="./style.css?v=20260501darksweep2" />
 </head>
-<body id="top" class="home-page home-page--premium">
-  <div id="site-header-root"></div>
-  <script src="/assets/site-header.js?v=18"></script>
-  <script src="/assets/catalog.js?v=10"></script>
-
-  <main class="home-premium">
-    <section class="home-hero-section" id="anuncios" aria-label="Destaques da Uzuu">
-      <div class="container">
-        <div class="home-hero" id="home-hero-slider">
-          <button class="home-hero__arrow home-hero__arrow--prev" type="button" aria-label="Banner anterior" data-hero-nav="prev">
-            <span aria-hidden="true">&#8249;</span>
-          </button>
-          <div id="home-hero-track" class="home-hero__track"></div>
-          <button class="home-hero__arrow home-hero__arrow--next" type="button" aria-label="Proximo banner" data-hero-nav="next">
-            <span aria-hidden="true">&#8250;</span>
-          </button>
-          <div id="home-hero-dots" class="home-hero__dots" aria-label="Controle do banner principal"></div>
-        </div>
+<body id="top" class="home-page home-infinite-page">
+  <div class="home-infinite">
+    <div class="home-infinite-topbar">
+      <div class="home-infinite-container home-infinite-topbar__inner">
+        <span>🚚 Frete grátis para todo o Brasil</span>
+        <span>💳 Parcele em até 12x sem juros</span>
+        <span>↩ Troca fácil em até 7 dias</span>
+        <span>🔒 Compra 100% segura</span>
       </div>
-    </section>
-
-    <section class="container home-proof-strip" aria-label="Beneficios da compra">
-      <article class="home-proof-strip__item">
-        <span class="home-proof-strip__icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M3 7h10v8H3zm11 3h3l3 3v2h-6zm-9 7a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm11 0a2 2 0 1 0 .001 4A2 2 0 0 0 16 17zM5 19h7m4 0h2"></path></svg>
-        </span>
-        <span class="home-proof-strip__copy">
-          <strong>FRETE GRATIS</strong>
-          <small>para todo o Brasil</small>
-        </span>
-      </article>
-      <article class="home-proof-strip__item">
-        <span class="home-proof-strip__icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M3 6h18v12H3zm0 4h18M7 15h3"></path></svg>
-        </span>
-        <span class="home-proof-strip__copy">
-          <strong>PARCELE EM ATE 12X</strong>
-          <small>sem juros no cartao</small>
-        </span>
-      </article>
-      <article class="home-proof-strip__item">
-        <span class="home-proof-strip__icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.66-5.66M20 12a8 8 0 0 1-13.66 5.66M17 3v4h-4M7 21v-4h4"></path></svg>
-        </span>
-        <span class="home-proof-strip__copy">
-          <strong>TROCA GRATIS</strong>
-          <small>em ate 7 dias</small>
-        </span>
-      </article>
-      <article class="home-proof-strip__item">
-        <span class="home-proof-strip__icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.6-2.7 8.8-7 10-4.3-1.2-7-5.4-7-10V6zm-3 9 2 2 4-4"></path></svg>
-        </span>
-        <span class="home-proof-strip__copy">
-          <strong>COMPRA 100% SEGURA</strong>
-          <small>seus dados protegidos</small>
-        </span>
-      </article>
-    </section>
-
-    <section class="container home-orbit-section" aria-label="Atalhos por categoria" id="produtos">
-      <div id="home-category-orbit" class="home-orbit-grid"></div>
-    </section>
-
-    <section class="container home-merch-section" aria-label="Mais vendidos">
-      <div class="home-merch-section__head">
-        <h2>MAIS VENDIDOS</h2>
-        <div class="home-merch-section__controls">
-          <a href="#recomendados">Ver todos</a>
-          <div class="home-scroll-arrows">
-            <button type="button" aria-label="Voltar prateleira" data-scroll-target="best-sellers-track" data-scroll-direction="prev">&#8249;</button>
-            <button type="button" aria-label="Avancar prateleira" data-scroll-target="best-sellers-track" data-scroll-direction="next">&#8250;</button>
-          </div>
-        </div>
-      </div>
-      <div id="best-sellers-track" class="home-product-row"></div>
-    </section>
-
-    <section class="container home-promo-grid" id="lancamentos" aria-label="Campanhas promocionais">
-      <article class="home-promo-card home-promo-card--launch">
-        <div class="home-promo-card__copy">
-          <h3>LANCAMENTOS</h3>
-          <p>Novas pecas toda semana</p>
-          <a href="#recomendados">Ver lancamentos</a>
-        </div>
-      </article>
-      <article class="home-promo-card home-promo-card--sale">
-        <div class="home-promo-card__copy">
-          <h3>ATE 50% OFF</h3>
-          <p>Nas melhores pecas</p>
-          <a href="/cupons/">Aproveitar ofertas</a>
-        </div>
-      </article>
-      <article class="home-promo-card home-promo-card--street">
-        <div class="home-promo-card__copy">
-          <h3>STREETWEAR PREMIUM</h3>
-          <p>Qualidade que se destaca</p>
-          <a href="#recomendados">Ver streetwear</a>
-        </div>
-      </article>
-    </section>
-
-    <section class="container home-merch-section home-merch-section--recommend" id="recomendados" aria-label="Recomendados para voce">
-      <div class="home-merch-section__head home-merch-section__head--filters">
-        <h2>RECOMENDADOS PARA VOCE</h2>
-        <div id="recommend-tabs" class="home-filter-tabs" role="tablist" aria-label="Filtros de recomendacao">
-          <button class="is-active" type="button" data-home-filter="all">Todos</button>
-          <button type="button" data-home-filter="masculino">Masculino</button>
-          <button type="button" data-home-filter="feminino">Feminino</button>
-          <button type="button" data-home-filter="acessorios">Acessorios</button>
-          <button type="button" data-home-filter="calcados">Calcados</button>
-          <button type="button" data-home-filter="streetwear">Streetwear</button>
-        </div>
-      </div>
-      <div id="recommend-grid" class="home-product-grid"></div>
-      <p id="recommend-feedback" class="home-recommend-feedback" hidden>Nenhum produto encontrado para esse filtro.</p>
-    </section>
-
-    <section class="container home-loadmore-section" aria-label="Carregar mais produtos automaticamente">
-      <div id="load-more-products" class="home-loadmore-sentinel" aria-hidden="true"></div>
-    </section>
-  </main>
-
-  <footer class="site-footer home-premium-footer">
-    <div class="container home-newsletter">
-      <div class="home-newsletter__copy">
-        <span class="home-newsletter__icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M3 6h18v12H3zm1.5 1.5 7.5 6 7.5-6"></path></svg>
-        </span>
-        <div>
-          <strong>Cadastre-se e receba ofertas exclusivas</strong>
-          <p>Novidades, promocoes e lancamentos direto no seu e-mail.</p>
-        </div>
-      </div>
-      <form id="newsletter-form" class="home-newsletter__form">
-        <label class="sr-only" for="newsletter-email">Digite seu e-mail</label>
-        <input id="newsletter-email" type="email" placeholder="Digite seu e-mail" />
-        <button type="submit">Cadastrar</button>
-      </form>
     </div>
 
-    <div class="container home-footer__top">
-      <section class="home-footer__brand">
-        <a class="home-footer__logo" href="/#top" aria-label="UZUU">UZUU</a>
-        <p>Estilo sem pagar caro.<br />Peca premium com preco justo para todos os estilos.</p>
-        <div class="home-footer__social" aria-label="Redes sociais">
-          <a href="#" aria-label="Instagram">
-            <svg viewBox="0 0 24 24"><path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm5 5.2A4.8 4.8 0 1 0 16.8 12 4.8 4.8 0 0 0 12 7.2zm6.2-.9a1.1 1.1 0 1 0 1.1 1.1 1.1 1.1 0 0 0-1.1-1.1z"></path></svg>
-          </a>
-          <a href="#" aria-label="TikTok">
-            <svg viewBox="0 0 24 24"><path d="M14 3c1 2 2.7 3.7 5 4.2V10a8.2 8.2 0 0 1-5-1.7v6.4a5.7 5.7 0 1 1-4-5.4v2.8a2.9 2.9 0 1 0 1.2 2.4V3z"></path></svg>
-          </a>
-          <a href="#" aria-label="WhatsApp">
-            <svg viewBox="0 0 24 24"><path d="M20 11.5a8.5 8.5 0 0 1-12.4 7.5L4 20l1.1-3.4A8.5 8.5 0 1 1 20 11.5zm-4.8 2.3-.8-.4c-.3-.2-.6-.2-.8.1l-.2.3c-.2.2-.4.3-.7.2a6.9 6.9 0 0 1-3.3-2.9c-.2-.3-.2-.6 0-.8l.2-.2c.2-.2.2-.5.1-.8l-.3-.8c-.2-.5-.7-.6-1.1-.3a2 2 0 0 0-.7 2.1 9.2 9.2 0 0 0 5.6 5.7 2 2 0 0 0 2.1-.6c.4-.4.3-.9-.1-1.2z"></path></svg>
-          </a>
-          <a href="#" aria-label="YouTube">
-            <svg viewBox="0 0 24 24"><path d="M21.6 7.2a2.7 2.7 0 0 0-1.9-1.9C18 4.8 12 4.8 12 4.8s-6 0-7.7.5A2.7 2.7 0 0 0 2.4 7.2 28.8 28.8 0 0 0 1.9 12c0 1.7.1 3.3.5 4.8a2.7 2.7 0 0 0 1.9 1.9c1.7.5 7.7.5 7.7.5s6 0 7.7-.5a2.7 2.7 0 0 0 1.9-1.9c.4-1.5.5-3.1.5-4.8s-.1-3.3-.5-4.8zM10 15.5v-7l6 3.5-6 3.5z"></path></svg>
-          </a>
+    <header class="home-infinite-header">
+      <div class="home-infinite-container home-infinite-header__row">
+        <a class="home-infinite-brand" href="#top" aria-label="UZUU">UZUU</a>
+        <button class="home-infinite-category-trigger" type="button" data-home-action="categories">☰ Todas as categorias</button>
+        <form id="home-search-form" class="home-infinite-search" role="search">
+          <input id="home-search-input" type="search" placeholder="Buscar produtos, categorias ou marcas..." aria-label="Buscar produtos" />
+          <span aria-hidden="true">⌕</span>
+        </form>
+        <a class="home-infinite-login" href="/login/">Entrar<br /><span>ou cadastrar</span></a>
+        <a class="home-infinite-action" href="/perfil/favoritos/">♡ Favoritos</a>
+        <a class="home-infinite-cart" href="/carrinho/">🛒 Carrinho <span id="home-cart-count">0</span></a>
+      </div>
+
+      <nav class="home-infinite-container home-infinite-nav" aria-label="Navegacao principal">
+        <a href="#novidades">Novidades</a>
+        <a href="#masculino">Masculino</a>
+        <a href="#feminino">Feminino</a>
+        <a href="#acessorios">Acessórios</a>
+        <a href="#calcados">Calçados</a>
+        <a href="#streetwear">Streetwear</a>
+        <a href="#marcas">Marcas</a>
+        <a class="is-promo" href="#promocoes">Promoções</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="home-infinite-hero">
+        <img src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1800&q=90" alt="Campanha UZUU" />
+        <div class="home-infinite-hero__overlay"></div>
+        <div class="home-infinite-container home-infinite-hero__content">
+          <div>
+            <p>Coleção outono / inverno</p>
+            <h1>Estilo sem<br />pagar caro</h1>
+            <span>As melhores peças com os melhores preços. Qualidade premium, preço justo.</span>
+            <div class="home-infinite-hero__actions">
+              <button type="button" data-home-action="collection">Ver coleção</button>
+              <button type="button" data-home-action="launches">Lançamentos</button>
+            </div>
+          </div>
         </div>
       </section>
 
-      <div class="home-footer__columns">
+      <section class="home-infinite-container home-infinite-benefits" aria-label="Beneficios da compra">
+        <article><span>🚚</span><div><strong>Frete grátis</strong><small>para todo o Brasil</small></div></article>
+        <article><span>💳</span><div><strong>Parcele em até 12x</strong><small>sem juros no cartão</small></div></article>
+        <article><span>↩</span><div><strong>Troca grátis</strong><small>em até 7 dias</small></div></article>
+        <article><span>🔒</span><div><strong>Compra 100% segura</strong><small>seus dados protegidos</small></div></article>
+      </section>
+
+      <section class="home-infinite-container home-infinite-categories" aria-label="Categorias">
+        <div id="home-categories-grid" class="home-infinite-categories__grid"></div>
+      </section>
+
+      <section id="novidades" class="home-infinite-container home-infinite-section">
+        <div class="home-infinite-section__head">
+          <h2>Mais vendidos</h2>
+          <button type="button" data-home-action="show-all">Ver todos</button>
+        </div>
+        <div id="best-sellers-grid" class="home-infinite-product-grid"></div>
+      </section>
+
+      <section id="promocoes" class="home-infinite-container home-infinite-ad-section">
+        <div id="ad-banner-row-primary" class="home-infinite-ad-grid"></div>
+      </section>
+
+      <section class="home-infinite-container home-infinite-section">
+        <div class="home-infinite-section__head">
+          <h2>Recomendados para você</h2>
+          <button type="button" data-home-action="show-all">Ver todos</button>
+        </div>
+        <div id="home-filter-tabs" class="home-infinite-tabs"></div>
+        <div id="recommended-grid" class="home-infinite-product-grid"></div>
+      </section>
+
+      <section class="home-infinite-container home-infinite-ad-section">
+        <div id="ad-banner-row-secondary" class="home-infinite-ad-grid"></div>
+      </section>
+
+      <section class="home-infinite-container home-infinite-section">
+        <div class="home-infinite-section__head">
+          <h2>Continue explorando</h2>
+          <button type="button" data-home-action="load-more">Carregamento automático</button>
+        </div>
+        <div id="explore-grid" class="home-infinite-product-grid"></div>
+        <div id="loading-more-grid" class="home-infinite-product-grid" hidden></div>
+        <div id="infinite-loader" class="home-infinite-loader">Role para carregar mais produtos</div>
+      </section>
+
+      <section class="home-infinite-container home-infinite-newsletter">
+        <div>
+          <h2>Cadastre-se e receba ofertas exclusivas</h2>
+          <p>Novidades, promoções e lançamentos direto no seu e-mail.</p>
+        </div>
+        <form id="home-newsletter-form">
+          <input type="email" placeholder="Digite seu e-mail" aria-label="Digite seu e-mail" />
+          <button type="submit">Cadastrar</button>
+        </form>
+        <p id="home-newsletter-feedback" class="home-infinite-newsletter__feedback" hidden></p>
+      </section>
+    </main>
+
+    <footer class="home-infinite-footer">
+      <div class="home-infinite-container home-infinite-footer__grid">
+        <section class="home-infinite-footer__brand">
+          <strong>UZUU</strong>
+          <p>Estilo sem pagar caro. Peças premium com preço justo para todos os estilos.</p>
+          <div>◎ ♪ ☁ ▶</div>
+        </section>
         <section>
-          <h3>INSTITUCIONAL</h3>
-          <a href="/sobre/">Sobre a UZUU</a>
-          <a href="/trabalhe-conosco/">Trabalhe conosco</a>
-          <a href="/privacidade/">Politica de privacidade</a>
-          <a href="/trocas/">Trocas e devolucoes</a>
+          <h3>Institucional</h3>
+          <a href="/marketplace/">Sobre a UZUU</a>
+          <a href="/seller/">Trabalhe conosco</a>
+          <a href="/privacidade/">Política de privacidade</a>
           <a href="/termos/">Termos de uso</a>
         </section>
         <section>
-          <h3>AJUDA</h3>
-          <a href="/central-de-ajuda/">Central de ajuda</a>
-          <a href="/como-comprar/">Como comprar</a>
-          <a href="/pagamento/">Formas de pagamento</a>
-          <a href="/prazos/">Prazos de entrega</a>
+          <h3>Ajuda</h3>
+          <a href="/perfil/">Central de ajuda</a>
+          <a href="/produtos/">Como comprar</a>
+          <a href="/carrinho/">Formas de pagamento</a>
           <a href="/perfil/pedidos/">Rastrear pedido</a>
         </section>
         <section>
-          <h3>CATEGORIAS</h3>
-          <a href="/?q=masculino#produtos">Masculino</a>
-          <a href="/?q=feminino#produtos">Feminino</a>
-          <a href="/?cat=Acessorios#produtos">Acessorios</a>
-          <a href="/?q=calcados#produtos">Calcados</a>
-          <a href="/?q=streetwear#produtos">Streetwear</a>
-          <a href="/cupons/">Promocoes</a>
-        </section>
-        <section class="home-footer__payments">
-          <h3>FORMAS DE PAGAMENTO</h3>
-          <div class="home-payment-badges">
-            <span><img src="/assets/icons/visa-logo-real.svg" alt="Visa" /></span>
-            <span><img src="/assets/icons/mastercard-logo-real.svg" alt="Mastercard" /></span>
-            <span><img src="/assets/icons/elo-logo-real.png" alt="Elo" /></span>
-            <span><img src="/assets/icons/hipercard-logo-real.svg" alt="Hipercard" /></span>
-            <span><img src="/assets/icons/pix-logo.svg" alt="Pix" /></span>
-          </div>
-          <div class="home-security-card">
-            <h3>SEGURANCA</h3>
-            <div class="home-security-card__item">
-              <span aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.6-2.7 8.8-7 10-4.3-1.2-7-5.4-7-10V6zm-3 9 2 2 4-4"></path></svg>
-              </span>
-              <div>
-                <strong>Site protegido</strong>
-                <small>Certificado SSL</small>
-              </div>
-            </div>
-          </div>
+          <h3>Categorias</h3>
+          <a href="#masculino">Masculino</a>
+          <a href="#feminino">Feminino</a>
+          <a href="#acessorios">Acessórios</a>
+          <a href="#calcados">Calçados</a>
+          <a href="#promocoes">Promoções</a>
         </section>
       </div>
-    </div>
+      <div class="home-infinite-container home-infinite-footer__bottom">© 2026 UZUU. Todos os direitos reservados.</div>
+    </footer>
+  </div>
 
-    <div class="container home-footer__bottom">
-      <p>&copy; 2024 UZUU. Todos os direitos reservados.</p>
-    </div>
-  </footer>
-
-  <script src="./script.js?v=14"></script>
+  <div id="home-toast" class="home-toast" hidden></div>
+  <script src="/assets/catalog.js?v=10"></script>
+  <script src="./script.js?v=20260430homefunc1"></script>
 </body>
 </html>
+

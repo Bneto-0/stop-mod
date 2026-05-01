@@ -1,1 +1,28 @@
-{"name":"Uzuu","short_name":"Uzuu","start_url":"/","display":"standalone","background_color":"#0b0b0d","theme_color":"#0b0b0d","icons":[{"src":"/favicon.png?v=20260416b","sizes":"1080x1080","type":"image/png"}]}
+{
+  "id": "/",
+  "name": "UZUU",
+  "short_name": "UZUU",
+  "description": "Marketplace de moda, calcados e acessorios da UZUU.",
+  "start_url": "/?source=pwa&v=20260430blackapp1",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "fullscreen"],
+  "orientation": "any",
+  "background_color": "#080808",
+  "theme_color": "#000000",
+  "categories": ["shopping", "lifestyle", "fashion"],
+  "icons": [
+    {
+      "src": "/favicon.png?v=20260423home",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.png?v=20260423home",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,595 +1,525 @@
-const sharedCatalog = window.stopmodCatalog || null;
-const CART_KEY = sharedCatalog?.storageKeys?.cart || "stopmod_cart";
-const FAVORITES_KEY = sharedCatalog?.storageKeys?.favorites || "stopmod_favorites";
+(function () {
+  const catalog = window.stopmodCatalog || null;
+  const NEWSLETTER_KEY = "uzuu_newsletter_emails";
 
-const products = Array.isArray(sharedCatalog?.products) ? sharedCatalog.products : [];
-const formatBRL = sharedCatalog?.formatBRL || ((value) => Number(value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }));
-const pixPrice = sharedCatalog?.pixPrice || ((value) => Number(value || 0) * 0.93);
-const oldPrice = sharedCatalog?.oldPrice || ((value) => Number(value || 0) * 1.12);
-const productHref = sharedCatalog?.productHref || ((id) => `/produtos/?id=${encodeURIComponent(String(id))}`);
+  const fallbackProducts = [
+    { id: 1, name: "Moletom UZUU Oversized", category: "Streetwear", price: 199.9, image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=800&q=80", badge: "20% OFF" },
+    { id: 2, name: "Camiseta UZUU Basic", category: "Masculino", price: 89.9, image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=800&q=80", badge: "Novo" },
+    { id: 3, name: "Bone UZUU Classic", category: "Acessorios", price: 79.9, image: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=800&q=80", badge: "Mais vendido" },
+    { id: 4, name: "Mochila UZUU Essential", category: "Acessorios", price: 159.9, image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80", badge: "Premium" },
+    { id: 5, name: "Tenis UZUU Street", category: "Calcados", price: 249.9, image: "https://images.unsplash.com/photo-1543508282-6319a3e2621f?auto=format&fit=crop&w=800&q=80", badge: "Oferta" },
+    { id: 6, name: "Bermuda UZUU Casual", category: "Masculino", price: 99.9, image: "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?auto=format&fit=crop&w=800&q=80", badge: "Leve" }
+  ];
 
-const heroTrack = document.getElementById("home-hero-track");
-const heroDots = document.getElementById("home-hero-dots");
-const orbitGrid = document.getElementById("home-category-orbit");
-const bestSellersTrack = document.getElementById("best-sellers-track");
-const recommendGrid = document.getElementById("recommend-grid");
-const recommendFeedback = document.getElementById("recommend-feedback");
-const recommendTabs = Array.from(document.querySelectorAll("[data-home-filter]"));
-const loadMoreSentinel = document.getElementById("load-more-products");
-const newsletterForm = document.getElementById("newsletter-form");
-const newsletterEmail = document.getElementById("newsletter-email");
-const searchInput = document.getElementById("search-input");
-const cartCount = document.getElementById("cart-count");
+  const categories = [
+    { name: "Masculino", image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80" },
+    { name: "Feminino", image: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=800&q=80" },
+    { name: "Acessorios", label: "Acessórios", image: "https://images.unsplash.com/photo-1523779105320-d1cd346ff52b?auto=format&fit=crop&w=800&q=80" },
+    { name: "Calcados", label: "Calçados", image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80" },
+    { name: "Streetwear", image: "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=800&q=80" },
+    { name: "Promocoes", label: "Promoções", image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=800&q=80" }
+  ];
 
-const heroSlides = [
-  {
-    kickerAccent: "COLECAO",
-    kickerText: "OUTONO / INVERNO",
-    title: "ESTILO SEM PAGAR CARO",
-    text: "As melhores pecas com os melhores precos. Qualidade premium, preco justo.",
-    primaryLabel: "Ver colecao",
-    primaryHref: "#recomendados",
-    secondaryLabel: "Lancamentos",
-    secondaryHref: "#lancamentos",
-    image: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1600&q=80"
-  },
-  {
-    kickerAccent: "DROP",
-    kickerText: "STREETWEAR PREMIUM",
-    title: "PECAS FORTES EM LEITURA LIMPA",
-    text: "Modelagens urbanas, visual refinado e selecao pensada para vender com cara de marca grande.",
-    primaryLabel: "Ver streetwear",
-    primaryHref: "#recomendados",
-    secondaryLabel: "Mais vendidos",
-    secondaryHref: "#produtos",
-    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1600&q=80"
-  },
-  {
-    kickerAccent: "NOVA",
-    kickerText: "CURADORIA UZUU",
-    title: "PRECO FORTE E VITRINE PREMIUM",
-    text: "Selecao escura, premium e comercial para deixar a home com leitura de marketplace profissional.",
-    primaryLabel: "Explorar agora",
-    primaryHref: "#produtos",
-    secondaryLabel: "Promocoes",
-    secondaryHref: "/cupons/",
-    image: "https://images.unsplash.com/photo-1503341338985-c0477be52513?auto=format&fit=crop&w=1600&q=80"
-  }
-];
+  const adBanners = [
+    { title: "Lançamentos", subtitle: "Novas peças toda semana", cta: "Ver lançamentos", action: "launches", image: "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=1000&q=80", tone: "from-blue-950" },
+    { title: "Até 50% OFF", subtitle: "Nas melhores peças", cta: "Aproveitar ofertas", action: "Promocoes", image: "https://images.unsplash.com/photo-1506629905607-d9f297d8f8af?auto=format&fit=crop&w=1000&q=80", tone: "from-black" },
+    { title: "Streetwear Premium", subtitle: "Qualidade que se destaca", cta: "Ver streetwear", action: "Streetwear", image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1000&q=80", tone: "from-neutral-950" }
+  ];
 
-const homeProductMeta = {
-  1: {
-    segment: "streetwear",
-    orbit: "streetwear",
-    image: "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=900&q=80"
-  },
-  2: {
-    segment: "masculino",
-    orbit: "masculino",
-    image: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=900&q=80"
-  },
-  3: {
-    segment: "feminino",
-    orbit: "feminino",
-    image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=80"
-  },
-  4: {
-    segment: "streetwear",
-    orbit: "streetwear",
-    image: "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=900&q=80"
-  },
-  10: {
-    segment: "masculino",
-    orbit: "masculino",
-    image: "https://images.unsplash.com/photo-1562157873-818bc0726f68?auto=format&fit=crop&w=900&q=80"
-  },
-  11: {
-    segment: "calcados",
-    orbit: "calcados",
-    image: "https://images.unsplash.com/photo-1549298916-f52d724204b4?auto=format&fit=crop&w=900&q=80"
-  },
-  12: {
-    segment: "acessorios",
-    orbit: "acessorios",
-    image: "https://images.unsplash.com/photo-1495107334309-fcf20504a5ab?auto=format&fit=crop&w=900&q=80"
-  },
-  13: {
-    segment: "feminino",
-    orbit: "feminino",
-    image: "https://images.unsplash.com/photo-1506629905607-d9d4b5b1f1b3?auto=format&fit=crop&w=900&q=80"
-  },
-  14: {
-    segment: "masculino",
-    orbit: "masculino",
-    image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80"
-  },
-  15: {
-    segment: "feminino",
-    orbit: "feminino",
-    image: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=900&q=80"
-  },
-  17: {
-    segment: "streetwear",
-    orbit: "streetwear",
-    image: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&w=900&q=80"
-  },
-  18: {
-    segment: "masculino",
-    orbit: "masculino",
-    image: "https://images.unsplash.com/photo-1551232864-3f0890e580d9?auto=format&fit=crop&w=900&q=80"
-  },
-  19: {
-    segment: "streetwear",
-    orbit: "streetwear",
-    image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80"
-  },
-  21: {
-    segment: "feminino",
-    orbit: "feminino",
-    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=80"
-  }
-};
-
-const orbitCards = [
-  { key: "masculino", label: "Masculino", productId: 2 },
-  { key: "feminino", label: "Feminino", productId: 15 },
-  { key: "acessorios", label: "Acessorios", productId: 12 },
-  { key: "calcados", label: "Calcados", productId: 11 },
-  { key: "streetwear", label: "Streetwear", productId: 4 },
-  { key: "promocoes", label: "Promocoes", promo: true }
-];
-
-const bestSellerIds = [4, 1, 12, 11, 14, 10];
-const recommendationIds = [15, 2, 4, 17, 1, 11, 3, 12, 14, 18, 21, 13];
-const recommendationBadges = {
-  15: "-10%"
-};
-const recommendationPoolIds = Array.from(
-  new Set(
-    [...recommendationIds, ...products.map((item) => Number(item?.id || 0))]
-      .filter((id) => Number.isInteger(id) && id > 0)
-  )
-);
-const RECOMMEND_BATCH_SIZE = 6;
-
-let currentHeroIndex = 0;
-let heroTimer = null;
-let activeFilter = "all";
-let recommendLimit = RECOMMEND_BATCH_SIZE;
-let recommendObserver = null;
-let recommendLoadQueued = false;
-const filterKeywords = new Set(["all", "masculino", "feminino", "acessorios", "calcados", "streetwear"]);
-
-function getQueryParams() {
-  try {
-    return new URLSearchParams(window.location.search);
-  } catch {
-    return new URLSearchParams();
-  }
-}
-
-function normalizeText(value) {
-  return String(value || "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-}
-
-function getProductById(id) {
-  return sharedCatalog?.getProductById ? sharedCatalog.getProductById(id) : products.find((item) => Number(item.id) === Number(id)) || null;
-}
-
-function getDisplayProduct(id) {
-  const product = getProductById(id);
-  if (!product) return null;
-  const summary = sharedCatalog?.getRatingSummary ? sharedCatalog.getRatingSummary(product.id) : { average: 4.8, count: 32, sold: 0 };
-  const meta = homeProductMeta[product.id] || {};
-  return {
-    ...product,
-    displayImage: meta.image || product.image,
-    segment: meta.segment || "all",
-    ratingAverage: Number(summary?.average || 4.8),
-    ratingCount: Math.max(Number(summary?.count || 0), 12),
-    soldCount: Number(summary?.sold || 0),
-    compareAt: oldPrice(product.price),
-    pixValue: pixPrice(product.price)
+  const categoryGroups = {
+    Masculino: ["camisetas", "camisas", "calcas", "shorts", "moletons", "calcados"],
+    Feminino: ["vestidos", "saias", "blusas", "conjuntos", "blazers"],
+    Acessorios: ["acessorios", "bolsas"],
+    Calcados: ["calcados", "tenis", "coturno"],
+    Streetwear: ["streetwear", "moletons", "jaquetas", "camisetas", "calcas"],
+    Promocoes: ["promocoes"]
   };
-}
 
-function loadFavoriteIds() {
-  if (sharedCatalog?.loadFavorites) return sharedCatalog.loadFavorites();
-  try {
-    const parsed = JSON.parse(localStorage.getItem(FAVORITES_KEY) || "[]");
-    return Array.isArray(parsed) ? parsed.map(Number).filter((item) => Number.isInteger(item) && item > 0) : [];
-  } catch {
-    return [];
-  }
-}
+  const state = {
+    products: [],
+    visibleCount: 24,
+    selectedCategory: "Todos",
+    query: "",
+    loadingMore: false
+  };
 
-function isFavorite(id) {
-  return sharedCatalog?.isFavorite ? sharedCatalog.isFavorite(id) : loadFavoriteIds().includes(Number(id));
-}
-
-function toggleFavorite(id) {
-  return sharedCatalog?.toggleFavorite ? sharedCatalog.toggleFavorite(id) : false;
-}
-
-function renderCartCount() {
-  if (!cartCount) return;
-  const total = sharedCatalog?.countCartItems ? sharedCatalog.countCartItems() : 0;
-  cartCount.textContent = String(total);
-}
-
-function renderStars() {
-  return "&#9733;&#9733;&#9733;&#9733;&#9733;";
-}
-
-function installPrice(value) {
-  return formatBRL(Number(value || 0) / 12);
-}
-
-function favoriteIconMarkup(product) {
-  const favorite = isFavorite(product.id);
-  return `
-    <button class="home-product-card__favorite${favorite ? " is-active" : ""}" type="button" data-product-favorite="${product.id}" data-no-card-open aria-label="${favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}" aria-pressed="${favorite ? "true" : "false"}">
-      ${favorite ? "&#10084;" : "&#9825;"}
-    </button>
-  `;
-}
-
-function productCardMarkup(product, options = {}) {
-  const saleBadge = options.saleBadge ? `<span class="home-product-card__sale">${options.saleBadge}</span>` : "";
-  const compareAt = options.showCompare === false ? "" : `<small>${formatBRL(product.compareAt)}</small>`;
-  return `
-    <article class="home-product-card" data-product-open-id="${product.id}" tabindex="0" role="link" aria-label="Abrir ${product.name}">
-      <div class="home-product-card__media">
-        ${saleBadge}
-        ${favoriteIconMarkup(product)}
-        <img src="${product.displayImage}" alt="${product.name}" loading="lazy" />
-      </div>
-      <div class="home-product-card__body">
-        <h3>${product.name}</h3>
-        <div class="home-product-card__rating">
-          <span class="home-product-card__stars" aria-hidden="true">${renderStars()}</span>
-          <span>(${product.ratingCount})</span>
-        </div>
-        <div class="home-product-card__price">
-          <strong>${formatBRL(product.price)}</strong>
-          ${compareAt}
-        </div>
-        <div class="home-product-card__pix">${formatBRL(product.pixValue)} no PIX</div>
-        <div class="home-product-card__installments">12x de ${installPrice(product.price)}</div>
-      </div>
-    </article>
-  `;
-}
-
-function renderHero() {
-  if (!heroTrack || !heroDots) return;
-
-  heroTrack.innerHTML = heroSlides
-    .map(
-      (slide, index) => `
-        <article class="home-hero__slide${index === currentHeroIndex ? " is-active" : ""}" data-hero-slide="${index}">
-          <div class="home-hero__media" style="background-image:url('${slide.image}')"></div>
-          <div class="home-hero__overlay"></div>
-          <div class="home-hero__content">
-            <p class="home-hero__kicker"><span>${slide.kickerAccent}</span> ${slide.kickerText}</p>
-            <h1>${slide.title}</h1>
-            <p>${slide.text}</p>
-            <div class="home-hero__actions">
-              <a class="home-hero__primary" href="${slide.primaryHref}">${slide.primaryLabel}</a>
-              <a class="home-hero__secondary" href="${slide.secondaryHref}">${slide.secondaryLabel}</a>
-            </div>
-          </div>
-        </article>
-      `
-    )
-    .join("");
-
-  heroDots.innerHTML = heroSlides
-    .map(
-      (_, index) => `<button type="button" class="${index === currentHeroIndex ? "is-active" : ""}" data-hero-dot="${index}" aria-label="Ir para banner ${index + 1}"></button>`
-    )
-    .join("");
-}
-
-function activateHero(index) {
-  const total = heroSlides.length;
-  currentHeroIndex = (index + total) % total;
-  document.querySelectorAll("[data-hero-slide]").forEach((slide, slideIndex) => {
-    slide.classList.toggle("is-active", slideIndex === currentHeroIndex);
-  });
-  document.querySelectorAll("[data-hero-dot]").forEach((dot, dotIndex) => {
-    dot.classList.toggle("is-active", dotIndex === currentHeroIndex);
-  });
-}
-
-function restartHeroTimer() {
-  if (heroTimer) clearInterval(heroTimer);
-  heroTimer = setInterval(() => activateHero(currentHeroIndex + 1), 5400);
-}
-
-function renderOrbit() {
-  if (!orbitGrid) return;
-
-  orbitGrid.innerHTML = orbitCards
-    .map((item) => {
-      if (item.promo) {
-        return `
-          <button class="home-orbit-card home-orbit-card--promo" type="button" data-orbit-filter="promocoes" aria-label="Abrir promocoes">
-            <span class="home-orbit-card__media">
-              <span class="home-orbit-card__promo-icon" aria-hidden="true">%</span>
-            </span>
-            <span class="home-orbit-card__label">${item.label}</span>
-          </button>
-        `;
-      }
-
-      const product = getDisplayProduct(item.productId);
-      if (!product) return "";
-
-      return `
-        <button class="home-orbit-card" type="button" data-orbit-filter="${item.key}" aria-label="Filtrar por ${item.label}">
-          <span class="home-orbit-card__media">
-            <img src="${product.displayImage}" alt="${item.label}" loading="lazy" />
-          </span>
-          <span class="home-orbit-card__label">${item.label}</span>
-        </button>
-      `;
-    })
-    .join("");
-}
-
-function renderBestSellers() {
-  if (!bestSellersTrack) return;
-  bestSellersTrack.innerHTML = bestSellerIds
-    .map((id) => getDisplayProduct(id))
-    .filter(Boolean)
-    .map((product) => productCardMarkup(product, { showCompare: true }))
-    .join("");
-}
-
-function getSearchTerm() {
-  const fromInput = String(searchInput?.value || "").trim();
-  if (fromInput) {
-    const normalizedInput = normalizeText(fromInput);
-    return filterKeywords.has(normalizedInput) ? "" : fromInput;
+  function escapeHtml(value) {
+    return String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   }
 
-  const params = getQueryParams();
-  const query = String(params.get("q") || "").trim();
-  return filterKeywords.has(normalizeText(query)) ? "" : query;
-}
-
-function inferFilterFromUrl() {
-  const params = getQueryParams();
-  const category = normalizeText(params.get("cat"));
-  const query = normalizeText(params.get("q"));
-
-  if (category === "acessorios") return "acessorios";
-  if (category === "calcados") return "calcados";
-  if (query.includes("streetwear")) return "streetwear";
-  if (query.includes("masculino")) return "masculino";
-  if (query.includes("feminino")) return "feminino";
-  if (query.includes("calcados")) return "calcados";
-  if (query.includes("acessorios")) return "acessorios";
-  return "all";
-}
-
-function matchesSearch(product, term) {
-  const haystack = normalizeText(`${product.name} ${product.category} ${product.badge} ${product.shortDescription || ""}`);
-  return !term || haystack.includes(normalizeText(term));
-}
-
-function matchesFilter(product, filter) {
-  return filter === "all" ? true : product.segment === filter;
-}
-
-function updateFilterButtons() {
-  recommendTabs.forEach((button) => {
-    button.classList.toggle("is-active", String(button.dataset.homeFilter || "") === activeFilter);
-  });
-}
-
-function getRecommendationProducts() {
-  const term = getSearchTerm();
-  return recommendationPoolIds
-    .map((id) => getDisplayProduct(id))
-    .filter(Boolean)
-    .filter((product) => matchesFilter(product, activeFilter))
-    .filter((product) => matchesSearch(product, term));
-}
-
-function disconnectRecommendationObserver() {
-  if (recommendObserver) {
-    recommendObserver.disconnect();
-    recommendObserver = null;
+  function normalizeText(value) {
+    return String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
   }
-}
 
-function queueMoreRecommendations() {
-  const list = getRecommendationProducts();
-  if (recommendLoadQueued || recommendLimit >= list.length) return;
-  recommendLoadQueued = true;
-  window.requestAnimationFrame(() => {
-    recommendLimit = Math.min(recommendLimit + RECOMMEND_BATCH_SIZE, list.length);
-    recommendLoadQueued = false;
-    renderRecommendations();
-  });
-}
+  function money(value) {
+    if (catalog?.formatBRL) return catalog.formatBRL(Number(value) || 0);
+    return Number(value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  }
 
-function setupRecommendationObserver(hasMore) {
-  disconnectRecommendationObserver();
-  if (!loadMoreSentinel || !hasMore) return;
+  function oldPrice(value) {
+    return catalog?.oldPrice ? catalog.oldPrice(value) : Number((Number(value || 0) * 1.12).toFixed(2));
+  }
 
-  recommendObserver = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) queueMoreRecommendations();
+  function pixPrice(value) {
+    return catalog?.pixPrice ? catalog.pixPrice(value) : Number((Number(value || 0) * 0.95).toFixed(2));
+  }
+
+  function productHref(product) {
+    return catalog?.productHref ? catalog.productHref(product.id) : `/produtos/?id=${encodeURIComponent(String(product.id))}`;
+  }
+
+  function productRating(product) {
+    const summary = catalog?.getRatingSummary ? catalog.getRatingSummary(product.id) : null;
+    return {
+      average: Number(summary?.average || product.rating || 4.8),
+      count: Number(summary?.count || product.reviews || 12)
+    };
+  }
+
+  function normalizeProduct(product, index) {
+    const price = Number(product.price || product.preco || 0);
+    return {
+      id: Number(product.id || index + 1),
+      name: String(product.name || product.nome || "Produto UZUU"),
+      category: String(product.category || product.categoria || "Streetwear"),
+      size: String(product.size || product.tamanho || "P ao GG"),
+      price,
+      oldPrice: Number(product.oldPrice || product.precoAntigo || oldPrice(price)),
+      image: String(product.image || product.imagem || ""),
+      badge: String(product.badge || product.tag || (index % 3 === 0 ? "Novo" : "Oferta")),
+      description: String(product.shortDescription || product.description || "")
+    };
+  }
+
+  function baseProducts() {
+    const source = Array.isArray(catalog?.products) && catalog.products.length ? catalog.products : fallbackProducts;
+    return source.map(normalizeProduct);
+  }
+
+  function buildProductPool() {
+    const base = baseProducts();
+    const repeats = [];
+    for (let page = 0; page < 5; page += 1) {
+      base.forEach((product, index) => {
+        repeats.push({
+          ...product,
+          uiId: `${product.id}-${page}-${index}`,
+          badge: page === 0 ? product.badge : (index % 4 === 0 ? "Novo" : product.badge)
+        });
       });
-    },
-    {
-      rootMargin: "420px 0px 420px 0px",
-      threshold: 0.01
     }
-  );
-
-  recommendObserver.observe(loadMoreSentinel);
-}
-
-function renderRecommendations() {
-  if (!recommendGrid || !recommendFeedback) return;
-
-  const list = getRecommendationProducts();
-  const visible = list.slice(0, recommendLimit);
-
-  recommendGrid.innerHTML = visible
-    .map((product) => productCardMarkup(product, { saleBadge: recommendationBadges[product.id] || "" }))
-    .join("");
-
-  recommendFeedback.hidden = list.length > 0;
-  updateFilterButtons();
-  if (loadMoreSentinel) {
-    const hasMore = list.length > visible.length;
-    loadMoreSentinel.hidden = list.length === 0 || !hasMore;
-    setupRecommendationObserver(hasMore);
-  }
-}
-
-function setActiveFilter(filter) {
-  activeFilter = filter;
-  recommendLimit = RECOMMEND_BATCH_SIZE;
-  renderRecommendations();
-}
-
-function showToast(message) {
-  const current = document.querySelector(".toast");
-  if (current) current.remove();
-
-  const toast = document.createElement("div");
-  toast.className = "toast";
-  toast.textContent = message;
-  document.body.appendChild(toast);
-
-  window.setTimeout(() => {
-    toast.remove();
-  }, 2200);
-}
-
-function syncInitialState() {
-  activeFilter = inferFilterFromUrl();
-  updateFilterButtons();
-  if (searchInput) {
-    const params = getQueryParams();
-    const query = String(params.get("q") || "").trim();
-    if (query && !searchInput.value) searchInput.value = query;
-  }
-}
-
-document.addEventListener("click", (event) => {
-  const favoriteButton = event.target instanceof Element ? event.target.closest("[data-product-favorite]") : null;
-  if (favoriteButton) {
-    const id = favoriteButton.getAttribute("data-product-favorite");
-    const product = getProductById(id);
-    const isNowFavorite = toggleFavorite(id);
-    renderBestSellers();
-    renderRecommendations();
-    showToast(isNowFavorite ? `${product?.name || "Produto"} salvo nos favoritos.` : `${product?.name || "Produto"} removido dos favoritos.`);
-    return;
+    return repeats;
   }
 
-  const card = event.target instanceof Element ? event.target.closest("[data-product-open-id]") : null;
-  if (card && !event.target.closest("[data-no-card-open]")) {
-    window.location.href = productHref(card.getAttribute("data-product-open-id"));
-    return;
+  function matchesCategory(product, category) {
+    if (!category || category === "Todos") return true;
+    if (category === "Promocoes") return product.oldPrice > product.price;
+    if (category === "launches") return ["novo", "lançamento", "lancamento", "drop"].some((word) => normalizeText(product.badge).includes(word));
+
+    const normalizedCategory = normalizeText(product.category);
+    const normalizedName = normalizeText(product.name);
+    const groups = categoryGroups[category] || [category];
+    return groups.some((item) => {
+      const token = normalizeText(item);
+      return normalizedCategory.includes(token) || normalizedName.includes(token);
+    });
   }
 
-  const heroDot = event.target instanceof Element ? event.target.closest("[data-hero-dot]") : null;
-  if (heroDot) {
-    activateHero(Number(heroDot.getAttribute("data-hero-dot") || 0));
-    restartHeroTimer();
-    return;
+  function matchesQuery(product) {
+    const query = normalizeText(state.query);
+    if (!query) return true;
+    return [product.name, product.category, product.size, product.badge, product.description]
+      .some((field) => normalizeText(field).includes(query));
   }
 
-  const heroNav = event.target instanceof Element ? event.target.closest("[data-hero-nav]") : null;
-  if (heroNav) {
-    activateHero(currentHeroIndex + (heroNav.getAttribute("data-hero-nav") === "prev" ? -1 : 1));
-    restartHeroTimer();
-    return;
+  function filteredProducts() {
+    return state.products.filter((product) => matchesCategory(product, state.selectedCategory) && matchesQuery(product));
   }
 
-  const orbit = event.target instanceof Element ? event.target.closest("[data-orbit-filter]") : null;
-  if (orbit) {
-    const filter = String(orbit.getAttribute("data-orbit-filter") || "");
-    if (filter === "promocoes") {
-      window.location.href = "/cupons/";
+  function scrollToProducts() {
+    document.getElementById("novidades")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function showToast(message) {
+    const toast = document.getElementById("home-toast");
+    if (!toast) return;
+    toast.textContent = message;
+    toast.hidden = false;
+    window.clearTimeout(showToast.timer);
+    showToast.timer = window.setTimeout(() => {
+      toast.hidden = true;
+    }, 2300);
+  }
+
+  function renderCartCount() {
+    const node = document.getElementById("home-cart-count");
+    if (!node) return;
+    if (catalog?.countCartItems) {
+      node.textContent = String(catalog.countCartItems());
       return;
     }
 
-    setActiveFilter(filter);
-    document.getElementById("recomendados")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    return;
+    try {
+      const raw = JSON.parse(localStorage.getItem("stopmod_cart") || "[]");
+      node.textContent = String(Array.isArray(raw) ? raw.length : 0);
+    } catch {
+      node.textContent = "0";
+    }
   }
 
-  const scrollButton = event.target instanceof Element ? event.target.closest("[data-scroll-target]") : null;
-  if (scrollButton) {
-    const targetId = scrollButton.getAttribute("data-scroll-target");
-    const direction = scrollButton.getAttribute("data-scroll-direction") === "prev" ? -1 : 1;
-    const target = document.getElementById(String(targetId || ""));
-    target?.scrollBy({ left: direction * 380, behavior: "smooth" });
-    return;
-  }
-});
-
-document.addEventListener("keydown", (event) => {
-  const card = event.target instanceof Element ? event.target.closest("[data-product-open-id]") : null;
-  if (!card) return;
-  if (event.key !== "Enter" && event.key !== " ") return;
-  event.preventDefault();
-  window.location.href = productHref(card.getAttribute("data-product-open-id"));
-});
-
-recommendTabs.forEach((button) => {
-  button.addEventListener("click", () => {
-    setActiveFilter(String(button.dataset.homeFilter || "all"));
-  });
-});
-
-searchInput?.addEventListener("input", () => {
-  recommendLimit = RECOMMEND_BATCH_SIZE;
-  renderRecommendations();
-});
-
-newsletterForm?.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const email = String(newsletterEmail?.value || "").trim();
-  if (!email || !email.includes("@")) {
-    showToast("Digite um e-mail valido para continuar.");
-    return;
+  function favoriteLabel(productId) {
+    return catalog?.isFavorite?.(productId) ? "Remover dos favoritos" : "Adicionar aos favoritos";
   }
 
-  if (newsletterEmail) newsletterEmail.value = "";
-  showToast("Cadastro realizado com sucesso.");
-});
+  function favoriteIcon(productId) {
+    return catalog?.isFavorite?.(productId) ? "♥" : "♡";
+  }
 
-window.addEventListener("storage", (event) => {
-  if ([FAVORITES_KEY, CART_KEY].includes(String(event.key || ""))) {
-    renderBestSellers();
-    renderRecommendations();
+  function productCard(product) {
+    const rating = productRating(product);
+    const href = productHref(product);
+    const isFavorite = !!catalog?.isFavorite?.(product.id);
+    return `
+      <article class="home-infinite-product-card" data-product-id="${product.id}">
+        <a class="home-infinite-product-card__media" href="${href}" aria-label="Abrir ${escapeHtml(product.name)}">
+          <img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}" loading="lazy" />
+          <span>${escapeHtml(product.badge)}</span>
+        </a>
+        <button class="home-infinite-product-card__favorite ${isFavorite ? "is-active" : ""}" type="button" data-home-favorite="${product.id}" aria-label="${favoriteLabel(product.id)}">${favoriteIcon(product.id)}</button>
+        <div class="home-infinite-product-card__body">
+          <p>${escapeHtml(product.category)}</p>
+          <h3><a href="${href}">${escapeHtml(product.name)}</a></h3>
+          <div class="home-infinite-product-card__rating">★★★★★ <small>(${rating.count || 12})</small></div>
+          <strong>${money(product.price)}</strong>
+          ${product.oldPrice > product.price ? `<del>${money(product.oldPrice)}</del>` : ""}
+          <em>${money(pixPrice(product.price))} no PIX</em>
+          <small>12x de ${money(product.price / 12)}</small>
+          <button class="home-infinite-product-card__cart" type="button" data-home-cart="${product.id}">Adicionar ao carrinho</button>
+        </div>
+      </article>
+    `;
+  }
+
+  function skeletonCard() {
+    return `
+      <article class="home-infinite-skeleton">
+        <div></div>
+        <span></span>
+        <span></span>
+        <span></span>
+      </article>
+    `;
+  }
+
+  function renderProductGrid(node, products) {
+    if (!node) return;
+    if (!products.length) {
+      node.innerHTML = `
+        <div class="home-infinite-empty">
+          <strong>Nenhum produto encontrado.</strong>
+          <span>Tente buscar por camiseta, calça, jaqueta ou acessórios.</span>
+        </div>
+      `;
+      return;
+    }
+    node.innerHTML = products.map(productCard).join("");
+  }
+
+  function renderSkeletonGrid(node, count = 18) {
+    if (!node) return;
+    node.innerHTML = Array.from({ length: count }, skeletonCard).join("");
+  }
+
+  function renderAllProducts() {
+    const list = filteredProducts();
+    const bestSellers = state.products.filter((product) => matchesQuery(product)).slice(0, 18);
+    const recommended = list.slice(0, 18);
+    const exploreMore = list.slice(18, state.visibleCount);
+    renderProductGrid(document.getElementById("best-sellers-grid"), state.selectedCategory === "Todos" ? bestSellers : recommended);
+    renderProductGrid(document.getElementById("recommended-grid"), recommended);
+    renderProductGrid(document.getElementById("explore-grid"), exploreMore);
+    updateTabs();
+    updateCategories();
+  }
+
+  function renderCategories() {
+    const node = document.getElementById("home-categories-grid");
+    if (!node) return;
+    node.innerHTML = categories.map((category) => `
+      <button type="button" data-category="${category.name}">
+        <span><img src="${category.image}" alt="${escapeHtml(category.label || category.name)}" loading="lazy" /></span>
+        <strong>${escapeHtml(category.label || category.name)}</strong>
+      </button>
+    `).join("");
+  }
+
+  function renderTabs() {
+    const node = document.getElementById("home-filter-tabs");
+    if (!node) return;
+    const tabs = [
+      { value: "Todos", label: "Todos" },
+      { value: "Masculino", label: "Masculino" },
+      { value: "Feminino", label: "Feminino" },
+      { value: "Acessorios", label: "Acessórios" },
+      { value: "Calcados", label: "Calçados" },
+      { value: "Streetwear", label: "Streetwear" }
+    ];
+    node.innerHTML = tabs.map((category) => `<button type="button" data-filter="${category.value}">${category.label}</button>`).join("");
+  }
+
+  function updateTabs() {
+    document.querySelectorAll("[data-filter]").forEach((button) => {
+      button.classList.toggle("is-active", button.getAttribute("data-filter") === state.selectedCategory);
+    });
+  }
+
+  function updateCategories() {
+    document.querySelectorAll("[data-category]").forEach((button) => {
+      button.classList.toggle("is-active", button.getAttribute("data-category") === state.selectedCategory);
+    });
+  }
+
+  function selectCategory(category, shouldScroll = true) {
+    state.selectedCategory = category || "Todos";
+    state.visibleCount = 24;
+    renderAllProducts();
+    if (shouldScroll) scrollToProducts();
+  }
+
+  function loadMoreProducts() {
+    const list = filteredProducts();
+    if (state.visibleCount >= list.length) {
+      showToast("Todos os produtos disponíveis já estão na vitrine.");
+      return;
+    }
+    state.visibleCount += 12;
+    renderAllProducts();
+    document.getElementById("explore-grid")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function renderAdBanners(targetId) {
+    const node = document.getElementById(targetId);
+    if (!node) return;
+    node.innerHTML = adBanners.map((banner) => `
+      <article class="home-infinite-ad-card home-infinite-ad-card--${banner.tone}">
+        <img src="${banner.image}" alt="${escapeHtml(banner.title)}" loading="lazy" />
+        <div></div>
+        <section>
+          <h3>${escapeHtml(banner.title)}</h3>
+          <p>${escapeHtml(banner.subtitle)}</p>
+          <button type="button" data-banner-action="${banner.action}">${escapeHtml(banner.cta)}</button>
+        </section>
+      </article>
+    `).join("");
+  }
+
+  function addToCart(productId) {
+    const product = catalog?.getProductById?.(productId);
+    if (!catalog?.addToCart || !product) {
+      window.location.href = `/produtos/?id=${encodeURIComponent(String(productId))}`;
+      return;
+    }
+    const variant = catalog.getDefaultVariant?.(product.id);
+    const count = catalog.addToCart(product.id, 1, { variantId: variant?.id || "" });
     renderCartCount();
+    showToast(`${product.name} foi adicionado ao carrinho.`);
+    window.dispatchEvent(new CustomEvent("stopmod:cart-updated", { detail: { count } }));
   }
-});
 
-window.addEventListener("beforeunload", () => {
-  disconnectRecommendationObserver();
-});
+  function toggleFavorite(productId) {
+    if (!catalog?.toggleFavorite) return;
+    const active = catalog.toggleFavorite(productId);
+    document.querySelectorAll(`[data-home-favorite="${productId}"]`).forEach((button) => {
+      button.classList.toggle("is-active", active);
+      button.textContent = active ? "♥" : "♡";
+      button.setAttribute("aria-label", active ? "Remover dos favoritos" : "Adicionar aos favoritos");
+    });
+    const product = catalog.getProductById?.(productId);
+    showToast(active ? `${product?.name || "Produto"} salvo nos favoritos.` : "Produto removido dos favoritos.");
+  }
 
-syncInitialState();
-renderHero();
-renderOrbit();
-renderBestSellers();
-renderRecommendations();
-renderCartCount();
-restartHeroTimer();
+  function setupEvents() {
+    document.addEventListener("click", (event) => {
+      const target = event.target instanceof Element ? event.target : null;
+      if (!target) return;
+
+      const favoriteButton = target.closest("[data-home-favorite]");
+      if (favoriteButton) {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleFavorite(Number(favoriteButton.getAttribute("data-home-favorite")));
+        return;
+      }
+
+      const cartButton = target.closest("[data-home-cart]");
+      if (cartButton) {
+        event.preventDefault();
+        event.stopPropagation();
+        addToCart(Number(cartButton.getAttribute("data-home-cart")));
+        return;
+      }
+
+      const categoryButton = target.closest("[data-category]");
+      if (categoryButton) {
+        selectCategory(categoryButton.getAttribute("data-category") || "Todos");
+        return;
+      }
+
+      const filterButton = target.closest("[data-filter]");
+      if (filterButton) {
+        selectCategory(filterButton.getAttribute("data-filter") || "Todos");
+        return;
+      }
+
+      const bannerButton = target.closest("[data-banner-action]");
+      if (bannerButton) {
+        const action = bannerButton.getAttribute("data-banner-action") || "Todos";
+        selectCategory(action === "launches" ? "launches" : action);
+        return;
+      }
+
+      const navCategory = target.closest(".home-infinite-nav a[href^='#'], .home-infinite-footer a[href^='#']");
+      if (navCategory) {
+        const hash = String(navCategory.getAttribute("href") || "").replace("#", "");
+        const mapped = {
+          novidades: "Todos",
+          masculino: "Masculino",
+          feminino: "Feminino",
+          acessorios: "Acessorios",
+          calcados: "Calcados",
+          streetwear: "Streetwear",
+          promocoes: "Promocoes",
+          marcas: "Todos"
+        }[hash];
+        if (mapped) {
+          event.preventDefault();
+          selectCategory(mapped);
+        }
+        return;
+      }
+
+      const actionButton = target.closest("[data-home-action]");
+      if (actionButton) {
+        const action = actionButton.getAttribute("data-home-action");
+        if (action === "collection" || action === "show-all") {
+          state.query = "";
+          const input = document.getElementById("home-search-input");
+          if (input) input.value = "";
+          selectCategory("Todos");
+        }
+        if (action === "launches") selectCategory("launches");
+        if (action === "categories") {
+          document.querySelector(".home-infinite-categories")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+        if (action === "load-more") {
+          loadMoreProducts();
+        }
+      }
+    });
+
+    const searchForm = document.getElementById("home-search-form");
+    const searchInput = document.getElementById("home-search-input");
+    searchForm?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      state.query = searchInput?.value || "";
+      state.visibleCount = 24;
+      renderAllProducts();
+      scrollToProducts();
+    });
+    searchInput?.addEventListener("input", () => {
+      state.query = searchInput.value;
+      state.visibleCount = 24;
+      renderAllProducts();
+    });
+
+    const newsletterForm = document.getElementById("home-newsletter-form");
+    newsletterForm?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const input = newsletterForm.querySelector("input[type='email']");
+      const feedback = document.getElementById("home-newsletter-feedback");
+      const email = String(input?.value || "").trim().toLowerCase();
+      const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      if (!valid) {
+        if (feedback) {
+          feedback.hidden = false;
+          feedback.textContent = "Digite um e-mail válido para receber as ofertas.";
+        }
+        return;
+      }
+      const current = JSON.parse(localStorage.getItem(NEWSLETTER_KEY) || "[]");
+      const next = Array.isArray(current) && current.includes(email) ? current : [...(Array.isArray(current) ? current : []), email];
+      localStorage.setItem(NEWSLETTER_KEY, JSON.stringify(next.slice(-200)));
+      input.value = "";
+      if (feedback) {
+        feedback.hidden = false;
+        feedback.textContent = "Cadastro realizado. Você vai receber as ofertas da UZUU.";
+      }
+      showToast("E-mail cadastrado com sucesso.");
+    });
+
+    window.addEventListener("storage", renderCartCount);
+    window.addEventListener("stopmod:cart-updated", renderCartCount);
+  }
+
+  function setupInfiniteLoad() {
+    const node = document.getElementById("infinite-loader");
+    const loadingGrid = document.getElementById("loading-more-grid");
+    if (!node) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      const [entry] = entries;
+      if (!entry.isIntersecting || state.loadingMore) return;
+
+      const list = filteredProducts();
+      if (state.visibleCount >= list.length) {
+        node.textContent = "Continue navegando pela coleção";
+        return;
+      }
+
+      state.loadingMore = true;
+      node.textContent = "Carregando mais produtos...";
+      if (loadingGrid) {
+        loadingGrid.hidden = false;
+        renderSkeletonGrid(loadingGrid, 6);
+      }
+
+      window.setTimeout(() => {
+        state.visibleCount += 12;
+        state.loadingMore = false;
+        if (loadingGrid) {
+          loadingGrid.hidden = true;
+          loadingGrid.innerHTML = "";
+        }
+        node.textContent = "Role para carregar mais produtos";
+        renderAllProducts();
+      }, 350);
+    }, { rootMargin: "700px" });
+
+    observer.observe(node);
+  }
+
+  function initHome() {
+    state.products = buildProductPool();
+    renderSkeletonGrid(document.getElementById("best-sellers-grid"));
+    renderSkeletonGrid(document.getElementById("recommended-grid"));
+    renderCategories();
+    renderTabs();
+    renderAdBanners("ad-banner-row-primary");
+    renderAdBanners("ad-banner-row-secondary");
+    setupEvents();
+    renderCartCount();
+    renderAllProducts();
+    setupInfiniteLoad();
+  }
+
+  document.addEventListener("DOMContentLoaded", initHome);
+})();

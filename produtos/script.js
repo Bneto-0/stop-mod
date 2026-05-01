@@ -6,8 +6,21 @@
   if (!catalog || !root) return;
 
   const params = new URLSearchParams(window.location.search);
-  const productId = Number(params.get("id") || 0);
-  const product = catalog.getProductById(productId);
+  const requestedProductId = Number(params.get("id") || 0);
+  const fallbackProduct = (() => {
+    if (requestedProductId) return null;
+
+    if (typeof catalog.getProductById === "function") {
+      for (let probeId = 1; probeId <= 500; probeId += 1) {
+        const candidate = catalog.getProductById(probeId);
+        if (candidate) return candidate;
+      }
+    }
+
+    return null;
+  })();
+  const product = catalog.getProductById(requestedProductId) || fallbackProduct;
+  const productId = Number(product?.id || requestedProductId || 0);
   let selectedVariantId = String(params.get("variant") || "").trim();
   let selectedSize = String(params.get("size") || "").trim().toUpperCase();
   let galleryOpen = false;
@@ -41,6 +54,45 @@
       .replace(/>/g, "&gt;")
       .replace(/\"/g, "&quot;")
       .replace(/'/g, "&#39;");
+  }
+
+  function imagePlaceholderData(label) {
+    const safeLabel = String(label || "UZUU")
+      .replace(/[<>&"]/g, "")
+      .trim()
+      .slice(0, 34)
+      .toUpperCase();
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900">
+        <defs>
+          <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#050505" />
+            <stop offset="100%" stop-color="#171717" />
+          </linearGradient>
+          <linearGradient id="frame" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#2a2a2a" />
+            <stop offset="100%" stop-color="#111111" />
+          </linearGradient>
+        </defs>
+        <rect width="900" height="900" rx="64" fill="url(#bg)" />
+        <rect x="44" y="44" width="812" height="812" rx="44" fill="url(#frame)" stroke="#2e2e2e" />
+        <text x="450" y="404" text-anchor="middle" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="118" font-weight="800" letter-spacing="-4">UZUU</text>
+        <text x="450" y="500" text-anchor="middle" fill="#8f8f8f" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="600" letter-spacing="4">IMAGEM PREMIUM</text>
+        <text x="450" y="570" text-anchor="middle" fill="#5f5f5f" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="600" letter-spacing="2">${safeLabel}</text>
+      </svg>
+    `;
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+  }
+
+  function sanitizeImageSource(value, label) {
+    const src = String(value || "").trim();
+    return src || imagePlaceholderData(label);
+  }
+
+  function productFallbackSource(preferredLabel) {
+    const variants = typeof catalog.getProductVariants === "function" ? catalog.getProductVariants(product?.id) : [];
+    const fallback = variants.find((variant) => String(variant?.image || "").trim())?.image || product?.image || "";
+    return sanitizeImageSource(fallback, preferredLabel || product?.name || "UZUU");
   }
 
   function renderStars(value) {
@@ -681,6 +733,9 @@
 
   function variantCard(variant, selected) {
     const soldOut = Number(variant.stock || 0) <= 0;
+    const variantSrc = sanitizeImageSource(variant.image || product.image, `${product?.name || "Produto"} ${variant.colorName}`);
+    const fallbackSrc = productFallbackSource(product?.name || "UZUU");
+    const placeholderSrc = imagePlaceholderData(`${product?.name || "Produto"} ${variant.colorName}`);
     return `
       <button
         class="product-variant-card${selected ? " is-selected" : ""}${soldOut ? " is-unavailable" : ""}"
@@ -691,10 +746,38 @@
         title="${escapeHtml(variant.colorName)}"
       >
         <span class="product-variant-thumb-wrap">
-          <img class="product-variant-thumb" src="${escapeHtml(variant.image || product.image)}" data-fallback-src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)} na cor ${escapeHtml(variant.colorName)}" loading="lazy" />
+          <img class="product-variant-thumb" src="${escapeHtml(variantSrc)}" data-fallback-src="${escapeHtml(fallbackSrc)}" data-placeholder-src="${escapeHtml(placeholderSrc)}" alt="${escapeHtml(product.name)} na cor ${escapeHtml(variant.colorName)}" loading="lazy" />
           <span class="product-variant-swatch" style="--variant-swatch:${escapeHtml(variant.swatch || "#d8c8bc")}"></span>
         </span>
         <span class="product-variant-name">${escapeHtml(variant.colorName)}</span>
+      </button>
+    `;
+  }
+
+  function ensureProductQueryState() {
+    if (!product || requestedProductId || !productId) return;
+    const nextParams = new URLSearchParams(window.location.search);
+    nextParams.set("id", String(productId));
+    const nextQuery = nextParams.toString();
+    const nextUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ""}${window.location.hash || ""}`;
+    window.history.replaceState({}, "", nextUrl);
+  }
+
+  function mediaThumbCard(variant, selected) {
+    const soldOut = Number(variant.stock || 0) <= 0;
+    const variantSrc = sanitizeImageSource(variant.image || product.image, `${product?.name || "Produto"} ${variant.colorName}`);
+    const fallbackSrc = productFallbackSource(product?.name || "UZUU");
+    const placeholderSrc = imagePlaceholderData(`${product?.name || "Produto"} ${variant.colorName}`);
+    return `
+      <button
+        class="product-detail-media__thumb${selected ? " is-selected" : ""}${soldOut ? " is-unavailable" : ""}"
+        type="button"
+        data-variant-select="${escapeHtml(variant.id)}"
+        aria-pressed="${selected ? "true" : "false"}"
+        aria-label="Selecionar foto da cor ${escapeHtml(variant.colorName)}${soldOut ? ", sem estoque" : ""}"
+        title="${escapeHtml(variant.colorName)}"
+      >
+        <img src="${escapeHtml(variantSrc)}" data-fallback-src="${escapeHtml(fallbackSrc)}" data-placeholder-src="${escapeHtml(placeholderSrc)}" alt="${escapeHtml(product.name)} na cor ${escapeHtml(variant.colorName)}" loading="lazy" />
       </button>
     `;
   }
@@ -717,6 +800,7 @@
     if (!galleryOpen || !variants.length) return "";
     const safeIndex = Math.max(0, variants.findIndex((variant) => variant.id === selectedVariantId));
     const active = variants[safeIndex] || variants[0];
+    const fallbackSrc = productFallbackSource(product?.name || "UZUU");
 
     return `
       <div class="product-gallery-modal" role="dialog" aria-modal="true" aria-label="Galeria de cores do produto">
@@ -733,7 +817,7 @@
                 aria-pressed="${variant.id === active.id ? "true" : "false"}"
                 aria-label="Abrir cor ${escapeHtml(variant.colorName)}"
               >
-                <img src="${escapeHtml(variant.image || product.image)}" data-fallback-src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)} na cor ${escapeHtml(variant.colorName)}" loading="lazy" />
+                <img src="${escapeHtml(sanitizeImageSource(variant.image || product.image, `${product?.name || "Produto"} ${variant.colorName}`))}" data-fallback-src="${escapeHtml(fallbackSrc)}" data-placeholder-src="${escapeHtml(imagePlaceholderData(`${product?.name || "Produto"} ${variant.colorName}`))}" alt="${escapeHtml(product.name)} na cor ${escapeHtml(variant.colorName)}" loading="lazy" />
                 <span>${escapeHtml(variant.colorName)}</span>
               </button>
             `).join("")}
@@ -1055,6 +1139,8 @@
       return;
     }
 
+    ensureProductQueryState();
+
     const summary = catalog.getRatingSummary(product.id);
     const reviews = catalog.getProductReviews(product.id);
     const related = catalog.getRelatedProducts(product.id, 4);
@@ -1071,6 +1157,9 @@
     const reviewAverage = reviewCount ? summary.average.toFixed(1) : "Novo";
     const reviewStars = reviewCount ? renderStars(summary.average) : renderStars(0);
     const soldCount = Math.max(0, Number(summary.sold || 0));
+    const fallbackSrc = productFallbackSource(product?.name || "UZUU");
+    const selectedImageSrc = sanitizeImageSource(selectedVariant?.image || product.image, `${product?.name || "Produto"} ${selectedColorLabel}`);
+    const placeholderSrc = imagePlaceholderData(`${product?.name || "Produto"} ${selectedColorLabel}`);
     const soldLabel = soldCount
       ? `+ ${soldCount} ${soldCount === 1 ? "venda confirmada" : "vendas confirmadas"}`
       : "+ novo na vitrine";
@@ -1085,7 +1174,13 @@
     root.innerHTML = `
       <div class="product-detail-grid">
         <section class="product-detail-media">
-          <img src="${selectedVariant?.image || product.image}" data-fallback-src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}" />
+          <div class="product-detail-media__thumbs" role="list" aria-label="Fotos das cores do produto">
+            ${variants.length ? variants.map((variant) => mediaThumbCard(variant, variant.id === selectedVariant?.id)).join("") : ""}
+          </div>
+          <button class="product-detail-media__hero" type="button" data-gallery-open aria-label="Ampliar imagem de ${escapeHtml(product.name)}">
+            <span class="product-detail-media__badge">${escapeHtml(selectedColorLabel)}</span>
+            <img src="${escapeHtml(selectedImageSrc)}" data-fallback-src="${escapeHtml(fallbackSrc)}" data-placeholder-src="${escapeHtml(placeholderSrc)}" alt="${escapeHtml(product.name)}" loading="eager" />
+          </button>
         </section>
 
         <section class="product-detail-panel">
@@ -1386,13 +1481,19 @@
     const image = event.target instanceof HTMLImageElement ? event.target : null;
     if (!image) return;
     const fallback = String(image.getAttribute("data-fallback-src") || "").trim();
-    if (!fallback) return;
-    if (image.src === fallback) {
+    const placeholder = String(image.getAttribute("data-placeholder-src") || "").trim();
+    if (fallback && image.src !== fallback) {
+      image.src = fallback;
       image.removeAttribute("data-fallback-src");
       return;
     }
-    image.src = fallback;
+    if (placeholder && image.src !== placeholder) {
+      image.src = placeholder;
+      image.removeAttribute("data-placeholder-src");
+      return;
+    }
     image.removeAttribute("data-fallback-src");
+    image.removeAttribute("data-placeholder-src");
   }, true);
 
   document.addEventListener("keydown", (event) => {
