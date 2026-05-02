@@ -85,6 +85,32 @@
       });
     }
 
+    function onlyDigits(value) {
+      return String(value || "").replace(/\D+/g, "");
+    }
+
+    function formatCep(value) {
+      const digits = onlyDigits(value).slice(0, 8);
+      if (digits.length <= 5) return digits;
+      return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+    }
+
+    function estimateDeliveryByCep(value) {
+      const digits = onlyDigits(value);
+      if (digits.length !== 8) return null;
+
+      const state = digits.startsWith("0") ? "São Paulo - SP" : "Brasil";
+      const price = digits.startsWith("05876") ? 0 : 19.9;
+      const days = price === 0 ? "1 a 3 dias úteis" : "3 a 7 dias úteis";
+
+      return {
+        cep: formatCep(digits),
+        city: state,
+        days,
+        price,
+      };
+    }
+
     function Step({ number, title, subtitle, active, done }) {
       return (
         <div className="flex items-center gap-3">
@@ -124,22 +150,29 @@
     }
 
     function CarrinhoPremiumUZUU() {
+      const savedCep = localStorage.getItem("uzuu_cart_cep") || "";
+      const savedDeliveryQuote = estimateDeliveryByCep(savedCep);
       const [items, setItems] = useState(initialItems);
       const [coupon, setCoupon] = useState("");
-      const [cep, setCep] = useState("");
+      const [cep, setCep] = useState(savedDeliveryQuote ? savedDeliveryQuote.cep : "");
       const [couponApplied, setCouponApplied] = useState(false);
+      const [couponFeedback, setCouponFeedback] = useState("");
+      const [cepFeedback, setCepFeedback] = useState("");
+      const [deliveryQuote, setDeliveryQuote] = useState(savedDeliveryQuote);
 
       const subtotal = useMemo(() => items.reduce((sum, item) => sum + item.price * item.qty, 0), [items]);
       const oldSubtotal = useMemo(() => items.reduce((sum, item) => item.oldPrice ? sum + item.oldPrice * item.qty : sum + item.price * item.qty, 0), [items]);
       const productDiscount = Math.max(0, oldSubtotal - subtotal);
       const couponDiscount = couponApplied ? subtotal * 0.1 : 0;
       const shippingGoal = 500;
-      const shippingMissing = Math.max(0, shippingGoal - subtotal);
-      const hasFreeShipping = subtotal >= shippingGoal;
-      const shipping = hasFreeShipping ? 0 : 19.9;
+      const hasFreeShippingByCep = !!deliveryQuote && deliveryQuote.price === 0;
+      const hasFreeShipping = subtotal >= shippingGoal || hasFreeShippingByCep;
+      const shippingMissing = hasFreeShipping ? 0 : Math.max(0, shippingGoal - subtotal);
+      const shipping = hasFreeShipping ? 0 : deliveryQuote ? deliveryQuote.price : 19.9;
       const total = subtotal - couponDiscount + shipping;
-      const progress = Math.min(100, (subtotal / shippingGoal) * 100);
-      const totalSaved = productDiscount + couponDiscount + (hasFreeShipping ? 19.9 : 0);
+      const progress = hasFreeShipping ? 100 : Math.min(100, (subtotal / shippingGoal) * 100);
+      const totalDiscount = productDiscount + couponDiscount;
+      const totalSaved = totalDiscount + (shipping === 0 ? 19.9 : 0);
 
       function updateQty(id, amount) {
         setItems((current) =>
@@ -155,7 +188,43 @@
       }
 
       function applyCoupon() {
-        setCouponApplied(coupon.trim().toUpperCase() === "UZUU10");
+        const code = coupon.trim().toUpperCase();
+        if (!code) {
+          setCouponApplied(false);
+          setCouponFeedback("Digite um cupom para aplicar.");
+          return;
+        }
+
+        if (code === "UZUU10") {
+          setCouponApplied(true);
+          setCoupon("UZUU10");
+          setCouponFeedback("Cupom UZUU10 aplicado com sucesso.");
+          return;
+        }
+
+        setCouponApplied(false);
+        setCouponFeedback("Cupom inválido. Use UZUU10 para testar.");
+      }
+
+      function applyAvailableCoupon() {
+        setCoupon("UZUU10");
+        setCouponApplied(true);
+        setCouponFeedback("Cupom UZUU10 aplicado com sucesso.");
+      }
+
+      function calculateCep() {
+        const quote = estimateDeliveryByCep(cep);
+        if (!quote) {
+          setDeliveryQuote(null);
+          setCepFeedback("Informe um CEP válido com 8 números.");
+          return;
+        }
+
+        setCep(quote.cep);
+        setDeliveryQuote(quote);
+        setCepFeedback(`Entrega para ${quote.city}: ${quote.days}${quote.price === 0 ? " com frete grátis." : ` por ${money(quote.price)}.`}`);
+        localStorage.setItem("uzuu_cart_cep", quote.cep);
+        localStorage.setItem("uzuu_cart_delivery_city", quote.city);
       }
 
       return (
@@ -277,16 +346,23 @@
                   <div className="flex gap-3">
                     <input
                       value={coupon}
-                      onChange={(event) => setCoupon(event.target.value)}
+                      onChange={(event) => {
+                        setCoupon(event.target.value);
+                        setCouponApplied(false);
+                        setCouponFeedback("");
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") applyCoupon();
+                      }}
                       placeholder="Digite seu cupom"
                       className="min-w-0 flex-1 rounded-xl border border-white/10 bg-black px-4 py-3 text-sm uppercase outline-none placeholder:text-neutral-600 focus:border-blue-500"
                     />
-                    <button onClick={applyCoupon} className="rounded-xl border border-blue-500 bg-blue-600/10 px-5 py-3 text-sm font-black text-blue-400 transition hover:bg-blue-600 hover:text-white">
+                    <button type="button" onClick={applyCoupon} className="rounded-xl border border-blue-500 bg-blue-600/10 px-5 py-3 text-sm font-black text-blue-400 transition hover:bg-blue-600 hover:text-white">
                       Aplicar
                     </button>
                   </div>
-                  {couponApplied && <p className="mt-3 text-xs font-bold text-emerald-400">Cupom UZUU10 aplicado com sucesso.</p>}
-                  <button className="mt-3 text-xs font-black text-blue-400">VER CUPONS DISPONÍVEIS</button>
+                  {couponFeedback && <p className={`mt-3 text-xs font-bold ${couponApplied ? "text-emerald-400" : "text-blue-300"}`}>{couponFeedback}</p>}
+                  <button type="button" onClick={applyAvailableCoupon} className="mt-3 text-xs font-black text-blue-400">VER CUPONS DISPONÍVEIS</button>
                 </div>
 
                 <div className="rounded-3xl border border-white/10 bg-[#101216] p-5">
@@ -297,15 +373,22 @@
                   <div className="flex gap-3">
                     <input
                       value={cep}
-                      onChange={(event) => setCep(event.target.value)}
+                      onChange={(event) => {
+                        setCep(formatCep(event.target.value));
+                        setCepFeedback("");
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") calculateCep();
+                      }}
                       placeholder="Digite seu CEP"
                       className="min-w-0 flex-1 rounded-xl border border-white/10 bg-black px-4 py-3 text-sm outline-none placeholder:text-neutral-600 focus:border-blue-500"
                     />
-                    <button className="rounded-xl border border-blue-500 bg-blue-600/10 px-5 py-3 text-sm font-black text-blue-400 transition hover:bg-blue-600 hover:text-white">
+                    <button type="button" onClick={calculateCep} className="rounded-xl border border-blue-500 bg-blue-600/10 px-5 py-3 text-sm font-black text-blue-400 transition hover:bg-blue-600 hover:text-white">
                       Calcular
                     </button>
                   </div>
-                  <button className="mt-3 text-xs font-black text-blue-400">NÃO SEI MEU CEP · BUSCAR CEP</button>
+                  {cepFeedback && <p className={`mt-3 text-xs font-bold ${deliveryQuote ? "text-emerald-400" : "text-blue-300"}`}>{cepFeedback}</p>}
+                  <button type="button" onClick={() => window.open("https://buscacepinter.correios.com.br/app/endereco/index.php", "_blank", "noopener,noreferrer")} className="mt-3 text-xs font-black text-blue-400">NÃO SEI MEU CEP · BUSCAR CEP</button>
                 </div>
               </div>
 
@@ -333,14 +416,14 @@
                     </div>
                   </div>
                   <div className="mt-4 flex justify-between text-sm text-neutral-400">
-                    <span>Envio para todo o Brasil</span>
-                    <span className="font-black text-blue-400">{money(shippingGoal)}</span>
+                    <span>{deliveryQuote ? `${deliveryQuote.city} · ${deliveryQuote.days}` : "Envio para todo o Brasil"}</span>
+                    <span className="font-black text-blue-400">{hasFreeShipping || shipping === 0 ? "Grátis" : money(shipping)}</span>
                   </div>
                 </div>
 
                 <div className="mt-5 space-y-3 border-b border-white/10 pb-5 text-sm text-neutral-300">
                   <div className="flex justify-between"><span>Subtotal ({items.length} itens)</span><span>{money(subtotal)}</span></div>
-                  <div className="flex justify-between"><span>Desconto</span><span className="text-emerald-400">- {money(couponDiscount || productDiscount)}</span></div>
+                  <div className="flex justify-between"><span>Desconto</span><span className="text-emerald-400">- {money(totalDiscount)}</span></div>
                   <div className="flex justify-between"><span>Frete</span><span className="font-black text-emerald-400">{hasFreeShipping ? "Grátis" : money(shipping)}</span></div>
                 </div>
 
