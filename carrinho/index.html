@@ -3,570 +3,400 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Carrinho | Uzuu</title>
+  <title>Carrinho | UZUU</title>
   <link rel="canonical" href="https://uzuu.com.br/carrinho/" />
-  <meta name="theme-color" content="#000000" />
+  <meta name="theme-color" content="#050608" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="UZUU" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="format-detection" content="telephone=no" />
-  <link rel="apple-touch-icon" href="/favicon.png?v=20260423home" />
-  <link rel="manifest" href="/site.webmanifest?v=20260430blackapp1" />
   <link rel="icon" href="../favicon.png?v=20260416b" type="image/png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../style.css?v=20260501premium2" />
-  <link rel="stylesheet" href="style.css?v=56" />
-  <script>window.__UZUU_API_BASE__ = "/ops-api";</script>
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6485539380158983" crossorigin="anonymous"></script>
-<link rel="stylesheet" href="/assets/site-header.css?v=29" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      background: #050608;
+    }
+
+    body {
+      margin: 0;
+      background: #050608;
+      font-family: "Outfit", Arial, Helvetica, sans-serif;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+  </style>
 </head>
-<body id="top">
-  <div id="site-header-root"></div>
-  <script src="/assets/site-header.js?v=18"></script>
+<body>
+  <div id="root"></div>
 
-  <main id="cart" class="cart-premium-page container">
-    <section class="cart-premium-progress" aria-label="Etapas da compra">
-      <div class="cart-premium-progress__steps">
-        <span class="is-active">1. Carrinho</span>
-        <span>2. Identificacao</span>
-        <span>3. Pagamento</span>
-        <span>4. Confirmacao</span>
-      </div>
-      <a class="cart-premium-progress__link" href="../perfil/">Ambiente seguro</a>
-    </section>
+  <script type="text/babel">
+    const { useMemo, useState } = React;
 
-    <div class="cart-premium-layout">
-      <section class="cart-premium-main" aria-label="Conteudo do carrinho">
-        <section class="cart-premium-panel">
-          <div class="cart-premium-panel__head">
-            <div>
-              <h2 id="cart-overview-title">Meu Carrinho (0)</h2>
-              <p id="cart-overview-count">Selecione todos os itens</p>
-            </div>
-            <button id="clear-cart-btn" class="cart-premium-clear" type="button">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V5h6v2m-7 3v8m4-8v8m4-8v8M7 7l1 13h8l1-13"></path></svg>
-              <span>Limpar carrinho</span>
-            </button>
+    const initialItems = [
+      {
+        id: 1,
+        name: "Camiseta Oversized UZUU Essential",
+        variant: "Cor: Preta · Tamanho: G",
+        price: 159.9,
+        oldPrice: 199.9,
+        qty: 1,
+        stock: 8,
+        image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=90",
+      },
+      {
+        id: 2,
+        name: "Calça Cargo Techwear UZUU",
+        variant: "Cor: Preta · Tamanho: 42",
+        price: 259.9,
+        oldPrice: 319.9,
+        qty: 1,
+        stock: 5,
+        image: "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?auto=format&fit=crop&w=700&q=90",
+      },
+      {
+        id: 3,
+        name: "Moletom Hoodie UZUU Future",
+        variant: "Cor: Preto · Tamanho: G",
+        price: 249.9,
+        oldPrice: 299.9,
+        qty: 1,
+        stock: 6,
+        image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=700&q=90",
+      },
+    ];
+
+    function money(value) {
+      return Number(value || 0).toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+      });
+    }
+
+    function Step({ number, title, subtitle, active, done }) {
+      return (
+        <div className="flex items-center gap-3">
+          <div
+            className={`flex h-10 w-10 items-center justify-center rounded-full border text-sm font-black ${
+              done
+                ? "border-blue-500 bg-blue-600 text-white"
+                : active
+                ? "border-blue-500 bg-blue-600 text-white shadow-lg shadow-blue-600/30"
+                : "border-white/20 bg-white/5 text-neutral-500"
+            }`}
+          >
+            {done ? "✓" : number}
           </div>
-          <div class="cart-premium-goal-card">
-            <div class="cart-premium-goal-card__copy">
-              <span aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M3 7h11v8H3zM14 9h3l4 4v2h-2a2 2 0 1 1-4 0H9a2 2 0 1 1-4 0H3V7m4 10a1 1 0 1 0 0 2 1 1 0 0 0 0-2m10 0a1 1 0 1 0 .001 2A1 1 0 0 0 17 17zM14 10v3h5"></path></svg>
-              </span>
-              <p id="cart-progress-copy">Adicione mais R$ 250,00 para ganhar frete gratis.</p>
-            </div>
-            <div class="cart-premium-goal-card__meter">
-              <div class="cart-obsidian-goal__bar">
-                <span id="cart-progress-fill"></span>
-              </div>
-              <div class="cart-obsidian-goal__labels">
-                <small id="cart-progress-current">R$ 0,00</small>
-                <small>R$ 250,00</small>
-              </div>
-            </div>
+          <div className="hidden md:block">
+            <p className={`text-sm font-black ${active ? "text-blue-400" : "text-neutral-400"}`}>{title}</p>
+            <p className="text-xs text-neutral-500">{subtitle}</p>
           </div>
-          <ul id="cart-items" class="cart-premium-items"></ul>
-        </section>
+        </div>
+      );
+    }
 
-        <section id="cart-tools-panel" class="cart-premium-panel cart-premium-panel--compact" hidden aria-label="Ferramentas do carrinho">
-          <div class="cart-premium-support-grid">
-            <article class="cart-premium-panel cart-premium-panel--compact">
-              <div class="cart-premium-panel__head">
-                <div>
-                  <h3>Cupom de desconto</h3>
-                  <p>Aplique beneficios da sua conta.</p>
-                </div>
-              </div>
-              <div class="cart-premium-inline-form">
-                <input id="coupon-input" type="text" placeholder="Digite seu cupom" autocomplete="off" />
-                <button id="apply-coupon-btn" type="button">Aplicar</button>
-              </div>
-            </article>
+    function QuantityControl({ value, onMinus, onPlus }) {
+      return (
+        <div className="inline-flex h-11 overflow-hidden rounded-xl border border-white/10 bg-[#111318]">
+          <button onClick={onMinus} className="w-11 text-xl font-black text-neutral-300 transition hover:bg-white hover:text-black">
+            −
+          </button>
+          <span className="flex w-12 items-center justify-center border-x border-white/10 text-sm font-black text-white">
+            {value}
+          </span>
+          <button onClick={onPlus} className="w-11 text-xl font-black text-neutral-300 transition hover:bg-white hover:text-black">
+            +
+          </button>
+        </div>
+      );
+    }
 
-            <article class="cart-premium-panel cart-premium-panel--compact">
-              <div class="cart-premium-panel__head">
-                <div>
-                  <h3>Estimativa de entrega</h3>
-                  <p>Calcule o frete do seu CEP.</p>
-                </div>
-              </div>
-              <div class="cart-premium-inline-form">
-                <input id="cart-cep-input" type="text" inputmode="numeric" placeholder="00000-000" autocomplete="postal-code" />
-                <button id="cart-cep-apply" type="button">Calcular</button>
-              </div>
-              <div class="cart-premium-shipping-options">
-                <label class="cart-premium-shipping-option cart-premium-shipping-option--highlight">
-                  <input id="shipping-method-standard" type="radio" name="shipping-method" value="standard" checked />
-                  <div class="cart-premium-shipping-option__copy">
-                    <strong>Entrega padrao</strong>
-                    <small>Prazo economico</small>
-                  </div>
-                  <strong class="cart-premium-shipping-option__price is-free">Gratis</strong>
-                </label>
-                <label class="cart-premium-shipping-option">
-                  <input id="shipping-method-express" type="radio" name="shipping-method" value="express" />
-                  <div class="cart-premium-shipping-option__copy">
-                    <strong>Entrega expressa</strong>
-                    <small>Receba mais rapido</small>
-                  </div>
-                  <strong class="cart-premium-shipping-option__price">R$ 19,90</strong>
-                </label>
-              </div>
-              <p id="shipping-feedback" class="cart-premium-inline-note"></p>
-            </article>
-          </div>
-        </section>
+    function CarrinhoPremiumUZUU() {
+      const [items, setItems] = useState(initialItems);
+      const [coupon, setCoupon] = useState("");
+      const [cep, setCep] = useState("");
+      const [couponApplied, setCouponApplied] = useState(false);
 
-        <section class="cart-premium-recommendations" aria-label="Voce tambem pode gostar">
-          <div class="cart-premium-section-head">
-            <div>
-              <h2>Voce tambem pode gostar</h2>
-              <p>Selecao complementar para sua compra.</p>
+      const subtotal = useMemo(() => items.reduce((sum, item) => sum + item.price * item.qty, 0), [items]);
+      const oldSubtotal = useMemo(() => items.reduce((sum, item) => item.oldPrice ? sum + item.oldPrice * item.qty : sum + item.price * item.qty, 0), [items]);
+      const productDiscount = Math.max(0, oldSubtotal - subtotal);
+      const couponDiscount = couponApplied ? subtotal * 0.1 : 0;
+      const shippingGoal = 500;
+      const shippingMissing = Math.max(0, shippingGoal - subtotal);
+      const hasFreeShipping = subtotal >= shippingGoal;
+      const shipping = hasFreeShipping ? 0 : 19.9;
+      const total = subtotal - couponDiscount + shipping;
+      const progress = Math.min(100, (subtotal / shippingGoal) * 100);
+      const totalSaved = productDiscount + couponDiscount + (hasFreeShipping ? 19.9 : 0);
+
+      function updateQty(id, amount) {
+        setItems((current) =>
+          current.map((item) => {
+            if (item.id !== id) return item;
+            return { ...item, qty: Math.max(1, Math.min(item.stock, item.qty + amount)) };
+          })
+        );
+      }
+
+      function removeItem(id) {
+        setItems((current) => current.filter((item) => item.id !== id));
+      }
+
+      function applyCoupon() {
+        setCouponApplied(coupon.trim().toUpperCase() === "UZUU10");
+      }
+
+      return (
+        <div className="min-h-screen bg-[#050608] text-white">
+          <header className="border-b border-white/10 bg-black/95 px-5 py-4 backdrop-blur-xl">
+            <div className="mx-auto flex max-w-7xl items-center justify-between gap-5">
+              <div className="text-4xl font-black tracking-tight">UZUU</div>
+
+              <nav className="hidden items-center gap-7 text-sm font-bold text-neutral-300 lg:flex">
+                <button className="transition hover:text-white">Novidades</button>
+                <button className="transition hover:text-white">Masculino</button>
+                <button className="transition hover:text-white">Feminino</button>
+                <button className="transition hover:text-white">Coleções</button>
+                <button className="transition hover:text-white">Acessórios</button>
+                <button className="font-black text-blue-500">Sale</button>
+              </nav>
+
+              <div className="hidden flex-1 md:block md:max-w-xl">
+                <input
+                  placeholder="Buscar produtos, categorias e muito mais..."
+                  className="w-full rounded-2xl border border-white/10 bg-[#111318] px-5 py-3 text-sm text-white outline-none placeholder:text-neutral-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div className="flex items-center gap-4 text-sm font-black">
+                <span className="hidden md:inline">Minha conta</span>
+                <span className="hidden md:inline">♡ Favoritos</span>
+                <span className="relative">
+                  🛍 Carrinho
+                  <b className="absolute -right-4 -top-3 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white">
+                    {items.length}
+                  </b>
+                </span>
+              </div>
             </div>
-            <a href="../#produtos">Ver tudo</a>
-          </div>
-          <div id="cart-recommendations-grid" class="cart-premium-recommendations__grid"></div>
-        </section>
-      </section>
+          </header>
 
-      <aside class="cart-premium-side" aria-label="Resumo do pedido">
-        <section class="cart-premium-summary">
-          <h2>Resumo do pedido</h2>
-          <div class="cart-premium-summary-free">
-            <span aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M3 7h11v8H3zM14 9h3l4 4v2h-2a2 2 0 1 1-4 0H9a2 2 0 1 1-4 0H3V7m4 10a1 1 0 1 0 0 2 1 1 0 0 0 0-2m10 0a1 1 0 1 0 .001 2A1 1 0 0 0 17 17zM14 10v3h5"></path></svg>
-            </span>
-            <div>
-              <strong>Parabens! Voce ganhou frete gratis.</strong>
-              <small>Envio para todo o Brasil.</small>
-            </div>
-          </div>
-
-          <div class="cart-premium-summary__rows">
-            <div class="cart-premium-summary__row">
-              <span id="summary-subtotal-label">Subtotal (0 itens)</span>
-              <strong id="summary-subtotal-amount">R$ 0,00</strong>
-            </div>
-            <div class="cart-premium-summary__row">
-              <span>Descontos</span>
-              <strong id="summary-discount-total" class="is-discount">-R$ 0,00</strong>
-            </div>
-            <div class="cart-premium-summary__row">
-              <span>Frete</span>
-              <button id="shipping-value" class="cart-premium-summary__action" type="button">Gratis</button>
-            </div>
-          </div>
-
-          <div class="cart-premium-total cart-premium-total--highlight">
-            <p>Voce esta economizando <span id="cart-savings-badge">R$ 0,00</span></p>
-            <div class="cart-premium-total__line">
-              <span>Total</span>
-              <strong>R$ <span id="cart-total-main">0</span><sup id="cart-total-cents">00</sup></strong>
-            </div>
-            <small id="summary-installments">Em ate 12x de R$ 0,00 sem juros</small>
-          </div>
-
-          <div class="cart-premium-actions">
-            <button id="checkout" class="cart-premium-primary" disabled>Ir para pagamento</button>
-            <a class="cart-premium-secondary" href="../#produtos">Continuar comprando</a>
-          </div>
-
-          <div class="cart-premium-trust">
-            <article class="cart-premium-trust__item">
-              <span aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.97 3.05 7.98 7 9 3.95-1.02 7-4.03 7-9V6l-7-3zm0 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-3 8a4 4 0 0 1 6 0"></path></svg>
-              </span>
-              <div>
-                <strong>Compra segura</strong>
-                <small>Seus dados estao protegidos</small>
-              </div>
-            </article>
-            <article class="cart-premium-trust__item">
-              <span aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M3 7h11v8H3zM14 9h3l4 4v2h-2a2 2 0 1 1-4 0H9a2 2 0 1 1-4 0H3V7m4 10a1 1 0 1 0 0 2 1 1 0 0 0 0-2m10 0a1 1 0 1 0 .001 2A1 1 0 0 0 17 17zM14 10v3h5"></path></svg>
-              </span>
-              <div>
-                <strong>Frete gratis</strong>
-                <small>Acima do valor minimo</small>
-              </div>
-            </article>
-            <article class="cart-premium-trust__item">
-              <span aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4zM8 10h4M8 14h6M16 10h2"></path></svg>
-              </span>
-              <div>
-                <strong>Pagamento protegido</strong>
-                <small>Pix e cartoes aceitos</small>
-              </div>
-            </article>
-          </div>
-
-          <div class="cart-premium-payments">
-            <p>Formas de pagamento aceitas</p>
-            <div class="cart-premium-payments__chips">
-              <span>PIX</span>
-              <span>VISA</span>
-              <span>Mastercard</span>
-              <span>ELO</span>
-              <span>Hipercard</span>
+          <div className="border-b border-white/10 bg-[#0b0d11] px-5 py-4">
+            <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+              <Step number="1" title="Carrinho" subtitle="Revisão dos itens" active />
+              <div className="hidden h-px flex-1 bg-white/10 md:block" />
+              <Step number="2" title="Identificação" subtitle="Seus dados" />
+              <div className="hidden h-px flex-1 bg-white/10 md:block" />
+              <Step number="3" title="Pagamento" subtitle="Escolha a forma" />
+              <div className="hidden h-px flex-1 bg-white/10 md:block" />
+              <Step number="4" title="Confirmação" subtitle="Finalize seu pedido" />
             </div>
           </div>
 
-          <p id="feedback" class="cart-premium-feedback"></p>
-          <button id="summary-coupon-value" class="cart-premium-inline-link" type="button">Aplicar cupom</button>
-          <span id="items-count" hidden>0</span>
-          <span id="free-ship-count" hidden>0</span>
-          <span id="coupon-count" hidden>0</span>
-          <span id="products-before-main" hidden>0</span>
-          <span id="products-before-cents" hidden>00</span>
-          <span id="products-now-main" hidden>0</span>
-          <span id="products-now-cents" hidden>00</span>
-          <span id="products-before-wrap" hidden></span>
-          <p id="summary-pix-value" hidden>R$ 0,00</p>
-          <p id="payment-selected" class="pay-selected-inline" hidden></p>
-          <span id="summary-pix-total" hidden>R$ 0,00</span>
-        </section>
-      </aside>
-    </div>
-  </main>
-
-  <div id="checkout-modal" class="modal" hidden>
-    <div class="modal-backdrop" data-close="1"></div>
-    <div class="modal-card modal-card--checkout" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <form id="payment-form" class="checkout-premium-form">
-        <header class="checkout-premium-topbar">
-          <div class="checkout-premium-brand">UZUU</div>
-          <div class="checkout-premium-steps" aria-label="Etapas do checkout">
-            <span><em>1</em><strong>Carrinho</strong></span>
-            <span><em>2</em><strong>Identificacao</strong></span>
-            <span class="is-active"><em>3</em><strong>Pagamento</strong></span>
-            <span><em>4</em><strong>Confirmacao</strong></span>
-          </div>
-          <div class="checkout-premium-assurance">
-            <strong>Ambiente 100% seguro</strong>
-            <small>Seus dados estao protegidos</small>
-          </div>
-        </header>
-        <div class="checkout-premium-layout">
-          <section class="checkout-premium-main">
-            <button class="checkout-premium-close" type="button" data-close="1" aria-label="Fechar pagamento">x</button>
-            <div class="checkout-premium-title-wrap">
-              <h2 id="modal-title" class="checkout-premium-title">Forma de pagamento</h2>
-              <p>Escolha a melhor forma para finalizar sua compra.</p>
-            </div>
-            <span id="checkout-address-line" class="checkout-premium-hidden-mirror">Nenhum endereco selecionado.</span>
-            <span id="checkout-address-ship" class="checkout-premium-hidden-mirror">Frete: --</span>
-            <a id="edit-address-link" class="checkout-premium-hidden-mirror" href="../entrega/">Alterar endereco</a>
-            <input id="confirm-address" class="checkout-hidden-field" type="checkbox" tabindex="-1" aria-hidden="true" />
-            <section class="checkout-premium-methods" aria-label="Meios de pagamento">
-              <div class="checkout-premium-tabs">
-                <label class="checkout-premium-tab is-active" data-payment-tab="pix">
-                  <input type="radio" name="pay" value="pix" checked />
-                  <strong><span class="checkout-tab-icon checkout-tab-icon--pix" aria-hidden="true"></span>PIX</strong>
-                  <small>5% OFF</small>
-                </label>
-
-                <label class="checkout-premium-tab" data-payment-tab="credito">
-                  <input type="radio" name="pay" value="credito" />
-                  <strong>Cartao</strong>
-                  <small>Ate 6x sem juros</small>
-                </label>
-
-                <label class="checkout-premium-tab" data-payment-tab="boleto">
-                  <input type="radio" name="pay" value="boleto" />
-                  <strong><span class="checkout-tab-icon checkout-tab-icon--boleto" aria-hidden="true"></span>Boleto</strong>
-                  <small>A vista</small>
-                </label>
-              </div>
-
-              <div class="checkout-premium-panels">
-                <section class="checkout-premium-panel is-active" data-payment-panel="pix">
-                  <div class="checkout-premium-pix-layout">
-                    <article class="checkout-premium-pix-callout">
-                      <span class="checkout-premium-badge">Pix</span>
-                      <h3>Pague com Pix e economize mais</h3>
-                      <strong>5% OFF</strong>
-                      <p>Economize com o codigo copia e cola ou escaneie o QR Code para pagar agora.</p>
-                      <div class="checkout-premium-pix-safe">
-                        <span>I</span>
-                        <p>No pagamento a aprovacao ocorre direto no nosso painel com seguranca.</p>
+          <main className="mx-auto grid max-w-7xl gap-6 px-5 py-6 lg:grid-cols-[1fr,390px]">
+            <section className="space-y-4">
+              <div className="rounded-3xl border border-white/10 bg-[#101216] p-5 shadow-2xl shadow-black/30">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-blue-500/30 bg-blue-600/15 text-2xl">🚚</div>
+                    <div>
+                      <p className="text-sm text-neutral-300">
+                        {hasFreeShipping ? (
+                          <>Parabéns! Você ganhou <b className="text-blue-400">FRETE GRÁTIS</b> para todo o Brasil.</>
+                        ) : (
+                          <>Falta <b className="text-blue-400">{money(shippingMissing)}</b> para ganhar <b className="text-blue-400">FRETE GRÁTIS</b>.</>
+                        )}
+                      </p>
+                      <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
+                        <div className="h-full rounded-full bg-blue-600" style={{ width: `${progress}%` }} />
                       </div>
-                    </article>
+                    </div>
+                  </div>
+                  <p className="hidden text-sm font-bold text-neutral-400 md:block">
+                    {money(subtotal)} / {money(shippingGoal)}
+                  </p>
+                </div>
+              </div>
 
-                    <article class="checkout-premium-pix-card checkout-premium-pix-card--qr">
-                      <div id="checkout-pay-qr-slot" class="inline-pay-qr-slot checkout-result__qr checkout-premium-pix-qr-slot">
-                        <div class="checkout-premium-pix-placeholder">
-                          <span>QR</span>
+              <div className="space-y-3">
+                {items.map((item) => (
+                  <article key={item.id} className="rounded-3xl border border-white/10 bg-[#101216] p-4 shadow-2xl shadow-black/20">
+                    <div className="grid gap-4 md:grid-cols-[150px,1fr,150px,130px] md:items-center">
+                      <div className="h-36 overflow-hidden rounded-2xl bg-neutral-900 md:h-28">
+                        <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                      </div>
+
+                      <div>
+                        <h2 className="text-lg font-black text-white">{item.name}</h2>
+                        <p className="mt-2 text-sm text-neutral-400">{item.variant}</p>
+                        <div className="mt-3 flex flex-wrap gap-3 text-xs font-bold">
+                          <span className="text-emerald-400">✓ Em estoque</span>
+                          <span className="text-neutral-500">Envio em até 24h</span>
+                          <span className="text-blue-400">Restam {item.stock}</span>
                         </div>
                       </div>
-                      <small>O QR Code expira em <strong id="checkout-pix-expire">29:47</strong></small>
-                    </article>
 
-                    <article class="checkout-premium-pix-card checkout-premium-pix-card--copy">
-                      <h4>Ou copie o codigo Pix</h4>
-                      <p>Colando no app do seu banco</p>
-                      <div id="checkout-pix-code" class="checkout-premium-pix-code">Aguardando codigo Pix...</div>
-                      <button id="checkout-pay-copy-inline" class="checkout-premium-copy-button" type="button">Copiar codigo</button>
-                    </article>
-                  </div>
-                </section>
+                      <div className="md:text-center">
+                        <QuantityControl
+                          value={item.qty}
+                          onMinus={() => updateQty(item.id, -1)}
+                          onPlus={() => updateQty(item.id, 1)}
+                        />
+                      </div>
 
-                <section class="checkout-premium-panel" data-payment-panel="credito">
-                  <div class="checkout-premium-brands">
-                    <img class="checkout-premium-card-banner" src="../assets/icons/card-banner.svg?v=2" alt="Bandeiras de cartao aceitas" />
-                  </div>
-
-                  <div class="checkout-premium-fields">
-                    <label class="checkout-premium-inline-field checkout-premium-inline-field--full">
-                      <span>Numero do cartao</span>
-                      <input id="checkout-card-number" type="text" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" />
-                    </label>
-
-                    <label class="checkout-premium-inline-field checkout-premium-inline-field--full">
-                      <span>Nome do titular</span>
-                      <input id="checkout-card-holder" type="text" autocomplete="cc-name" placeholder="Nome do titular" />
-                    </label>
-
-                    <label class="checkout-premium-inline-field">
-                      <span>Validade</span>
-                      <input id="checkout-card-expiry" type="text" inputmode="numeric" autocomplete="cc-exp" placeholder="MM / AAAA" />
-                    </label>
-
-                    <label class="checkout-premium-inline-field">
-                      <span>CVV</span>
-                      <input id="checkout-card-cvv" type="password" inputmode="numeric" autocomplete="cc-csc" placeholder="CVV" maxlength="4" />
-                    </label>
-
-                    <input id="checkout-card-tax-id" type="hidden" />
-                    <select id="checkout-card-installments" class="checkout-hidden-field" aria-label="Parcelamento do cartao"></select>
-
-                    <label class="checkout-premium-inline-field checkout-premium-inline-field--hidden">
-                      <span>Tipo do cartao</span>
-                      <select id="card-kind-select" aria-label="Tipo do cartao">
-                        <option value="credito">Credito</option>
-                      </select>
-                    </label>
-                  </div>
-                </section>
-
-                <section class="checkout-premium-panel" data-payment-panel="boleto">
-                  <div class="checkout-premium-boleto-card">
-                    <h3>Boleto bancario</h3>
-                    <p>O boleto sera gerado apos a confirmacao do pedido e podera ser pago no banco ou aplicativo. A compensacao pode levar ate 2 dias uteis.</p>
-                  </div>
-                </section>
+                      <div className="md:text-right">
+                        <p className="text-xl font-black text-white">{money(item.price * item.qty)}</p>
+                        <p className="text-xs text-neutral-500 line-through">{money(item.oldPrice * item.qty)}</p>
+                        <button onClick={() => removeItem(item.id)} className="mt-4 text-sm font-bold text-neutral-500 transition hover:text-red-400">
+                          🗑 Remover
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                ))}
               </div>
 
-              <section class="checkout-premium-delivery-card" aria-label="Dados de entrega">
-                <div class="checkout-premium-delivery-card__head">
-                  <div>
-                    <h3>Dados de entrega</h3>
-                    <p>No mesmo painel da compra</p>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="rounded-3xl border border-white/10 bg-[#101216] p-5">
+                  <div className="mb-4 flex items-center gap-3">
+                    <div className="text-2xl">🏷</div>
+                    <h3 className="text-xl font-black">Cupom de desconto</h3>
                   </div>
-                  <span class="checkout-premium-delivery-chip">Frete gratis</span>
+                  <div className="flex gap-3">
+                    <input
+                      value={coupon}
+                      onChange={(event) => setCoupon(event.target.value)}
+                      placeholder="Digite seu cupom"
+                      className="min-w-0 flex-1 rounded-xl border border-white/10 bg-black px-4 py-3 text-sm uppercase outline-none placeholder:text-neutral-600 focus:border-blue-500"
+                    />
+                    <button onClick={applyCoupon} className="rounded-xl border border-blue-500 bg-blue-600/10 px-5 py-3 text-sm font-black text-blue-400 transition hover:bg-blue-600 hover:text-white">
+                      Aplicar
+                    </button>
+                  </div>
+                  {couponApplied && <p className="mt-3 text-xs font-bold text-emerald-400">Cupom UZUU10 aplicado com sucesso.</p>}
+                  <button className="mt-3 text-xs font-black text-blue-400">VER CUPONS DISPONÍVEIS</button>
                 </div>
-                  <div class="checkout-premium-delivery-card__grid">
-                    <div class="checkout-premium-delivery-line">
-                        <span class="checkout-premium-delivery-icon">N</span>
-                    <div>
-                      <strong>Nome</strong>
-                      <small id="checkout-customer-name">Cliente</small>
-                    </div>
-                  </div>
-                  <div class="checkout-premium-delivery-line">
-                        <span class="checkout-premium-delivery-icon">F</span>
-                    <div>
-                      <strong>Entrega</strong>
-                      <small id="checkout-shipping-note">Frete protegido pela UZUU</small>
-                    </div>
-                  </div>
-                  <div class="checkout-premium-delivery-line">
-                        <span class="checkout-premium-delivery-icon">E</span>
-                    <div>
-                      <strong>E-mail</strong>
-                      <small id="checkout-customer-email">cliente@uzuu.com.br</small>
-                    </div>
-                  </div>
-                  <div class="checkout-premium-delivery-line">
-                        <span class="checkout-premium-delivery-icon">C</span>
-                    <div>
-                      <strong>CEP</strong>
-                      <small id="checkout-customer-cep">--</small>
-                    </div>
-                  </div>
-                  <div class="checkout-premium-delivery-line">
-                        <span class="checkout-premium-delivery-icon">T</span>
-                    <div>
-                      <strong>Telefone</strong>
-                      <small id="checkout-customer-phone">Nao informado</small>
-                    </div>
-                  </div>
-                  <div class="checkout-premium-delivery-line">
-                        <span class="checkout-premium-delivery-icon">U</span>
-                    <div>
-                      <strong>Cidade / Estado</strong>
-                      <small id="checkout-customer-city">Sao Paulo - SP</small>
-                    </div>
-                  </div>
-                </div>
-              </section>
 
-              <div class="checkout-premium-back-link">
-                <a href="#cart-summary-inline">Voltar para identificacao</a>
+                <div className="rounded-3xl border border-white/10 bg-[#101216] p-5">
+                  <div className="mb-4 flex items-center gap-3">
+                    <div className="text-2xl">🚚</div>
+                    <h3 className="text-xl font-black">Estimativa de entrega</h3>
+                  </div>
+                  <div className="flex gap-3">
+                    <input
+                      value={cep}
+                      onChange={(event) => setCep(event.target.value)}
+                      placeholder="Digite seu CEP"
+                      className="min-w-0 flex-1 rounded-xl border border-white/10 bg-black px-4 py-3 text-sm outline-none placeholder:text-neutral-600 focus:border-blue-500"
+                    />
+                    <button className="rounded-xl border border-blue-500 bg-blue-600/10 px-5 py-3 text-sm font-black text-blue-400 transition hover:bg-blue-600 hover:text-white">
+                      Calcular
+                    </button>
+                  </div>
+                  <button className="mt-3 text-xs font-black text-blue-400">NÃO SEI MEU CEP · BUSCAR CEP</button>
+                </div>
               </div>
 
-              <div class="checkout-premium-secure">
-                <span aria-hidden="true">&#128274;</span>
-                <span>Ambiente seguro</span>
+              <div className="grid gap-3 border-t border-white/10 pt-6 text-center text-sm text-neutral-400 md:grid-cols-3">
+                <div>🛡 <b className="text-white">30 dias</b> para trocas e devoluções</div>
+                <div>🎧 Atendimento premium: <b className="text-white">(11) 4002-8922</b></div>
+                <div>⭐ UZUU · Streetwear feito para quem vive o agora</div>
               </div>
             </section>
 
-            <p id="checkout-feedback" class="feedback" aria-live="polite"></p>
-          </section>
+            <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+              <div className="rounded-3xl border border-white/10 bg-[#101216] p-5 shadow-2xl shadow-black/40">
+                <h2 className="text-2xl font-black">Resumo do pedido</h2>
 
-          <aside class="checkout-premium-summary" aria-label="Resumo do pedido">
-            <h3 class="checkout-premium-summary-title">Resumo do pedido</h3>
-            <div class="checkout-premium-summary-card">
-              <div id="checkout-summary-items" class="checkout-premium-summary-items">
-                <div class="checkout-premium-product">
-                  <div id="checkout-summary-image" class="checkout-premium-product-image">UZUU</div>
-                  <div class="checkout-premium-product-copy">
-                    <strong id="checkout-summary-name">Produto Uzuu</strong>
-                    <small id="checkout-summary-meta">Entrega protegida pela Uzuu</small>
-                    <small id="checkout-summary-qty">1 unidade</small>
+                <div className="mt-5 rounded-3xl border border-white/10 bg-black/40 p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-xl">🚚</div>
+                    <div className="flex-1">
+                      <p className="text-sm font-black text-white">
+                        {hasFreeShipping ? "Parabéns! Você ganhou FRETE GRÁTIS!" : "Continue comprando para ganhar frete grátis"}
+                      </p>
+                      <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
+                        <div className="h-full rounded-full bg-blue-600" style={{ width: `${progress}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex justify-between text-sm text-neutral-400">
+                    <span>Envio para todo o Brasil</span>
+                    <span className="font-black text-blue-400">{money(shippingGoal)}</span>
                   </div>
                 </div>
+
+                <div className="mt-5 space-y-3 border-b border-white/10 pb-5 text-sm text-neutral-300">
+                  <div className="flex justify-between"><span>Subtotal ({items.length} itens)</span><span>{money(subtotal)}</span></div>
+                  <div className="flex justify-between"><span>Desconto</span><span className="text-emerald-400">- {money(couponDiscount || productDiscount)}</span></div>
+                  <div className="flex justify-between"><span>Frete</span><span className="font-black text-emerald-400">{hasFreeShipping ? "Grátis" : money(shipping)}</span></div>
+                </div>
+
+                <div className="mt-5 flex items-end justify-between">
+                  <p className="text-2xl font-black">Total</p>
+                  <p className="text-3xl font-black text-blue-500">{money(total)}</p>
+                </div>
+
+                <p className="mt-2 text-center text-sm font-bold text-emerald-400">
+                  Você está economizando {money(totalSaved)}
+                </p>
+
+                <button className="mt-5 w-full rounded-2xl bg-blue-600 py-4 text-lg font-black text-white shadow-2xl shadow-blue-600/30 transition hover:scale-[1.01] hover:bg-blue-700">
+                  Ir para pagamento ›
+                </button>
+
+                <button className="mt-3 w-full rounded-2xl border border-blue-500/60 py-4 text-base font-black text-blue-400 transition hover:bg-blue-600 hover:text-white">
+                  Continuar comprando
+                </button>
               </div>
 
-              <div class="checkout-premium-price-lines">
-                <div class="checkout-premium-line">
-                  <span>Subtotal</span>
-                  <strong id="checkout-summary-subtotal">R$ 0,00</strong>
-                </div>
-                <div class="checkout-premium-line">
-                  <span>Desconto</span>
-                  <strong id="checkout-summary-discount">R$ 0,00</strong>
-                </div>
-                <div class="checkout-premium-line">
-                  <span>Entrega</span>
-                  <strong id="checkout-summary-shipping">--</strong>
-                </div>
-                <div class="checkout-premium-line checkout-premium-line--pix-save">
-                  <span>Desconto Pix (5%)</span>
-                  <strong id="checkout-summary-pix-save">R$ 0,00</strong>
-                </div>
-                <div class="checkout-premium-line checkout-premium-line--total">
-                  <span>Total</span>
-                  <strong id="checkout-summary-total">R$ 0,00</strong>
-                </div>
-              </div>
-
-              <div class="checkout-premium-applied">
-                <span>✓ Cupom aplicado</span>
-                <small id="checkout-summary-coupon-label">UZUU10</small>
-              </div>
-
-              <div class="checkout-premium-actions">
-                <button id="confirm-payment" class="btn primary" type="submit">Finalizar compra</button>
-              </div>
-            </div>
-            <div class="checkout-premium-trust" aria-label="Seguranca do pagamento">
-              <article class="checkout-premium-trust__item">
-                <span aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.97 3.05 7.98 7 9 3.95-1.02 7-4.03 7-9V6l-7-3zm0 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-3 8a4 4 0 0 1 6 0"></path></svg>
-                </span>
+              <div className="grid grid-cols-3 gap-3 rounded-3xl border border-white/10 bg-[#101216] p-4 text-center text-xs text-neutral-400">
                 <div>
-                  <strong>Site protegido</strong>
-                  <small>Certificado SSL ativo</small>
+                  <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-blue-600/20 text-blue-400">🛡</div>
+                  <b className="text-white">Compra segura</b>
+                  <p>Dados protegidos</p>
                 </div>
-              </article>
-              <article class="checkout-premium-trust__item">
-                <span aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M4 12h4l2-5 4 10 2-5h4M6 18h12"></path></svg>
-                </span>
                 <div>
-                  <strong>Pagamento protegido</strong>
-                  <small>Dados criptografados</small>
+                  <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-blue-600/20 text-blue-400">🚚</div>
+                  <b className="text-white">Frete grátis</b>
+                  <p>Em compras acima de R$ 500</p>
                 </div>
-              </article>
-              <article class="checkout-premium-trust__item">
-                <span aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15.36-6.36M21 12a9 9 0 0 1-15.36 6.36M18 3v4h-4M6 21v-4h4"></path></svg>
-                </span>
                 <div>
-                  <strong>Compra segura</strong>
-                  <small>Ambiente monitorado</small>
+                  <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-blue-600/20 text-blue-400">🔒</div>
+                  <b className="text-white">Pagamento protegido</b>
+                  <p>Ambiente certificado</p>
                 </div>
-              </article>
-            </div>
+              </div>
 
-            <div class="checkout-premium-summary-footer">
-              <div class="checkout-premium-summary-footer__line">
-                <span>Forma de pagamento aceita</span>
+              <div className="rounded-3xl border border-white/10 bg-[#101216] p-5">
+                <p className="text-sm font-black">Formas de pagamento aceitas</p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {["PIX", "VISA", "Mastercard", "Elo", "Hipercard"].map((card) => (
+                    <span key={card} className="rounded-xl border border-white/10 bg-black px-3 py-2 text-xs font-black text-neutral-300">
+                      {card}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div class="checkout-premium-summary-brands">
-                <span>PIX</span>
-                <span>VISA</span>
-                <span>Mastercard</span>
-                <span>ELO</span>
-                <span>Hipercard</span>
-              </div>
-            </div>
-          </aside>
+            </aside>
+          </main>
         </div>
-      </form>
-    </div>
-  </div>
+      );
+    }
 
-  <div id="inline-pay-modal" class="modal inline-pay-modal" hidden>
-    <div class="modal-backdrop" data-inline-close="1"></div>
-    <section class="inline-pay-card" role="dialog" aria-modal="true" aria-labelledby="inline-pay-title">
-      <header class="inline-pay-head">
-        <h2 id="inline-pay-title">Pagamento seguro na loja</h2>
-        <button class="inline-pay-close" type="button" data-inline-close="1" aria-label="Fechar pagamento">x</button>
-      </header>
-      <p id="inline-pay-status" class="inline-pay-status">
-        Finalize o pagamento diretamente na loja.
-      </p>
-      <div id="inline-pay-content" class="inline-pay-content" aria-live="polite">
-      </div>
-      <div class="inline-pay-actions">
-        <a id="inline-pay-open-link" class="btn secondary" href="#" target="_blank" rel="noopener noreferrer" hidden></a>
-        <button id="inline-pay-done" class="btn primary" type="button">Ja conclui o pagamento</button>
-      </div>
-    </section>
-  </div>
-
-  <div id="site-footer-root"></div>
-<script src="/assets/site-footer.js?v=3"></script>
-
-  <script src="https://assets.pagseguro.com.br/checkout-sdk-js/rc/dist/browser/pagseguro.min.js"></script>
-  <script src="../assets/catalog.js?v=11"></script>
-  <script src="script.js?v=66"></script>
-  <script src="../assets/menu-dropdown.js?v=22"></script>
+    ReactDOM.createRoot(document.getElementById("root")).render(<CarrinhoPremiumUZUU />);
+  </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
