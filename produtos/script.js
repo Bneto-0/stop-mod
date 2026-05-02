@@ -91,7 +91,7 @@
 
   function productFallbackSource(preferredLabel) {
     const variants = typeof catalog.getProductVariants === "function" ? catalog.getProductVariants(product?.id) : [];
-    const fallback = variants.find((variant) => String(variant?.image || "").trim())?.image || product?.image || "";
+    const fallback = product?.image || variants.find((variant) => String(variant?.image || "").trim())?.image || "";
     return sanitizeImageSource(fallback, preferredLabel || product?.name || "UZUU");
   }
 
@@ -105,6 +105,14 @@
     if (!feedback) return;
     feedback.textContent = message;
     feedback.hidden = !message;
+  }
+
+  function notifyCartUpdated() {
+    window.dispatchEvent(new CustomEvent("stopmod:cart-updated"));
+  }
+
+  function notifyShippingUpdated() {
+    window.dispatchEvent(new CustomEvent("stopmod:shipping-updated"));
   }
 
   function favoriteHeartMarkup(isFavorite) {
@@ -169,6 +177,8 @@
       complement: String(next?.complement || "").trim()
     };
     localStorage.setItem("stopmod_ship_to", JSON.stringify(payload));
+    localStorage.setItem("stopmod_ship_cep", payload.cep);
+    notifyShippingUpdated();
     return payload;
   }
 
@@ -494,12 +504,23 @@
   }
 
   function relatedCard(item) {
+    const oldPrice = catalog.oldPrice(item.price);
+    const pixPrice = catalog.pixPrice(item.price);
     return `
       <a class="related-product-card" href="${catalog.productHref(item.id)}">
-        <img src="${item.image}" alt="${escapeHtml(item.name)}" />
-        <span>${escapeHtml(item.category)}</span>
-        <strong>${escapeHtml(item.name)}</strong>
-        <em>${catalog.formatBRL(item.price)}</em>
+        <div class="related-product-card__media">
+          <img src="${item.image}" alt="${escapeHtml(item.name)}" loading="lazy" />
+          <small>Ver produto</small>
+        </div>
+        <div class="related-product-card__body">
+          <span>${escapeHtml(item.category)}</span>
+          <strong>${escapeHtml(item.name)}</strong>
+          <div class="related-product-card__rating" aria-label="Produto recomendado">★★★★★ <small>(12)</small></div>
+          <em>${catalog.formatBRL(item.price)}</em>
+          <del>${catalog.formatBRL(oldPrice)}</del>
+          <p>${catalog.formatBRL(pixPrice)} no PIX</p>
+          <small>12x de ${catalog.formatBRL(item.price / 12)}</small>
+        </div>
       </a>
     `;
   }
@@ -1143,7 +1164,7 @@
 
     const summary = catalog.getRatingSummary(product.id);
     const reviews = catalog.getProductReviews(product.id);
-    const related = catalog.getRelatedProducts(product.id, 4);
+    const related = catalog.getRelatedProducts(product.id, 8);
     const seller = typeof catalog.getProductSeller === "function" ? catalog.getProductSeller(product.id) : null;
     const isFavorite = catalog.isFavorite(product.id);
     const reviewAccess = catalog.getProductReviewAccess(product.id);
@@ -1193,6 +1214,11 @@
           </div>
           <p class="product-sales-copy">${escapeHtml(soldLabel)}</p>
           <h1>${escapeHtml(product.name)}</h1>
+          <div class="product-enterprise-strip" aria-label="Beneficios da compra">
+            <span>Compra protegida</span>
+            <span>Envio monitorado</span>
+            <span>Troca facil</span>
+          </div>
 
           <div class="product-quantity-box${soldOut ? " is-sold-out" : ""}">
             <div class="product-variant-stack">
@@ -1345,6 +1371,7 @@
     const qty = currentQty();
     const before = catalog.getCartQuantity(product.id, variant.id);
     catalog.addToCart(product.id, qty, { variantId: variant.id });
+    notifyCartUpdated();
     const after = catalog.getCartQuantity(product.id, variant.id);
     const added = Math.max(0, after - before);
 
