@@ -15,6 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/assets/site-header.css?v=29" />
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -40,43 +41,23 @@
   </style>
 </head>
 <body>
+  <div id="site-header-root"></div>
+  <script src="/assets/site-header.js?v=19"></script>
+
   <div id="root"></div>
 
+  <script src="../assets/catalog.js?v=10"></script>
   <script type="text/babel">
-    const { useMemo, useState } = React;
+    const { useEffect, useMemo, useState } = React;
 
-    const initialItems = [
-      {
-        id: 1,
-        name: "Camiseta Oversized UZUU Essential",
-        variant: "Cor: Preta · Tamanho: G",
-        price: 159.9,
-        oldPrice: 199.9,
-        qty: 1,
-        stock: 8,
-        image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=90",
-      },
-      {
-        id: 2,
-        name: "Calça Cargo Techwear UZUU",
-        variant: "Cor: Preta · Tamanho: 42",
-        price: 259.9,
-        oldPrice: 319.9,
-        qty: 1,
-        stock: 5,
-        image: "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?auto=format&fit=crop&w=700&q=90",
-      },
-      {
-        id: 3,
-        name: "Moletom Hoodie UZUU Future",
-        variant: "Cor: Preto · Tamanho: G",
-        price: 249.9,
-        oldPrice: 299.9,
-        qty: 1,
-        stock: 6,
-        image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=700&q=90",
-      },
-    ];
+    const CART_KEY = "stopmod_cart";
+    const COUPON_KEY = "stopmod_coupon";
+    const PROFILE_KEY = "stopmod_profile";
+    const AUTH_TOKEN_KEY = "stopmod_auth_token";
+    const SHIP_KEY = "stopmod_ship_to";
+    const SHIP_LIST_KEY = "stopmod_ship_list";
+    const LEGACY_SHIP_KEY = "stopmod_ship_cep";
+    const LEGACY_CART_CEP_KEY = "uzuu_cart_cep";
 
     function money(value) {
       return Number(value || 0).toLocaleString("pt-BR", {
@@ -95,20 +76,139 @@
       return `${digits.slice(0, 5)}-${digits.slice(5)}`;
     }
 
+    function loadJson(key, fallback = null) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return fallback;
+        const parsed = JSON.parse(raw);
+        return parsed == null ? fallback : parsed;
+      } catch {
+        return fallback;
+      }
+    }
+
+    function saveJson(key, value) {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
+
+    function getCatalog() {
+      return window.stopmodCatalog || null;
+    }
+
+    function loadShipTo() {
+      const current = loadJson(SHIP_KEY, null);
+      if (current && typeof current === "object") return current;
+      const legacyCep = localStorage.getItem(LEGACY_SHIP_KEY) || localStorage.getItem(LEGACY_CART_CEP_KEY) || "";
+      return legacyCep ? { cep: formatCep(legacyCep) } : null;
+    }
+
     function estimateDeliveryByCep(value) {
       const digits = onlyDigits(value);
       if (digits.length !== 8) return null;
 
-      const state = digits.startsWith("0") ? "São Paulo - SP" : "Brasil";
-      const price = digits.startsWith("05876") ? 0 : 19.9;
-      const days = price === 0 ? "1 a 3 dias úteis" : "3 a 7 dias úteis";
+      const isKnownUzuuAddress = digits === "05876090";
+      const isSaoPaulo = digits.startsWith("0");
+      const price = isKnownUzuuAddress ? 0 : isSaoPaulo ? 12.9 : 19.9;
+      const days = isKnownUzuuAddress ? "1 a 3 dias úteis" : isSaoPaulo ? "2 a 5 dias úteis" : "3 a 7 dias úteis";
 
       return {
         cep: formatCep(digits),
-        city: state,
+        city: isSaoPaulo ? "São Paulo - SP" : "Brasil",
+        state: isSaoPaulo ? "SP" : "",
         days,
         price,
+        knownAddress: isKnownUzuuAddress,
       };
+    }
+
+    function buildAddressFromQuote(quote) {
+      const current = loadShipTo() || {};
+      const cityParts = String(quote.city || "").split(" - ");
+
+      return {
+        id: String(current.id || "principal"),
+        label: String(current.label || "Principal"),
+        cep: quote.cep,
+        street: String(current.street || (quote.knownAddress ? "Rua Miguel Luongo" : "")).trim(),
+        number: String(current.number || (quote.knownAddress ? "320" : "")).trim(),
+        complement: String(current.complement || "").trim(),
+        district: String(current.district || "").trim(),
+        city: String(current.city || cityParts[0] || quote.city || "").trim(),
+        state: String(current.state || quote.state || cityParts[1] || "").trim(),
+      };
+    }
+
+    function notifyCartChanged() {
+      window.dispatchEvent(new CustomEvent("stopmod:cart-updated"));
+    }
+
+    function notifyShippingChanged() {
+      window.dispatchEvent(new CustomEvent("stopmod:shipping-updated"));
+    }
+
+    function productOldPrice(product, catalog) {
+      if (product?.oldPrice) return Number(product.oldPrice);
+      if (product?.precoAntigo) return Number(product.precoAntigo);
+      if (catalog?.oldPrice) return Number(catalog.oldPrice(product?.price || product?.preco || 0));
+      return Number(product?.price || product?.preco || 0);
+    }
+
+    function mapCartItems(rawItems = null) {
+      const catalog = getCatalog();
+      if (!catalog?.loadCartItems || !catalog?.getProductById) return [];
+      const cartItems = Array.isArray(rawItems) ? rawItems : catalog.loadCartItems();
+
+      return cartItems
+        .map((entry) => {
+          const product = catalog.getProductById(entry.productId);
+          if (!product) return null;
+
+          const variant = catalog.resolveVariant?.(product, entry.variantId) || catalog.getDefaultVariant?.(product) || null;
+          const stock = Math.max(1, Number(variant?.stock || 1));
+          const quantity = Math.max(1, Math.min(stock, Number(entry.quantity || 1)));
+          const price = Number(product.price || product.preco || 0);
+          const variantName = String(variant?.colorName || product.color || "Padrão").trim();
+          const size = String(product.size || product.tamanho || "Único").trim();
+
+          return {
+            id: `${product.id}::${variant?.id || ""}`,
+            productId: Number(product.id),
+            variantId: String(variant?.id || ""),
+            name: String(product.name || product.nome || "Produto UZUU"),
+            variant: `Cor: ${variantName} · Tamanho: ${size}`,
+            price,
+            oldPrice: productOldPrice(product, catalog),
+            qty: quantity,
+            stock,
+            image: String(variant?.image || product.image || product.imagem || ""),
+            href: catalog.productHref ? catalog.productHref(product.id, variant?.id || "") : `/produtos/?id=${product.id}`,
+          };
+        })
+        .filter(Boolean);
+    }
+
+    function persistCart(viewItems) {
+      const catalog = getCatalog();
+      const payload = viewItems.map((item) => ({
+        productId: item.productId,
+        variantId: item.variantId,
+        quantity: item.qty,
+      }));
+      const normalized = catalog?.saveCartItems ? catalog.saveCartItems(payload) : payload;
+      notifyCartChanged();
+      return mapCartItems(normalized);
+    }
+
+    function cartPayloadFromItems(items) {
+      return items.map((item) => ({
+        productId: item.productId,
+        variantId: item.variantId,
+        quantity: item.qty,
+        name: item.name,
+        variant: item.variant,
+        price: item.price,
+        image: item.image,
+      }));
     }
 
     function Step({ number, title, subtitle, active, done }) {
@@ -136,55 +236,90 @@
     function QuantityControl({ value, onMinus, onPlus }) {
       return (
         <div className="inline-flex h-11 overflow-hidden rounded-xl border border-white/10 bg-[#111318]">
-          <button onClick={onMinus} className="w-11 text-xl font-black text-neutral-300 transition hover:bg-white hover:text-black">
+          <button type="button" onClick={onMinus} className="w-11 text-xl font-black text-neutral-300 transition hover:bg-white hover:text-black">
             −
           </button>
           <span className="flex w-12 items-center justify-center border-x border-white/10 text-sm font-black text-white">
             {value}
           </span>
-          <button onClick={onPlus} className="w-11 text-xl font-black text-neutral-300 transition hover:bg-white hover:text-black">
+          <button type="button" onClick={onPlus} className="w-11 text-xl font-black text-neutral-300 transition hover:bg-white hover:text-black">
             +
           </button>
         </div>
       );
     }
 
+    function EmptyCart({ onContinue }) {
+      return (
+        <div className="rounded-3xl border border-white/10 bg-[#101216] p-8 text-center shadow-2xl shadow-black/20">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl border border-blue-500/30 bg-blue-600/15 text-3xl">🛍</div>
+          <h2 className="mt-5 text-2xl font-black text-white">Seu carrinho está vazio</h2>
+          <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-neutral-400">
+            Escolha seus produtos favoritos e volte para finalizar sua compra na UZUU.
+          </p>
+          <button type="button" onClick={onContinue} className="mt-6 rounded-2xl bg-blue-600 px-6 py-3 text-sm font-black text-white transition hover:bg-blue-700">
+            Ver produtos
+          </button>
+        </div>
+      );
+    }
+
     function CarrinhoPremiumUZUU() {
-      const savedCep = localStorage.getItem("uzuu_cart_cep") || "";
-      const savedDeliveryQuote = estimateDeliveryByCep(savedCep);
-      const [items, setItems] = useState(initialItems);
-      const [coupon, setCoupon] = useState("");
-      const [cep, setCep] = useState(savedDeliveryQuote ? savedDeliveryQuote.cep : "");
-      const [couponApplied, setCouponApplied] = useState(false);
-      const [couponFeedback, setCouponFeedback] = useState("");
+      const savedCoupon = loadJson(COUPON_KEY, {});
+      const savedShip = loadShipTo();
+      const savedDeliveryQuote = estimateDeliveryByCep(savedShip?.cep || localStorage.getItem(LEGACY_CART_CEP_KEY) || "");
+      const [items, setItems] = useState(() => mapCartItems());
+      const [coupon, setCoupon] = useState(savedCoupon?.code === "UZUU10" ? "UZUU10" : "");
+      const [cep, setCep] = useState(savedDeliveryQuote ? savedDeliveryQuote.cep : formatCep(savedShip?.cep || ""));
+      const [couponApplied, setCouponApplied] = useState(savedCoupon?.code === "UZUU10");
+      const [couponFeedback, setCouponFeedback] = useState(savedCoupon?.code === "UZUU10" ? "Cupom UZUU10 aplicado com sucesso." : "");
       const [cepFeedback, setCepFeedback] = useState("");
       const [deliveryQuote, setDeliveryQuote] = useState(savedDeliveryQuote);
+      const [checkoutFeedback, setCheckoutFeedback] = useState("");
+
+      useEffect(() => {
+        const syncCart = () => setItems(mapCartItems());
+        const syncStorage = (event) => {
+          if (!event.key || event.key === CART_KEY) syncCart();
+        };
+
+        window.addEventListener("storage", syncStorage);
+        window.addEventListener("stopmod:cart-updated", syncCart);
+        return () => {
+          window.removeEventListener("storage", syncStorage);
+          window.removeEventListener("stopmod:cart-updated", syncCart);
+        };
+      }, []);
 
       const subtotal = useMemo(() => items.reduce((sum, item) => sum + item.price * item.qty, 0), [items]);
-      const oldSubtotal = useMemo(() => items.reduce((sum, item) => item.oldPrice ? sum + item.oldPrice * item.qty : sum + item.price * item.qty, 0), [items]);
+      const oldSubtotal = useMemo(() => items.reduce((sum, item) => sum + (item.oldPrice || item.price) * item.qty, 0), [items]);
+      const totalUnits = useMemo(() => items.reduce((sum, item) => sum + item.qty, 0), [items]);
       const productDiscount = Math.max(0, oldSubtotal - subtotal);
       const couponDiscount = couponApplied ? subtotal * 0.1 : 0;
       const shippingGoal = 500;
       const hasFreeShippingByCep = !!deliveryQuote && deliveryQuote.price === 0;
       const hasFreeShipping = subtotal >= shippingGoal || hasFreeShippingByCep;
       const shippingMissing = hasFreeShipping ? 0 : Math.max(0, shippingGoal - subtotal);
-      const shipping = hasFreeShipping ? 0 : deliveryQuote ? deliveryQuote.price : 19.9;
-      const total = subtotal - couponDiscount + shipping;
+      const shipping = items.length === 0 ? 0 : hasFreeShipping ? 0 : deliveryQuote ? deliveryQuote.price : 19.9;
+      const total = Math.max(0, subtotal - couponDiscount + shipping);
       const progress = hasFreeShipping ? 100 : Math.min(100, (subtotal / shippingGoal) * 100);
       const totalDiscount = productDiscount + couponDiscount;
-      const totalSaved = totalDiscount + (shipping === 0 ? 19.9 : 0);
+      const totalSaved = totalDiscount + (items.length && shipping === 0 ? 19.9 : 0);
 
       function updateQty(id, amount) {
-        setItems((current) =>
-          current.map((item) => {
+        setCheckoutFeedback("");
+        setItems((current) => {
+          const next = current.map((item) => {
             if (item.id !== id) return item;
             return { ...item, qty: Math.max(1, Math.min(item.stock, item.qty + amount)) };
-          })
-        );
+          });
+          return persistCart(next);
+        });
       }
 
       function removeItem(id) {
-        setItems((current) => current.filter((item) => item.id !== id));
+        setCheckoutFeedback("");
+        setItems((current) => persistCart(current.filter((item) => item.id !== id)));
       }
 
       function applyCoupon() {
@@ -192,6 +327,7 @@
         if (!code) {
           setCouponApplied(false);
           setCouponFeedback("Digite um cupom para aplicar.");
+          localStorage.removeItem(COUPON_KEY);
           return;
         }
 
@@ -199,17 +335,20 @@
           setCouponApplied(true);
           setCoupon("UZUU10");
           setCouponFeedback("Cupom UZUU10 aplicado com sucesso.");
+          saveJson(COUPON_KEY, { code: "UZUU10", percent: 10 });
           return;
         }
 
         setCouponApplied(false);
         setCouponFeedback("Cupom inválido. Use UZUU10 para testar.");
+        localStorage.removeItem(COUPON_KEY);
       }
 
       function applyAvailableCoupon() {
         setCoupon("UZUU10");
         setCouponApplied(true);
         setCouponFeedback("Cupom UZUU10 aplicado com sucesso.");
+        saveJson(COUPON_KEY, { code: "UZUU10", percent: 10 });
       }
 
       function calculateCep() {
@@ -220,48 +359,58 @@
           return;
         }
 
+        const address = buildAddressFromQuote(quote);
         setCep(quote.cep);
         setDeliveryQuote(quote);
         setCepFeedback(`Entrega para ${quote.city}: ${quote.days}${quote.price === 0 ? " com frete grátis." : ` por ${money(quote.price)}.`}`);
-        localStorage.setItem("uzuu_cart_cep", quote.cep);
+        saveJson(SHIP_KEY, address);
+        saveJson(SHIP_LIST_KEY, [address]);
+        localStorage.setItem(LEGACY_SHIP_KEY, quote.cep);
+        localStorage.setItem(LEGACY_CART_CEP_KEY, quote.cep);
         localStorage.setItem("uzuu_cart_delivery_city", quote.city);
+        notifyShippingChanged();
+      }
+
+      function continueShopping() {
+        window.location.href = "/#produtos";
+      }
+
+      function goToPayment() {
+        setCheckoutFeedback("");
+
+        if (!items.length) {
+          setCheckoutFeedback("Seu carrinho está vazio. Adicione um produto antes de finalizar.");
+          return;
+        }
+
+        const profile = loadJson(PROFILE_KEY, null);
+        const token = String(localStorage.getItem(AUTH_TOKEN_KEY) || "").trim();
+        if (!profile && !token) {
+          window.location.href = `/login/?next=${encodeURIComponent("/carrinho/")}`;
+          return;
+        }
+
+        const address = loadShipTo();
+        if (!address?.cep) {
+          setCheckoutFeedback("Calcule seu CEP ou salve o endereço antes de seguir para pagamento.");
+          return;
+        }
+
+        saveJson("stopmod_checkout_snapshot", {
+          items: cartPayloadFromItems(items),
+          coupon: couponApplied ? { code: "UZUU10", discount: couponDiscount } : null,
+          shipping: { price: shipping, quote: deliveryQuote, address },
+          subtotal,
+          total,
+          totalUnits,
+          createdAt: new Date().toISOString(),
+        });
+
+        window.location.href = "/entrega/?next=/carrinho/";
       }
 
       return (
         <div className="min-h-screen bg-[#050608] text-white">
-          <header className="border-b border-white/10 bg-black/95 px-5 py-4 backdrop-blur-xl">
-            <div className="mx-auto flex max-w-7xl items-center justify-between gap-5">
-              <div className="text-4xl font-black tracking-tight">UZUU</div>
-
-              <nav className="hidden items-center gap-7 text-sm font-bold text-neutral-300 lg:flex">
-                <button className="transition hover:text-white">Novidades</button>
-                <button className="transition hover:text-white">Masculino</button>
-                <button className="transition hover:text-white">Feminino</button>
-                <button className="transition hover:text-white">Coleções</button>
-                <button className="transition hover:text-white">Acessórios</button>
-                <button className="font-black text-blue-500">Sale</button>
-              </nav>
-
-              <div className="hidden flex-1 md:block md:max-w-xl">
-                <input
-                  placeholder="Buscar produtos, categorias e muito mais..."
-                  className="w-full rounded-2xl border border-white/10 bg-[#111318] px-5 py-3 text-sm text-white outline-none placeholder:text-neutral-500 focus:border-blue-500"
-                />
-              </div>
-
-              <div className="flex items-center gap-4 text-sm font-black">
-                <span className="hidden md:inline">Minha conta</span>
-                <span className="hidden md:inline">♡ Favoritos</span>
-                <span className="relative">
-                  🛍 Carrinho
-                  <b className="absolute -right-4 -top-3 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white">
-                    {items.length}
-                  </b>
-                </span>
-              </div>
-            </div>
-          </header>
-
           <div className="border-b border-white/10 bg-[#0b0d11] px-5 py-4">
             <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
               <Step number="1" title="Carrinho" subtitle="Revisão dos itens" active />
@@ -300,41 +449,45 @@
               </div>
 
               <div className="space-y-3">
-                {items.map((item) => (
-                  <article key={item.id} className="rounded-3xl border border-white/10 bg-[#101216] p-4 shadow-2xl shadow-black/20">
-                    <div className="grid gap-4 md:grid-cols-[150px,1fr,150px,130px] md:items-center">
-                      <div className="h-36 overflow-hidden rounded-2xl bg-neutral-900 md:h-28">
-                        <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
-                      </div>
+                {items.length ? (
+                  items.map((item) => (
+                    <article key={item.id} className="rounded-3xl border border-white/10 bg-[#101216] p-4 shadow-2xl shadow-black/20">
+                      <div className="grid gap-4 md:grid-cols-[150px,1fr,150px,130px] md:items-center">
+                        <a href={item.href} className="block h-36 overflow-hidden rounded-2xl bg-neutral-900 md:h-28">
+                          <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                        </a>
 
-                      <div>
-                        <h2 className="text-lg font-black text-white">{item.name}</h2>
-                        <p className="mt-2 text-sm text-neutral-400">{item.variant}</p>
-                        <div className="mt-3 flex flex-wrap gap-3 text-xs font-bold">
-                          <span className="text-emerald-400">✓ Em estoque</span>
-                          <span className="text-neutral-500">Envio em até 24h</span>
-                          <span className="text-blue-400">Restam {item.stock}</span>
+                        <div>
+                          <a href={item.href} className="text-lg font-black text-white transition hover:text-blue-400">{item.name}</a>
+                          <p className="mt-2 text-sm text-neutral-400">{item.variant}</p>
+                          <div className="mt-3 flex flex-wrap gap-3 text-xs font-bold">
+                            <span className="text-emerald-400">✓ Em estoque</span>
+                            <span className="text-neutral-500">Envio em até 24h</span>
+                            <span className="text-blue-400">Restam {item.stock}</span>
+                          </div>
+                        </div>
+
+                        <div className="md:text-center">
+                          <QuantityControl
+                            value={item.qty}
+                            onMinus={() => updateQty(item.id, -1)}
+                            onPlus={() => updateQty(item.id, 1)}
+                          />
+                        </div>
+
+                        <div className="md:text-right">
+                          <p className="text-xl font-black text-white">{money(item.price * item.qty)}</p>
+                          <p className="text-xs text-neutral-500 line-through">{money(item.oldPrice * item.qty)}</p>
+                          <button type="button" onClick={() => removeItem(item.id)} className="mt-4 text-sm font-bold text-neutral-500 transition hover:text-blue-400">
+                            🗑 Remover
+                          </button>
                         </div>
                       </div>
-
-                      <div className="md:text-center">
-                        <QuantityControl
-                          value={item.qty}
-                          onMinus={() => updateQty(item.id, -1)}
-                          onPlus={() => updateQty(item.id, 1)}
-                        />
-                      </div>
-
-                      <div className="md:text-right">
-                        <p className="text-xl font-black text-white">{money(item.price * item.qty)}</p>
-                        <p className="text-xs text-neutral-500 line-through">{money(item.oldPrice * item.qty)}</p>
-                        <button onClick={() => removeItem(item.id)} className="mt-4 text-sm font-bold text-neutral-500 transition hover:text-red-400">
-                          🗑 Remover
-                        </button>
-                      </div>
-                    </div>
-                  </article>
-                ))}
+                    </article>
+                  ))
+                ) : (
+                  <EmptyCart onContinue={continueShopping} />
+                )}
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
@@ -350,6 +503,7 @@
                         setCoupon(event.target.value);
                         setCouponApplied(false);
                         setCouponFeedback("");
+                        localStorage.removeItem(COUPON_KEY);
                       }}
                       onKeyDown={(event) => {
                         if (event.key === "Enter") applyCoupon();
@@ -415,16 +569,16 @@
                       </div>
                     </div>
                   </div>
-                  <div className="mt-4 flex justify-between text-sm text-neutral-400">
+                  <div className="mt-4 flex justify-between gap-4 text-sm text-neutral-400">
                     <span>{deliveryQuote ? `${deliveryQuote.city} · ${deliveryQuote.days}` : "Envio para todo o Brasil"}</span>
-                    <span className="font-black text-blue-400">{hasFreeShipping || shipping === 0 ? "Grátis" : money(shipping)}</span>
+                    <span className="font-black text-blue-400">{items.length === 0 ? "--" : hasFreeShipping || shipping === 0 ? "Grátis" : money(shipping)}</span>
                   </div>
                 </div>
 
                 <div className="mt-5 space-y-3 border-b border-white/10 pb-5 text-sm text-neutral-300">
-                  <div className="flex justify-between"><span>Subtotal ({items.length} itens)</span><span>{money(subtotal)}</span></div>
+                  <div className="flex justify-between"><span>Subtotal ({totalUnits} itens)</span><span>{money(subtotal)}</span></div>
                   <div className="flex justify-between"><span>Desconto</span><span className="text-emerald-400">- {money(totalDiscount)}</span></div>
-                  <div className="flex justify-between"><span>Frete</span><span className="font-black text-emerald-400">{hasFreeShipping ? "Grátis" : money(shipping)}</span></div>
+                  <div className="flex justify-between"><span>Frete</span><span className="font-black text-emerald-400">{items.length === 0 ? "--" : hasFreeShipping ? "Grátis" : money(shipping)}</span></div>
                 </div>
 
                 <div className="mt-5 flex items-end justify-between">
@@ -436,13 +590,15 @@
                   Você está economizando {money(totalSaved)}
                 </p>
 
-                <button className="mt-5 w-full rounded-2xl bg-blue-600 py-4 text-lg font-black text-white shadow-2xl shadow-blue-600/30 transition hover:scale-[1.01] hover:bg-blue-700">
+                <button type="button" onClick={goToPayment} className="mt-5 w-full rounded-2xl bg-blue-600 py-4 text-lg font-black text-white shadow-2xl shadow-blue-600/30 transition hover:scale-[1.01] hover:bg-blue-700">
                   Ir para pagamento ›
                 </button>
 
-                <button className="mt-3 w-full rounded-2xl border border-blue-500/60 py-4 text-base font-black text-blue-400 transition hover:bg-blue-600 hover:text-white">
+                <button type="button" onClick={continueShopping} className="mt-3 w-full rounded-2xl border border-blue-500/60 py-4 text-base font-black text-blue-400 transition hover:bg-blue-600 hover:text-white">
                   Continuar comprando
                 </button>
+
+                {checkoutFeedback && <p className="mt-4 rounded-2xl border border-blue-500/30 bg-blue-600/10 px-4 py-3 text-sm font-bold text-blue-200">{checkoutFeedback}</p>}
               </div>
 
               <div className="grid grid-cols-3 gap-3 rounded-3xl border border-white/10 bg-[#101216] p-4 text-center text-xs text-neutral-400">
