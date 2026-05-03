@@ -321,9 +321,9 @@
 
   function renderAllProducts() {
     const list = filteredProducts();
-    const bestSellers = state.products.filter((product) => matchesQuery(product)).slice(0, 18);
-    const recommended = list.slice(0, 18);
-    const explore = list.slice(18, state.visibleCount);
+    const bestSellers = state.products.filter((product) => matchesQuery(product)).slice(0, 12);
+    const recommended = list.slice(0, 12);
+    const explore = list.slice(12, state.visibleCount);
 
     renderProductGrid(document.getElementById("best-sellers-grid"), state.selectedCategory === "Todos" ? bestSellers : recommended);
     renderProductGrid(document.getElementById("recommended-grid"), recommended);

@@ -7928,3 +7928,430 @@ body:not(.home-infinite-page) .cep-modal__close {
   }
 }
 
+/* Organizacao premium da home */
+body.home-infinite-page {
+  --uzuu-home-blue: #2563eb;
+  --uzuu-home-blue-soft: rgba(37, 99, 235, 0.18);
+  --uzuu-home-panel: #111318;
+  --uzuu-home-panel-2: #0c0e12;
+  --uzuu-home-border: rgba(255, 255, 255, 0.1);
+}
+
+body.home-infinite-page .home-infinite-container {
+  width: min(1380px, calc(100% - 40px));
+}
+
+body.home-infinite-page .home-infinite-hero {
+  background: #020202;
+  border-bottom-color: var(--uzuu-home-border);
+}
+
+body.home-infinite-page .home-infinite-hero > img {
+  height: clamp(410px, 35vw, 520px);
+  object-position: center 38%;
+  opacity: 0.6;
+}
+
+body.home-infinite-page .home-infinite-hero__overlay {
+  background:
+    radial-gradient(circle at 78% 30%, rgba(37, 99, 235, 0.12), transparent 28%),
+    linear-gradient(90deg, #000000 0%, rgba(0, 0, 0, 0.88) 42%, rgba(0, 0, 0, 0.18) 100%);
+}
+
+body.home-infinite-page .home-infinite-hero__content > div {
+  max-width: 46rem;
+}
+
+body.home-infinite-page .home-infinite-hero__content p {
+  margin-bottom: 0.8rem;
+}
+
+body.home-infinite-page .home-infinite-hero__content h1 {
+  font-size: clamp(3.05rem, 5.8vw, 5.35rem);
+}
+
+body.home-infinite-page .home-infinite-hero__content span {
+  max-width: 31rem;
+  margin-top: 1rem;
+  font-size: clamp(1rem, 1.25vw, 1.12rem);
+}
+
+body.home-infinite-page .home-infinite-hero__actions {
+  margin-top: 1.45rem;
+}
+
+body.home-infinite-page .home-infinite-hero__actions button {
+  min-height: 48px;
+  padding: 0.82rem 1.55rem;
+}
+
+body.home-infinite-page .home-infinite-hero__metrics {
+  max-width: 34rem;
+  gap: 0.6rem;
+  margin-top: 1.35rem;
+}
+
+body.home-infinite-page .home-infinite-hero__metrics article {
+  min-height: 78px;
+  padding: 0.82rem 0.9rem;
+  border-radius: 0.95rem;
+  background: rgba(6, 8, 14, 0.56);
+}
+
+body.home-infinite-page .home-infinite-hero__metrics strong {
+  font-size: 1.05rem;
+}
+
+body.home-infinite-page .home-infinite-hero__metrics small {
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+body.home-infinite-page .home-infinite-benefits {
+  gap: 0;
+  margin-top: 0.9rem;
+  margin-bottom: 0.7rem;
+  padding: 0.72rem 0.75rem;
+  border-radius: 1.15rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055) 0%, rgba(255, 255, 255, 0.025) 100%),
+    #0d0f12;
+}
+
+body.home-infinite-page .home-infinite-benefits article {
+  min-height: 58px;
+  gap: 0.7rem;
+  padding: 0.25rem 1rem;
+}
+
+body.home-infinite-page .home-infinite-benefits span {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--uzuu-home-blue-soft);
+  color: #93c5fd;
+  font-size: 0;
+}
+
+body.home-infinite-page .home-infinite-benefits span::before {
+  content: "+";
+  font-size: 1.05rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+body.home-infinite-page .home-infinite-benefits strong {
+  font-size: 0.82rem;
+  line-height: 1.2;
+}
+
+body.home-infinite-page .home-infinite-benefits small {
+  display: block;
+  margin-top: 0.12rem;
+  font-size: 0.78rem;
+  line-height: 1.25;
+}
+
+body.home-infinite-page .home-infinite-proof-strip {
+  gap: 0.75rem;
+  margin-top: 0.7rem;
+  margin-bottom: 0.35rem;
+}
+
+body.home-infinite-page .home-infinite-proof-strip__item {
+  min-height: 96px;
+  padding: 0.95rem 1rem;
+  border-radius: 1.05rem;
+  background:
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0.02) 100%),
+    var(--uzuu-home-panel-2);
+}
+
+body.home-infinite-page .home-infinite-proof-strip__item strong {
+  font-size: 0.94rem;
+}
+
+body.home-infinite-page .home-infinite-proof-strip__item span {
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+body.home-infinite-page .home-infinite-categories {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+body.home-infinite-page .home-infinite-categories__grid {
+  gap: 0.75rem;
+}
+
+body.home-infinite-page .home-infinite-categories__grid span {
+  width: 6.2rem;
+  height: 6.2rem;
+  background: #0f1115;
+}
+
+body.home-infinite-page .home-infinite-categories__grid strong {
+  margin-top: 0.55rem;
+  font-size: 0.8rem;
+}
+
+body.home-infinite-page .home-infinite-section,
+body.home-infinite-page .home-infinite-ad-section {
+  padding-top: 1.05rem;
+  padding-bottom: 1.05rem;
+}
+
+body.home-infinite-page .home-infinite-section__head {
+  margin-bottom: 0.85rem;
+}
+
+body.home-infinite-page .home-infinite-section__head h2 {
+  font-size: clamp(1.45rem, 2vw, 1.9rem);
+}
+
+body.home-infinite-page .home-infinite-tabs {
+  margin-bottom: 0.95rem;
+}
+
+body.home-infinite-page .home-infinite-product-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.82rem;
+}
+
+body.home-infinite-page .home-infinite-product-card {
+  border-radius: 1.05rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0.015) 100%),
+    #121418;
+}
+
+body.home-infinite-page .home-infinite-product-card__media {
+  aspect-ratio: 4 / 4.18;
+  background: #0b0d11;
+}
+
+body.home-infinite-page .home-infinite-product-card__favorite {
+  right: 0.58rem;
+  top: 0.58rem;
+  padding: 0.32rem 0.54rem;
+}
+
+body.home-infinite-page .home-infinite-product-card__media span {
+  left: 0.58rem;
+  top: 0.58rem;
+  font-size: 0.62rem;
+  padding: 0.22rem 0.52rem;
+}
+
+body.home-infinite-page .home-infinite-product-card__body {
+  padding: 0.72rem 0.76rem 0.78rem;
+}
+
+body.home-infinite-page .home-infinite-product-card__body p {
+  margin-bottom: 0.22rem;
+  font-size: 0.62rem;
+}
+
+body.home-infinite-page .home-infinite-product-card__body h3 {
+  min-height: 2.18rem;
+  font-size: 0.82rem;
+  line-height: 1.25;
+}
+
+body.home-infinite-page .home-infinite-product-card__rating {
+  margin-top: 0.42rem;
+}
+
+body.home-infinite-page .home-infinite-product-card__body strong {
+  margin-top: 0.42rem;
+  font-size: 1.18rem;
+  letter-spacing: -0.04em;
+}
+
+body.home-infinite-page .home-infinite-product-card__body del,
+body.home-infinite-page .home-infinite-product-card__body em,
+body.home-infinite-page .home-infinite-product-card__body > small {
+  font-size: 0.69rem;
+}
+
+body.home-infinite-page .home-infinite-product-card__cart {
+  margin-top: 0.58rem;
+  padding: 0.54rem 0.65rem;
+}
+
+body.home-infinite-page .home-infinite-ad-grid {
+  gap: 0.85rem;
+}
+
+body.home-infinite-page .home-infinite-ad-card {
+  height: clamp(9.8rem, 14vw, 11.2rem);
+  border-radius: 1.15rem;
+}
+
+body.home-infinite-page .home-infinite-newsletter {
+  margin-top: 0.65rem;
+  margin-bottom: 1.4rem;
+  padding: 1.2rem;
+}
+
+@media (min-width: 1480px) {
+  body.home-infinite-page .home-infinite-container {
+    width: min(1450px, calc(100% - 48px));
+  }
+}
+
+@media (max-width: 1180px) {
+  body.home-infinite-page .home-infinite-product-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  body.home-infinite-page .home-infinite-categories__grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  body.home-infinite-page .home-infinite-hero > img {
+    height: 430px;
+  }
+}
+
+@media (max-width: 860px) {
+  body.home-infinite-page .home-infinite-container {
+    width: min(100% - 24px, 1380px);
+  }
+
+  body.home-infinite-page .home-infinite-hero > img {
+    height: 360px;
+  }
+
+  body.home-infinite-page .home-infinite-hero__content h1 {
+    font-size: clamp(2.55rem, 10.8vw, 4.15rem);
+  }
+
+  body.home-infinite-page .home-infinite-hero__metrics {
+    display: none;
+  }
+
+  body.home-infinite-page .home-infinite-benefits,
+  body.home-infinite-page .home-infinite-proof-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body.home-infinite-page .home-infinite-benefits article + article {
+    border-left: 0;
+  }
+
+  body.home-infinite-page .home-infinite-categories__grid {
+    display: flex;
+    gap: 0.8rem;
+    margin-right: -12px;
+    overflow-x: auto;
+    padding: 0.2rem 12px 0.35rem 0;
+    scrollbar-width: none;
+  }
+
+  body.home-infinite-page .home-infinite-categories__grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  body.home-infinite-page .home-infinite-categories__grid button {
+    min-width: 5.6rem;
+  }
+
+  body.home-infinite-page .home-infinite-categories__grid span {
+    width: 5.25rem;
+    height: 5.25rem;
+  }
+}
+
+@media (max-width: 640px) {
+  body.home-infinite-page .home-infinite-container {
+    width: min(100% - 18px, 1380px);
+  }
+
+  body.home-infinite-page .home-infinite-hero > img {
+    height: 330px;
+    object-position: 58% center;
+  }
+
+  body.home-infinite-page .home-infinite-hero__content p {
+    font-size: 0.64rem;
+  }
+
+  body.home-infinite-page .home-infinite-hero__content span {
+    max-width: 19rem;
+    font-size: 0.9rem;
+  }
+
+  body.home-infinite-page .home-infinite-benefits {
+    margin-top: 0.7rem;
+    padding: 0.62rem;
+  }
+
+  body.home-infinite-page .home-infinite-benefits article {
+    min-height: 52px;
+    padding: 0.25rem 0.4rem;
+  }
+
+  body.home-infinite-page .home-infinite-benefits span {
+    width: 28px;
+    height: 28px;
+    flex-basis: 28px;
+  }
+
+  body.home-infinite-page .home-infinite-benefits strong {
+    font-size: 0.72rem;
+  }
+
+  body.home-infinite-page .home-infinite-benefits small {
+    font-size: 0.68rem;
+  }
+
+  body.home-infinite-page .home-infinite-proof-strip {
+    grid-template-columns: 1fr;
+  }
+
+  body.home-infinite-page .home-infinite-proof-strip__item {
+    min-height: auto;
+  }
+
+  body.home-infinite-page .home-infinite-product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.58rem;
+  }
+
+  body.home-infinite-page .home-infinite-product-card {
+    border-radius: 0.88rem;
+  }
+
+  body.home-infinite-page .home-infinite-product-card__media {
+    aspect-ratio: 4 / 4.45;
+  }
+
+  body.home-infinite-page .home-infinite-product-card__body {
+    padding: 0.62rem;
+  }
+
+  body.home-infinite-page .home-infinite-product-card__body h3 {
+    min-height: 2rem;
+    font-size: 0.76rem;
+  }
+
+  body.home-infinite-page .home-infinite-product-card__body strong {
+    font-size: 1.02rem;
+  }
+
+  body.home-infinite-page .home-infinite-product-card__cart {
+    padding: 0.48rem 0.55rem;
+    font-size: 0.68rem;
+  }
+
+  body.home-infinite-page .home-infinite-ad-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

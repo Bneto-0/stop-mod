@@ -794,17 +794,110 @@ body.with-shared-header .cart-page {
 
 @media (max-width: 620px) {
   .shared-header__utility-row {
-    grid-template-columns: 1fr;
-    gap: 6px;
+    display: flex;
+    gap: 18px;
+    min-height: 30px;
+    overflow-x: auto;
+    padding: 6px 0;
+    scrollbar-width: none;
+    white-space: nowrap;
+  }
+
+  .shared-header__utility-row::-webkit-scrollbar {
+    display: none;
   }
 
   .shared-header__utility-item {
-    justify-content: flex-start;
-    min-height: 24px;
+    flex: 0 0 auto;
+    justify-content: center;
+    min-height: 20px;
+    font-size: 0.68rem;
+  }
+
+  .shared-header__utility-item svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .shared-header--home .shared-header__top-row {
+    gap: 10px;
+    padding: 10px 0;
+  }
+
+  .shared-header--home .shared-header__identity {
+    gap: 10px;
+  }
+
+  .shared-header--home .shared-brand {
+    font-size: 2rem;
+  }
+
+  .shared-header--home .shared-location {
+    gap: 7px;
+  }
+
+  .shared-header--home .shared-location svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .shared-header--home .shared-location small {
+    font-size: 0.65rem;
+  }
+
+  .shared-header--home .shared-location strong {
+    max-width: 170px;
+    font-size: 0.76rem;
+  }
+
+  .shared-header--home .shared-search input {
+    height: 44px;
+    padding-left: 42px;
+    padding-right: 56px;
   }
 
   .shared-header--home .shared-search__button {
-    width: 40px;
-    height: 34px;
+    width: 36px;
+    height: 32px;
+    border-radius: 10px;
+  }
+
+  .shared-header--home .shared-header__actions {
+    justify-content: flex-start;
+    gap: 10px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .shared-header--home .shared-header__actions::-webkit-scrollbar {
+    display: none;
+  }
+
+  .shared-header--home .shared-action-link,
+  .shared-header--home .shared-cart {
+    min-height: 30px;
+    padding: 0 4px;
+  }
+
+  .shared-header--home .shared-action-link svg,
+  .shared-header--home .shared-cart svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .shared-header--home .shared-action-link span,
+  .shared-header--home .shared-cart span,
+  .shared-header--home .shared-promo-link span {
+    font-size: 0.68rem;
+  }
+
+  .shared-header--home .shared-header__menu-row {
+    min-height: 34px;
+  }
+
+  .shared-header--home .shared-promo-link {
+    min-height: 34px;
   }
 }
