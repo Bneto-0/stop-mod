@@ -7,7 +7,7 @@
       <div class="container home-footer__top">
         <section class="home-footer__brand">
           <a class="home-footer__logo" href="/#top" aria-label="UZUU">UZUU</a>
-          <p>Estilo sem pagar caro.<br />Peca premium com preco justo para todos os estilos.</p>
+          <p>Estilo sem pagar caro.<br />Peça premium com preço justo para todos os estilos.</p>
           <div class="home-footer__social" aria-label="Redes sociais">
             <a href="#" aria-label="Instagram">
               <svg viewBox="0 0 24 24"><path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm5 5.2A4.8 4.8 0 1 0 16.8 12 4.8 4.8 0 0 0 12 7.2zm6.2-.9a1.1 1.1 0 1 0 1.1 1.1 1.1 1.1 0 0 0-1.1-1.1z"></path></svg>
@@ -29,8 +29,8 @@
             <h3>INSTITUCIONAL</h3>
             <a href="/marketplace/">Sobre a UZUU</a>
             <a href="/seller/">Trabalhe conosco</a>
-            <a href="/privacidade/">Politica de privacidade</a>
-            <a href="/termos/">Trocas e devolucoes</a>
+            <a href="/privacidade/">Política de privacidade</a>
+            <a href="/termos/">Trocas e devoluções</a>
             <a href="/termos/">Termos de uso</a>
           </section>
           <section>
@@ -45,10 +45,10 @@
             <h3>CATEGORIAS</h3>
             <a href="/?q=masculino#produtos">Masculino</a>
             <a href="/?q=feminino#produtos">Feminino</a>
-            <a href="/?cat=Acessorios#produtos">Acessorios</a>
-            <a href="/?q=calcados#produtos">Calcados</a>
+            <a href="/?cat=Acessorios#produtos">Acessórios</a>
+            <a href="/?q=calcados#produtos">Calçados</a>
             <a href="/?q=streetwear#produtos">Streetwear</a>
-            <a href="/cupons/">Promocoes</a>
+            <a href="/cupons/">Promoções</a>
           </section>
           <section class="home-footer__payments">
             <h3>FORMAS DE PAGAMENTO</h3>
@@ -60,7 +60,7 @@
               <span><img src="/assets/icons/pix-logo.svg" alt="Pix" /></span>
             </div>
             <div class="home-security-card">
-              <h3>SEGURANCA</h3>
+              <h3>SEGURANÇA</h3>
               <div class="home-security-card__item">
                 <span aria-hidden="true">
                   <svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.6-2.7 8.8-7 10-4.3-1.2-7-5.4-7-10V6zm-3 9 2 2 4-4"></path></svg>

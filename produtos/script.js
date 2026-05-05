@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
   const catalog = window.stopmodCatalog;
   const root = document.getElementById("product-detail-root");
   const topFeatures = document.getElementById("product-detail-top-features");
@@ -262,7 +262,7 @@
     }
 
     if (shipping === 0) {
-      return `<span class="product-delivery-card__freight is-free">Frete Gratis</span>`;
+      return `<span class="product-delivery-card__freight is-free">Frete Grátis</span>`;
     }
 
     return `<span class="product-delivery-card__freight-meta is-quoted">Frete: ${escapeHtml(formatFreightNumber(shipping))}</span>`;
@@ -356,7 +356,7 @@
       cepLookupSuccess = false;
       cepLookupLoading = false;
       cepLookupResult = null;
-      cepLookupMessage = "CEP invalido. Use 8 digitos.";
+      cepLookupMessage = "CEP inválido. Use 8 dígitos.";
       renderProduct();
       return null;
     }
@@ -377,7 +377,7 @@
           break;
         }
       } catch {
-        // tenta o proximo provedor
+        // Tenta o próximo provedor antes de exibir erro.
       }
     }
 
@@ -386,7 +386,7 @@
       cepLookupError = true;
       cepLookupSuccess = false;
       cepLookupResult = null;
-      cepLookupMessage = "CEP nao encontrado. Tente novamente.";
+      cepLookupMessage = "CEP não encontrado. Tente novamente.";
       renderProduct();
       return null;
     }
@@ -395,7 +395,7 @@
     cepLookupSuccess = false;
     cepLookupResult = found;
     cepDraft = String(found.cep || normalizeCep(cepDigits));
-    cepLookupMessage = "Endereco reconhecido. Informe o numero da residencia.";
+    cepLookupMessage = "Endereço reconhecido. Informe o número da residência.";
     renderProduct();
     return found;
   }
@@ -417,7 +417,7 @@
     cepLookupLoading = false;
     cepLookupError = false;
     cepLookupSuccess = false;
-    cepLookupMessage = cepLookupResult ? "Endereco reconhecido. Informe o numero da residencia." : "";
+    cepLookupMessage = cepLookupResult ? "Endereço reconhecido. Informe o número da residência." : "";
   }
 
   function closeCepModal() {
@@ -446,7 +446,7 @@
           ${freightMarkup}
         </div>
         <p class="product-delivery-card__estimate" data-delivery-estimate ${showEstimate ? "" : "hidden"}>${escapeHtml(estimateText)}</p>
-        <p class="product-delivery-card__note">Ao finalizar o pagamento seu pedido sera enviado em ate 24 horas.</p>
+        <p class="product-delivery-card__note">Ao finalizar o pagamento seu pedido será enviado em até 24 horas.</p>
       </article>
     `;
   }
@@ -503,6 +503,18 @@
     `;
   }
 
+  function displayCategoryLabel(value) {
+    const normalized = String(value || "")
+      .trim()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+    if (normalized === "calcas") return "Calças";
+    if (normalized === "calcados") return "Calçados";
+    if (normalized === "acessorios") return "Acessórios";
+    return String(value || "").trim();
+  }
+
   function relatedCard(item) {
     const oldPrice = catalog.oldPrice(item.price);
     const pixPrice = catalog.pixPrice(item.price);
@@ -513,7 +525,7 @@
           <small>Ver produto</small>
         </div>
         <div class="related-product-card__body">
-          <span>${escapeHtml(item.category)}</span>
+          <span>${escapeHtml(displayCategoryLabel(item.category))}</span>
           <strong>${escapeHtml(item.name)}</strong>
           <div class="related-product-card__rating" aria-label="Produto recomendado">★★★★★ <small>(12)</small></div>
           <em>${catalog.formatBRL(item.price)}</em>
@@ -528,7 +540,7 @@
   function singularCategoryLabel(value) {
     const map = Object.freeze({
       Camisetas: "Camiseta",
-      Calcas: "Calca",
+      Calcas: "Calça",
       Jaquetas: "Jaqueta",
       Moletons: "Moletom",
       Vestidos: "Vestido",
@@ -537,8 +549,8 @@
       Blazers: "Blazer",
       Saias: "Saia",
       Shorts: "Short",
-      Calcados: "Calcado",
-      Acessorios: "Acessorio"
+      Calcados: "Calçado",
+      Acessorios: "Acessório"
     });
     return map[String(value || "").trim()] || String(value || "").trim();
   }
@@ -556,7 +568,7 @@
       ["Lavagem vintage", "lavagem vintage"],
       ["Jeans encorpado", "jeans encorpado"],
       ["Botoes metalicos", "botoes metalicos"],
-      ["Facil de combinar com camisetas e vestidos", "facil de combinar"],
+      ["Facil de combinar com camisetas e vestidos", "fácil de combinar"],
       ["Bolsos cargo laterais", "bolsos cargo"],
       ["Tecido resistente", "tecido resistente"],
       ["Modelagem reta", "modelagem reta"],
@@ -568,7 +580,7 @@
       ["Caimento leve", "caimento leve"],
       ["Modelagem minimalista", "minimalista"],
       ["Uso casual", "uso casual"],
-      ["Combina com tenis e sandalia", "combina facil"],
+      ["Combina com tenis e sandalia", "combina fácil"],
       ["Tecido com linho", "linho leve"],
       ["Respiracao alta", "alta respiracao"],
       ["Caimento leve", "caimento leve"],
@@ -611,8 +623,8 @@
     document.body.classList.remove("has-cep-modal");
     root.innerHTML = `
       <div class="product-empty-state">
-        <h1>Produto nao encontrado</h1>
-        <p>Esse item nao esta mais na vitrine ou o link ficou incompleto.</p>
+        <h1>Produto não encontrado</h1>
+        <p>Esse item não está mais na vitrine ou o link ficou incompleto.</p>
         <div class="product-detail-actions">
           <a class="btn primary" href="/#produtos">Voltar para vitrine</a>
         </div>
@@ -655,7 +667,7 @@
     if (!raw) return [];
 
     const normalized = normalizeSizeToken(raw).replace(/\s+/g, " ");
-    if (normalized === "UNICO") return ["Unico"];
+    if (normalized === "UNICO") return ["Único"];
 
     const numericRange = normalized.match(/^(\d+)\s*(?:AO|A|ATE|-)\s*(\d+)$/);
     if (numericRange) {
@@ -852,17 +864,17 @@
     if (!pendingReviewPhoto) {
       return `
         <div class="review-photo-preview" data-review-photo-preview>
-          <p>Adicione uma foto real do produto para aparecer junto do seu comentario.</p>
+          <p>Adicione uma foto real do produto para aparecer junto do seu comentário.</p>
         </div>
       `;
     }
 
     return `
       <div class="review-photo-preview has-photo" data-review-photo-preview>
-        <img src="${escapeHtml(pendingReviewPhoto)}" alt="Pre-visualizacao da foto da avaliacao" />
+        <img src="${escapeHtml(pendingReviewPhoto)}" alt="Pré-visualização da foto da avaliação" />
         <div class="review-photo-preview__meta">
           <strong>${escapeHtml(pendingReviewPhotoName || "Foto pronta")}</strong>
-          <span>Essa imagem vai junto com sua avaliacao.</span>
+          <span>Essa imagem vai junto com sua avaliação.</span>
         </div>
         <button class="btn secondary review-photo-preview__remove" type="button" data-review-photo-clear>Remover foto</button>
       </div>
@@ -875,16 +887,16 @@
 
     if (!pendingReviewPhoto) {
       preview.className = "review-photo-preview";
-      preview.innerHTML = "<p>Adicione uma foto real do produto para aparecer junto do seu comentario.</p>";
+      preview.innerHTML = "<p>Adicione uma foto real do produto para aparecer junto do seu comentário.</p>";
       return;
     }
 
     preview.className = "review-photo-preview has-photo";
     preview.innerHTML = `
-      <img src="${escapeHtml(pendingReviewPhoto)}" alt="Pre-visualizacao da foto da avaliacao" />
+      <img src="${escapeHtml(pendingReviewPhoto)}" alt="Pré-visualização da foto da avaliação" />
       <div class="review-photo-preview__meta">
         <strong>${escapeHtml(pendingReviewPhotoName || "Foto pronta")}</strong>
-        <span>Essa imagem vai junto com sua avaliacao.</span>
+        <span>Essa imagem vai junto com sua avaliação.</span>
       </div>
       <button class="btn secondary review-photo-preview__remove" type="button" data-review-photo-clear>Remover foto</button>
     `;
@@ -902,7 +914,7 @@
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(String(reader.result || ""));
-      reader.onerror = () => reject(new Error("Nao foi possivel ler a foto."));
+      reader.onerror = () => reject(new Error("Não foi possível ler a foto."));
       reader.readAsDataURL(file);
     });
   }
@@ -911,7 +923,7 @@
     return new Promise((resolve, reject) => {
       const image = new Image();
       image.onload = () => resolve(image);
-      image.onerror = () => reject(new Error("Nao foi possivel processar a foto."));
+      image.onerror = () => reject(new Error("Não foi possível processar a foto."));
       image.src = dataUrl;
     });
   }
@@ -947,13 +959,13 @@
 
     if (!String(file.type || "").startsWith("image/")) {
       clearPendingReviewPhoto();
-      showFeedback("Envie uma imagem valida para a avaliacao.");
+      showFeedback("Envie uma imagem válida para a avaliação.");
       return;
     }
 
     if (Number(file.size || 0) > 8 * 1024 * 1024) {
       clearPendingReviewPhoto();
-      showFeedback("A foto esta muito pesada. Use uma imagem com ate 8 MB.");
+      showFeedback("A foto está muito pesada. Use uma imagem com até 8 MB.");
       return;
     }
 
@@ -962,14 +974,14 @@
       pendingReviewPhotoName = String(file.name || "foto-produto.jpg");
       if (!pendingReviewPhoto || pendingReviewPhoto.length > 450000) {
         clearPendingReviewPhoto();
-        showFeedback("Nao deu para salvar essa foto. Tente uma imagem menor.");
+        showFeedback("Não deu para salvar essa foto. Tente uma imagem menor.");
         return;
       }
       updateReviewPhotoPreview();
-      showFeedback("Foto pronta para ser enviada com a avaliacao.");
+      showFeedback("Foto pronta para ser enviada com a avaliação.");
     } catch {
       clearPendingReviewPhoto();
-      showFeedback("Nao foi possivel carregar a foto da avaliacao.");
+      showFeedback("Não foi possível carregar a foto da avaliação.");
     }
   }
 
@@ -983,36 +995,36 @@
     switch (access?.reason) {
       case "eligible":
         return {
-          title: "Avaliacao liberada para voce",
-          text: `${orderId} ja foi confirmado como recebido. Agora voce pode enviar estrelas, comentario e foto real do produto.`,
+          title: "Avaliação liberada para você",
+          text: `${orderId} já foi confirmado como recebido. Agora você pode enviar estrelas, comentário e foto real do produto.`,
           linkHref: "../perfil/pedidos/",
           linkLabel: "Ver rastreio do pedido"
         };
       case "login_required":
         return {
           title: "Entre na conta que fez a compra",
-          text: "Esse formulario so aparece para o cliente que recebeu o produto e confirmou o recebimento no pedido.",
+      text: "Esse formulário só aparece para o cliente que recebeu o produto e confirmou o recebimento no pedido.",
           linkHref: "../login/",
           linkLabel: "Entrar agora"
         };
       case "already_reviewed":
         return {
-          title: "Sua avaliacao ja foi publicada",
-          text: "Depois que o comentario do pedido e enviado, essa area some automaticamente para esse cliente.",
+          title: "Sua avaliação já foi publicada",
+          text: "Depois que o comentário do pedido é enviado, essa área some automaticamente para esse cliente.",
           linkHref: "../perfil/pedidos/",
           linkLabel: "Ver meus pedidos"
         };
       case "awaiting_receipt":
         return {
-          title: "Avaliacao bloqueada ate confirmar recebimento",
-          text: "Assim que voce receber o produto, confirme isso em Meus pedidos. So depois dessa confirmacao o formulario aparece para voce.",
+          title: "Avaliação bloqueada até confirmar recebimento",
+          text: "Assim que você receber o produto, confirme isso em Meus pedidos. Só depois dessa confirmação o formulário aparece para você.",
           linkHref: "../perfil/pedidos/",
           linkLabel: "Abrir meus pedidos"
         };
       default:
         return {
-          title: "Avaliacao disponivel so para clientes",
-          text: "Esse formulario so libera para quem comprou este produto e confirmou o recebimento no proprio pedido.",
+          title: "Avaliação disponível só para clientes",
+          text: "Esse formulário só libera para quem comprou este produto e confirmou o recebimento no próprio pedido.",
           linkHref: "../perfil/pedidos/",
           linkLabel: "Ir para meus pedidos"
         };
@@ -1044,8 +1056,8 @@
           </select>
         </label>
         <label>
-          Sua avaliacao
-          <textarea name="text" rows="5" placeholder="Conte como foi sua experiencia com este produto." required></textarea>
+          Sua avaliação
+          <textarea name="text" rows="5" placeholder="Conte como foi sua experiência com este produto." required></textarea>
         </label>
         <label class="review-photo-field">
           <span>Foto do produto (opcional)</span>
@@ -1053,7 +1065,7 @@
         </label>
         ${reviewPhotoPreviewMarkup()}
         <p class="review-form-note">Envie uma foto mostrando a cor real, caimento ou acabamento do produto.</p>
-        <button class="btn primary" type="submit">Enviar avaliacao</button>
+        <button class="btn primary" type="submit">Enviar avaliação</button>
       </form>
     `;
   }
@@ -1065,7 +1077,7 @@
       <aside class="product-seller-card">
         <div class="product-seller-card__head">
           <div>
-            <p class="eyebrow">Loja responsavel</p>
+            <p class="eyebrow">Loja responsável</p>
             <h2>${escapeHtml(seller.name)}</h2>
           </div>
           <span class="review-badge">Parceiro</span>
@@ -1081,7 +1093,7 @@
         <div class="product-seller-rating">
           <span class="rating-stars">${renderStars(seller.rating)}</span>
           <strong>${Number(seller.rating || 0).toFixed(1)}</strong>
-          <span>${Number(seller.reviewCount || 0)} avaliacao(oes) na loja</span>
+          <span>${Number(seller.reviewCount || 0)} avaliação(ões) na loja</span>
         </div>
 
         <div class="product-seller-stats">
@@ -1099,11 +1111,11 @@
           </article>
           <article>
             <strong>${Number(seller.productReviewCount || 0)}</strong>
-            <span>comentarios no item</span>
+            <span>comentários no item</span>
           </article>
         </div>
 
-        <p class="product-seller-card__copy">Esse produto esta sendo vendido por um comerciante parceiro dentro da sua loja.</p>
+        <p class="product-seller-card__copy">Esse produto está sendo vendido por um comerciante parceiro dentro da sua loja.</p>
       </aside>
     `;
   }
@@ -1120,7 +1132,7 @@
           <button class="cep-modal__close" type="button" data-cep-close aria-label="Fechar">&times;</button>
           <p class="eyebrow">CEP</p>
           <h3>Calcular entrega</h3>
-          <p class="cep-modal__copy">Informe o CEP e o sistema reconhece rua, bairro, cidade e estado. Depois voce completa so o numero.</p>
+          <p class="cep-modal__copy">Informe o CEP e o sistema reconhece rua, bairro, cidade e estado. Depois você completa só o número.</p>
 
           <form class="cep-form" data-cep-form>
             <div class="cep-form__row">
@@ -1132,21 +1144,21 @@
             </div>
 
             <div class="cep-form__result${found ? " is-visible" : ""}">
-              <strong>${escapeHtml(found?.street || "Rua nao localizada ainda")}</strong>
+              <strong>${escapeHtml(found?.street || "Rua não localizada ainda")}</strong>
               <span>${escapeHtml(found?.district || "Bairro")}</span>
               <span>${escapeHtml([found?.city || "", found?.state || ""].filter(Boolean).join(" - ") || "Cidade - UF")}</span>
             </div>
 
             <label>
-              Numero da residencia
+              Número da residência
               <input type="text" name="number" inputmode="numeric" placeholder="Ex.: 320" value="${escapeHtml(numberDraft)}" data-address-number />
             </label>
 
-            <p class="cep-form__message${cepLookupError ? " is-error" : ""}${cepLookupSuccess ? " is-success" : ""}">${escapeHtml(cepLookupMessage || "Digite um CEP valido para continuar.")}</p>
+            <p class="cep-form__message${cepLookupError ? " is-error" : ""}${cepLookupSuccess ? " is-success" : ""}">${escapeHtml(cepLookupMessage || "Digite um CEP válido para continuar.")}</p>
 
             <div class="cep-form__actions">
               <button class="btn secondary" type="button" data-cep-close>Cancelar</button>
-              <button class="btn primary" type="submit" ${cepLookupLoading ? "disabled" : ""}>Salvar endereco</button>
+              <button class="btn primary" type="submit" ${cepLookupLoading ? "disabled" : ""}>Salvar endereço</button>
             </div>
           </form>
         </div>
@@ -1173,7 +1185,7 @@
     const sizes = getProductSizes();
     const selectedSizeLabel = ensureSelectedSize();
     const soldOut = !selectedVariant || Number(selectedVariant.stock || 0) <= 0;
-    const selectedColorLabel = selectedVariant?.colorName || "Indisponivel";
+    const selectedColorLabel = selectedVariant?.colorName || "Indisponível";
     const reviewCount = reviews.length;
     const reviewAverage = reviewCount ? summary.average.toFixed(1) : "Novo";
     const reviewStars = reviewCount ? renderStars(summary.average) : renderStars(0);
@@ -1217,7 +1229,7 @@
           <div class="product-enterprise-strip" aria-label="Beneficios da compra">
             <span>Compra protegida</span>
             <span>Envio monitorado</span>
-            <span>Troca facil</span>
+            <span>Troca fácil</span>
           </div>
 
           <div class="product-quantity-box${soldOut ? " is-sold-out" : ""}">
@@ -1232,18 +1244,18 @@
                   <button class="product-media-expand" type="button" data-gallery-open>Ampliar imagem</button>
                 </div>
               </div>
-              <div class="product-variant-list" role="list" aria-label="Variantes de cor disponiveis">
+              <div class="product-variant-list" role="list" aria-label="Variantes de cor disponíveis">
                 ${variants.length ? variants.map((variant) => variantCard(variant, variant.id === selectedVariant?.id)).join("") : '<span class="product-variant-empty">Produto esgotado no momento.</span>'}
               </div>
               <div class="product-size-panel">
                 <div class="product-size-panel__head">
                   <div class="product-size-panel__current" aria-live="polite">
                     <strong>Tamanho:</strong>
-                    <span>${escapeHtml(selectedSizeLabel || "Indisponivel")}</span>
+                    <span>${escapeHtml(selectedSizeLabel || "Indisponível")}</span>
                   </div>
-                  <small>${sizes.length} opcao(oes)</small>
+                  <small>${sizes.length} opção(ões)</small>
                 </div>
-                <div class="product-size-list" role="list" aria-label="Tamanhos disponiveis">
+                <div class="product-size-list" role="list" aria-label="Tamanhos disponíveis">
                   ${sizes.length ? sizes.map((size) => sizeCard(size, normalizeSizeToken(size) === normalizeSizeToken(selectedSizeLabel))).join("") : '<span class="product-size-empty">Sem tamanhos cadastrados.</span>'}
                 </div>
               </div>
@@ -1278,7 +1290,7 @@
             <button class="btn primary" type="button" data-buy-now ${soldOut ? "disabled" : ""}>Comprar agora</button>
           </div>
           <p class="product-detail-feedback" data-product-feedback hidden></p>
-          <section class="product-security-card" aria-label="Seguranca da compra">
+          <section class="product-security-card" aria-label="Segurança da compra">
             <article class="product-security-card__item">
               <span aria-hidden="true">
                 <svg viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.97 3.05 7.98 7 9 3.95-1.02 7-4.03 7-9V6l-7-3zm0 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-3 8a4 4 0 0 1 6 0"></path></svg>
@@ -1303,7 +1315,7 @@
               </span>
               <div>
                 <strong>Troca facilitada</strong>
-                <small>Suporte e devolucao em ate 7 dias</small>
+                <small>Suporte e devolução em até 7 dias</small>
               </div>
             </article>
           </section>
@@ -1315,10 +1327,10 @@
           <div class="product-reviews-card__head">
             <div>
               <p class="eyebrow">Avaliacoes</p>
-              <h2>O que clientes estao dizendo</h2>
-              <p class="product-reviews-card__copy">Agora essa area fica focada em comentarios reais, estrelas e foto enviada pelos clientes.</p>
+              <h2>O que clientes estão dizendo</h2>
+              <p class="product-reviews-card__copy">Agora essa área fica focada em comentários reais, estrelas e foto enviada pelos clientes.</p>
             </div>
-            <span class="review-badge">${reviewCount} comentario(s)</span>
+            <span class="review-badge">${reviewCount} comentário(s)</span>
           </div>
           <div class="product-reviews-body">
             <div class="product-reviews-stream">
@@ -1327,10 +1339,10 @@
                   <strong>${reviewAverage}</strong>
                   <span class="rating-stars">${reviewStars}</span>
                 </div>
-                <p>${reviewCount ? "Avaliacoes com comentario, foto opcional e nota por estrelas." : "Seja o primeiro cliente a mandar comentario, estrelas e foto real do produto."}</p>
+                <p>${reviewCount ? "Avaliações com comentário, foto opcional e nota por estrelas." : "Seja o primeiro cliente a mandar comentário, estrelas e foto real do produto."}</p>
               </div>
               <div class="review-list">
-                ${reviewCount ? reviews.slice(0, 8).map(reviewCard).join("") : '<article class="review-empty-card"><strong>Nenhuma avaliacao ainda.</strong><p>Esse espaco agora fica reservado para comentarios dos clientes com foto e estrelas.</p></article>'}
+                ${reviewCount ? reviews.slice(0, 8).map(reviewCard).join("") : '<article class="review-empty-card"><strong>Nenhuma avaliação ainda.</strong><p>Esse espaço agora fica reservado para comentários dos clientes com foto e estrelas.</p></article>'}
               </div>
             </div>
 
@@ -1364,7 +1376,7 @@
   function addSelectedQtyToCart() {
     const variant = getSelectedVariant();
     if (!variant || Number(variant.stock || 0) <= 0) {
-      showFeedback("Essa cor esta sem estoque no momento.");
+      showFeedback("Essa cor está sem estoque no momento.");
       return false;
     }
 
@@ -1376,7 +1388,7 @@
     const added = Math.max(0, after - before);
 
     if (!added) {
-      showFeedback(`Nao ha mais estoque disponivel para ${variant.colorName}.`);
+      showFeedback(`Não há mais estoque disponível para ${variant.colorName}.`);
       return false;
     }
 
@@ -1475,7 +1487,7 @@
     const clearPhoto = event.target instanceof Element ? event.target.closest("[data-review-photo-clear]") : null;
     if (clearPhoto) {
       clearPendingReviewPhoto();
-      showFeedback("Foto removida da avaliacao.");
+      showFeedback("Foto removida da avaliação.");
       return;
     }
 
@@ -1605,7 +1617,7 @@
       if (!found) {
         cepLookupError = true;
         cepLookupSuccess = false;
-        cepLookupMessage = "Nao foi possivel localizar esse CEP.";
+        cepLookupMessage = "Não foi possível localizar esse CEP.";
         renderProduct();
         return;
       }
@@ -1613,7 +1625,7 @@
       if (!number) {
         cepLookupError = true;
         cepLookupSuccess = false;
-        cepLookupMessage = "Informe o numero da residencia.";
+        cepLookupMessage = "Informe o número da residência.";
         renderProduct();
         return;
       }
@@ -1626,12 +1638,12 @@
       });
       cepLookupError = false;
       cepLookupSuccess = true;
-      cepLookupMessage = "Endereco salvo com sucesso.";
+      cepLookupMessage = "Endereço salvo com sucesso.";
       renderProduct();
       await new Promise((resolve) => window.setTimeout(resolve, 1100));
       closeCepModal();
       renderProduct();
-      showFeedback("Endereco atualizado pelo CEP.");
+      showFeedback("Endereço atualizado pelo CEP.");
       return;
     }
 
@@ -1654,13 +1666,13 @@
       orderId: String(form.getAttribute("data-review-order-id") || access.orderId || "")
     });
     if (!review) {
-      showFeedback("Essa avaliacao so pode ser enviada depois da confirmacao de recebimento do pedido.");
+      showFeedback("Essa avaliação só pode ser enviada depois da confirmação de recebimento do pedido.");
       return;
     }
     pendingReviewPhoto = "";
     pendingReviewPhotoName = "";
     renderProduct();
-    showFeedback("Avaliacao enviada com sucesso.");
+    showFeedback("Avaliação enviada com sucesso.");
   });
 
   renderProduct();

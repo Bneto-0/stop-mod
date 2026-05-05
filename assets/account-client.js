@@ -113,6 +113,9 @@
       saveJson(KEYS.shipList, addresses.map((item) => normalizeAddressForStorage(item)));
     }
 
+    window.dispatchEvent(new Event("stopmod:profile-updated"));
+    window.dispatchEvent(new Event("stopmod:shipping-updated"));
+
     return payload;
   }
 
@@ -123,6 +126,8 @@
     localStorage.removeItem(KEYS.authLastSeen);
     localStorage.removeItem(KEYS.shipTo);
     localStorage.removeItem(KEYS.shipList);
+    window.dispatchEvent(new Event("stopmod:profile-updated"));
+    window.dispatchEvent(new Event("stopmod:shipping-updated"));
   }
 
   function getAuthHeaders() {

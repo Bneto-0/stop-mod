@@ -5,26 +5,26 @@
   const fallbackProducts = [
     { id: 1, name: "Moletom UZUU Oversized", category: "Streetwear", price: 199.9, image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=800&q=80", badge: "20% OFF" },
     { id: 2, name: "Camiseta UZUU Basic", category: "Masculino", price: 89.9, image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=800&q=80", badge: "Novo" },
-    { id: 3, name: "Bone UZUU Classic", category: "Acessorios", price: 79.9, image: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=800&q=80", badge: "Mais vendido" },
+    { id: 3, name: "Boné UZUU Classic", category: "Acessorios", price: 79.9, image: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=800&q=80", badge: "Mais vendido" },
     { id: 4, name: "Mochila UZUU Essential", category: "Acessorios", price: 159.9, image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80", badge: "Premium" },
-    { id: 5, name: "Tenis UZUU Street", category: "Calcados", price: 249.9, image: "https://images.unsplash.com/photo-1543508282-6319a3e2621f?auto=format&fit=crop&w=800&q=80", badge: "Oferta" },
+    { id: 5, name: "Tênis UZUU Street", category: "Calcados", price: 249.9, image: "https://images.unsplash.com/photo-1543508282-6319a3e2621f?auto=format&fit=crop&w=800&q=80", badge: "Oferta" },
     { id: 6, name: "Bermuda UZUU Casual", category: "Masculino", price: 99.9, image: "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?auto=format&fit=crop&w=800&q=80", badge: "Leve" }
   ];
 
   const categories = [
     { name: "Masculino", label: "Masculino", image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80" },
     { name: "Feminino", label: "Feminino", image: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=800&q=80" },
-    { name: "Acessorios", label: "Acessorios", image: "https://images.unsplash.com/photo-1523779105320-d1cd346ff52b?auto=format&fit=crop&w=800&q=80" },
-    { name: "Calcados", label: "Calcados", image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80" },
+    { name: "Acessorios", label: "Acessórios", image: "https://images.unsplash.com/photo-1523779105320-d1cd346ff52b?auto=format&fit=crop&w=800&q=80" },
+    { name: "Calcados", label: "Calçados", image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80" },
     { name: "Streetwear", label: "Streetwear", image: "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=800&q=80" },
-    { name: "Promocoes", label: "Promocoes", image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=800&q=80" }
+    { name: "Promocoes", label: "Promoções", image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=800&q=80" }
   ];
 
   const tabs = ["Todos", "Masculino", "Feminino", "Acessorios", "Calcados", "Streetwear"];
 
   const adBanners = [
-    { title: "Lancamentos", subtitle: "Novas pecas toda semana", cta: "Ver lancamentos", action: "launches", image: "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=1000&q=80", tone: "from-blue-950" },
-    { title: "Ate 50% OFF", subtitle: "Nas melhores pecas", cta: "Aproveitar ofertas", action: "Promocoes", image: "https://images.unsplash.com/photo-1506629905607-d9f297d8f8af?auto=format&fit=crop&w=1000&q=80", tone: "from-black" },
+    { title: "Lançamentos", subtitle: "Novas peças toda semana", cta: "Ver lançamentos", action: "launches", image: "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=1000&q=80", tone: "from-blue-950" },
+    { title: "Até 50% OFF", subtitle: "Nas melhores peças", cta: "Aproveitar ofertas", action: "Promocoes", image: "https://images.unsplash.com/photo-1506629905607-d9f297d8f8af?auto=format&fit=crop&w=1000&q=80", tone: "from-black" },
     { title: "Streetwear Premium", subtitle: "Qualidade que se destaca", cta: "Ver streetwear", action: "Streetwear", image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1000&q=80", tone: "from-neutral-950" }
   ];
 
@@ -168,13 +168,22 @@
   function matchesCategory(product, category) {
     if (!category || category === "Todos") return true;
     if (category === "Promocoes") return product.oldPrice > product.price;
-    if (category === "launches") return ["novo", "lancamento", "drop"].some((word) => normalizeText(product.badge).includes(word));
+    if (category === "launches") return ["novo", "lancamento", "lançamento", "drop"].some((word) => normalizeText(product.badge).includes(word));
 
     const normalizedCategory = normalizeText(product.category);
     const normalizedName = normalizeText(product.name);
     const token = normalizeText(category);
 
     return normalizedCategory.includes(token) || normalizedName.includes(token);
+  }
+
+  function displayCategoryLabel(value) {
+    const normalized = normalizeText(value);
+    if (normalized === "acessorios") return "Acessórios";
+    if (normalized === "calcados") return "Calçados";
+    if (normalized === "promocoes") return "Promoções";
+    if (normalized === "launches") return "Lançamentos";
+    return String(value || "");
   }
 
   function matchesQuery(product) {
@@ -228,7 +237,7 @@
     if (!node) return;
 
     node.innerHTML = tabs.map((tab) => `
-      <button type="button" data-filter="${tab}">${tab}</button>
+      <button type="button" data-filter="${tab}">${displayCategoryLabel(tab)}</button>
     `).join("");
   }
 
@@ -278,7 +287,7 @@
         </a>
         <button class="home-infinite-product-card__favorite ${isFavorite ? "is-active" : ""}" type="button" data-home-favorite="${product.id}" aria-label="${favoriteLabel(product.id)}">${favoriteIcon(product.id)}</button>
         <div class="home-infinite-product-card__body">
-          <p>${escapeHtml(product.category)}</p>
+          <p>${escapeHtml(displayCategoryLabel(product.category))}</p>
           <h3><a href="${href}">${escapeHtml(product.name)}</a></h3>
           <div class="home-infinite-product-card__rating">★★★★★ <small>(${rating.count || 12})</small></div>
           <strong>${money(product.price)}</strong>
@@ -298,7 +307,7 @@
       node.innerHTML = `
         <div class="home-infinite-empty">
           <strong>Nenhum produto encontrado.</strong>
-          <span>Tente buscar por camiseta, calca, jaqueta ou acessorios.</span>
+          <span>Tente buscar por camiseta, calça, jaqueta ou acessórios.</span>
         </div>
       `;
       return;
@@ -432,7 +441,7 @@
       if (!valid) {
         if (feedback) {
           feedback.hidden = false;
-          feedback.textContent = "Digite um e-mail valido para receber as ofertas.";
+          feedback.textContent = "Digite um e-mail válido para receber as ofertas.";
         }
         return;
       }
@@ -447,7 +456,7 @@
       if (input) input.value = "";
       if (feedback) {
         feedback.hidden = false;
-        feedback.textContent = "Cadastro realizado. Voce vai receber as ofertas da UZUU.";
+        feedback.textContent = "Cadastro realizado. Você vai receber as ofertas da UZUU.";
       }
 
       showToast("E-mail cadastrado com sucesso.");
@@ -465,7 +474,7 @@
 
       const list = filteredProducts();
       if (state.visibleCount >= list.length) {
-        node.textContent = "Continue navegando pela colecao";
+        node.textContent = "Continue navegando pela coleção";
         return;
       }
 

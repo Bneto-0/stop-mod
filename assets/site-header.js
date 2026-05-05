@@ -1,6 +1,8 @@
 (function () {
   const CART_KEY = "stopmod_cart";
   const PROFILE_KEY = "stopmod_profile";
+  const PROFILE_EXTRA_KEY = "stopmod_profile_extra";
+  const AUTH_TOKEN_KEY = "stopmod_auth_token";
   const SHIP_KEY = "stopmod_ship_to";
   const LEGACY_SHIP_KEY = "stopmod_ship_cep";
   const FALLBACK_AVATAR_BASE = "https://ui-avatars.com/api/?background=111111&color=ffffff&bold=true&size=96&name=";
@@ -10,6 +12,7 @@
 
   const path = window.location.pathname || "/";
   const isHome = path === "/" || /\/index\.html$/i.test(path);
+  const usePremiumHeader = true;
   const navState = {
     perfil: /^\/perfil\/?$/i.test(path),
     favoritos: /\/perfil\/favoritos\//i.test(path),
@@ -22,8 +25,8 @@
     { label: "Novidades", href: "/#anuncios", current: isHome },
     { label: "Masculino", href: "/?q=masculino#produtos", current: false },
     { label: "Feminino", href: "/?q=feminino#produtos", current: false },
-    { label: "Acessorios", href: "/?cat=Acessorios#produtos", current: false },
-    { label: "Calcados", href: "/?q=calcados#produtos", current: false },
+    { label: "Acessórios", href: "/?cat=Acessorios#produtos", current: false },
+    { label: "Calçados", href: "/?q=calcados#produtos", current: false },
     { label: "Streetwear", href: "/?q=streetwear#produtos", current: false },
     { label: "Marcas", href: "/marketplace/", current: navState.marketplace }
   ];
@@ -34,8 +37,8 @@
       href: "/?q=masculino#produtos",
       links: [
         { label: "Camisetas", href: "/?cat=Camisetas#produtos" },
-        { label: "Tenis", href: "/?q=tenis#produtos" },
-        { label: "Calcas", href: "/?cat=Calcas#produtos" },
+        { label: "Tênis", href: "/?q=tenis#produtos" },
+        { label: "Calças", href: "/?cat=Calcas#produtos" },
         { label: "Jaquetas", href: "/?cat=Jaquetas#produtos" }
       ]
     },
@@ -50,22 +53,22 @@
       ]
     },
     {
-      title: "Calcados",
+      title: "Calçados",
       href: "/?q=calcados#produtos",
       links: [
-        { label: "Tenis", href: "/?q=tenis#produtos" },
+        { label: "Tênis", href: "/?q=tenis#produtos" },
         { label: "Botas", href: "/?q=botas#produtos" },
-        { label: "Sandalias", href: "/?q=sandalias#produtos" },
+        { label: "Sandálias", href: "/?q=sandalias#produtos" },
         { label: "Slides", href: "/?q=slides#produtos" }
       ]
     },
     {
-      title: "Acessorios",
+      title: "Acessórios",
       href: "/?cat=Acessorios#produtos",
       links: [
         { label: "Bolsas", href: "/?q=bolsas#produtos" },
         { label: "Bones", href: "/?q=bones#produtos" },
-        { label: "Oculos", href: "/?q=oculos#produtos" },
+        { label: "Óculos", href: "/?q=oculos#produtos" },
         { label: "Joias", href: "/?q=acessorios#produtos" }
       ]
     },
@@ -75,7 +78,7 @@
       links: [
         { label: "Camisetas", href: "/?cat=Camisetas#produtos" },
         { label: "Moletons", href: "/?cat=Moletons#produtos" },
-        { label: "Calcas", href: "/?cat=Calcas#produtos" },
+        { label: "Calças", href: "/?cat=Calcas#produtos" },
         { label: "Bones", href: "/?q=bones#produtos" }
       ]
     },
@@ -117,21 +120,20 @@
   }
 
   function renderUtilityStrip() {
-    if (!isHome) return "";
     return `
       <div class="shared-header__utility">
         <div class="shared-header__container shared-header__utility-row">
           <span class="shared-header__utility-item">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h10v8H3zm11 3h3l3 3v2h-6zm-9 7a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm11 0a2 2 0 1 0 .001 4A2 2 0 0 0 16 17zM5 19h7m4 0h2"></path></svg>
-            <span>Frete gratis para todo o Brasil</span>
+            <span>Frete grátis para todo o Brasil</span>
           </span>
           <span class="shared-header__utility-item">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3zm0 4h18M7 15h3"></path></svg>
-            <span>Parcele em ate 12x sem juros</span>
+            <span>Parcele em até 12x sem juros</span>
           </span>
           <span class="shared-header__utility-item">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 13.66-5.66M20 12a8 8 0 0 1-13.66 5.66M17 3v4h-4M7 21v-4h4"></path></svg>
-            <span>Troca gratis em ate 7 dias</span>
+            <span>Troca grátis em até 7 dias</span>
           </span>
           <span class="shared-header__utility-item">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.6-2.7 8.8-7 10-4.3-1.2-7-5.4-7-10V6zm-3 9 2 2 4-4"></path></svg>
@@ -143,18 +145,18 @@
   }
 
   root.innerHTML = `
-    <header class="shared-header ${isHome ? "shared-header--home" : ""}" aria-label="Cabecalho da loja">
+    <header class="shared-header ${usePremiumHeader ? "shared-header--home" : ""}" aria-label="Cabeçalho da loja">
       ${renderUtilityStrip()}
       <div class="shared-header__container">
         <div class="shared-header__top-row">
           <div class="shared-header__identity">
             <a class="shared-brand" href="/#top" aria-label="UZUU">UZUU</a>
 
-            <a class="shared-location" href="/entrega/" aria-label="Selecionar endereco de entrega">
+            <a class="shared-location" href="/entrega/" aria-label="Selecionar endereço de entrega">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c3.87 0 7 3.09 7 6.9 0 4.71-5.2 10.35-6.45 11.65a.8.8 0 0 1-1.1 0C10.2 19.25 5 13.61 5 8.9 5 5.09 8.13 2 12 2zm0 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"></path></svg>
               <span class="shared-location__text">
                 <small>Enviar para</small>
-                <strong id="ship-summary">Rua nao informada</strong>
+                <strong id="ship-summary">Rua não informada</strong>
               </span>
               <span class="shared-location__caret" aria-hidden="true">&#9662;</span>
             </a>
@@ -164,9 +166,9 @@
             <svg class="shared-search__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 4a6.5 6.5 0 1 0 4.03 11.6l4.43 4.44 1.41-1.42-4.44-4.43A6.5 6.5 0 0 0 10.5 4zm0 2a4.5 4.5 0 1 1 0 9.001A4.5 4.5 0 0 1 10.5 6z"></path></svg>
             <label class="sr-only" for="search-input">Pesquisar produto</label>
             <input id="search-input" type="search" placeholder="Buscar produtos, categorias ou marcas..." />
-            <button class="shared-search__button ${isHome ? "shared-search__button--icon" : ""}" type="submit" aria-label="Buscar">
+            <button class="shared-search__button ${usePremiumHeader ? "shared-search__button--icon" : ""}" type="submit" aria-label="Buscar">
               ${
-                isHome
+                usePremiumHeader
                   ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 4a6.5 6.5 0 1 0 4.03 11.6l4.43 4.44 1.41-1.42-4.44-4.43A6.5 6.5 0 0 0 10.5 4zm0 2a4.5 4.5 0 1 1 0 9.001A4.5 4.5 0 0 1 10.5 6z"></path></svg>'
                   : "Buscar"
               }
@@ -207,16 +209,16 @@
             </button>
           </div>
 
-          <nav class="shared-nav" aria-label="Navegacao principal da loja">
+          <nav class="shared-nav" aria-label="Navegação principal da loja">
             ${renderPrimaryNav()}
           </nav>
 
-          <a class="shared-promo-link ${navState.promocoes ? "is-current" : ""}" href="/cupons/" aria-label="Promocoes">
+          <a class="shared-promo-link ${navState.promocoes ? "is-current" : ""}" href="/cupons/" aria-label="Promoções">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M20 13.59 12.59 21a2 2 0 0 1-2.83 0L3 14.24V4h10.24L20 10.76a2 2 0 0 1 0 2.83Z"></path>
               <circle cx="9" cy="9" r="1.6"></circle>
             </svg>
-            <span>Promocoes</span>
+            <span>Promoções</span>
           </a>
         </div>
 
@@ -228,10 +230,10 @@
               </div>
 
               <aside class="shared-mega-promo">
-                <span class="shared-mega-promo__eyebrow">Selecao UZUU</span>
+                <span class="shared-mega-promo__eyebrow">Seleção UZUU</span>
                 <strong>Estilo sem pagar caro</strong>
-                <p>Moda com leitura premium e preco forte para uma home mais comercial.</p>
-                <a href="/#produtos">Ver colecao</a>
+                <p>Moda com leitura premium e preço forte para uma home mais comercial.</p>
+                <a href="/#produtos">Ver coleção</a>
               </aside>
             </div>
           </div>
@@ -282,7 +284,7 @@
   }
 
   function summarizeAddress(address) {
-    if (!address || typeof address !== "object") return "Rua nao informada";
+    if (!address || typeof address !== "object") return "Rua não informada";
     const street = String(address.street || "").trim();
     const number = String(address.number || "").trim();
     const city = String(address.city || "").trim();
@@ -291,7 +293,7 @@
     if (street) return street;
     if (city) return city;
     if (cep) return `CEP ${cep}`;
-    return "Rua nao informada";
+    return "Rua não informada";
   }
 
   function buildFallbackAvatar(name) {
@@ -305,9 +307,22 @@
 
   function renderHeaderProfile() {
     const profile = loadJson(PROFILE_KEY);
-    if (!profile || !profileName || !profileLink) {
-      profileName.textContent = isHome ? "Entrar" : "Perfil";
-      if (profileSubtext) profileSubtext.textContent = isHome ? "ou cadastrar" : "";
+    const extra = loadJson(PROFILE_EXTRA_KEY);
+    const token = String(localStorage.getItem(AUTH_TOKEN_KEY) || "").trim();
+    const profileSource =
+      profile && typeof profile === "object"
+        ? profile
+        : extra && typeof extra === "object"
+          ? {
+              name: extra.fullName || extra.displayName || extra.username || "",
+              email: extra.email || "",
+              picture: extra.picture || ""
+            }
+          : null;
+
+    if (!profileSource && !token) {
+      profileName.textContent = "Entrar";
+      if (profileSubtext) profileSubtext.textContent = "ou cadastrar";
       profileLink.href = "/login/";
       profileLink.classList.remove("has-photo");
       if (profilePhoto) {
@@ -319,12 +334,12 @@
       return;
     }
 
-    const displayName = String(profile.name || "").trim().split(/\s+/)[0] || "Perfil";
-    const picture = String(profile.picture || "").trim();
+    const displayName = String(profileSource?.name || profileSource?.fullName || extra?.displayName || extra?.username || "Perfil").trim().split(/\s+/)[0] || "Perfil";
+    const picture = String(profileSource?.picture || extra?.picture || "").trim();
     const avatarSrc = isUsablePicture(picture) ? picture : buildFallbackAvatar(displayName);
 
     profileName.textContent = displayName;
-    if (profileSubtext) profileSubtext.textContent = isHome ? "minha conta" : "";
+    if (profileSubtext) profileSubtext.textContent = "minha conta";
     profileLink.href = "/perfil/";
     profileLink.setAttribute("aria-label", `Perfil de ${displayName}`);
     profileLink.classList.add("has-photo");
@@ -410,7 +425,7 @@
   });
 
   window.addEventListener("storage", (event) => {
-    if ([CART_KEY, PROFILE_KEY, SHIP_KEY, LEGACY_SHIP_KEY].includes(event.key || "")) {
+    if ([CART_KEY, PROFILE_KEY, PROFILE_EXTRA_KEY, AUTH_TOKEN_KEY, SHIP_KEY, LEGACY_SHIP_KEY].includes(event.key || "")) {
       renderHeaderState();
     }
   });

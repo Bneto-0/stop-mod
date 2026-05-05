@@ -956,6 +956,9 @@ function applySession(session) {
   if (addresses.length) {
     localStorage.setItem(SHIP_LIST_KEY, JSON.stringify(addresses.map(normalizeAddressForLocalStorage)));
   }
+
+  window.dispatchEvent(new Event("stopmod:profile-updated"));
+  window.dispatchEvent(new Event("stopmod:shipping-updated"));
 }
 
 function readStoredGooglePendingProfile() {
@@ -1000,6 +1003,7 @@ function applyPendingGoogleSession(user) {
     })
   );
   localStorage.setItem(AUTH_LAST_SEEN_KEY, String(Date.now()));
+  window.dispatchEvent(new Event("stopmod:profile-updated"));
 }
 
 function openGoogleRegistrationCompletion(message) {
